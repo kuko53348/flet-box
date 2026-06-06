@@ -1,0 +1,45 @@
+{
+  "name": "flet-box",
+  "version": "1.0.0",
+  "description": "Ultra-lightweight UI framework for vanilla JS web apps",
+  "type": "module",
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
+  "bin": {
+    "flet-box": "./bin/cli.js"
+  },
+  "scripts": {
+    "dev": "node bin/cli.js run --hot",
+    "build": "node bin/cli.js createBundle",
+    "test": "echo \"No tests yet\"",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "fletbox",
+    "flet-box",
+    "framework",
+    "ui",
+    "flutter-like",
+    "vanilla-js",
+    "lightweight",
+    "pwa",
+    "no-dependencies",
+    "zero-deps"
+  ],
+  "author": "FletBox Team",
+  "license": "MIT",
+  "devDependencies": {
+    "chokidar": "^4.0.3",
+    "esbuild": "^0.28.0",
+    "ws": "^8.21.0"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
