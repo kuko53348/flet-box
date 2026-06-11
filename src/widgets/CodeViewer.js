@@ -17,234 +17,213 @@ export const CodeViewer = (props) => {
         startingLineNumber = 1,
         lineNumberWidth = 40,
         lineNumberColor = colors.secondary,
-        
-        // Color props for consistency
-        headerBgColor = colors.primary,
-        headerTextColor = '#ffffff',
-        borderColor = colors.border,
-        
         ...rest
     } = props;
 
-    // Get the code as string
-    const codeString = typeof code === 'string' 
-        ? code 
-        : JSON.stringify(code, null, 2);
-    
-    // Split code into lines
-    const lines = codeString.split('\n');
-    const lineCount = lines.length;
-    
-    // Generate highlighted HTML for each line
-    const highlightedLines = lines.map(line => generateHighlightedHtml(line));
-    
-    // Create main container with WidgetFactory
+    let currentCode = typeof code === 'string' ? code : JSON.stringify(code, null, 2);
+    let currentTitle = title;
+    let headerRef = null;
+    let scrollWrapperRef = null;
+    let lineNumbersColRef = null;
+    let codeColRef = null;
+    let codeWrapperRef = null;
+
+    const refreshContent = () => {
+        const lines = currentCode.split('\n');
+        const highlightedLines = lines.map(line => generateHighlightedHtml(line));
+
+        if (showLineNumbers) {
+            // Actualizar números de línea
+            if (lineNumbersColRef) {
+                lineNumbersColRef.innerHTML = '';
+                for (let i = 0; i < lines.length; i++) {
+                    const numberDiv = WidgetFactory({
+                        tag: 'div',
+                        style: { padding: `0 ${padding / 2}px 0 ${padding}px`, whiteSpace: 'pre' },
+                        textContent: String(startingLineNumber + i)
+                    });
+                    lineNumbersColRef.appendChild(numberDiv);
+                }
+            }
+
+            // Actualizar código
+            if (codeColRef) {
+                codeColRef.innerHTML = '';
+                for (let i = 0; i < lines.length; i++) {
+                    const lineDiv = WidgetFactory({
+                        tag: 'div',
+                        style: { whiteSpace: 'pre', minHeight: '1.5em' }
+                    });
+                    lineDiv.innerHTML = highlightedLines[i] || '&nbsp;';
+                    codeColRef.appendChild(lineDiv);
+                }
+            }
+        } else {
+            // Actualizar código sin números de línea
+            if (codeWrapperRef) {
+                codeWrapperRef.innerHTML = highlightedLines.join('\n');
+            }
+        }
+    };
+
     const container = WidgetFactory({
-        width: '100%',
-        display: 'flex',
-        flexDirection: 'column',
+        tag: 'div',
+        style: { width: '100%', display: 'flex', flexDirection: 'column', ...rest.style },
         ...rest
     });
-    
-    // Add title header if provided
-    let header = null;
-    if (title && showHeader) {
-        header = WidgetFactory({
+
+    // Header
+    if (currentTitle && showHeader) {
+        headerRef = WidgetFactory({
             tag: 'div',
-            padding: '8px 12px',
-            backgroundColor: headerBgColor,
-            borderTopLeftRadius: typeof borderRadius === 'number' ? `${borderRadius}px` : borderRadius,
-            borderTopRightRadius: typeof borderRadius === 'number' ? `${borderRadius}px` : borderRadius,
-            color: headerTextColor,
-            fontSize: '14px',
-            fontWeight: 'bold',
-            textContent: title
+            style: {
+                padding: '8px 12px',
+                backgroundColor: colors.primary,
+                borderRadius: `${borderRadius}px ${borderRadius}px 0 0`,
+                color: '#fff',
+                fontSize: '14px',
+                fontWeight: 'bold'
+            },
+            textContent: currentTitle
         });
-        container.appendChild(header);
+        container.appendChild(headerRef);
     }
-    
-    // Create wrapper with horizontal scroll using WidgetFactory
-    const scrollWrapper = WidgetFactory({
+
+    // Scroll wrapper
+    scrollWrapperRef = WidgetFactory({
         tag: 'div',
-        backgroundColor: backgroundColor,
-        borderRadius: title ? `0 0 ${typeof borderRadius === 'number' ? `${borderRadius}px` : borderRadius} ${typeof borderRadius === 'number' ? `${borderRadius}px` : borderRadius}` : (typeof borderRadius === 'number' ? `${borderRadius}px` : borderRadius),
-        overflow: 'auto',
-        maxHeight: typeof maxHeight === 'number' ? `${maxHeight}px` : maxHeight,
-        overflowX: 'auto',
-        overflowY: 'auto'
+        style: {
+            backgroundColor,
+            borderRadius: currentTitle ? `0 0 ${borderRadius}px ${borderRadius}px` : `${borderRadius}px`,
+            overflow: 'auto',
+            maxHeight: typeof maxHeight === 'number' ? `${maxHeight}px` : maxHeight,
+            overflowX: 'auto',
+            overflowY: 'auto'
+        }
     });
-    
+
+    // Construir contenido según showLineNumbers
     if (showLineNumbers) {
-        // ========== WITH LINE NUMBERS ==========
-        // Create flex container with WidgetFactory
         const flexContainer = WidgetFactory({
             tag: 'div',
-            display: 'flex',
-            flexDirection: 'row',
-            minWidth: '100%',
-            width: 'fit-content'
+            style: { display: 'flex', flexDirection: 'row', minWidth: '100%', width: 'fit-content' }
         });
-        
-        // Line numbers column using WidgetFactory
-        const lineNumbersCol = WidgetFactory({
+
+        lineNumbersColRef = WidgetFactory({
             tag: 'div',
-            backgroundColor: backgroundColor,
-            borderRight: `1px solid ${borderColor}`,
-            padding: `${padding}px 0`,
-            fontFamily: 'monospace',
-            fontSize: typeof fontSize === 'number' ? `${fontSize}px` : fontSize,
-            lineHeight: '1.5',
-            textAlign: 'right',
-            color: lineNumberColor,
-            userSelect: 'none',
-            width: `${lineNumberWidth}px`,
-            flexShrink: 0
+            style: {
+                backgroundColor,
+                borderRight: `1px solid ${colors.border}`,
+                padding: `${padding}px 0`,
+                fontFamily: 'monospace',
+                fontSize: typeof fontSize === 'number' ? `${fontSize}px` : fontSize,
+                lineHeight: '1.5',
+                textAlign: 'right',
+                color: lineNumberColor,
+                userSelect: 'none',
+                width: `${lineNumberWidth}px`,
+                flexShrink: 0
+            }
         });
-        
-        // Add line numbers (manual DOM manipulation needed for dynamic content)
-        for (let i = 0; i < lineCount; i++) {
-            const lineNumber = startingLineNumber + i;
+
+        codeColRef = WidgetFactory({
+            tag: 'div',
+            style: {
+                padding: `${padding}px`,
+                fontFamily: 'monospace',
+                fontSize: typeof fontSize === 'number' ? `${fontSize}px` : fontSize,
+                lineHeight: '1.5',
+                whiteSpace: 'pre',
+                flex: 1,
+                overflowX: 'visible'
+            }
+        });
+
+        flexContainer.appendChild(lineNumbersColRef);
+        flexContainer.appendChild(codeColRef);
+        scrollWrapperRef.appendChild(flexContainer);
+
+        // Sincronizar scroll
+        const syncScroll = () => { 
+            if (lineNumbersColRef) lineNumbersColRef.scrollTop = codeColRef.scrollTop; 
+        };
+        codeColRef.addEventListener('scroll', syncScroll);
+
+        const originalCleanup = scrollWrapperRef._cleanup;
+        scrollWrapperRef._cleanup = () => {
+            if (originalCleanup) originalCleanup();
+            codeColRef.removeEventListener('scroll', syncScroll);
+        };
+    } else {
+        codeWrapperRef = WidgetFactory({
+            tag: 'div',
+            style: {
+                padding: typeof padding === 'number' ? `${padding}px` : padding,
+                fontFamily: 'monospace',
+                fontSize: typeof fontSize === 'number' ? `${fontSize}px` : fontSize,
+                whiteSpace: 'pre',
+                lineHeight: '1.5'
+            }
+        });
+        scrollWrapperRef.appendChild(codeWrapperRef);
+    }
+
+    container.appendChild(scrollWrapperRef);
+
+    // Rellenar contenido inicial
+    const lines = currentCode.split('\n');
+    const highlightedLines = lines.map(line => generateHighlightedHtml(line));
+
+    if (showLineNumbers) {
+        for (let i = 0; i < lines.length; i++) {
             const numberDiv = WidgetFactory({
                 tag: 'div',
-                padding: `0 ${padding / 2}px 0 ${padding}px`,
-                whiteSpace: 'pre',
-                textContent: String(lineNumber)
+                style: { padding: `0 ${padding / 2}px 0 ${padding}px`, whiteSpace: 'pre' },
+                textContent: String(startingLineNumber + i)
             });
-            lineNumbersCol.appendChild(numberDiv);
+            lineNumbersColRef.appendChild(numberDiv);
         }
-        
-        // Code column using WidgetFactory
-        const codeCol = WidgetFactory({
-            tag: 'div',
-            padding: `${padding}px`,
-            fontFamily: 'monospace',
-            fontSize: typeof fontSize === 'number' ? `${fontSize}px` : fontSize,
-            lineHeight: '1.5',
-            whiteSpace: 'pre',
-            flex: 1,
-            overflowX: 'visible'
-        });
-        
-        // Add highlighted code lines (manual DOM for innerHTML)
-        for (let i = 0; i < lineCount; i++) {
+
+        for (let i = 0; i < lines.length; i++) {
             const lineDiv = WidgetFactory({
                 tag: 'div',
-                whiteSpace: 'pre',
-                minHeight: '1.5em'
+                style: { whiteSpace: 'pre', minHeight: '1.5em' }
             });
             lineDiv.innerHTML = highlightedLines[i] || '&nbsp;';
-            codeCol.appendChild(lineDiv);
+            codeColRef.appendChild(lineDiv);
         }
-        
-        flexContainer.appendChild(lineNumbersCol);
-        flexContainer.appendChild(codeCol);
-        scrollWrapper.appendChild(flexContainer);
-        
-        // Sync scroll between line numbers and code (direct DOM needed)
-        const syncScroll = () => {
-            lineNumbersCol.scrollTop = codeCol.scrollTop;
-        };
-        
-        codeCol.addEventListener('scroll', syncScroll);
-        
-        // Store cleanup
-        const originalCleanup = scrollWrapper._cleanup;
-        scrollWrapper._cleanup = () => {
-            if (originalCleanup) originalCleanup();
-            codeCol.removeEventListener('scroll', syncScroll);
-        };
-        
     } else {
-        // ========== WITHOUT LINE NUMBERS (default) ==========
-        const codeWrapper = WidgetFactory({
-            tag: 'div',
-            padding: typeof padding === 'number' ? `${padding}px` : padding,
-            fontFamily: 'monospace',
-            fontSize: typeof fontSize === 'number' ? `${fontSize}px` : fontSize,
-            whiteSpace: 'pre',
-            lineHeight: '1.5'
-        });
-        codeWrapper.innerHTML = highlightedLines.join('\n');
-        scrollWrapper.appendChild(codeWrapper);
+        codeWrapperRef.innerHTML = highlightedLines.join('\n');
     }
-    
-    container.appendChild(scrollWrapper);
-    
-    // ========== PUBLIC METHODS (manteniendo API existente) ==========
-    
-    // Update the displayed code
+
+    // ========== MÉTODOS PÚBLICOS ==========
     container.updateCode = (newCode) => {
-        const newCodeString = typeof newCode === 'string' 
-            ? newCode 
-            : JSON.stringify(newCode, null, 2);
-        const newLines = newCodeString.split('\n');
-        const newHighlighted = newLines.map(line => generateHighlightedHtml(line));
-        
-        if (showLineNumbers && flexContainer) {
-            // Update line numbers
-            const lineNumbersCol = flexContainer.children[0];
-            const codeCol = flexContainer.children[1];
-            
-            // Clear and rebuild line numbers
-            while (lineNumbersCol.firstChild) {
-                lineNumbersCol.removeChild(lineNumbersCol.firstChild);
-            }
-            for (let i = 0; i < newLines.length; i++) {
-                const lineNumber = startingLineNumber + i;
-                const numberDiv = WidgetFactory({
-                    tag: 'div',
-                    padding: `0 ${padding / 2}px 0 ${padding}px`,
-                    whiteSpace: 'pre',
-                    textContent: String(lineNumber)
-                });
-                lineNumbersCol.appendChild(numberDiv);
-            }
-            
-            // Clear and rebuild code
-            while (codeCol.firstChild) {
-                codeCol.removeChild(codeCol.firstChild);
-            }
-            for (let i = 0; i < newHighlighted.length; i++) {
-                const lineDiv = WidgetFactory({
-                    tag: 'div',
-                    whiteSpace: 'pre',
-                    minHeight: '1.5em'
-                });
-                lineDiv.innerHTML = newHighlighted[i] || '&nbsp;';
-                codeCol.appendChild(lineDiv);
-            }
-        } else if (scrollWrapper.firstChild && !showLineNumbers) {
-            const codeWrapper = scrollWrapper.firstChild;
-            codeWrapper.innerHTML = newHighlighted.join('\n');
-        }
+        currentCode = typeof newCode === 'string' ? newCode : JSON.stringify(newCode, null, 2);
+        refreshContent();
     };
-    
-    // Update the title
+
     container.updateTitle = (newTitle) => {
-        if (header) {
-            header.textContent = newTitle;
+        currentTitle = newTitle;
+        if (headerRef) {
+            headerRef.textContent = currentTitle;
         }
     };
-    
-    // Toggle line numbers (manteniendo funcionalidad)
-    container.toggleLineNumbers = () => {
-        console.warn('toggleLineNumbers: recreate the widget to change this prop');
-    };
-    
-    // Scroll methods
+
     container.scrollTo = (x, y) => {
-        scrollWrapper.scrollLeft = x;
-        scrollWrapper.scrollTop = y;
+        if (scrollWrapperRef) {
+            scrollWrapperRef.scrollLeft = x;
+            scrollWrapperRef.scrollTop = y;
+        }
     };
-    
+
     container.scrollToStart = () => {
-        scrollWrapper.scrollLeft = 0;
+        if (scrollWrapperRef) scrollWrapperRef.scrollLeft = 0;
     };
-    
+
     container.scrollToEnd = () => {
-        scrollWrapper.scrollLeft = scrollWrapper.scrollWidth;
+        if (scrollWrapperRef) scrollWrapperRef.scrollLeft = scrollWrapperRef.scrollWidth;
     };
-    
+
     return container;
 };
 

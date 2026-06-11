@@ -1,4 +1,4 @@
-// widgets/Chart.js
+// widgets/Chart.js - Con curvas suaves y gradiente de relleno
 import { WidgetFactory } from '../widget-factory/index.js';
 import { colors } from '../utils/themes.js';
 
@@ -16,6 +16,10 @@ export const Chart = (props) => {
         barColor = colors.primary,
         lineColor = colors.primary,
         areaColor = `${colors.primary}40`,
+        // Nuevas props para curvas y gradiente
+        smooth = false,               // si true, dibuja líneas curvas suaves
+        areaGradient = false,         // si true, rellena área con gradiente (solo área)
+        areaGradientColors = null,    // array de dos colores para gradiente, ej. ['#ff0000', '#00ff00']
         candleUpColor = colors.success,
         candleDownColor = colors.danger,
         axisColor = colors.border,
@@ -125,22 +129,80 @@ export const Chart = (props) => {
         
         if (points.length < 2) return;
         
+        // Dibujar el área (relleno)
+        if (isArea) {
+            // Crear gradiente vertical si se solicita
+            let fillStyle = areaColor;
+            if (areaGradient) {
+                let grad;
+                if (areaGradientColors && areaGradientColors.length >= 2) {
+                    grad = ctx.createLinearGradient(0, chartHeight - pad.bottom, 0, pad.top);
+                    grad.addColorStop(0, areaGradientColors[0]);
+                    grad.addColorStop(1, areaGradientColors[1]);
+                } else {
+                    grad = ctx.createLinearGradient(0, chartHeight - pad.bottom, 0, pad.top);
+                    grad.addColorStop(0, lineColor);
+                    grad.addColorStop(1, 'transparent');
+                }
+                fillStyle = grad;
+            }
+            ctx.beginPath();
+            if (smooth) {
+                // Área con curvas suaves
+                ctx.moveTo(points[0].x, points[0].y);
+                for (let i = 0; i < points.length - 1; i++) {
+                    const xc = (points[i].x + points[i + 1].x) / 2;
+                    const yc = (points[i].y + points[i + 1].y) / 2;
+                    ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
+                }
+                ctx.quadraticCurveTo(
+                    points[points.length - 2].x,
+                    points[points.length - 2].y,
+                    points[points.length - 1].x,
+                    points[points.length - 1].y
+                );
+                ctx.lineTo(points[points.length - 1].x, chartHeight - pad.bottom);
+                ctx.lineTo(points[0].x, chartHeight - pad.bottom);
+                ctx.fillStyle = fillStyle;
+                ctx.fill();
+            } else {
+                // Área con líneas rectas
+                ctx.moveTo(points[0].x, points[0].y);
+                for (let i = 1; i < points.length; i++) {
+                    ctx.lineTo(points[i].x, points[i].y);
+                }
+                ctx.lineTo(points[points.length - 1].x, chartHeight - pad.bottom);
+                ctx.lineTo(points[0].x, chartHeight - pad.bottom);
+                ctx.fillStyle = fillStyle;
+                ctx.fill();
+            }
+        }
+        
+        // Dibujar la línea (borde)
         ctx.beginPath();
         ctx.moveTo(points[0].x, points[0].y);
-        for (let i = 1; i < points.length; i++) {
-            ctx.lineTo(points[i].x, points[i].y);
+        if (smooth) {
+            for (let i = 0; i < points.length - 1; i++) {
+                const xc = (points[i].x + points[i + 1].x) / 2;
+                const yc = (points[i].y + points[i + 1].y) / 2;
+                ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
+            }
+            ctx.quadraticCurveTo(
+                points[points.length - 2].x,
+                points[points.length - 2].y,
+                points[points.length - 1].x,
+                points[points.length - 1].y
+            );
+        } else {
+            for (let i = 1; i < points.length; i++) {
+                ctx.lineTo(points[i].x, points[i].y);
+            }
         }
         ctx.strokeStyle = lineColor;
         ctx.lineWidth = 2;
         ctx.stroke();
         
-        if (isArea && points.length > 0) {
-            ctx.lineTo(points[points.length - 1].x, chartHeight - pad.bottom);
-            ctx.lineTo(points[0].x, chartHeight - pad.bottom);
-            ctx.fillStyle = areaColor;
-            ctx.fill();
-        }
-        
+        // Dibujar puntos
         points.forEach(point => {
             ctx.fillStyle = lineColor;
             ctx.beginPath();

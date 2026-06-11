@@ -1,5 +1,6 @@
 // widgets/Column.js
 import { WidgetFactory } from '../widget-factory/index.js';
+import { colors } from '../utils/themes.js';
 
 export const Column = (props) => {
     const { style = {}, ...rest } = props;

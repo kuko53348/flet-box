@@ -1,4 +1,4 @@
-// widgets/Tooltip.js
+// widgets/Tooltip.js - Con cierre en scroll y resize
 import { WidgetFactory } from '../widget-factory/index.js';
 import { colors } from '../utils/themes.js';
 
@@ -8,7 +8,7 @@ export const Tooltip = (props) => {
         child,
         position = 'top',
         delay = 300,
-        bgColor = colors.gray800,
+        bgColor = colors.secondary,
         textColor = '#ffffff',
         fontSize = 12,
         padding = '6px 10px',
@@ -17,14 +17,12 @@ export const Tooltip = (props) => {
         showArrow = true,
         disabled = false,
         
-        // Additional styling props
         maxWidth = 200,
         textAlign = 'center',
         zIndex = 9999,
         animationDuration = 200,
         arrowSize = 6,
         
-        // Color props for consistency
         borderColor = 'transparent',
         borderWidth = 0,
         shadow = '0 2px 8px rgba(0,0,0,0.15)',
@@ -38,11 +36,20 @@ export const Tooltip = (props) => {
     let timeoutId = null;
     let isVisible = false;
 
-    // Create tooltip using WidgetFactory where possible
+    // ==== NUEVAS FUNCIONES PARA OCULTAR EN SCROLL / RESIZE ====
+    let scrollHandler = null;
+    let resizeHandler = null;
+
+    const hideOnScrollOrResize = () => {
+        if (isVisible) {
+            hideTooltip();
+        }
+    };
+
+    // ==== CREAR TOOLTIP ====
     const createTooltip = () => {
         if (tooltipElement) return tooltipElement;
 
-        // Tooltip content using WidgetFactory
         const content = WidgetFactory({
             backgroundColor: bgColor,
             borderRadius: typeof borderRadius === 'number' ? `${borderRadius}px` : borderRadius,
@@ -61,7 +68,6 @@ export const Tooltip = (props) => {
             })
         });
 
-        // Arrow element (needs manual DOM for positioning)
         let arrow = null;
         if (showArrow) {
             arrow = WidgetFactory({
@@ -73,7 +79,6 @@ export const Tooltip = (props) => {
             });
         }
 
-        // Main tooltip container
         const tooltip = WidgetFactory({
             tag: 'div',
             position: 'fixed',
@@ -96,7 +101,6 @@ export const Tooltip = (props) => {
         return tooltip;
     };
 
-    // Position tooltip (requires direct DOM manipulation)
     const positionTooltip = (targetRect, tooltipRect) => {
         if (!tooltipElement) return;
         
@@ -116,7 +120,6 @@ export const Tooltip = (props) => {
                     tooltipElement._arrow.style.left = `${arrowLeft}px`;
                 }
                 break;
-                
             case 'bottom':
                 top = targetRect.bottom + offset;
                 left = targetRect.left + (targetRect.width / 2) - (tooltipRect.width / 2);
@@ -129,7 +132,6 @@ export const Tooltip = (props) => {
                     tooltipElement._arrow.style.left = `${arrowLeft}px`;
                 }
                 break;
-                
             case 'left':
                 top = targetRect.top + (targetRect.height / 2) - (tooltipRect.height / 2);
                 left = targetRect.left - tooltipRect.width - offset;
@@ -142,7 +144,6 @@ export const Tooltip = (props) => {
                     tooltipElement._arrow.style.left = `${arrowLeft}px`;
                 }
                 break;
-                
             case 'right':
                 top = targetRect.top + (targetRect.height / 2) - (tooltipRect.height / 2);
                 left = targetRect.right + offset;
@@ -182,13 +183,18 @@ export const Tooltip = (props) => {
             const tooltipRect = tooltip.getBoundingClientRect();
             positionTooltip(childRect, tooltipRect);
             
-            // Use requestAnimationFrame for smooth appearance
             requestAnimationFrame(() => {
                 tooltip.style.opacity = '1';
                 tooltip.style.visibility = 'visible';
             });
             
             isVisible = true;
+            
+            // ==== AÑADIR LISTENERS DE SCROLL Y RESIZE ====
+            scrollHandler = hideOnScrollOrResize;
+            resizeHandler = hideOnScrollOrResize;
+            window.addEventListener('scroll', scrollHandler, true);  // capture true para capturar cualquier scroll
+            window.addEventListener('resize', resizeHandler);
         }, delay);
     };
 
@@ -202,10 +208,20 @@ export const Tooltip = (props) => {
             tooltipElement.style.opacity = '0';
             tooltipElement.style.visibility = 'hidden';
             isVisible = false;
+            
+            // ==== REMOVER LISTENERS ====
+            if (scrollHandler) {
+                window.removeEventListener('scroll', scrollHandler, true);
+                scrollHandler = null;
+            }
+            if (resizeHandler) {
+                window.removeEventListener('resize', resizeHandler);
+                resizeHandler = null;
+            }
         }
     };
 
-    // Wrap child with event listeners
+    // ==== ASIGNAR EVENTOS AL CHILD ====
     const wrappedChild = child;
     
     wrappedChild.addEventListener('mouseenter', showTooltip);
@@ -219,6 +235,9 @@ export const Tooltip = (props) => {
         if (tooltipElement && tooltipElement.parentNode) {
             tooltipElement.parentNode.removeChild(tooltipElement);
         }
+        // Limpiar listeners globales
+        if (scrollHandler) window.removeEventListener('scroll', scrollHandler, true);
+        if (resizeHandler) window.removeEventListener('resize', resizeHandler);
         wrappedChild.removeEventListener('mouseenter', showTooltip);
         wrappedChild.removeEventListener('mouseleave', hideTooltip);
         wrappedChild.removeEventListener('focus', showTooltip);
@@ -226,7 +245,7 @@ export const Tooltip = (props) => {
         if (originalCleanup) originalCleanup();
     };
 
-    // Public methods
+    // Métodos públicos
     wrappedChild.showTooltip = showTooltip;
     wrappedChild.hideTooltip = hideTooltip;
     wrappedChild.updateContent = (newText) => {

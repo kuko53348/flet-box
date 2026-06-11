@@ -1,5 +1,5 @@
-// navigations/AppBar.js - Con soporte completo para gradientes y colores sólidos
-import { createWidget } from '../widget-builder/index.js';
+// navigations/AppBar.js - Versión definitiva (sin [object,Object])
+import { WidgetFactory } from '../widget-factory/index.js';
 import { Container } from '../widgets/Container.js';
 import { Row } from '../widgets/Row.js';
 import { Text } from '../widgets/Text.js';
@@ -13,7 +13,7 @@ export const AppBar = (props) => {
         leading = null,
         actions = [],
         backgroundColor = colors.surface,
-        gradient = null,                     // ← Nueva prop para gradientes
+        gradient = null,
         titleColor = colors.text,
         iconColor = titleColor,
         elevation = 2,
@@ -21,12 +21,10 @@ export const AppBar = (props) => {
         titleSize = 20,
         titleWeight = '500',
         
-        // Navegación
         showBackButton = false,
         backButtonRoute = null,
         onBackPress = null,
         
-        // Props de estilo
         margin = 0,
         marginTop = 0,
         marginBottom = 0,
@@ -36,17 +34,21 @@ export const AppBar = (props) => {
         padding = 0,
         paddingTop = 0,
         paddingBottom = 0,
-        paddingLeft = 14,
-        paddingRight = 14,
+        paddingLeft = 4,
+        paddingRight = 4,
         borderRadius = 0,
         shadow = true,
         
-        // Nuevas props
         sticky = true,
         hideOnScroll = false,
         scrollThreshold = 100,
         ...rest
     } = props;
+
+    // Validar y filtrar acciones
+    const validActions = Array.isArray(actions) 
+        ? actions.filter(action => action instanceof HTMLElement)
+        : [];
 
     const finalMarginTop = marginTop || margin;
     const finalMarginBottom = marginBottom || margin;
@@ -70,10 +72,8 @@ export const AppBar = (props) => {
     };
     const boxShadow = shadow === true ? shadows[elevation] : (shadow || 'none');
 
-    // ========== DETERMINAR LEADING ==========
+    // ========== LEADING ==========
     let finalLeading = leading;
-    
-    // Si showBackButton está activado, crear botón de retroceso automático
     if (showBackButton && !finalLeading) {
         const backButton = Icon({
             name: 'arrow_back',
@@ -81,58 +81,45 @@ export const AppBar = (props) => {
             color: iconColor,
             cursor: 'pointer'
         });
-        
         backButton.onclick = () => {
-            if (onBackPress) {
-                onBackPress();
-            } else if (backButtonRoute) {
-                goTo(backButtonRoute);
-            } else {
-                goBack();
-            }
+            if (onBackPress) onBackPress();
+            else if (backButtonRoute) goTo(backButtonRoute);
+            else goBack();
         };
-        
         finalLeading = backButton;
     }
 
-    // ========== CONSTRUIR ESTILO DE FONDO ==========
+    // ========== FONDO ==========
     let backgroundStyle = {};
     if (gradient) {
-        // Los gradientes se aplican como imagen de fondo
         backgroundStyle = { backgroundImage: gradient };
     } else if (backgroundColor) {
-        // Colores sólidos se aplican como color de fondo
         backgroundStyle = { backgroundColor: backgroundColor };
     }
 
-    // ========== CREAR APPBAR ==========
-    const appBar = createWidget('header')({
+    // ========== APPBAR PRINCIPAL ==========
+    const appBar = WidgetFactory({
+        tag: 'header',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         width: `calc(100% - ${finalMarginLeft}px - ${finalMarginRight}px)`,
         minHeight: 56,
-        ...backgroundStyle,                     // ← Fondo (color o gradiente)
+        ...backgroundStyle,
         borderRadius: finalBorderRadius,
-
         marginTop: `${finalMarginTop}px`,
         marginBottom: `${finalMarginBottom}px`,
         marginLeft: `${finalMarginLeft}px`,
         marginRight: `${finalMarginRight}px`,
-
         paddingTop: `${finalPaddingTop}px`,
         paddingBottom: `${finalPaddingBottom}px`,
         paddingLeft: `${finalPaddingLeft}px`,
         paddingRight: `${finalPaddingRight}px`,
-
         boxShadow: boxShadow,
         flexShrink: 0,
-        
-        // Posición sticky
         position: sticky ? 'sticky' : 'relative',
         top: sticky ? 0 : 'auto',
         zIndex: sticky ? 100 : 'auto',
-        
         style: {
             transition: 'transform 0.3s ease, opacity 0.3s ease',
             ...rest.style
@@ -140,7 +127,7 @@ export const AppBar = (props) => {
         ...rest
     });
 
-    // ========== LEFT SECTION (transparente para mostrar el fondo) ==========
+    // ========== SECCIÓN IZQUIERDA ==========
     const leftSection = Container({
         display: 'flex',
         alignItems: 'center',
@@ -148,23 +135,24 @@ export const AppBar = (props) => {
         justifyContent: 'flex-start',
         minWidth: 48,
         flexShrink: 0,
-        child: finalLeading
+        child: finalLeading instanceof HTMLElement ? finalLeading : null
     });
+    appBar.appendChild(leftSection);
 
-    // ========== TITLE SECTION ==========
+    // ========== TÍTULO ==========
     let titleElement;
     if (typeof title === 'string') {
         titleElement = Text({
-            value: title,
+            text: title,
             size: titleSize,
-            fontWeight: titleWeight,
+            weight: titleWeight,
             color: titleColor,
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             letterSpacing: '0.15px'
         });
-    } else if (title) {
+    } else if (title instanceof HTMLElement) {
         titleElement = title;
     }
 
@@ -179,48 +167,46 @@ export const AppBar = (props) => {
         minWidth: 0,
         child: titleElement
     });
-
-    // ========== RIGHT SECTION ==========
-    const rightSection = Row({
-        alignItems: 'center',
-        justifyContent: 'flex-end',
-        gap: 4,
-        minWidth: 48,
-        flexShrink: 0,
-        style: { backgroundColor: 'transparent' },
-        children: actions
-    });
-
-    appBar.appendChild(leftSection);
     appBar.appendChild(centerSection);
-    appBar.appendChild(rightSection);
 
-    // ========== HIDE ON SCROLL (opcional) ==========
+    // ========== SECCIÓN DERECHA (solo si hay acciones válidas) ==========
+    if (validActions.length > 0) {
+        const rightSection = Row({
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            gap: 4,
+            minWidth: 48,
+            flexShrink: 0,
+            style: { backgroundColor: 'transparent' },
+            children: validActions
+        });
+        appBar.appendChild(rightSection);
+    } else {
+        // Contenedor vacío para mantener la alineación
+        const emptyRight = Container({
+            minWidth: 48,
+            flexShrink: 0,
+            style: { visibility: 'hidden' }
+        });
+        appBar.appendChild(emptyRight);
+    }
+
+    // ========== HIDE ON SCROLL ==========
     if (hideOnScroll) {
         let lastScrollY = 0;
-        
         const handleScroll = () => {
             const currentScrollY = window.scrollY;
-            
             if (currentScrollY > lastScrollY && currentScrollY > scrollThreshold) {
-                // Scrolling down - ocultar
                 appBar.style.transform = 'translateY(-100%)';
                 appBar.style.opacity = '0';
             } else if (currentScrollY < lastScrollY) {
-                // Scrolling up - mostrar
                 appBar.style.transform = 'translateY(0)';
                 appBar.style.opacity = '1';
             }
-            
             lastScrollY = currentScrollY;
         };
-        
         window.addEventListener('scroll', handleScroll);
-        
-        // Limpiar al destruir
-        appBar._cleanupScroll = () => {
-            window.removeEventListener('scroll', handleScroll);
-        };
+        appBar._cleanupScroll = () => window.removeEventListener('scroll', handleScroll);
     }
 
     // ========== MÉTODOS PÚBLICOS ==========
@@ -232,7 +218,6 @@ export const AppBar = (props) => {
     };
     
     appBar.setBackgroundColor = (color) => {
-        // Si se pasa un gradiente, aplicar como imagen; si no, como color sólido
         if (color && color.includes('gradient')) {
             appBar.style.backgroundImage = color;
             appBar.style.backgroundColor = '';
@@ -242,15 +227,10 @@ export const AppBar = (props) => {
         }
     };
     
-    appBar.show = () => {
-        appBar.style.display = 'flex';
-    };
+    appBar.show = () => { appBar.style.display = 'flex'; };
+    appBar.hide = () => { appBar.style.display = 'none'; };
     
-    appBar.hide = () => {
-        appBar.style.display = 'none';
-    };
-    
-    // ========== CLEANUP ==========
+    // Limpieza
     const originalCleanup = appBar._cleanup;
     appBar._cleanup = () => {
         if (originalCleanup) originalCleanup();

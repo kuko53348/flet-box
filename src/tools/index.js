@@ -27,3 +27,4 @@ export { transition } from './transition.js';
 export { useState, useWatchState } from './useState.js';
 export { uuid, shortId, numericId, timestampId } from './uuid.js';
 export { dict, emptyDict, fromJSON, fromEntries, Dict } from './dict.js';
+export { ref } from './ref.js';

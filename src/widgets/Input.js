@@ -1,6 +1,6 @@
-// widgets/Input.js
-import { createWidget } from '../widget-builder/index.js';
+// widgets/Input.js - Versión completa con colores del tema
 import { WidgetFactory } from '../widget-factory/index.js';
+// import { createWidget } from '../widget-builder/index.js';
 import { colors } from '../utils/themes.js';
 import { Icon } from './Icon.js';
 import { TextInputValidator } from '../utils/TextInputValidator.js';
@@ -11,17 +11,20 @@ export const Input = (props) => {
         placeholder = '',
         type = 'text',
         label,
+        error = false,
         disabled = false,
         readonly = false,
         size = 'medium',
-        variant = 'outlined',
+        variant = 'outlined', // 'outlined', 'filled', 'underlined'
         fullWidth = false,
         borderRadius = 24,
+        
         iconLeft,
         iconRight,
         iconColor = colors.textSecondary,
         iconSize = 20,
         onIconPress,
+        
         validation = 'none',
         maxLength,
         required = false,
@@ -29,6 +32,7 @@ export const Input = (props) => {
         onValidated,
         showValidationMessage = true,
         showValidationIcon = true,
+        
         onInput,
         onChange,
         onFocus,
@@ -39,6 +43,8 @@ export const Input = (props) => {
     let currentValue = value;
     let isValid = true;
     let validationMessage = '';
+    
+    // References
     let inputElement = null;
     let validationIcon = null;
     let errorMessageElement = null;
@@ -50,24 +56,6 @@ export const Input = (props) => {
         large: { padding: '14px 18px', fontSize: '16px', iconSize: 24 }
     };
     const sz = sizes[size] || sizes.medium;
-
-    const getInputMode = (t) => {
-        switch (t) {
-            case 'email': return 'email';
-            case 'number': return 'numeric';
-            case 'tel': return 'tel';
-            case 'url': return 'url';
-            case 'search': return 'search';
-            default: return 'text';
-        }
-    };
-
-    const getAutoComplete = (t) => {
-        if (t === 'email') return 'email';
-        if (t === 'tel') return 'tel';
-        if (t === 'url') return 'url';
-        return 'off';
-    };
 
     const validateValue = (val) => {
         let valid = true;
@@ -131,32 +119,45 @@ export const Input = (props) => {
         }
     };
 
-    const updateUI = () => {
+    const updateValidationUI = (valid) => {
         if (!inputWrapper) return;
-
-        let borderColor = colors.border;
-        if (!isValid && currentValue) borderColor = colors.danger;
-        else if (currentValue && isValid && validation !== 'none') borderColor = colors.success;
-
-        if (variant === 'outlined') {
-            inputWrapper.style.borderColor = borderColor;
-        } else if (variant === 'underlined') {
-            inputWrapper.style.borderBottomColor = borderColor;
+        
+        // Border color based on theme
+        let borderColorValue = colors.border;
+        if (error) {
+            borderColorValue = colors.danger;
+        } else if (!valid && currentValue) {
+            borderColorValue = colors.danger;
+        } else if (currentValue && valid && validation !== 'none') {
+            borderColorValue = colors.success;
         }
-
+        
+        if (variant === 'outlined') {
+            inputWrapper.style.borderColor = borderColorValue;
+        } else if (variant === 'underlined') {
+            inputWrapper.style.borderBottomColor = borderColorValue;
+        }
+        
+        // Validation icon
         if (showValidationIcon && validationIcon) {
             if (currentValue && validation !== 'none') {
                 validationIcon.textContent = isValid ? '✓' : '✗';
                 validationIcon.style.color = isValid ? colors.success : colors.danger;
-                validationIcon.style.display = 'inline-flex';
+                validationIcon.style.display = 'flex';
             } else {
                 validationIcon.style.display = 'none';
             }
         }
-
+        
+        // Error message
         if (errorMessageElement) {
-            if (validationMessage && showValidationMessage && !isValid) {
+            if (validationMessage && showValidationMessage && !isValid && !error) {
                 errorMessageElement.textContent = validationMessage;
+                errorMessageElement.style.color = colors.danger;
+                errorMessageElement.style.display = 'block';
+            } else if (error) {
+                errorMessageElement.textContent = error === true ? 'Invalid value' : error;
+                errorMessageElement.style.color = colors.danger;
                 errorMessageElement.style.display = 'block';
             } else {
                 errorMessageElement.style.display = 'none';
@@ -166,84 +167,98 @@ export const Input = (props) => {
 
     const handleInput = (val, event) => {
         let filtered = filterValue(val);
-        if (maxLength && filtered.length > maxLength) {
-            filtered = filtered.slice(0, maxLength);
-        }
-
+        if (maxLength) filtered = filtered.slice(0, maxLength);
+        
         currentValue = filtered;
         if (inputElement) inputElement.value = filtered;
-
+        
         const result = validateValue(filtered);
         isValid = result.valid;
         validationMessage = result.message;
-
-        updateUI();
-
+        
+        updateValidationUI(isValid);
+        
         if (onInput) onInput(filtered, event);
         if (onValidated) onValidated(isValid, validationMessage);
         if (onChange) onChange(filtered, event);
     };
 
-    // Construcción del DOM...
+    // Main container
     const container = WidgetFactory({
-        display: 'inline-flex',
-        flexDirection: 'column',
-        gap: '4px',
-        width: fullWidth ? '100%' : 'auto',
-        ...rest
+        tag: 'div',
+        style: {
+            display: 'inline-flex',
+            flexDirection: 'column',
+            gap: '4px',
+            width: fullWidth ? '100%' : 'auto',
+            ...rest.style
+        }
     });
 
+    // Label
     if (label) {
         const requiredMark = required ? ' *' : '';
         const labelEl = WidgetFactory({
             tag: 'label',
             textContent: label + requiredMark,
-            fontSize: '12px',
-            fontWeight: '500',
-            color: colors.textSecondary,
-            marginBottom: '2px'
+            style: {
+                fontSize: '12px',
+                fontWeight: '500',
+                color: error ? colors.danger : colors.textSecondary,
+                marginBottom: '2px'
+            }
         });
         container.appendChild(labelEl);
     }
 
+    // Input wrapper styles based on variant
     let wrapperStyles = {
         display: 'flex',
         alignItems: 'center',
         width: '100%',
-        transition: 'all 0.2s ease',
-        position: 'relative'
+        transition: 'all 0.2s ease'
     };
+    
     if (variant === 'filled') {
         wrapperStyles.backgroundColor = colors.gray100;
         wrapperStyles.borderRadius = typeof borderRadius === 'number' ? `${borderRadius}px` : borderRadius;
         wrapperStyles.border = 'none';
     } else if (variant === 'underlined') {
         wrapperStyles.backgroundColor = 'transparent';
-        wrapperStyles.borderBottom = `1px solid ${colors.border}`;
+        wrapperStyles.borderBottom = `1px solid ${error ? colors.danger : colors.border}`;
         wrapperStyles.borderRadius = '0';
     } else {
+        // outlined (default)
         wrapperStyles.backgroundColor = 'transparent';
         wrapperStyles.borderRadius = typeof borderRadius === 'number' ? `${borderRadius}px` : borderRadius;
-        wrapperStyles.border = `1px solid ${colors.border}`;
+        wrapperStyles.border = `1px solid ${error ? colors.danger : colors.border}`;
     }
-    inputWrapper = WidgetFactory({ style: wrapperStyles });
+    
+    inputWrapper = WidgetFactory({
+        tag: 'div',
+        style: wrapperStyles
+    });
 
+    // Left icon
     if (iconLeft) {
-        const iconEl = Icon({ name: iconLeft, size: iconSize || sz.iconSize, color: iconColor, marginLeft: '12px' });
+        const iconEl = Icon({
+            name: iconLeft,
+            size: iconSize || sz.iconSize,
+            color: iconColor,
+            marginLeft: '12px'
+        });
         if (onIconPress) iconEl.onclick = onIconPress;
         inputWrapper.appendChild(iconEl);
     }
 
-    const finalType = type === 'number' ? 'text' : type;
-    inputElement = createWidget('input')({
-        type: finalType,
-        inputmode: getInputMode(type),
-        autocomplete: getAutoComplete(type),
+    // Input element
+    inputElement = WidgetFactory({
+        tag: 'input',
+        type: type,
         value: currentValue,
         placeholder: placeholder,
         disabled: disabled,
         readOnly: readonly,
-        maxlength: maxLength,  // ← Para limitar caracteres
         style: {
             flex: 1,
             padding: sz.padding,
@@ -256,26 +271,39 @@ export const Input = (props) => {
             color: disabled ? colors.textDisabled : colors.text
         }
     });
-
+    
     inputElement.oninput = (e) => handleInput(e.target.value, e);
     inputElement.onfocus = (e) => {
         if (variant === 'outlined') {
             inputWrapper.style.borderColor = colors.primary;
             inputWrapper.style.borderWidth = '2px';
+        } else if (variant === 'underlined') {
+            inputWrapper.style.borderBottomColor = colors.primary;
+            inputWrapper.style.borderBottomWidth = '2px';
         }
         if (onFocus) onFocus(e);
     };
     inputElement.onblur = (e) => {
         if (variant === 'outlined') {
-            inputWrapper.style.borderColor = !isValid && currentValue ? colors.danger : colors.border;
+            inputWrapper.style.borderColor = error ? colors.danger : colors.border;
             inputWrapper.style.borderWidth = '1px';
+        } else if (variant === 'underlined') {
+            inputWrapper.style.borderBottomColor = error ? colors.danger : colors.border;
+            inputWrapper.style.borderBottomWidth = '1px';
         }
+        const result = validateValue(currentValue);
+        isValid = result.valid;
+        validationMessage = result.message;
+        updateValidationUI(isValid);
         if (onBlur) onBlur(e);
     };
+    
     inputWrapper.appendChild(inputElement);
 
+    // Validation icon
     if (showValidationIcon && validation !== 'none') {
-        validationIcon = createWidget('span')({
+        validationIcon = WidgetFactory({
+            tag: 'span',
             textContent: '',
             style: {
                 width: '24px',
@@ -289,15 +317,23 @@ export const Input = (props) => {
         inputWrapper.appendChild(validationIcon);
     }
 
+    // Right icon
     if (iconRight) {
-        const iconEl = Icon({ name: iconRight, size: iconSize || sz.iconSize, color: iconColor, style: { marginRight: '12px' } });
+        const iconEl = Icon({
+            name: iconRight,
+            size: iconSize || sz.iconSize,
+            color: iconColor,
+            style: { marginRight: '12px' }
+        });
         if (onIconPress) iconEl.onclick = onIconPress;
         inputWrapper.appendChild(iconEl);
     }
 
     container.appendChild(inputWrapper);
 
-    errorMessageElement = createWidget('span')({
+    // Error message
+    errorMessageElement = WidgetFactory({
+        tag: 'span',
         textContent: '',
         style: {
             fontSize: '11px',
@@ -308,14 +344,7 @@ export const Input = (props) => {
     });
     container.appendChild(errorMessageElement);
 
-    // Inicializar
-    if (currentValue) {
-        const result = validateValue(currentValue);
-        isValid = result.valid;
-        validationMessage = result.message;
-        updateUI();
-    }
-
+    // Public methods
     container.getValue = () => currentValue;
     container.setValue = (newValue) => {
         currentValue = newValue;
@@ -323,14 +352,12 @@ export const Input = (props) => {
         const result = validateValue(newValue);
         isValid = result.valid;
         validationMessage = result.message;
-        updateUI();
+        updateValidationUI(isValid);
     };
     container.isValid = () => validateValue(currentValue).valid;
     container.validate = () => {
         const result = validateValue(currentValue);
-        isValid = result.valid;
-        validationMessage = result.message;
-        updateUI();
+        updateValidationUI(result.valid);
         return result;
     };
     container.reset = () => container.setValue('');

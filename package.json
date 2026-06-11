@@ -26,7 +26,7 @@
     "no-dependencies",
     "zero-deps"
   ],
-  "author": "FletBox Team",
+  "author": "Flet-Box Team",
   "license": "MIT",
   "devDependencies": {
     "chokidar": "^4.0.3",

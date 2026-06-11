@@ -15,3 +15,10 @@ export { default as stackPosition } from './stackPosition.js';
 export { toREM, setBaseFontSize, toPX, getBaseFontSize } from './units.js';
 export { addNavigation } from './navigation.js';
 export { TextInputValidator } from './TextInputValidator.js';
+export { 
+    formatMediaTime, 
+    formatMediaTimeLong, 
+    getProgressPercent, 
+    percentToSeconds, 
+    formatMediaProgress 
+} from './mediaTime.js';

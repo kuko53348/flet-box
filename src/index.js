@@ -1,20 +1,18 @@
 // src/index.js - Main entry point
 
 // ========== CORE ==========
+// src/index.js
 export { 
-    runApp, 
-    createApp,
-    insertBy, 
-    prependBy, 
-    insertBefore, 
-    insertAfter, 
-    replaceBy,
-    mountAll
-} from './core/runApp.js';
+    App,
+    runApp, createApp, insertBy, prependBy, insertBefore, insertAfter, replaceBy, mountAll,
+    initHMR, getHMR,
+    installPWA, updatePWA, removePWA, isPWAInstalled ,
+} from './core/index.js';
 
+// ... resto de exportaciones (widgets, tools, etc.)
 export { createWidget } from './widget-builder/index.js';
 // src/index.js
-export { initHMR, getHMR } from './core/hmr-client.js';
+// export { initHMR, getHMR } from './core/hmr-client.js';
 // ========== TOOLS ==========
 export {
     mapList, repeat, range,
@@ -32,10 +30,12 @@ export {
     useState, useWatchState,
     memo, memoWithKey, clearMemo,
     uuid, shortId, numericId, timestampId,
-    dict, emptyDict, fromJSON, fromEntries
+    dict, emptyDict, fromJSON, fromEntries,
+    ref
 } from './tools/index.js';
 
 // ========== UTILS ==========
+// src/index.js (sección de UTILS)
 export {
     colors, setTheme, getTheme, toggleTheme, subscribeTheme,
     applySystemTheme, watchSystemTheme, getColor, palettes,
@@ -47,7 +47,13 @@ export {
     stackPosition,
     toREM, setBaseFontSize, toPX, getBaseFontSize,
     addNavigation,
-    TextInputValidator
+    TextInputValidator,
+    // Media time utilities
+    formatMediaTime,
+    formatMediaTimeLong,
+    getProgressPercent,
+    percentToSeconds,
+    formatMediaProgress
 } from './utils/index.js';
 
 // ========== WIDGETS ==========
@@ -59,7 +65,8 @@ export {
     Slider, SnackBar, Modal, BottomSheet, AlertDialog,
     FloatingActionButton, Stepper, Skeleton,
     CodeViewer, Inspector, Pagination, TreeView, Chart, QRCode,
-    DraggBox, DroppBox, DataTable, Carousel, Tooltip, 
+    DraggBox, DroppBox, DataTable, Carousel, Tooltip, InstallButton,
+    Video, Audio , CircularBar
 } from './widgets/index.js';
 // Markdown
 // ========== NAVIGATIONS ==========
@@ -69,7 +76,7 @@ export {
     initRouter, goTo, goBack, goForward, replace,
     getCurrentPath, getCurrentRoute, getCurrentRouteConfig,
     getRoute, isActive, subscribe, useParams, useQueryParams,
-    buildUrl, clearRouter
+    buildUrl, clearRouter,
 } from './navigations/index.js';
 
 // ========== SERVICES ==========
@@ -91,4 +98,4 @@ export {
 } from './services/index.js';
 
 // ========== ANIMATIONS ==========
-export { AnimatedBox, AnimatedText ,animate } from './animations/index.js';
+export { AnimatedBox, AnimatedText, MatrixRain ,animate } from './animations/index.js';

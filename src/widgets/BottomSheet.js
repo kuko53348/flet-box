@@ -1,10 +1,11 @@
-// widgets/BottomSheet.js
+// widgets/BottomSheet.js - Versión corregida y completa
 import { WidgetFactory } from '../widget-factory/index.js';
 import { colors } from '../utils/themes.js';
 import { Row } from './Row.js';
 import { Column } from './Column.js';
 import { Text } from './Text.js';
 import { Icon } from './Icon.js';
+import { Container } from './Container.js';
 
 export const BottomSheet = (props) => {
     const {
@@ -17,10 +18,38 @@ export const BottomSheet = (props) => {
         closeOnOverlayClick = true,
         closeOnDragDown = true,
         showCloseButton = true,
+        
+        // Colores
         backgroundColor = colors.surface,
+        overlayColor = 'rgba(0, 0, 0, 0.5)',
+        dragHandleColor = colors.border,
+        headerTextColor = colors.text,
+        headerBorderColor = colors.border,
+        actionBorderColor = colors.border,
+        
+        // Bordes y sombras
         borderRadius = 24,
+        shadow = '0 -4px 12px rgba(0,0,0,0.1)',
+        
+        // Espaciado
+        headerPadding = '0 16px 8px 16px',
+        contentPadding = '0 16px',
+        actionPadding = '12px 16px',
+        dragHandlePadding = '12px 0 8px 0',
+        dragHandleWidth = 40,
+        dragHandleHeight = 4,
+        
+        // Animación
+        animationDuration = 300,
+        
+        // Z-index
+        zIndex = 9999,
+        overlayZIndex = 9998,
+        
+        // Callbacks
         onOpen,
         onClose,
+        
         ...rest
     } = props;
 
@@ -30,18 +59,18 @@ export const BottomSheet = (props) => {
     let startY = 0;
     let currentY = 0;
 
-    // Overlay using WidgetFactory
+    // Overlay
     overlay = WidgetFactory({
         position: 'fixed',
         top: 0,
         left: 0,
         width: '100%',
         height: '100%',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        zIndex: 9998,
+        backgroundColor: overlayColor,
+        zIndex: overlayZIndex,
         opacity: 0,
         visibility: 'hidden',
-        transition: 'opacity 0.3s ease, visibility 0.3s ease',
+        transition: `opacity ${animationDuration}ms ease, visibility ${animationDuration}ms ease`,
         onclick: () => {
             if (closeOnOverlayClick) close();
         }
@@ -51,13 +80,13 @@ export const BottomSheet = (props) => {
     const dragHandle = showDragHandle ? WidgetFactory({
         display: 'flex',
         justifyContent: 'center',
-        padding: '12px 0 8px 0',
+        padding: dragHandlePadding,
         cursor: 'grab',
         child: WidgetFactory({
-            width: 40,
-            height: 4,
-            backgroundColor: colors.border,
-            borderRadius: 2
+            width: dragHandleWidth,
+            height: dragHandleHeight,
+            backgroundColor: dragHandleColor,
+            borderRadius: dragHandleHeight / 2
         })
     }) : null;
 
@@ -68,7 +97,7 @@ export const BottomSheet = (props) => {
             text: title,
             size: 18,
             weight: 'bold',
-            color: colors.text,
+            color: headerTextColor,
             style: { flex: 1 }
         }));
     }
@@ -87,34 +116,36 @@ export const BottomSheet = (props) => {
         alignItems: 'center',
         justifyContent: 'space-between',
         style: {
-            padding: '0 16px 8px 16px',
-            borderBottom: title ? `1px solid ${colors.border}` : 'none'
+            padding: headerPadding,
+            borderBottom: title ? `1px solid ${headerBorderColor}` : 'none'
         },
         children: headerChildren
     }) : null;
 
-    // Actions
+    // Actions footer
     const actionsElement = actions.length > 0 ? Row({
         alignItems: 'center',
         justifyContent: 'flex-end',
         gap: 8,
         style: {
-            padding: '12px 16px',
-            borderTop: `1px solid ${colors.border}`,
+            padding: actionPadding,
+            borderTop: `1px solid ${actionBorderColor}`,
             marginTop: 'auto'
         },
         children: actions
     }) : null;
 
-    // Content
-    const contentElement = WidgetFactory({
-        flex: 1,
-        padding: '0 16px',
-        overflow: 'auto',
+    // Content wrapper
+    const contentWrapper = Container({
+        style: {
+            flex: 1,
+            overflow: 'auto',
+            padding: contentPadding
+        },
         child: content
     });
 
-    // BottomSheet container using WidgetFactory
+    // BottomSheet container
     sheetContainer = WidgetFactory({
         position: 'fixed',
         bottom: 0,
@@ -122,28 +153,28 @@ export const BottomSheet = (props) => {
         right: 0,
         backgroundColor: backgroundColor,
         borderRadius: `${borderRadius}px ${borderRadius}px 0 0`,
-        boxShadow: '0 -4px 12px rgba(0,0,0,0.1)',
+        boxShadow: shadow,
         transform: 'translateY(100%)',
-        transition: 'transform 0.3s ease',
+        transition: `transform ${animationDuration}ms ease`,
         maxHeight: maxHeight,
         height: height === 'auto' ? 'auto' : height,
         display: 'flex',
         flexDirection: 'column',
-        zIndex: 9999,
+        zIndex: zIndex,
         overflow: 'hidden'
     });
 
     // Body
     const sheetBody = Column({
         style: { height: '100%' },
-        children: [dragHandle, header, contentElement, actionsElement].filter(Boolean)
+        children: [dragHandle, header, contentWrapper, actionsElement].filter(Boolean)
     });
 
     sheetContainer.appendChild(sheetBody);
     overlay.appendChild(sheetContainer);
     document.body.appendChild(overlay);
 
-    // Drag handlers (requires direct DOM manipulation)
+    // Drag handlers
     const onTouchStart = (e) => {
         startY = e.touches ? e.touches[0].clientY : e.clientY;
         currentY = startY;
@@ -156,15 +187,14 @@ export const BottomSheet = (props) => {
         const delta = moveY - startY;
         if (delta > 0) {
             currentY = moveY;
-            const transform = delta;
-            sheetContainer.style.transform = `translateY(${transform}px)`;
+            sheetContainer.style.transform = `translateY(${delta}px)`;
             const opacity = 1 - (delta / sheetContainer.offsetHeight);
             overlay.style.opacity = Math.max(0, Math.min(1, opacity));
         }
     };
 
     const onTouchEnd = () => {
-        sheetContainer.style.transition = 'transform 0.3s ease';
+        sheetContainer.style.transition = `transform ${animationDuration}ms ease`;
         const delta = currentY - startY;
         if (delta > 100) {
             close();
@@ -202,7 +232,7 @@ export const BottomSheet = (props) => {
         overlay.style.opacity = '0';
         setTimeout(() => {
             overlay.style.visibility = 'hidden';
-        }, 300);
+        }, animationDuration);
         if (onClose) onClose();
         document.removeEventListener('keydown', handleKeyDown);
         

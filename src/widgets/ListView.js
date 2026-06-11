@@ -1,5 +1,6 @@
 // src/widgets/ListView.js
-import { createWidget } from '../widget-builder/index.js';
+import { WidgetFactory } from '../widget-factory/index.js';
+// import { createWidget } from '../widget-builder/index.js';
 
 export const ListView = (props) => {
     const {
@@ -30,7 +31,8 @@ export const ListView = (props) => {
     }
 
     // Elemento base
-    const element = createWidget('div')({
+    const element = WidgetFactory({
+        tag: 'div',
         style: {
             width: typeof width === 'number' ? `${width}px` : width,
             height: typeof height === 'number' ? `${height}px` : height,

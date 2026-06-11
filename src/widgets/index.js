@@ -42,4 +42,8 @@ export { Skeleton } from './Skeleton.js';
 export { Chart } from './Chart.js';
 export { QRCode } from './QRCode.js';
 export { Slider } from './Slider.js';
+export { InstallButton } from './InstallButton.js';
+export { Video } from './Video.js';
+export { Audio } from './Audio.js';
+export { CircularBar } from './CircularBar.js';
 // export { Markdown } from './Markdown.js';

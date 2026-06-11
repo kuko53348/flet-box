@@ -5,13 +5,37 @@ export const indexHtml = () => `<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"> -->
     <link rel="stylesheet" href="/src/assets/fonts/icons.css">
-    <title>FletBox App</title>
+    
+    <!-- SEO BASICS -->
+    <title>FletBox - UI Framework</title>
+    <meta name="description" content="FletBox: UI framework with powerful animations, gradients, and declarative components. Fast, lightweight, and easy to use.">
+    <meta name="keywords" content="fletbox, framework, ui, javascript, animations, gradients">
+    <meta name="author" content="Your name">
+    
+    <!-- OPEN GRAPH (for social sharing) -->
+    <meta property="og:title" content="FletBox - UI Framework">
+    <meta property="og:description" content="UI framework with powerful animations and gradients">
+    <meta property="og:type" content="website">
+    
+    <!-- THEME COLOR (for PWA) -->
+    <meta name="theme-color" content="#1a1a2e">
+    
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
-        #root { width: 100%; height: 100vh; }
+        * { -webkit-text-size-adjust: 100%; }
+        body { margin: 0; padding: 0; font-family: system-ui, sans-serif}
     </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <!-- Registrar Service Worker -->
+    <!-- Registrar Service Worker -->
     <script type="importmap">
         {
             "imports": {
@@ -19,10 +43,18 @@ export const indexHtml = () => `<!DOCTYPE html>
             }
         }
     </script>
-</head>
-<body>
-    <div id="root"></div>
-    <script type="module" src="/src/app.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+          window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/service-worker.js')
+              .then(reg => console.log('✅ SW registrado y activo', reg))
+              .catch(err => console.error('❌ SW error', err));
+          });
+        }
+    </script>
+    
+    <script type="module" src="src/app.js"></script>
+
 </body>
 </html>`;
 
@@ -140,7 +172,99 @@ export default RootScreen;
 export const homeScreenJs = () => `// screens/HomeScreen.js
 import { Container, Column, Text, Button, Icon, colors, goTo } from 'flet-box';
 
+
 export const HomeScreen = () => {
+    return Container({
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 24,
+        backgroundColor: colors.background,
+        child: Column({
+            gap: 32,
+            alignItems: 'center',
+            children: [
+                // Icono de bienvenida
+                Container({
+                    width: 96,
+                    height: 96,
+                    borderRadius: 24,
+                    backgroundColor: colors.primary + '15',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    child: Icon({ name: 'rocket_launch', size: 56, color: colors.primary })
+                }),
+                
+                // Mensaje de bienvenida
+                Text({ 
+                    text: 'Welcome to FletBox', 
+                    size: 32, 
+                    weight: 'bold', 
+                    color: colors.text, 
+                    align: 'center' 
+                }),
+                
+                // Descripción
+                Text({ 
+                    text: 'Choose a section to explore:', 
+                    size: 16, 
+                    color: colors.textSecondary, 
+                    align: 'center' 
+                }),
+                
+                // Botones de navegación
+                Column({
+                    gap: 12,
+                    alignItems: 'stretch',
+                    style: { width: '100%', maxWidth: 280 },
+                    children: [
+                        // Botón Home (actual)
+                        Button({ 
+                            text: '🏠 Home', 
+                            iconRight: 'arrow_forward',
+                            bgColor: colors.primary, 
+                            color: '#ffffff',
+                            padding: '12px 20px',
+                            fullWidth: true,
+                            onPress: () => goTo('/home') 
+                        }),
+                        
+                        // Botón About
+                        Button({ 
+                            text: 'ℹ️ About', 
+                            iconRight: 'arrow_forward',
+                            variant: 'outlined',
+                            color: colors.info,
+                            padding: '12px 20px',
+                            fullWidth: true,
+                            onPress: () => goTo('/about') 
+                        }),
+                        
+                        // Botón Root (opcional)
+                        Button({ 
+                            text: '← Back to Root', 
+                            iconLeft: 'arrow_back',
+                            variant: 'text',
+                            color: colors.textSecondary,
+                            padding: '12px 20px',
+                            fullWidth: true,
+                            onPress: () => goTo('/') 
+                        })
+                    ]
+                })
+            ]
+        })
+    });
+};
+
+export default HomeScreen;
+`;
+
+export const aboutScreenJs = () => `// screens/AboutScreen.js
+import { Container, Column,Row, Text, Button, Icon, colors, goTo } from 'flet-box';
+
+
+export const AboutScreen = () => {
     return Container({
         flex: 1,
         justifyContent: 'center',
@@ -168,90 +292,47 @@ export const HomeScreen = () => {
                     align: 'center' 
                 }),
                 Text({ 
-                    text: 'A lightweight UI framework for building modern web apps with pure JavaScript.', 
+                    text: 'A simple and fast UI framework for building web apps with pure JavaScript.', 
                     size: 16, 
                     color: colors.textSecondary, 
                     align: 'center',
                     style: { maxWidth: 400 }
                 }),
-                Button({ 
-                    text: 'Get Started', 
-                    iconRight: 'arrow_forward',
-                    bgColor: colors.primary, 
-                    color: '#ffffff',
-                    padding: '12px 32px',
-                    size: 'large',
-                    onPress: () => goTo('/about') 
-                })
-            ]
-        })
-    });
-};
-
-export default HomeScreen;
-`;
-
-export const aboutScreenJs = () => `// screens/AboutScreen.js
-import { Container, Column, Text, Button, Icon, colors, goTo } from 'flet-box';
-
-export const AboutScreen = () => {
-    return Container({
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 20,
-        backgroundColor: colors.background,
-        child: Column({
-            gap: 28,
-            alignItems: 'center',
-            children: [
+                // What is FletBox?
                 Container({
-                    width: 80,
-                    height: 80,
-                    borderRadius: 20,
-                    backgroundColor: colors.info + '15',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    child: Icon({ name: 'info', size: 48, color: colors.info })
-                }),
-                Text({ 
-                    text: 'About FletBox', 
-                    size: 32, 
-                    weight: 'bold', 
-                    color: colors.info, 
-                    align: 'center' 
-                }),
-                Text({ 
-                    text: 'Zero dependencies · 40+ widgets · Built-in router', 
-                    size: 14, 
-                    color: colors.textSecondary, 
-                    align: 'center' 
-                }),
-                Column({
-                    gap: 12,
-                    alignItems: 'flex-start',
-                    children: [
-                        Container({ flexDirection: 'row', gap: 12, alignItems: 'center', children: [
-                            Icon({ name: 'check_circle', size: 18, color: colors.success }),
-                            Text({ text: 'Zero external dependencies', size: 14 })
-                        ] }),
-                        Container({ flexDirection: 'row', gap: 12, alignItems: 'center', children: [
-                            Icon({ name: 'check_circle', size: 18, color: colors.success }),
-                            Text({ text: '40+ ready-to-use widgets', size: 14 })
-                        ] }),
-                        Container({ flexDirection: 'row', gap: 12, alignItems: 'center', children: [
-                            Icon({ name: 'check_circle', size: 18, color: colors.success }),
-                            Text({ text: 'Built-in router', size: 14 })
-                        ] }),
-                        Container({ flexDirection: 'row', gap: 12, alignItems: 'center', children: [
-                            Icon({ name: 'check_circle', size: 18, color: colors.success }),
-                            Text({ text: 'Dark/Light theme system', size: 14 })
-                        ] }),
-                        Container({ flexDirection: 'row', gap: 12, alignItems: 'center', children: [
-                            Icon({ name: 'check_circle', size: 18, color: colors.success }),
-                            Text({ text: 'Hot reload support', size: 14 })
-                        ] })
-                    ]
+                    marginTop: 16,
+                    padding: 20,
+                    borderRadius: 16,
+                    backgroundColor: colors.surface,
+                    style: { width: '100%', maxWidth: 400 },
+                    child: Column({
+                        gap: 12,
+                        children: [
+                            Text({ text: '✨ What is FletBox?', size: 18, weight: 'bold', color: colors.primary }),
+                            Text({ text: 'FletBox helps you create web apps easily. No complex tools. Just write JavaScript.', size: 14, color: colors.textSecondary }),
+                            Container({ height: 1, backgroundColor: colors.border, marginVertical: 8 }),
+                            Row({ gap: 12, alignItems: 'center', children: [
+                                Icon({ name: 'check_circle', size: 20, color: colors.success }),
+                                Text({ text: 'Zero dependencies - lightweight', size: 14, color: colors.text })
+                            ] }),
+                            Row({ gap: 12, alignItems: 'center', children: [
+                                Icon({ name: 'check_circle', size: 20, color: colors.success }),
+                                Text({ text: '40+ ready-to-use widgets', size: 14, color: colors.text })
+                            ] }),
+                            Row({ gap: 12, alignItems: 'center', children: [
+                                Icon({ name: 'check_circle', size: 20, color: colors.success }),
+                                Text({ text: 'Built-in navigation (router)', size: 14, color: colors.text })
+                            ] }),
+                            Row({ gap: 12, alignItems: 'center', children: [
+                                Icon({ name: 'check_circle', size: 20, color: colors.success }),
+                                Text({ text: 'Dark / Light theme', size: 14, color: colors.text })
+                            ] }),
+                            Row({ gap: 12, alignItems: 'center', children: [
+                                Icon({ name: 'check_circle', size: 20, color: colors.success }),
+                                Text({ text: 'Hot reload for fast development', size: 14, color: colors.text })
+                            ] })
+                        ]
+                    })
                 }),
                 Button({ 
                     text: 'Back to Root', 
@@ -460,31 +541,58 @@ fi
 `;
 
 export const serviceWorkerJs = () => `// service-worker.js - PWA offline support
-const CACHE_NAME = 'fletbox-app-v1';
-const urlsToCache = ['/', '/index.html', '/src/app.js'];
+const CACHE_NAME = 'fletbox-v1';
 
 self.addEventListener('install', event => {
-    event.waitUntil(
-        caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
-    );
-});
-
-self.addEventListener('fetch', event => {
-    event.respondWith(
-        caches.match(event.request).then(response => response || fetch(event.request))
-    );
+  event.waitUntil(
+    (async () => {
+      try {
+        const cache = await caches.open(CACHE_NAME);
+        const urls = ['/', '/index.html'];
+        
+        for (const url of urls) {
+          try {
+            const response = await fetch(url);
+            if (response.ok) {
+              await cache.put(url, response);
+            } else {
+              console.log('🔧 [INSTALL] ⚠️ No cached: ' + url + ' - status: ' + response.status);
+            }
+          } catch (err) {
+            console.log('🔧 [INSTALL] ❌ Error cached ' + url + ':', err.message);
+          }
+        }
+        
+        self.skipWaiting();
+      } catch (error) {
+        console.error('🔧 [INSTALL] ❌ Error fatal:', error);
+      }
+    })()
+  );
 });
 
 self.addEventListener('activate', event => {
-    event.waitUntil(
-        caches.keys().then(cacheNames => {
-            return Promise.all(
-                cacheNames.map(cache => {
-                    if (cache !== CACHE_NAME) return caches.delete(cache);
-                })
-            );
-        })
-    );
+  console.log('🔧 [ACTIVATE] Evento activate iniciado');
+  
+  event.waitUntil(
+    (async () => {
+      try {
+        const cacheNames = await caches.keys();
+        for (const cacheName of cacheNames) {
+          if (cacheName !== CACHE_NAME) {
+            await caches.delete(cacheName);
+          }
+        }
+        await self.clients.claim();
+      } catch (error) {
+        console.error('🔧 [ACTIVATE] ❌ Error:', error);
+      }
+    })()
+  );
+});
+
+self.addEventListener('fetch', event => {
+  event.respondWith(fetch(event.request));
 });
 `;
 
@@ -501,6 +609,59 @@ export const packageJson = (name) => `{
     "flet-box": "^1.0.0"
   }
 }`;
+
+export const manifest = () => `{
+  "name": "FletBox - UI Framework",
+  "short_name": "FletBox",
+  "description": "UI framework with powerful animations and gradients",
+  "start_url": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay"],
+  "theme_color": "#1a1a2e",
+  "background_color": "#1a1a2e",
+  "orientation": "any",
+  "handle_links": "preferred",
+  "icons": [
+    {
+      "src": "/src/assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/src/assets/icon-192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/src/assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/src/assets/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "handle_links": "preferred",
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
+  "protocol_handlers": [
+    {
+      "protocol": "web+fletbox",
+      "url": "/?handler=%s"
+    }
+  ],
+  "edge_side_panel": {
+    "preferred_width": 400
+  }
+}
+`;
 
 export const gitignore = () => `node_modules/
 dist/

@@ -8,7 +8,7 @@ export const Badge = (props) => {
     const {
         value,
         child,
-        bgColor,
+        bgColor = colors.secondary,
         color = colors.text,
         size = 20,
         position = 'top-right',

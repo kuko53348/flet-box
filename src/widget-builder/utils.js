@@ -15,7 +15,7 @@ export const remProps = [
     'padding', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft',
     'margin', 'marginTop', 'marginRight', 'marginBottom', 'marginLeft',
     'top', 'right', 'bottom', 'left', 'inset',
-    'fontSize', 'letterSpacing', 'wordSpacing', 'lineHeight', 'textIndent',
+    'size','fontSize', 'letterSpacing', 'wordSpacing', 'lineHeight', 'textIndent',
     'borderRadius', 'borderTopLeftRadius', 'borderTopRightRadius',
     'borderBottomLeftRadius', 'borderBottomRightRadius',
     'borderWidth', 'gap', 'rowGap', 'columnGap',

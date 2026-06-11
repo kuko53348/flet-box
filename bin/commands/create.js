@@ -51,6 +51,7 @@ export const createProject = async (projectName) => {
     createFile(path.join(projectPath, 'src/screens/AboutScreen.js'), templates.aboutScreenJs());
     createFile(path.join(projectPath, 'src/components/DrawerMenu.js'), templates.drawerMenuJs());
 
+    createFile(path.join(projectPath, 'manifest.json'), templates.manifest());
     // createFile(path.join(projectPath, 'createBundle.sh'), templates.createBundleSh());
     createFile(path.join(projectPath, 'service-worker.js'), templates.serviceWorkerJs());
     createFile(path.join(projectPath, 'package.json'), templates.packageJson(projectName));
@@ -59,7 +60,7 @@ export const createProject = async (projectName) => {
     
     // Make scripts executable
     makeExecutable(path.join(projectPath, 'run.sh'));
-    makeExecutable(path.join(projectPath, 'createBundle.sh'));
+    // makeExecutable(path.join(projectPath, 'createBundle.sh'));
     
     // Copy fonts and assets from package
     const sourcePackageDir = path.join(__dirname, '..', '..');
@@ -83,13 +84,37 @@ export const createProject = async (projectName) => {
     // Copy additional assets
     const sourceAssetsDir = path.join(sourcePackageDir, 'src/assets');
     const destAssetsDir = path.join(projectPath, 'src/assets');
-    
+
     if (fs.existsSync(sourceAssetsDir)) {
+        // logo
         const logo = path.join(sourceAssetsDir, 'logo.png');
         if (fs.existsSync(logo)) {
             copyFile(logo, path.join(destAssetsDir, 'logo.png'));
         }
+
+        // icon 192
+        const iconSmall = path.join(sourceAssetsDir, 'icon-192.png');
+        const iconSmallMaskared = path.join(sourceAssetsDir, 'icon-192-maskable.png');
+
+        if (fs.existsSync(iconSmall)) {
+            copyFile(iconSmall, path.join(destAssetsDir, 'icon-192.png')); // ✅ copia el icono correcto
+        }
+        if (fs.existsSync(iconSmallMaskared)) {
+            copyFile(iconSmallMaskared, path.join(destAssetsDir, 'icon-192-maskable.png'));
+        }
+
+        // icon 512
+        const iconBig = path.join(sourceAssetsDir, 'icon-512.png');
+        const iconBigMaskared = path.join(sourceAssetsDir, 'icon-512-maskable.png');
+
+        if (fs.existsSync(iconBig)) {
+          copyFile(iconBig, path.join(destAssetsDir, 'icon-512.png'));
+        }
+        if (fs.existsSync(iconBigMaskared)) {
+            copyFile(iconBigMaskared, path.join(destAssetsDir, 'icon-512-maskable.png'));
+        }
     }
+
     
     console.log(`\n${c('green', '✅')} Project "${projectName}" created successfully!\n`);
     console.log(`  ${c('cyan', 'cd')} ${projectName}`);

@@ -1,6 +1,7 @@
 // navigations/Scaffold.js
 // navigations/Scaffold.js
-import { createWidget } from '../widget-builder/index.js';
+import { WidgetFactory } from '../widget-factory/index.js';
+// import { createWidget } from '../widget-builder/index.js';
 import { colors } from '../utils/themes.js';
 import { initRouter, getCurrentRoute, subscribe } from './Router.js';
 
@@ -42,7 +43,8 @@ export const Scaffold = (props) => {
         return item;
     };
 
-    const container = createWidget('div')({
+    const container = WidgetFactory({
+        tag: 'div',
         style: {
             display: 'flex',
             flexDirection: 'column',

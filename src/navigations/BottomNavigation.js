@@ -1,5 +1,6 @@
 // navigations/BottomNavigation.js - VERSIÓN CORREGIDA
-import { createWidget } from '../widget-builder/index.js';
+import { WidgetFactory } from '../widget-factory/index.js';
+// import { createWidget } from '../widget-builder/index.js';
 import { Container } from '../widgets/Container.js';
 import { Text } from '../widgets/Text.js';
 import { Icon } from '../widgets/Icon.js';
@@ -52,7 +53,8 @@ export const BottomNavigation = (props) => {
     };
     const boxShadow = shadow === true ? shadows[elevation] : (shadow || 'none');
 
-    const container = createWidget('nav')({
+    const container = WidgetFactory({
+        tag: 'nav',
         display: 'flex',
         width: `calc(100% - ${finalMarginLeft}px - ${finalMarginRight}px)`,
         height: height,

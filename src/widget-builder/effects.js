@@ -35,7 +35,7 @@ export const applyEffects = (widget) => {
         // Hover - solo si NO está presionado
         widget.addEventListener('mouseenter', () => {
             if (isPressed) return;
-            widget.style.transform = 'translateY(-4px)';
+            widget.style.transform = 'translateY(-1.2px)';
             if (originalShadow && originalShadow !== 'none') {
                 widget.style.boxShadow = originalShadow.replace(/0 \d+px \d+px/, '0 8px 16px');
             }

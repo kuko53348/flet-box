@@ -18,6 +18,8 @@ export const FloatingActionButton = (props) => {
         backgroundColor = colors.primary,
         foregroundColor = '#ffffff',
         elevation = 6,
+        borderRadius = 48,
+        padding= 12,
         mini = false,
         extended = false,
         disabled = false,
@@ -29,6 +31,8 @@ export const FloatingActionButton = (props) => {
 
     const children = [
         Icon({
+            padding,
+            borderRadius,
             name: icon,
             size: iconSize,
             color: foregroundColor

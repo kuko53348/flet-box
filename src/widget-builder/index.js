@@ -1,7 +1,7 @@
 // src/widget-builder/index.js
 export { createWidget } from './createWidget.js';
 export { assignProps } from './assignProps.js';
-export { translateProps, createTranslator } from './translateProps.js';
+export { translateProps } from './translateProps.js';
 export { makeParentable } from './parentable.js';
 export { addChildren } from './children.js';
 export { applyEffects } from './effects.js';

@@ -8,6 +8,7 @@ export const Container = (props) => {
     
     
     return WidgetFactory({
+        tag: 'div',
         bgColor: colors.surface,
         display: 'flex',
         flexDirection: 'column',

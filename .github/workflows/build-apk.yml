@@ -1,0 +1,51 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:  # Permite ejecutar manualmente
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # 1. Clonar el repositorio
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      # 2. Instalar Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      
+      # 3. Instalar Cordova
+      - name: Install Cordova
+        run: npm install -g cordova
+      
+      # 4. Instalar Java (necesario para Android)
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      
+      # 5. Configurar Android SDK
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v2
+      
+      # 6. Añadir plataforma Android
+      - name: Add Android platform
+        run: cordova platform add android
+      
+      # 7. Construir APK
+      - name: Build APK
+        run: cordova build android --release
+      
+      # 8. Subir el APK como artefacto
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-release
+          path: platforms/android/app/build/outputs/apk/release/

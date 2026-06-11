@@ -1,12 +1,18 @@
 // core/runApp.js
-import { initRouter } from '../navigations/Router.js';
+import { stopWebRefresh } from '../utils/stopWebRefresh.js';
+import { initRouter } from '../navigations/Router.js';  // ← IMPORTANTE: añadir esta línea
 import { applySystemTheme, watchSystemTheme, colors, subscribeTheme } from '../utils/themes.js';
 import { Container } from '../widgets/Container.js';
 import { setGlobalRender } from '../tools/useState.js';
 
-export const runApp = (App, rootId = 'root', routes = null) => {
+export const runApp = (App, rootId = 'root', preventRefresh = true, routes = null) => {
     const root = document.getElementById(rootId);
     if (!root) return;
+
+    // Si preventRefresh es true (por defecto), deshabilitamos los refrescos
+    // if (preventRefresh) {
+    //     stopWebRefresh();
+    // }
 
     let currentMainContainer = null;
     let currentUnsubscribe = null;
