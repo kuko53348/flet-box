@@ -1,7 +1,5 @@
-// navigations/Scaffold.js
-// navigations/Scaffold.js
+// navigations/Scaffold.js - Fixed (no cierra el drawer automáticamente)
 import { WidgetFactory } from '../widget-factory/index.js';
-// import { createWidget } from '../widget-builder/index.js';
 import { colors } from '../utils/themes.js';
 import { initRouter, getCurrentRoute, subscribe } from './Router.js';
 
@@ -12,16 +10,25 @@ export const Scaffold = (props) => {
         bottomBar: originalBottomBar,
         fab: originalFab,
         drawer,
-        routes,                    // ← Prop para el router
+        leftNavBar,
+        leftNavBarWidth = 260,
+        rightNavBar,
+        rightNavBarWidth = 260,
+        navSideBar,               // legacy support
+        navSideBarWidth = 260,
+        navSideBarPosition = 'left',
+        routes,
         backgroundColor = colors.background,
+        closeDrawerOnNavigate = false,  // NUEVA: false por defecto (no cerrar al navegar)
         ...rest
     } = props;
 
     let routesConfig = null;
     let isRouterMode = false;
     let unsubscribe = null;
+    let drawerInstance = null;    // guardamos la instancia del drawer
 
-    // 🔥 DETECTAR MODO ROUTER (prioridad: routes > body)
+    // Router detection
     if (routes && typeof routes === 'object' && Object.keys(routes).length > 0) {
         routesConfig = routes;
         isRouterMode = true;
@@ -30,10 +37,20 @@ export const Scaffold = (props) => {
         isRouterMode = true;
     }
 
-    // 🔥 INICIALIZAR ROUTER con la URL actual del navegador
     if (isRouterMode && routesConfig) {
         const currentUrl = typeof window !== 'undefined' ? window.location.pathname : '/';
         initRouter(routesConfig, currentUrl);
+    }
+
+    // Normalize legacy navSideBar
+    let finalLeftNavBar = leftNavBar;
+    let finalRightNavBar = rightNavBar;
+    if (navSideBar && !leftNavBar && !rightNavBar) {
+        if (navSideBarPosition === 'right') {
+            finalRightNavBar = navSideBar;
+        } else {
+            finalLeftNavBar = navSideBar;
+        }
     }
 
     const toElement = (item) => {
@@ -59,9 +76,12 @@ export const Scaffold = (props) => {
     });
 
     let appBarContainer = null;
-    let bodyContainer = null;
     let bottomBarContainer = null;
     let fabContainer = null;
+    let leftNavBarContainer = null;
+    let rightNavBarContainer = null;
+    let mainContentContainer = null;
+
     let currentAppBar = null;
     let currentBottomBar = null;
     let currentFab = null;
@@ -77,118 +97,129 @@ export const Scaffold = (props) => {
         return widget;
     };
 
-    const updateAppBar = (newAppBarConfig) => {
+    // Update functions
+    const updateAppBar = (cfg) => {
         if (!appBarContainer) return;
         while (appBarContainer.firstChild) appBarContainer.removeChild(appBarContainer.firstChild);
-        
-        if (newAppBarConfig === false) {
+        if (cfg === false) {
             appBarContainer.style.display = 'none';
             return;
         }
         appBarContainer.style.display = 'block';
-        
-        let widgetToShow = null;
-        if (newAppBarConfig === true || newAppBarConfig === undefined) {
-            widgetToShow = toElement(originalAppBar);
-        } else {
-            widgetToShow = toElement(newAppBarConfig);
-        }
-        
-        if (widgetToShow) {
-            appBarContainer.appendChild(widgetToShow);
-            currentAppBar = widgetToShow;
-            if (drawer && container._drawer) {
-                const menuIcon = widgetToShow.querySelector('.material-icons');
+        const widget = (cfg === true || cfg === undefined) ? toElement(originalAppBar) : toElement(cfg);
+        if (widget) {
+            appBarContainer.appendChild(widget);
+            currentAppBar = widget;
+            if (drawer && drawerInstance) {
+                const menuIcon = widget.querySelector('.material-icons');
                 if (menuIcon && menuIcon.textContent === 'menu') {
                     const oldClick = menuIcon.onclick;
                     menuIcon.onclick = (e) => {
+                        e.stopPropagation();   // evita propagación que pueda cerrar el drawer
                         if (oldClick) oldClick(e);
-                        if (container._drawer.open) container._drawer.open();
-                        else if (container._drawer.toggle) container._drawer.toggle();
+                        if (drawerInstance.open && typeof drawerInstance.open === 'function') {
+                            drawerInstance.open();
+                        } else if (drawerInstance.toggle) {
+                            drawerInstance.toggle();
+                        }
                     };
                 }
             }
         }
     };
 
-    const updateBottomBar = (newBottomBarConfig) => {
+    const updateBottomBar = (cfg) => {
         if (!bottomBarContainer) return;
         while (bottomBarContainer.firstChild) bottomBarContainer.removeChild(bottomBarContainer.firstChild);
-        
-        if (newBottomBarConfig === false) {
+        if (cfg === false) {
             bottomBarContainer.style.display = 'none';
             return;
         }
         bottomBarContainer.style.display = 'block';
-        
-        let widgetToShow = null;
-        if (newBottomBarConfig === true || newBottomBarConfig === undefined) {
-            widgetToShow = toElement(originalBottomBar);
-        } else {
-            widgetToShow = toElement(newBottomBarConfig);
-        }
-        
-        if (widgetToShow) {
-            bottomBarContainer.appendChild(widgetToShow);
-            currentBottomBar = widgetToShow;
-        }
+        const widget = (cfg === true || cfg === undefined) ? toElement(originalBottomBar) : toElement(cfg);
+        if (widget) bottomBarContainer.appendChild(widget);
     };
 
-    const updateFab = (newFabConfig) => {
+    const updateFab = (cfg) => {
         if (!fabContainer) return;
         while (fabContainer.firstChild) fabContainer.removeChild(fabContainer.firstChild);
-        
-        if (newFabConfig === false) {
+        if (cfg === false) {
             fabContainer.style.display = 'none';
             return;
         }
         fabContainer.style.display = 'block';
-        
-        let widgetToShow = null;
-        if (newFabConfig === true || newFabConfig === undefined) {
-            widgetToShow = toElement(originalFab);
-        } else {
-            widgetToShow = toElement(newFabConfig);
+        const widget = (cfg === true || cfg === undefined) ? toElement(originalFab) : toElement(cfg);
+        if (widget) fabContainer.appendChild(widget);
+    };
+
+    const updateLeftBar = (cfg) => {
+        if (!leftNavBarContainer) return;
+        while (leftNavBarContainer.firstChild) leftNavBarContainer.removeChild(leftNavBarContainer.firstChild);
+        if (cfg === false) {
+            leftNavBarContainer.style.display = 'none';
+            if (mainContentContainer) mainContentContainer.style.width = '';
+            return;
         }
-        
-        if (widgetToShow) {
-            fabContainer.appendChild(widgetToShow);
-            currentFab = widgetToShow;
+        leftNavBarContainer.style.display = 'block';
+        const widget = (cfg === true || cfg === undefined) ? toElement(finalLeftNavBar) : toElement(cfg);
+        if (widget) {
+            leftNavBarContainer.appendChild(widget);
+            if (mainContentContainer) mainContentContainer.style.width = `calc(100% - ${leftNavBarWidth}px)`;
         }
     };
 
-    // 🔥 ACTUALIZAR BODY (CORAZÓN DEL ROUTER)
+    const updateRightBar = (cfg) => {
+        if (!rightNavBarContainer) return;
+        while (rightNavBarContainer.firstChild) rightNavBarContainer.removeChild(rightNavBarContainer.firstChild);
+        if (cfg === false) {
+            rightNavBarContainer.style.display = 'none';
+            return;
+        }
+        rightNavBarContainer.style.display = 'block';
+        const widget = (cfg === true || cfg === undefined) ? toElement(finalRightNavBar) : toElement(cfg);
+        if (widget) rightNavBarContainer.appendChild(widget);
+    };
+
     const updateBody = () => {
-        if (!bodyContainer) return;
-        while (bodyContainer.firstChild) bodyContainer.removeChild(bodyContainer.firstChild);
+        if (!mainContentContainer) return;
+        while (mainContentContainer.firstChild) mainContentContainer.removeChild(mainContentContainer.firstChild);
 
         if (isRouterMode) {
             const routeConfig = getCurrentRoute();
             let route = routeConfig;
-            let appBarConfig = true;
-            let bottomBarConfig = true;
-            let fabConfig = true;
+            let appBarCfg = true;
+            let bottomBarCfg = true;
+            let fabCfg = true;
+            let leftBarCfg = true;
+            let rightBarCfg = true;
 
             if (routeConfig && typeof routeConfig === 'object' && !(routeConfig instanceof HTMLElement)) {
                 route = routeConfig.body || routeConfig;
-                appBarConfig = routeConfig.appBar !== undefined ? routeConfig.appBar : true;
-                bottomBarConfig = routeConfig.bottomBar !== undefined ? routeConfig.bottomBar : true;
-                fabConfig = routeConfig.fab !== undefined ? routeConfig.fab : true;
+                appBarCfg = routeConfig.appBar !== undefined ? routeConfig.appBar : true;
+                bottomBarCfg = routeConfig.bottomBar !== undefined ? routeConfig.bottomBar : true;
+                fabCfg = routeConfig.fab !== undefined ? routeConfig.fab : true;
+                leftBarCfg = routeConfig.leftNavBar !== undefined ? routeConfig.leftNavBar : true;
+                rightBarCfg = routeConfig.rightNavBar !== undefined ? routeConfig.rightNavBar : true;
             }
 
             const bodyWidget = makeFullSize(toElement(route));
-            if (bodyWidget) bodyContainer.appendChild(bodyWidget);
-            
-            updateAppBar(appBarConfig);
-            updateBottomBar(bottomBarConfig);
-            updateFab(fabConfig);
+            if (bodyWidget) mainContentContainer.appendChild(bodyWidget);
+            updateAppBar(appBarCfg);
+            updateBottomBar(bottomBarCfg);
+            updateFab(fabCfg);
+            updateLeftBar(leftBarCfg);
+            updateRightBar(rightBarCfg);
+
+            // Cerrar el drawer al navegar solo si la opción está activada
+            if (closeDrawerOnNavigate && drawerInstance && drawerInstance.close) {
+                drawerInstance.close();
+            }
         } else if (body) {
             const bodyWidget = makeFullSize(toElement(body));
-            if (bodyWidget) bodyContainer.appendChild(bodyWidget);
+            if (bodyWidget) mainContentContainer.appendChild(bodyWidget);
         }
     };
 
-    // 🔥 CONSTRUIR ESTRUCTURA
     const buildStructure = () => {
         while (container.firstChild) container.removeChild(container.firstChild);
 
@@ -196,13 +227,41 @@ export const Scaffold = (props) => {
         appBarContainer.style.flexShrink = '0';
         container.appendChild(appBarContainer);
 
-        bodyContainer = document.createElement('div');
-        bodyContainer.style.flex = '1 1 auto';
-        bodyContainer.style.minHeight = '0';
-        bodyContainer.style.display = 'flex';
-        bodyContainer.style.flexDirection = 'column';
-        bodyContainer.style.overflow = 'auto';
-        container.appendChild(bodyContainer);
+        const mainArea = document.createElement('div');
+        mainArea.style.display = 'flex';
+        mainArea.style.flex = '1';
+        mainArea.style.flexDirection = 'row';
+        mainArea.style.overflow = 'hidden';
+        mainArea.style.minHeight = '0';
+        container.appendChild(mainArea);
+
+        if (finalLeftNavBar) {
+            leftNavBarContainer = document.createElement('div');
+            leftNavBarContainer.style.width = `${leftNavBarWidth}px`;
+            leftNavBarContainer.style.flexShrink = '0';
+            leftNavBarContainer.style.overflow = 'auto';
+            leftNavBarContainer.style.height = '100%';
+            leftNavBarContainer.style.display = 'none';
+            mainArea.appendChild(leftNavBarContainer);
+        }
+
+        mainContentContainer = document.createElement('div');
+        mainContentContainer.style.flex = '1';
+        mainContentContainer.style.display = 'flex';
+        mainContentContainer.style.flexDirection = 'column';
+        mainContentContainer.style.overflow = 'auto';
+        mainContentContainer.style.minHeight = '0';
+        mainArea.appendChild(mainContentContainer);
+
+        if (finalRightNavBar) {
+            rightNavBarContainer = document.createElement('div');
+            rightNavBarContainer.style.width = `${rightNavBarWidth}px`;
+            rightNavBarContainer.style.flexShrink = '0';
+            rightNavBarContainer.style.overflow = 'auto';
+            rightNavBarContainer.style.height = '100%';
+            rightNavBarContainer.style.display = 'none';
+            mainArea.appendChild(rightNavBarContainer);
+        }
 
         bottomBarContainer = document.createElement('div');
         bottomBarContainer.style.flexShrink = '0';
@@ -216,7 +275,7 @@ export const Scaffold = (props) => {
         container.appendChild(fabContainer);
 
         if (drawer) {
-            const drawerInstance = toElement(drawer);
+            drawerInstance = toElement(drawer);
             if (drawerInstance) {
                 container._drawer = drawerInstance;
                 container.openDrawer = () => drawerInstance.open?.() ?? drawerInstance.toggle?.();
@@ -224,10 +283,11 @@ export const Scaffold = (props) => {
             }
         }
 
+        if (finalLeftNavBar) updateLeftBar(true);
+        if (finalRightNavBar) updateRightBar(true);
         updateBody();
     };
 
-    // 🔥 SUSCRIBIRSE A CAMBIOS DE RUTA
     if (isRouterMode) {
         unsubscribe = subscribe(() => {
             updateBody();
@@ -236,13 +296,15 @@ export const Scaffold = (props) => {
 
     buildStructure();
 
-    // 🔥 LIMPIEZA
     container._cleanup = () => {
         if (unsubscribe) unsubscribe();
-        if (container._drawer?.parentNode) {
-            container._drawer.parentNode.removeChild(container._drawer);
-        }
+        if (container._drawer?.parentNode) container._drawer.parentNode.removeChild(container._drawer);
     };
+
+    container.updateLeftNavBar = updateLeftBar;
+    container.updateRightNavBar = updateRightBar;
+    container.setLeftNavBarWidth = (w) => { if (leftNavBarContainer) leftNavBarContainer.style.width = typeof w === 'number' ? `${w}px` : w; };
+    container.setRightNavBarWidth = (w) => { if (rightNavBarContainer) rightNavBarContainer.style.width = typeof w === 'number' ? `${w}px` : w; };
 
     return container;
 };

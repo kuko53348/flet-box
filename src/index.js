@@ -71,7 +71,7 @@ export {
 // Markdown
 // ========== NAVIGATIONS ==========
 export {
-    Scaffold, AppBar, Drawer, BottomNavigation, Tabs, DrawerItem,
+    Scaffold, AdaptiveScaffold, AppBar, Drawer, BottomNavigation, Tabs, DrawerItem, CollapsibleSideBar,
     openDrawer, closeDrawer, toggleDrawer, destroyDrawer,
     initRouter, goTo, goBack, goForward, replace,
     getCurrentPath, getCurrentRoute, getCurrentRouteConfig,

@@ -1,11 +1,21 @@
-// src/navigations/DrawerItem.js
+// src/navigations/DrawerItem.js - Selección dinámica con router
 import { Container } from '../widgets/Container.js';
 import { Row } from '../widgets/Row.js';
 import { Text } from '../widgets/Text.js';
 import { Icon } from '../widgets/Icon.js';
 import { colors } from '../utils/themes.js';
-import { goTo, isActive } from './Router.js';
+import { goTo, subscribe, getCurrentPath } from './Router.js';
 import { closeDrawer } from './Drawer.js';
+
+// Evento global para exclusión mutua (fallback)
+const selectionEvent = new EventTarget();
+let globalCurrentPath = getCurrentPath();
+
+// Notificar cambios de ruta a todos los DrawerItems
+subscribe(() => {
+    globalCurrentPath = getCurrentPath();
+    selectionEvent.dispatchEvent(new CustomEvent('route-changed', { detail: { path: globalCurrentPath } }));
+});
 
 export const DrawerItem = (props) => {
     const {
@@ -13,69 +23,122 @@ export const DrawerItem = (props) => {
         label,
         route,
         onPress,
+        onSelect,
+        disableTransform = true,
         trailingIcon = 'chevron_right',
-        selected = false,
-        
-        // ========== COLORES ==========
         hintColor = colors.gray100,
         selectedColor = colors.primary,
         unselectedColor = colors.text,
-        iconColor,                    // si no se especifica, hereda
-        trailingIconColor,            // si no se especifica, hereda
-        
+        iconColor,
+        trailingIconColor,
         closeOnPress = true,
         ...rest
     } = props;
 
-    const isSelected = selected || (route ? isActive(route, false) : false);
-    
-    // Colores finales (con herencia lógica)
-    const finalTextColor = isSelected ? selectedColor : unselectedColor;
-    const finalIconColor = iconColor || finalTextColor;
-    const finalTrailingIconColor = trailingIconColor || finalTextColor;
+    let containerRef = null;
+    let textRef = null;
+    let iconRef = null;
+    let trailingIconRef = null;
+    let isSelected = false;
+    let unsubscribeRouter = null;
+    let unsubscribeGlobal = null;
 
-    const handlePress = () => {
-        onPress?.();
-        if (!onPress && route) goTo(route);
+    const updateUI = () => {
+        const finalTextColor = isSelected ? selectedColor : unselectedColor;
+        const finalIconColor = iconColor || finalTextColor;
+        const finalTrailingIconColor = trailingIconColor || finalTextColor;
+        if (containerRef) {
+            containerRef.style.backgroundColor = isSelected ? `${selectedColor}15` : 'transparent';
+        }
+        if (textRef) {
+            textRef.style.color = finalTextColor;
+            textRef.style.fontWeight = isSelected ? '600' : '400';
+        }
+        if (iconRef) iconRef.style.color = finalIconColor;
+        if (trailingIconRef) trailingIconRef.style.color = finalTrailingIconColor;
+    };
+
+    const checkActive = () => {
+        const currentPath = getCurrentPath();
+        const shouldBeSelected = (route === currentPath) || (route === '/' && currentPath === '');
+        if (shouldBeSelected !== isSelected) {
+            isSelected = shouldBeSelected;
+            updateUI();
+        }
+    };
+
+    const handleClick = () => {
+        if (!isSelected) {
+            isSelected = true;
+            updateUI();
+            selectionEvent.dispatchEvent(new CustomEvent('drawer-item-selected', { detail: { id: label } }));
+        }
+        if (onSelect) onSelect();
+        if (onPress) onPress();
+        if (route) goTo(route);
         if (closeOnPress) closeDrawer();
     };
 
-    return Container({
-        padding: '12px 16px',
-        cursor: 'pointer',
-        backgroundColor: isSelected ? `${selectedColor}15` : 'transparent',
-        transition: 'background-color 0.2s ease',
-        borderRadius: '8px',
-        margin: '4px 8px',
-        style: rest.style,
-        child: Row({
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 12,
-            children: [
-                icon && Icon({ name: icon, size: 22, color: finalIconColor }),
-                Text({ 
-                    text: label, 
-                    size: 15, 
-                    color: finalTextColor,
-                    fontWeight: isSelected ? '600' : '400',
-                    flex: 1
-                }),
-                trailingIcon && Icon({ name: trailingIcon, size: 18, color: finalTrailingIconColor })
-            ].filter(Boolean)
-        }),
-        onclick: handlePress,
-        onmouseenter: (e) => {
-            if (!isSelected) {
-                e.currentTarget.style.backgroundColor = hintColor;
-            }
-        },
-        onmouseleave: (e) => {
-            if (!isSelected) {
-                e.currentTarget.style.backgroundColor = 'transparent';
-            }
+    unsubscribeRouter = subscribe(() => checkActive());
+    unsubscribeGlobal = selectionEvent.addEventListener('drawer-item-selected', (e) => {
+        if (isSelected && e.detail.id !== label) {
+            isSelected = false;
+            updateUI();
         }
     });
+
+    checkActive(); // estado inicial
+
+    const container = Container({
+      padding: '12px 16px',
+      cursor: 'pointer',
+      borderRadius: '8px',
+      margin: '4px 8px',
+      disableTransform: disableTransform,   // ← desactiva scale y translateY
+      onclick: handleClick,
+      onmouseenter: (e) => {
+          if (!isSelected) e.currentTarget.style.backgroundColor = hintColor;
+      },
+      onmouseleave: (e) => {
+          if (!isSelected) e.currentTarget.style.backgroundColor = 'transparent';
+      },
+      ...rest
+  });
+
+    const rowChildren = [];
+    if (icon) {
+        const iconWidget = Icon({ name: icon, size: 22, color: unselectedColor });
+        rowChildren.push(iconWidget);
+        iconRef = iconWidget;
+    }
+    const textWidget = Text({ 
+      text: label,
+      size: 15,
+      color: unselectedColor,
+      fontWeight: '400',
+      flex: 1
+    });
+    
+    rowChildren.push(textWidget);
+    textRef = textWidget;
+    if (trailingIcon) {
+        const trailWidget = Icon({ name: trailingIcon, size: 18, color: unselectedColor });
+        rowChildren.push(trailWidget);
+        trailingIconRef = trailWidget;
+    }
+    const row = Row({ alignItems: 'center', justifyContent: 'space-between', gap: 12, children: rowChildren });
+    container.appendChild(row);
+    containerRef = container;
+    updateUI();
+
+    const originalCleanup = container._cleanup;
+    container._cleanup = () => {
+        if (unsubscribeRouter) unsubscribeRouter();
+        if (unsubscribeGlobal) unsubscribeGlobal();
+        if (originalCleanup) originalCleanup();
+    };
+
+    return container;
 };
 
 export default DrawerItem;

@@ -12,6 +12,8 @@ export const AppBar = (props) => {
         title,
         leading = null,
         actions = [],
+        actionsGap = 12,
+
         backgroundColor = colors.surface,
         gradient = null,
         titleColor = colors.text,
@@ -31,11 +33,12 @@ export const AppBar = (props) => {
         marginLeft = 0,
         marginRight = 0,
 
+
         padding = 0,
         paddingTop = 0,
         paddingBottom = 0,
         paddingLeft = 4,
-        paddingRight = 4,
+        paddingRight = 24,
         borderRadius = 0,
         shadow = true,
         
@@ -174,7 +177,8 @@ export const AppBar = (props) => {
         const rightSection = Row({
             alignItems: 'center',
             justifyContent: 'flex-end',
-            gap: 4,
+            paddingRight: paddingRight,
+            gap: actionsGap,
             minWidth: 48,
             flexShrink: 0,
             style: { backgroundColor: 'transparent' },

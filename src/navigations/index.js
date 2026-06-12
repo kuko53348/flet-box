@@ -1,6 +1,8 @@
 // src/navigations/index.js
 export { Scaffold } from './Scaffold.js';
+export { AdaptiveScaffold } from './AdaptiveScaffold.js';
 export { AppBar } from './AppBar.js';
+export { CollapsibleSideBar } from './CollapsibleSideBar.js';
 export { Drawer, openDrawer, closeDrawer, toggleDrawer, destroyDrawer } from './Drawer.js';
 export { BottomNavigation } from './BottomNavigation.js';
 export { Tabs } from './Tabs.js';

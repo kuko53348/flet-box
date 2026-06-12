@@ -92,40 +92,34 @@ export const Drawer = (props = {}) => {
     
     // ========== CONSTRUIR CONTENIDO ==========
     const contentContainer = Column({
-        style: {
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column'
-        },
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
         children: [
             header && Container({
-                style: {
-                    flexShrink: 0,
-                    // Border radius solo en las esquinas superiores según posición
-                    borderTopLeftRadius: position === 'right' ? `${borderRadius}px` : '0',
-                    borderTopRightRadius: position === 'left' ? `${borderRadius}px` : '0',
-                    overflow: 'hidden'
-                },
+                flexShrink: 0,
+                // Border radius solo en las esquinas superiores según posición
+                borderTopLeftRadius: position === 'right' ? `${borderRadius}px` : '0',
+                borderTopRightRadius: position === 'left' ? `${borderRadius}px` : '0',
+                overflow: 'hidden',
                 child: header
             }),
             
             body.length > 0 && Column({
-                style: {
-                    flex: 1,
-                    overflow: 'auto',
-                    backgroundColor: bgColor
-                },
+                flex: 1,
+                paddingTop: 8,
+                paddingBottom: 8,
+                overflow: 'auto',
+                backgroundColor: bgColor,
                 children: body
             }),
             
             footer && Container({
-                style: {
-                    flexShrink: 0,
-                    // Border radius solo en las esquinas inferiores según posición
-                    borderBottomLeftRadius: position === 'right' ? `${borderRadius}px` : '0',
-                    borderBottomRightRadius: position === 'left' ? `${borderRadius}px` : '0',
-                    overflow: 'hidden'
-                },
+                flexShrink: 0,
+                // Border radius solo en las esquinas inferiores según posición
+                borderBottomLeftRadius: position === 'right' ? `${borderRadius}px` : '0',
+                borderBottomRightRadius: position === 'left' ? `${borderRadius}px` : '0',
+                overflow: 'hidden',
                 child: footer
             })
         ].filter(Boolean)
