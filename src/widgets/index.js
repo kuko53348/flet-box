@@ -46,4 +46,6 @@ export { InstallButton } from './InstallButton.js';
 export { Video } from './Video.js';
 export { Audio } from './Audio.js';
 export { CircularBar } from './CircularBar.js';
+export { CircularChart } from './CircularChart.js';
 // export { Markdown } from './Markdown.js';
+

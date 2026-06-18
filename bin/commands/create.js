@@ -6,119 +6,132 @@ import { createFile, copyFile, makeExecutable } from '../utils/helpers.js';
 import * as templates from '../utils/templates.js';
 import { c } from '../utils/colors.js';
 
-// Get __dirname in ES module
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export const createProject = async (projectName) => {
-    if (!projectName) {
-        console.error(c('red', '❌ Please specify a project name'));
-        console.log(c('gray', 'Example: flet-box create my-app'));
-        process.exit(1);
-    }
-
-    const projectPath = path.join(process.cwd(), projectName);
-    
-    // Check if directory already exists
-    if (fs.existsSync(projectPath)) {
-        console.error(c('red', `❌ Folder "${projectName}" already exists`));
-        process.exit(1);
-    }
-
-    console.log(`\n${c('cyan', '📦 Creating project:')} ${projectName}\n`);
-    
-    // Create directory structure
-    const dirs = [
-        '', 'src', 'src/assets/fonts', 'src/components', 
-        'src/screens', 'src/database', 'src/services'
-    ];
-    
-    for (const dir of dirs) {
-        const fullPath = path.join(projectPath, dir);
-        if (!fs.existsSync(fullPath)) {
-            fs.mkdirSync(fullPath, { recursive: true });
-            console.log(`${c('green', '📁')} Created: ${dir || '.'}`);
+// Parse arguments to detect --adaptive flag
+const parseCreateArgs = (args) => {
+    let template = 'basic'; // default
+    let projectName = null;
+    for (let i = 0; i < args.length; i++) {
+        if (args[i] === '--adaptive') {
+            template = 'adaptive';
+        } else if (args[i] === '--blank') {
+            template = 'blank';
+        } else if (args[i] === '--full') {
+            template = 'full';
+        } else if (args[i] === '--sidebar') {
+            template = 'sidebar';
+        } else if (!args[i].startsWith('--')) {
+            projectName = args[i];
         }
     }
-    
-    // Create main files
-    createFile(path.join(projectPath, 'index.html'), templates.indexHtml());
-    createFile(path.join(projectPath, 'src/app.js'), templates.appJs());
-    createFile(path.join(projectPath, 'src/screens/RootScreen.js'), templates.rootScreenJs());
-    createFile(path.join(projectPath, 'src/screens/HomeScreen.js'), templates.homeScreenJs());
-    createFile(path.join(projectPath, 'src/database/themes.js'), templates.themesJs());
-    createFile(path.join(projectPath, 'run.sh'), templates.runSh());
-    createFile(path.join(projectPath, 'src/screens/AboutScreen.js'), templates.aboutScreenJs());
-    createFile(path.join(projectPath, 'src/components/DrawerMenu.js'), templates.drawerMenuJs());
+    return { template, projectName };
+};
 
-    createFile(path.join(projectPath, 'manifest.json'), templates.manifest());
-    // createFile(path.join(projectPath, 'createBundle.sh'), templates.createBundleSh());
-    createFile(path.join(projectPath, 'service-worker.js'), templates.serviceWorkerJs());
-    createFile(path.join(projectPath, 'package.json'), templates.packageJson(projectName));
+export const createProject = async (projectName, rawArgs = []) => {
+    const { template, projectName: name } = parseCreateArgs([projectName, ...rawArgs]);
+    const finalName = name || projectName;
+    if (!finalName) {
+        console.error(c('red', '❌ Project name required'));
+        console.log(c('gray', 'Usage: flet-box create <name> [--adaptive|--blank|--full|--sidebar]'));
+        process.exit(1);
+    }
+
+    const projectPath = path.join(process.cwd(), finalName);
+    if (fs.existsSync(projectPath)) {
+        console.error(c('red', `❌ Folder "${finalName}" already exists`));
+        process.exit(1);
+    }
+
+    console.log(`\n${c('cyan', '📦 Creating project:')} ${finalName} (${template} template)\n`);
+
+    // Create directories
+    const commonDirs = ['src', 'src/assets/fonts', 'src/database'];
+    const extraDirs = template === 'blank' ? [] : ['src/screens', 'src/components'];
+    if (template === 'sidebar' || template === 'adaptive') {
+        extraDirs.push('src/components/layouts');
+    }
+    const allDirs = [...commonDirs, ...extraDirs];
+    for (const dir of allDirs) {
+        const fullPath = path.join(projectPath, dir);
+        fs.mkdirSync(fullPath, { recursive: true });
+        console.log(`${c('green', '📁')} Created: ${dir}`);
+    }
+
+    // Create common files
+    createFile(path.join(projectPath, 'index.html'), templates.indexHtml());
+    createFile(path.join(projectPath, 'package.json'), templates.packageJson(finalName));
     createFile(path.join(projectPath, '.gitignore'), templates.gitignore());
-    createFile(path.join(projectPath, 'README.md'), templates.readme(projectName));
-    
-    // Make scripts executable
-    makeExecutable(path.join(projectPath, 'run.sh'));
-    // makeExecutable(path.join(projectPath, 'createBundle.sh'));
-    
-    // Copy fonts and assets from package
+    createFile(path.join(projectPath, 'README.md'), templates.readme(finalName, template));
+    createFile(path.join(projectPath, 'run.sh'), templates.runSh());
+    createFile(path.join(projectPath, 'service-worker.js'), templates.serviceWorkerJs());
+    createFile(path.join(projectPath, 'manifest.json'), templates.manifest());
+    createFile(path.join(projectPath, 'src/database/themes.js'), templates.themesJs());
+
+    // Copy fonts (same as before)
     const sourcePackageDir = path.join(__dirname, '..', '..');
     const sourceFontsDir = path.join(sourcePackageDir, 'src/fonts');
     const destFontsDir = path.join(projectPath, 'src/assets/fonts');
-    
     if (fs.existsSync(sourceFontsDir)) {
         const iconsCss = path.join(sourceFontsDir, 'icons.css');
         const woff = path.join(sourceFontsDir, 'MaterialIcons-Regular.woff2');
-        
-        if (fs.existsSync(iconsCss)) {
-            copyFile(iconsCss, path.join(destFontsDir, 'icons.css'));
-        }
-        if (fs.existsSync(woff)) {
-            copyFile(woff, path.join(destFontsDir, 'MaterialIcons-Regular.woff2'));
-        }
+        if (fs.existsSync(iconsCss)) copyFile(iconsCss, path.join(destFontsDir, 'icons.css'));
+        if (fs.existsSync(woff)) copyFile(woff, path.join(destFontsDir, 'MaterialIcons-Regular.woff2'));
+    }
+
+    // Create screens and components based on template
+    if (template === 'blank') {
+        createFile(path.join(projectPath, 'src/app.js'), templates.blankAppJs());
     } else {
-        console.log(c('yellow', '⚠️ Warning: Fonts directory not found, skipping...'));
+        // Shared screens
+        createFile(path.join(projectPath, 'src/screens/RootScreen.js'), templates.rootScreenJs());
+        createFile(path.join(projectPath, 'src/screens/HomeScreen.js'), templates.homeScreenJs());
+        createFile(path.join(projectPath, 'src/screens/AboutScreen.js'), templates.aboutScreenJs());
+        if (template === 'adaptive') {
+            createFile(path.join(projectPath, 'src/screens/ProfileScreen.js'), templates.profileScreenJs());
+            createFile(path.join(projectPath, 'src/screens/index.js'), templates.screensIndexJs());
+        }
+        // Layout components
+        if (template !== 'blank') {
+            createFile(path.join(projectPath, 'src/components/layouts/AppBarComponent.js'), templates.appBarComponentJs());
+            if (template === 'full' || template === 'adaptive') {
+                createFile(path.join(projectPath, 'src/components/layouts/BottomNav.js'), templates.bottomNavJs());
+            }
+            if (template === 'sidebar' || template === 'adaptive') {
+                createFile(path.join(projectPath, 'src/components/layouts/Sidebar.js'), templates.sidebarJs());
+            }
+            // DrawerMenu (use modular version for adaptive/full, simple for basic)
+            if (template === 'basic') {
+                createFile(path.join(projectPath, 'src/components/DrawerMenu.js'), templates.drawerMenuJs()); // original simple
+            } else {
+                createFile(path.join(projectPath, 'src/components/layouts/DrawerMenu.js'), templates.drawerMenuModularJs());
+            }
+        }
+        // Main app.js
+        switch (template) {
+            case 'basic':
+                createFile(path.join(projectPath, 'src/app.js'), templates.basicAppJs());
+                break;
+            case 'full':
+                createFile(path.join(projectPath, 'src/app.js'), templates.fullAppJs());
+                break;
+            case 'sidebar':
+                createFile(path.join(projectPath, 'src/app.js'), templates.sidebarAppJs());
+                break;
+            case 'adaptive':
+                createFile(path.join(projectPath, 'src/app.js'), templates.adaptiveAppJs());
+                break;
+            default:
+                createFile(path.join(projectPath, 'src/app.js'), templates.basicAppJs());
+        }
     }
-    
-    // Copy additional assets
-    const sourceAssetsDir = path.join(sourcePackageDir, 'src/assets');
-    const destAssetsDir = path.join(projectPath, 'src/assets');
 
-    if (fs.existsSync(sourceAssetsDir)) {
-        // logo
-        const logo = path.join(sourceAssetsDir, 'logo.png');
-        if (fs.existsSync(logo)) {
-            copyFile(logo, path.join(destAssetsDir, 'logo.png'));
-        }
+    makeExecutable(path.join(projectPath, 'run.sh'));
 
-        // icon 192
-        const iconSmall = path.join(sourceAssetsDir, 'icon-192.png');
-        const iconSmallMaskared = path.join(sourceAssetsDir, 'icon-192-maskable.png');
-
-        if (fs.existsSync(iconSmall)) {
-            copyFile(iconSmall, path.join(destAssetsDir, 'icon-192.png')); // ✅ copia el icono correcto
-        }
-        if (fs.existsSync(iconSmallMaskared)) {
-            copyFile(iconSmallMaskared, path.join(destAssetsDir, 'icon-192-maskable.png'));
-        }
-
-        // icon 512
-        const iconBig = path.join(sourceAssetsDir, 'icon-512.png');
-        const iconBigMaskared = path.join(sourceAssetsDir, 'icon-512-maskable.png');
-
-        if (fs.existsSync(iconBig)) {
-          copyFile(iconBig, path.join(destAssetsDir, 'icon-512.png'));
-        }
-        if (fs.existsSync(iconBigMaskared)) {
-            copyFile(iconBigMaskared, path.join(destAssetsDir, 'icon-512-maskable.png'));
-        }
-    }
-
-    
-    console.log(`\n${c('green', '✅')} Project "${projectName}" created successfully!\n`);
-    console.log(`  ${c('cyan', 'cd')} ${projectName}`);
+    console.log(`\n${c('green', '✅')} Project "${finalName}" created successfully!\n`);
+    console.log(`  ${c('cyan', 'cd')} ${finalName}`);
     console.log(`  ${c('cyan', 'npm install')}`);
     console.log(`  ${c('cyan', 'npm run dev')}\n`);
-    console.log(`${c('gray', '📱 Screens: RootScreen (welcome) and HomeScreen (likes counter)')}\n`);
+    console.log(`${c('gray', `📱 Template: ${template}`)}\n`);
 };

@@ -66,7 +66,7 @@ export {
     FloatingActionButton, Stepper, Skeleton,
     CodeViewer, Inspector, Pagination, TreeView, Chart, QRCode,
     DraggBox, DroppBox, DataTable, Carousel, Tooltip, InstallButton,
-    Video, Audio , CircularBar
+    Video, Audio , CircularBar,CircularChart
 } from './widgets/index.js';
 // Markdown
 // ========== NAVIGATIONS ==========

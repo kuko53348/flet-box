@@ -24,6 +24,8 @@ export const DrawerItem = (props) => {
         route,
         onPress,
         onSelect,
+        borderRadius = 24,
+        gap = 12,
         disableTransform = true,
         trailingIcon = 'chevron_right',
         hintColor = colors.gray100,
@@ -92,7 +94,7 @@ export const DrawerItem = (props) => {
     const container = Container({
       padding: '12px 16px',
       cursor: 'pointer',
-      borderRadius: '8px',
+      borderRadius: borderRadius,
       margin: '4px 8px',
       disableTransform: disableTransform,   // ← desactiva scale y translateY
       onclick: handleClick,
@@ -126,7 +128,12 @@ export const DrawerItem = (props) => {
         rowChildren.push(trailWidget);
         trailingIconRef = trailWidget;
     }
-    const row = Row({ alignItems: 'center', justifyContent: 'space-between', gap: 12, children: rowChildren });
+    const row = Row({ 
+      alignItems: 'center', 
+      justifyContent: 'space-between', 
+      gap: gap,
+      children: rowChildren 
+    });
     container.appendChild(row);
     containerRef = container;
     updateUI();
