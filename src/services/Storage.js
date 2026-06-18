@@ -2,28 +2,28 @@
 
 /**
  * Storage - Almacenamiento local para DOM (síncrono, similar a localStorage)
- * 
+ *
  * @description Usa localStorage del navegador para persistir datos.
  * Soporta strings, objetos, arrays, números, booleanos.
- * 
+ *
  * @example
  * import { saveData, getData, deleteData, clearAllData, getAllKeys, getAllData } from './services/Storage.js';
- * 
+ *
  * // Guardar
  * saveData('user', { name: 'Juan', age: 30 });
- * 
+ *
  * // Leer
  * const user = getData('user');
- * 
+ *
  * // Eliminar
  * deleteData('user');
- * 
+ *
  * // Limpiar todo
  * clearAllData();
- * 
+ *
  * // Obtener todas las claves
  * const keys = getAllKeys();
- * 
+ *
  * // Obtener todos los datos
  * const allData = getAllData();
  */
@@ -36,14 +36,14 @@
  * @returns {boolean} - true si se guardó correctamente
  */
 export const saveData = (key, value) => {
-    try {
-        const serialized = JSON.stringify(value);
-        localStorage.setItem(key, serialized);
-        return true;
-    } catch (error) {
-        console.error('Error saving data:', error);
-        return false;
-    }
+  try {
+    const serialized = JSON.stringify(value);
+    localStorage.setItem(key, serialized);
+    return true;
+  } catch (error) {
+    console.error("Error saving data:", error);
+    return false;
+  }
 };
 
 // ========== READ ==========
@@ -53,13 +53,13 @@ export const saveData = (key, value) => {
  * @returns {any} - El valor guardado o null si no existe
  */
 export const getData = (key) => {
-    try {
-        const value = localStorage.getItem(key);
-        return value !== null ? JSON.parse(value) : null;
-    } catch (error) {
-        console.error('Error reading data:', error);
-        return null;
-    }
+  try {
+    const value = localStorage.getItem(key);
+    return value !== null ? JSON.parse(value) : null;
+  } catch (error) {
+    console.error("Error reading data:", error);
+    return null;
+  }
 };
 
 // ========== READ (síncrono directo) ==========
@@ -69,7 +69,7 @@ export const getData = (key) => {
  * @returns {any} - El valor guardado o null si no existe
  */
 export const getDataSync = (key) => {
-    return getData(key);
+  return getData(key);
 };
 
 // ========== UPDATE ==========
@@ -80,16 +80,16 @@ export const getDataSync = (key) => {
  * @returns {boolean} - true si se actualizó, false si no existía
  */
 export const updateData = (key, newValue) => {
-    try {
-        const exists = localStorage.getItem(key);
-        if (exists === null) return false;
-        
-        localStorage.setItem(key, JSON.stringify(newValue));
-        return true;
-    } catch (error) {
-        console.error('Error updating data:', error);
-        return false;
-    }
+  try {
+    const exists = localStorage.getItem(key);
+    if (exists === null) return false;
+
+    localStorage.setItem(key, JSON.stringify(newValue));
+    return true;
+  } catch (error) {
+    console.error("Error updating data:", error);
+    return false;
+  }
 };
 
 // ========== DELETE ==========
@@ -99,13 +99,13 @@ export const updateData = (key, newValue) => {
  * @returns {boolean} - true si se eliminó correctamente
  */
 export const deleteData = (key) => {
-    try {
-        localStorage.removeItem(key);
-        return true;
-    } catch (error) {
-        console.error('Error deleting data:', error);
-        return false;
-    }
+  try {
+    localStorage.removeItem(key);
+    return true;
+  } catch (error) {
+    console.error("Error deleting data:", error);
+    return false;
+  }
 };
 
 // ========== DELETE ALL ==========
@@ -114,13 +114,13 @@ export const deleteData = (key) => {
  * @returns {boolean} - true si se limpió correctamente
  */
 export const clearAllData = () => {
-    try {
-        localStorage.clear();
-        return true;
-    } catch (error) {
-        console.error('Error clearing data:', error);
-        return false;
-    }
+  try {
+    localStorage.clear();
+    return true;
+  } catch (error) {
+    console.error("Error clearing data:", error);
+    return false;
+  }
 };
 
 // ========== UTILS ==========
@@ -130,7 +130,7 @@ export const clearAllData = () => {
  * @returns {boolean} - true si existe
  */
 export const hasData = (key) => {
-    return localStorage.getItem(key) !== null;
+  return localStorage.getItem(key) !== null;
 };
 
 /**
@@ -138,17 +138,17 @@ export const hasData = (key) => {
  * @returns {string[]} - Array de claves
  */
 export const getAllKeys = () => {
-    try {
-        const keys = [];
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key) keys.push(key);
-        }
-        return keys;
-    } catch (error) {
-        console.error('Error getting all keys:', error);
-        return [];
+  try {
+    const keys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key) keys.push(key);
     }
+    return keys;
+  } catch (error) {
+    console.error("Error getting all keys:", error);
+    return [];
+  }
 };
 
 /**
@@ -156,24 +156,24 @@ export const getAllKeys = () => {
  * @returns {Object} - Objeto con todas las claves y valores
  */
 export const getAllData = () => {
-    try {
-        const result = {};
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key) {
-                try {
-                    const value = localStorage.getItem(key);
-                    result[key] = value !== null ? JSON.parse(value) : null;
-                } catch {
-                    result[key] = localStorage.getItem(key);
-                }
-            }
+  try {
+    const result = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key) {
+        try {
+          const value = localStorage.getItem(key);
+          result[key] = value !== null ? JSON.parse(value) : null;
+        } catch {
+          result[key] = localStorage.getItem(key);
         }
-        return result;
-    } catch (error) {
-        console.error('Error getting all data:', error);
-        return {};
+      }
     }
+    return result;
+  } catch (error) {
+    console.error("Error getting all data:", error);
+    return {};
+  }
 };
 
 /**
@@ -181,20 +181,20 @@ export const getAllData = () => {
  * @returns {number} - Tamaño en bytes
  */
 export const getStorageSize = () => {
-    try {
-        let total = 0;
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key) {
-                const value = localStorage.getItem(key);
-                total += (key.length + (value?.length || 0)) * 2;
-            }
-        }
-        return total;
-    } catch (error) {
-        console.error('Error getting storage size:', error);
-        return 0;
+  try {
+    let total = 0;
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key) {
+        const value = localStorage.getItem(key);
+        total += (key.length + (value?.length || 0)) * 2;
+      }
     }
+    return total;
+  } catch (error) {
+    console.error("Error getting storage size:", error);
+    return 0;
+  }
 };
 
 /**
@@ -203,27 +203,27 @@ export const getStorageSize = () => {
  * @returns {number} - Cantidad de elementos eliminados
  */
 export const deleteDataByPrefix = (prefix) => {
-    try {
-        let deleted = 0;
-        const keysToRemove = [];
-        
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && key.startsWith(prefix)) {
-                keysToRemove.push(key);
-            }
-        }
-        
-        keysToRemove.forEach(key => {
-            localStorage.removeItem(key);
-            deleted++;
-        });
-        
-        return deleted;
-    } catch (error) {
-        console.error('Error deleting data by prefix:', error);
-        return 0;
+  try {
+    let deleted = 0;
+    const keysToRemove = [];
+
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(prefix)) {
+        keysToRemove.push(key);
+      }
     }
+
+    keysToRemove.forEach((key) => {
+      localStorage.removeItem(key);
+      deleted++;
+    });
+
+    return deleted;
+  } catch (error) {
+    console.error("Error deleting data by prefix:", error);
+    return 0;
+  }
 };
 
 /**
@@ -232,27 +232,27 @@ export const deleteDataByPrefix = (prefix) => {
  * @returns {number} - Cantidad de elementos eliminados
  */
 export const deleteDataBySuffix = (suffix) => {
-    try {
-        let deleted = 0;
-        const keysToRemove = [];
-        
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && key.endsWith(suffix)) {
-                keysToRemove.push(key);
-            }
-        }
-        
-        keysToRemove.forEach(key => {
-            localStorage.removeItem(key);
-            deleted++;
-        });
-        
-        return deleted;
-    } catch (error) {
-        console.error('Error deleting data by suffix:', error);
-        return 0;
+  try {
+    let deleted = 0;
+    const keysToRemove = [];
+
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.endsWith(suffix)) {
+        keysToRemove.push(key);
+      }
     }
+
+    keysToRemove.forEach((key) => {
+      localStorage.removeItem(key);
+      deleted++;
+    });
+
+    return deleted;
+  } catch (error) {
+    console.error("Error deleting data by suffix:", error);
+    return 0;
+  }
 };
 
 /**
@@ -260,12 +260,12 @@ export const deleteDataBySuffix = (suffix) => {
  * @returns {number} - Número de items
  */
 export const getItemCount = () => {
-    try {
-        return localStorage.length;
-    } catch (error) {
-        console.error('Error getting item count:', error);
-        return 0;
-    }
+  try {
+    return localStorage.length;
+  } catch (error) {
+    console.error("Error getting item count:", error);
+    return 0;
+  }
 };
 
 /**
@@ -273,32 +273,32 @@ export const getItemCount = () => {
  * @returns {boolean} - true si está disponible
  */
 export const isStorageAvailable = () => {
-    try {
-        const test = '__storage_test__';
-        localStorage.setItem(test, test);
-        localStorage.removeItem(test);
-        return true;
-    } catch (e) {
-        return false;
-    }
+  try {
+    const test = "__storage_test__";
+    localStorage.setItem(test, test);
+    localStorage.removeItem(test);
+    return true;
+  } catch (e) {
+    return false;
+  }
 };
 
 // ========== EXPORT DEFAULT ==========
 const Storage = {
-    saveData,
-    getData,
-    getDataSync,
-    updateData,
-    deleteData,
-    clearAllData,
-    hasData,
-    getAllKeys,
-    getAllData,
-    getStorageSize,
-    deleteDataByPrefix,
-    deleteDataBySuffix,
-    getItemCount,
-    isStorageAvailable
+  saveData,
+  getData,
+  getDataSync,
+  updateData,
+  deleteData,
+  clearAllData,
+  hasData,
+  getAllKeys,
+  getAllData,
+  getStorageSize,
+  deleteDataByPrefix,
+  deleteDataBySuffix,
+  getItemCount,
+  isStorageAvailable,
 };
 
 export default Storage;

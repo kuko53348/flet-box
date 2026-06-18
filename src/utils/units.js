@@ -29,8 +29,8 @@ let BASE_FONT_SIZE = 16;
  * setBaseFontSize(20); // 1rem = 20px
  */
 export const setBaseFontSize = (size) => {
-    BASE_FONT_SIZE = size;
-    document.documentElement.style.fontSize = `${size}px`;
+  BASE_FONT_SIZE = size;
+  document.documentElement.style.fontSize = `${size}px`;
 };
 
 /**
@@ -45,20 +45,20 @@ export const setBaseFontSize = (size) => {
  * toREM('50%')  // "50%"
  */
 export const toREM = (value) => {
-    if (value === undefined || value === null) return undefined;
-    
-    // Si es número, convertir a rem
-    if (typeof value === 'number') {
-        return `${value / BASE_FONT_SIZE}rem`;
-    }
-    
-    // Si es string, devolverlo tal cual
-    if (typeof value === 'string') {
-        return value;
-    }
-    
-    // Para otros tipos (objetos, booleanos, etc.)
-    return String(value);
+  if (value === undefined || value === null) return undefined;
+
+  // Si es número, convertir a rem
+  if (typeof value === "number") {
+    return `${value / BASE_FONT_SIZE}rem`;
+  }
+
+  // Si es string, devolverlo tal cual
+  if (typeof value === "string") {
+    return value;
+  }
+
+  // Para otros tipos (objetos, booleanos, etc.)
+  return String(value);
 };
 
 /**
@@ -71,13 +71,13 @@ export const toREM = (value) => {
  * toPX('50%')  // "50%"
  */
 export const toPX = (value) => {
-    if (value === undefined || value === null) return undefined;
-    
-    if (typeof value === 'number') {
-        return `${value}px`;
-    }
-    
-    return value;
+  if (value === undefined || value === null) return undefined;
+
+  if (typeof value === "number") {
+    return `${value}px`;
+  }
+
+  return value;
 };
 
 /**

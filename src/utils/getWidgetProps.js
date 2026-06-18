@@ -4,13 +4,13 @@
  * Gets the current props of a widget
  * @param {HTMLElement} widget - The widget to inspect
  * @returns {Object} Dictionary with the widget's props
- * 
+ *
  * @example
  * const props = getWidgetProps(myButton);
  * // { text: 'Click', variant: 'filled', color: '#007aff' }
  */
 export const getWidgetProps = (widget) => {
-    return { ...(widget._props || {}) };
+  return { ...(widget._props || {}) };
 };
 
 /**
@@ -20,7 +20,7 @@ export const getWidgetProps = (widget) => {
  * @returns {any} Prop value or undefined
  */
 export const getWidgetProp = (widget, propName) => {
-    return widget._props ? widget._props[propName] : undefined;
+  return widget._props ? widget._props[propName] : undefined;
 };
 
 /**
@@ -29,7 +29,7 @@ export const getWidgetProp = (widget, propName) => {
  * @returns {string} Formatted props string
  */
 export const stringifyWidgetProps = (widget) => {
-    return JSON.stringify(widget._props || {}, null, 2);
+  return JSON.stringify(widget._props || {}, null, 2);
 };
 
 export default { getWidgetProps, getWidgetProp, stringifyWidgetProps };

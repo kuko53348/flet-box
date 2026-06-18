@@ -1,7 +1,7 @@
 // bin/commands/createScreen.js
-import fs from 'fs';
-import path from 'path';
-import { c } from '../utils/colors.js';
+import fs from "fs";
+import path from "path";
+import { c } from "../utils/colors.js";
 
 const screenTemplate = (name) => `// screens/${name}Screen.js
 import { Container, Column, Text, Button, colors } from 'flet-box';
@@ -29,50 +29,59 @@ export default ${name}Screen;
 `;
 
 export const createScreen = async (input) => {
-    const projectRoot = process.cwd();
-    const screensDir = path.join(projectRoot, 'src', 'screens');
-    
-    if (!fs.existsSync(screensDir)) {
-        console.error(c('red', '❌ Not a FletBox project. Run "flet-box create my-app" first.'));
-        process.exit(1);
+  const projectRoot = process.cwd();
+  const screensDir = path.join(projectRoot, "src", "screens");
+
+  if (!fs.existsSync(screensDir)) {
+    console.error(
+      c("red", '❌ Not a FletBox project. Run "flet-box create my-app" first.'),
+    );
+    process.exit(1);
+  }
+
+  const screenNames = [];
+
+  // Si es número, crear múltiples pantallas
+  if (!isNaN(input) && Number.isInteger(parseFloat(input))) {
+    const count = Math.min(parseInt(input), 10); // máximo 10
+    for (let i = 1; i <= count; i++) {
+      screenNames.push(`Screen${i}`);
     }
-    
-    const screenNames = [];
-    
-    // Si es número, crear múltiples pantallas
-    if (!isNaN(input) && Number.isInteger(parseFloat(input))) {
-        const count = Math.min(parseInt(input), 10); // máximo 10
-        for (let i = 1; i <= count; i++) {
-            screenNames.push(`Screen${i}`);
-        }
+  } else {
+    screenNames.push(input);
+  }
+
+  let created = 0;
+  for (const name of screenNames) {
+    const fileName = `${name}Screen.js`;
+    const filePath = path.join(screensDir, fileName);
+
+    if (fs.existsSync(filePath)) {
+      console.log(c("yellow", `⚠️ ${fileName} already exists, skipping...`));
     } else {
-        screenNames.push(input);
+      fs.writeFileSync(filePath, screenTemplate(name));
+      console.log(c("green", `✅ Created: src/screens/${fileName}`));
+      created++;
     }
-    
-    let created = 0;
-    for (const name of screenNames) {
-        const fileName = `${name}Screen.js`;
-        const filePath = path.join(screensDir, fileName);
-        
-        if (fs.existsSync(filePath)) {
-            console.log(c('yellow', `⚠️ ${fileName} already exists, skipping...`));
-        } else {
-            fs.writeFileSync(filePath, screenTemplate(name));
-            console.log(c('green', `✅ Created: src/screens/${fileName}`));
-            created++;
-        }
-    }
-    
-    if (created > 0) {
-        console.log(c('blue', '\n📝 Add to your routes in src/app.js:\n'));
-        screenNames.forEach(name => {
-            console.log(c('gray', `import { ${name}Screen } from './screens/${name}Screen.js';`));
-        });
-        console.log('');
-        screenNames.forEach(name => {
-            console.log(c('gray', `    '/${name.toLowerCase()}': { body: ${name}Screen },`));
-        });
-    }
-    
-    console.log(c('green', `\n✅ ${created} screen(s) created successfully!\n`));
+  }
+
+  if (created > 0) {
+    console.log(c("blue", "\n📝 Add to your routes in src/app.js:\n"));
+    screenNames.forEach((name) => {
+      console.log(
+        c(
+          "gray",
+          `import { ${name}Screen } from './screens/${name}Screen.js';`,
+        ),
+      );
+    });
+    console.log("");
+    screenNames.forEach((name) => {
+      console.log(
+        c("gray", `    '/${name.toLowerCase()}': { body: ${name}Screen },`),
+      );
+    });
+  }
+
+  console.log(c("green", `\n✅ ${created} screen(s) created successfully!\n`));
 };

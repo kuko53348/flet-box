@@ -7,12 +7,12 @@
  * @example shuffle([1,2,3,4,5]) // [3,1,5,2,4]
  */
 export const shuffle = (arr) => {
-    const result = [...arr];
-    for (let i = result.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [result[i], result[j]] = [result[j], result[i]];
-    }
-    return result;
+  const result = [...arr];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
 };
 
 /**
@@ -22,7 +22,7 @@ export const shuffle = (arr) => {
  * @example reverse([1,2,3,4]) // [4,3,2,1]
  */
 export const reverse = (arr) => {
-    return [...arr].reverse();
+  return [...arr].reverse();
 };
 
 /**
@@ -34,26 +34,28 @@ export const reverse = (arr) => {
  * @example sort(users, 'name')
  * @example sort(users, (a,b) => a.age - b.age)
  */
-export const sort = (arr, by, order = 'asc') => {
-    const result = [...arr];
-    
-    if (typeof by === 'function') {
-        result.sort(by);
-    } else if (typeof by === 'string') {
-        result.sort((a, b) => {
-            const aVal = a[by];
-            const bVal = b[by];
-            if (typeof aVal === 'number') {
-                return order === 'asc' ? aVal - bVal : bVal - aVal;
-            }
-            const cmp = String(aVal).localeCompare(String(bVal));
-            return order === 'asc' ? cmp : -cmp;
-        });
-    } else {
-        result.sort();
-    }
-    
-    return order === 'desc' && typeof by !== 'function' ? result.reverse() : result;
+export const sort = (arr, by, order = "asc") => {
+  const result = [...arr];
+
+  if (typeof by === "function") {
+    result.sort(by);
+  } else if (typeof by === "string") {
+    result.sort((a, b) => {
+      const aVal = a[by];
+      const bVal = b[by];
+      if (typeof aVal === "number") {
+        return order === "asc" ? aVal - bVal : bVal - aVal;
+      }
+      const cmp = String(aVal).localeCompare(String(bVal));
+      return order === "asc" ? cmp : -cmp;
+    });
+  } else {
+    result.sort();
+  }
+
+  return order === "desc" && typeof by !== "function"
+    ? result.reverse()
+    : result;
 };
 
 /**
@@ -63,16 +65,16 @@ export const sort = (arr, by, order = 'asc') => {
  * @returns {Array} Array with unique values
  */
 export const unique = (arr, key = null) => {
-    if (key) {
-        const seen = new Set();
-        return arr.filter(item => {
-            const value = item[key];
-            if (seen.has(value)) return false;
-            seen.add(value);
-            return true;
-        });
-    }
-    return [...new Set(arr)];
+  if (key) {
+    const seen = new Set();
+    return arr.filter((item) => {
+      const value = item[key];
+      if (seen.has(value)) return false;
+      seen.add(value);
+      return true;
+    });
+  }
+  return [...new Set(arr)];
 };
 
 /**
@@ -83,11 +85,11 @@ export const unique = (arr, key = null) => {
  * @example chunk([1,2,3,4,5], 2) // [[1,2], [3,4], [5]]
  */
 export const chunk = (arr, size) => {
-    const result = [];
-    for (let i = 0; i < arr.length; i += size) {
-        result.push(arr.slice(i, i + size));
-    }
-    return result;
+  const result = [];
+  for (let i = 0; i < arr.length; i += size) {
+    result.push(arr.slice(i, i + size));
+  }
+  return result;
 };
 
 export default { shuffle, reverse, sort, unique, chunk };

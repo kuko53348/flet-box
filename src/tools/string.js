@@ -7,8 +7,8 @@
  * @example capitalize('hello') // "Hello"
  */
 export const capitalize = (str) => {
-    if (!str) return '';
-    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  if (!str) return "";
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 };
 
 /**
@@ -18,8 +18,11 @@ export const capitalize = (str) => {
  * @example capitalizeWords('hello world') // "Hello World"
  */
 export const capitalizeWords = (str) => {
-    if (!str) return '';
-    return str.split(' ').map(word => capitalize(word)).join(' ');
+  if (!str) return "";
+  return str
+    .split(" ")
+    .map((word) => capitalize(word))
+    .join(" ");
 };
 
 /**
@@ -28,8 +31,8 @@ export const capitalizeWords = (str) => {
  * @returns {string} Lowercase string
  */
 export const lowerCase = (str) => {
-    if (!str) return '';
-    return str.toLowerCase();
+  if (!str) return "";
+  return str.toLowerCase();
 };
 
 /**
@@ -38,8 +41,8 @@ export const lowerCase = (str) => {
  * @returns {string} Uppercase string
  */
 export const upperCase = (str) => {
-    if (!str) return '';
-    return str.toUpperCase();
+  if (!str) return "";
+  return str.toUpperCase();
 };
 
 /**
@@ -49,8 +52,8 @@ export const upperCase = (str) => {
  * @example reverse('hello') // "olleh"
  */
 export const reverseString = (str) => {
-    if (!str) return '';
-    return str.split('').reverse().join('');
+  if (!str) return "";
+  return str.split("").reverse().join("");
 };
 
 /**
@@ -60,10 +63,17 @@ export const reverseString = (str) => {
  * @param {string} suffix - Suffix to add (default: '...')
  * @returns {string} Truncated string
  */
-export const truncate = (str, length = 50, suffix = '...') => {
-    if (!str) return '';
-    if (str.length <= length) return str;
-    return str.slice(0, length) + suffix;
+export const truncate = (str, length = 50, suffix = "...") => {
+  if (!str) return "";
+  if (str.length <= length) return str;
+  return str.slice(0, length) + suffix;
 };
 
-export default { capitalize, capitalizeWords, lowerCase, upperCase, reverseString, truncate };
+export default {
+  capitalize,
+  capitalizeWords,
+  lowerCase,
+  upperCase,
+  reverseString,
+  truncate,
+};

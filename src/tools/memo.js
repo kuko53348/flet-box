@@ -8,17 +8,17 @@
  * const expensiveFn = memo((n) => { ... })
  */
 export const memo = (fn) => {
-    const cache = new Map();
-    
-    return (...args) => {
-        const key = JSON.stringify(args);
-        if (cache.has(key)) {
-            return cache.get(key);
-        }
-        const result = fn(...args);
-        cache.set(key, result);
-        return result;
-    };
+  const cache = new Map();
+
+  return (...args) => {
+    const key = JSON.stringify(args);
+    if (cache.has(key)) {
+      return cache.get(key);
+    }
+    const result = fn(...args);
+    cache.set(key, result);
+    return result;
+  };
 };
 
 /**
@@ -28,17 +28,17 @@ export const memo = (fn) => {
  * @returns {Function} Memoized function
  */
 export const memoWithKey = (fn, keyFn) => {
-    const cache = new Map();
-    
-    return (...args) => {
-        const key = keyFn(...args);
-        if (cache.has(key)) {
-            return cache.get(key);
-        }
-        const result = fn(...args);
-        cache.set(key, result);
-        return result;
-    };
+  const cache = new Map();
+
+  return (...args) => {
+    const key = keyFn(...args);
+    if (cache.has(key)) {
+      return cache.get(key);
+    }
+    const result = fn(...args);
+    cache.set(key, result);
+    return result;
+  };
 };
 
 /**
@@ -46,9 +46,9 @@ export const memoWithKey = (fn, keyFn) => {
  * @param {Function} memoizedFn - Memoized function
  */
 export const clearMemo = (memoizedFn) => {
-    if (memoizedFn.cache) {
-        memoizedFn.cache.clear();
-    }
+  if (memoizedFn.cache) {
+    memoizedFn.cache.clear();
+  }
 };
 
 export default { memo, memoWithKey, clearMemo };

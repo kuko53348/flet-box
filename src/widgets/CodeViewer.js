@@ -1,230 +1,251 @@
 // widgets/CodeViewer.js
-import { WidgetFactory } from '../widget-factory/index.js';
-import { colors } from '../utils/themes.js';
-import { generateHighlightedHtml } from '../utils/syntaxHighlight.js';
+import { WidgetFactory } from "../widget-factory/index.js";
+import { colors } from "../utils/themes.js";
+import { generateHighlightedHtml } from "../utils/syntaxHighlight.js";
 
 export const CodeViewer = (props) => {
-    const {
-        code,
-        title,
-        maxHeight = 400,
-        fontSize = 12,
-        backgroundColor = colors.gray100,
-        padding = 12,
-        borderRadius = 8,
-        showHeader = true,
-        showLineNumbers = false,
-        startingLineNumber = 1,
-        lineNumberWidth = 40,
-        lineNumberColor = colors.secondary,
-        ...rest
-    } = props;
+  const {
+    code,
+    title,
+    maxHeight = 400,
+    fontSize = 12,
+    backgroundColor = colors.gray100,
+    padding = 12,
+    borderRadius = 8,
+    showHeader = true,
+    showLineNumbers = false,
+    startingLineNumber = 1,
+    lineNumberWidth = 40,
+    lineNumberColor = colors.secondary,
+    ...rest
+  } = props;
 
-    let currentCode = typeof code === 'string' ? code : JSON.stringify(code, null, 2);
-    let currentTitle = title;
-    let headerRef = null;
-    let scrollWrapperRef = null;
-    let lineNumbersColRef = null;
-    let codeColRef = null;
-    let codeWrapperRef = null;
+  let currentCode =
+    typeof code === "string" ? code : JSON.stringify(code, null, 2);
+  let currentTitle = title;
+  let headerRef = null;
+  let scrollWrapperRef = null;
+  let lineNumbersColRef = null;
+  let codeColRef = null;
+  let codeWrapperRef = null;
 
-    const refreshContent = () => {
-        const lines = currentCode.split('\n');
-        const highlightedLines = lines.map(line => generateHighlightedHtml(line));
+  const refreshContent = () => {
+    const lines = currentCode.split("\n");
+    const highlightedLines = lines.map((line) => generateHighlightedHtml(line));
 
-        if (showLineNumbers) {
-            // Actualizar números de línea
-            if (lineNumbersColRef) {
-                lineNumbersColRef.innerHTML = '';
-                for (let i = 0; i < lines.length; i++) {
-                    const numberDiv = WidgetFactory({
-                        tag: 'div',
-                        style: { padding: `0 ${padding / 2}px 0 ${padding}px`, whiteSpace: 'pre' },
-                        textContent: String(startingLineNumber + i)
-                    });
-                    lineNumbersColRef.appendChild(numberDiv);
-                }
-            }
-
-            // Actualizar código
-            if (codeColRef) {
-                codeColRef.innerHTML = '';
-                for (let i = 0; i < lines.length; i++) {
-                    const lineDiv = WidgetFactory({
-                        tag: 'div',
-                        style: { whiteSpace: 'pre', minHeight: '1.5em' }
-                    });
-                    lineDiv.innerHTML = highlightedLines[i] || '&nbsp;';
-                    codeColRef.appendChild(lineDiv);
-                }
-            }
-        } else {
-            // Actualizar código sin números de línea
-            if (codeWrapperRef) {
-                codeWrapperRef.innerHTML = highlightedLines.join('\n');
-            }
-        }
-    };
-
-    const container = WidgetFactory({
-        tag: 'div',
-        style: { width: '100%', display: 'flex', flexDirection: 'column', ...rest.style },
-        ...rest
-    });
-
-    // Header
-    if (currentTitle && showHeader) {
-        headerRef = WidgetFactory({
-            tag: 'div',
+    if (showLineNumbers) {
+      // Actualizar números de línea
+      if (lineNumbersColRef) {
+        lineNumbersColRef.innerHTML = "";
+        for (let i = 0; i < lines.length; i++) {
+          const numberDiv = WidgetFactory({
+            tag: "div",
             style: {
-                padding: '8px 12px',
-                backgroundColor: colors.primary,
-                borderRadius: `${borderRadius}px ${borderRadius}px 0 0`,
-                color: '#fff',
-                fontSize: '14px',
-                fontWeight: 'bold'
+              padding: `0 ${padding / 2}px 0 ${padding}px`,
+              whiteSpace: "pre",
             },
-            textContent: currentTitle
-        });
-        container.appendChild(headerRef);
-    }
-
-    // Scroll wrapper
-    scrollWrapperRef = WidgetFactory({
-        tag: 'div',
-        style: {
-            backgroundColor,
-            borderRadius: currentTitle ? `0 0 ${borderRadius}px ${borderRadius}px` : `${borderRadius}px`,
-            overflow: 'auto',
-            maxHeight: typeof maxHeight === 'number' ? `${maxHeight}px` : maxHeight,
-            overflowX: 'auto',
-            overflowY: 'auto'
+            textContent: String(startingLineNumber + i),
+          });
+          lineNumbersColRef.appendChild(numberDiv);
         }
+      }
+
+      // Actualizar código
+      if (codeColRef) {
+        codeColRef.innerHTML = "";
+        for (let i = 0; i < lines.length; i++) {
+          const lineDiv = WidgetFactory({
+            tag: "div",
+            style: { whiteSpace: "pre", minHeight: "1.5em" },
+          });
+          lineDiv.innerHTML = highlightedLines[i] || "&nbsp;";
+          codeColRef.appendChild(lineDiv);
+        }
+      }
+    } else {
+      // Actualizar código sin números de línea
+      if (codeWrapperRef) {
+        codeWrapperRef.innerHTML = highlightedLines.join("\n");
+      }
+    }
+  };
+
+  const container = WidgetFactory({
+    tag: "div",
+    style: {
+      width: "100%",
+      display: "flex",
+      flexDirection: "column",
+      ...rest.style,
+    },
+    ...rest,
+  });
+
+  // Header
+  if (currentTitle && showHeader) {
+    headerRef = WidgetFactory({
+      tag: "div",
+      style: {
+        padding: "8px 12px",
+        backgroundColor: colors.primary,
+        borderRadius: `${borderRadius}px ${borderRadius}px 0 0`,
+        color: "#fff",
+        fontSize: "14px",
+        fontWeight: "bold",
+      },
+      textContent: currentTitle,
+    });
+    container.appendChild(headerRef);
+  }
+
+  // Scroll wrapper
+  scrollWrapperRef = WidgetFactory({
+    tag: "div",
+    style: {
+      backgroundColor,
+      borderRadius: currentTitle
+        ? `0 0 ${borderRadius}px ${borderRadius}px`
+        : `${borderRadius}px`,
+      overflow: "auto",
+      maxHeight: typeof maxHeight === "number" ? `${maxHeight}px` : maxHeight,
+      overflowX: "auto",
+      overflowY: "auto",
+    },
+  });
+
+  // Construir contenido según showLineNumbers
+  if (showLineNumbers) {
+    const flexContainer = WidgetFactory({
+      tag: "div",
+      style: {
+        display: "flex",
+        flexDirection: "row",
+        minWidth: "100%",
+        width: "fit-content",
+      },
     });
 
-    // Construir contenido según showLineNumbers
-    if (showLineNumbers) {
-        const flexContainer = WidgetFactory({
-            tag: 'div',
-            style: { display: 'flex', flexDirection: 'row', minWidth: '100%', width: 'fit-content' }
-        });
+    lineNumbersColRef = WidgetFactory({
+      tag: "div",
+      style: {
+        backgroundColor,
+        borderRight: `1px solid ${colors.border}`,
+        padding: `${padding}px 0`,
+        fontFamily: "monospace",
+        fontSize: typeof fontSize === "number" ? `${fontSize}px` : fontSize,
+        lineHeight: "1.5",
+        textAlign: "right",
+        color: lineNumberColor,
+        userSelect: "none",
+        width: `${lineNumberWidth}px`,
+        flexShrink: 0,
+      },
+    });
 
-        lineNumbersColRef = WidgetFactory({
-            tag: 'div',
-            style: {
-                backgroundColor,
-                borderRight: `1px solid ${colors.border}`,
-                padding: `${padding}px 0`,
-                fontFamily: 'monospace',
-                fontSize: typeof fontSize === 'number' ? `${fontSize}px` : fontSize,
-                lineHeight: '1.5',
-                textAlign: 'right',
-                color: lineNumberColor,
-                userSelect: 'none',
-                width: `${lineNumberWidth}px`,
-                flexShrink: 0
-            }
-        });
+    codeColRef = WidgetFactory({
+      tag: "div",
+      style: {
+        padding: `${padding}px`,
+        fontFamily: "monospace",
+        fontSize: typeof fontSize === "number" ? `${fontSize}px` : fontSize,
+        lineHeight: "1.5",
+        whiteSpace: "pre",
+        flex: 1,
+        overflowX: "visible",
+      },
+    });
 
-        codeColRef = WidgetFactory({
-            tag: 'div',
-            style: {
-                padding: `${padding}px`,
-                fontFamily: 'monospace',
-                fontSize: typeof fontSize === 'number' ? `${fontSize}px` : fontSize,
-                lineHeight: '1.5',
-                whiteSpace: 'pre',
-                flex: 1,
-                overflowX: 'visible'
-            }
-        });
+    flexContainer.appendChild(lineNumbersColRef);
+    flexContainer.appendChild(codeColRef);
+    scrollWrapperRef.appendChild(flexContainer);
 
-        flexContainer.appendChild(lineNumbersColRef);
-        flexContainer.appendChild(codeColRef);
-        scrollWrapperRef.appendChild(flexContainer);
+    // Sincronizar scroll
+    const syncScroll = () => {
+      if (lineNumbersColRef) lineNumbersColRef.scrollTop = codeColRef.scrollTop;
+    };
+    codeColRef.addEventListener("scroll", syncScroll);
 
-        // Sincronizar scroll
-        const syncScroll = () => { 
-            if (lineNumbersColRef) lineNumbersColRef.scrollTop = codeColRef.scrollTop; 
-        };
-        codeColRef.addEventListener('scroll', syncScroll);
+    const originalCleanup = scrollWrapperRef._cleanup;
+    scrollWrapperRef._cleanup = () => {
+      if (originalCleanup) originalCleanup();
+      codeColRef.removeEventListener("scroll", syncScroll);
+    };
+  } else {
+    codeWrapperRef = WidgetFactory({
+      tag: "div",
+      style: {
+        padding: typeof padding === "number" ? `${padding}px` : padding,
+        fontFamily: "monospace",
+        fontSize: typeof fontSize === "number" ? `${fontSize}px` : fontSize,
+        whiteSpace: "pre",
+        lineHeight: "1.5",
+      },
+    });
+    scrollWrapperRef.appendChild(codeWrapperRef);
+  }
 
-        const originalCleanup = scrollWrapperRef._cleanup;
-        scrollWrapperRef._cleanup = () => {
-            if (originalCleanup) originalCleanup();
-            codeColRef.removeEventListener('scroll', syncScroll);
-        };
-    } else {
-        codeWrapperRef = WidgetFactory({
-            tag: 'div',
-            style: {
-                padding: typeof padding === 'number' ? `${padding}px` : padding,
-                fontFamily: 'monospace',
-                fontSize: typeof fontSize === 'number' ? `${fontSize}px` : fontSize,
-                whiteSpace: 'pre',
-                lineHeight: '1.5'
-            }
-        });
-        scrollWrapperRef.appendChild(codeWrapperRef);
+  container.appendChild(scrollWrapperRef);
+
+  // Rellenar contenido inicial
+  const lines = currentCode.split("\n");
+  const highlightedLines = lines.map((line) => generateHighlightedHtml(line));
+
+  if (showLineNumbers) {
+    for (let i = 0; i < lines.length; i++) {
+      const numberDiv = WidgetFactory({
+        tag: "div",
+        style: {
+          padding: `0 ${padding / 2}px 0 ${padding}px`,
+          whiteSpace: "pre",
+        },
+        textContent: String(startingLineNumber + i),
+      });
+      lineNumbersColRef.appendChild(numberDiv);
     }
 
-    container.appendChild(scrollWrapperRef);
-
-    // Rellenar contenido inicial
-    const lines = currentCode.split('\n');
-    const highlightedLines = lines.map(line => generateHighlightedHtml(line));
-
-    if (showLineNumbers) {
-        for (let i = 0; i < lines.length; i++) {
-            const numberDiv = WidgetFactory({
-                tag: 'div',
-                style: { padding: `0 ${padding / 2}px 0 ${padding}px`, whiteSpace: 'pre' },
-                textContent: String(startingLineNumber + i)
-            });
-            lineNumbersColRef.appendChild(numberDiv);
-        }
-
-        for (let i = 0; i < lines.length; i++) {
-            const lineDiv = WidgetFactory({
-                tag: 'div',
-                style: { whiteSpace: 'pre', minHeight: '1.5em' }
-            });
-            lineDiv.innerHTML = highlightedLines[i] || '&nbsp;';
-            codeColRef.appendChild(lineDiv);
-        }
-    } else {
-        codeWrapperRef.innerHTML = highlightedLines.join('\n');
+    for (let i = 0; i < lines.length; i++) {
+      const lineDiv = WidgetFactory({
+        tag: "div",
+        style: { whiteSpace: "pre", minHeight: "1.5em" },
+      });
+      lineDiv.innerHTML = highlightedLines[i] || "&nbsp;";
+      codeColRef.appendChild(lineDiv);
     }
+  } else {
+    codeWrapperRef.innerHTML = highlightedLines.join("\n");
+  }
 
-    // ========== MÉTODOS PÚBLICOS ==========
-    container.updateCode = (newCode) => {
-        currentCode = typeof newCode === 'string' ? newCode : JSON.stringify(newCode, null, 2);
-        refreshContent();
-    };
+  // ========== MÉTODOS PÚBLICOS ==========
+  container.updateCode = (newCode) => {
+    currentCode =
+      typeof newCode === "string" ? newCode : JSON.stringify(newCode, null, 2);
+    refreshContent();
+  };
 
-    container.updateTitle = (newTitle) => {
-        currentTitle = newTitle;
-        if (headerRef) {
-            headerRef.textContent = currentTitle;
-        }
-    };
+  container.updateTitle = (newTitle) => {
+    currentTitle = newTitle;
+    if (headerRef) {
+      headerRef.textContent = currentTitle;
+    }
+  };
 
-    container.scrollTo = (x, y) => {
-        if (scrollWrapperRef) {
-            scrollWrapperRef.scrollLeft = x;
-            scrollWrapperRef.scrollTop = y;
-        }
-    };
+  container.scrollTo = (x, y) => {
+    if (scrollWrapperRef) {
+      scrollWrapperRef.scrollLeft = x;
+      scrollWrapperRef.scrollTop = y;
+    }
+  };
 
-    container.scrollToStart = () => {
-        if (scrollWrapperRef) scrollWrapperRef.scrollLeft = 0;
-    };
+  container.scrollToStart = () => {
+    if (scrollWrapperRef) scrollWrapperRef.scrollLeft = 0;
+  };
 
-    container.scrollToEnd = () => {
-        if (scrollWrapperRef) scrollWrapperRef.scrollLeft = scrollWrapperRef.scrollWidth;
-    };
+  container.scrollToEnd = () => {
+    if (scrollWrapperRef)
+      scrollWrapperRef.scrollLeft = scrollWrapperRef.scrollWidth;
+  };
 
-    return container;
+  return container;
 };
 
 export default CodeViewer;

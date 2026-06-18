@@ -1,29 +1,19 @@
 // widgets/Container.js
-import { WidgetFactory } from '../widget-factory/index.js';
-import { colors } from '../utils/themes.js';
+import { WidgetFactory } from "../widget-factory/index.js";
+import { colors } from "../utils/themes.js";
 
 export const Container = (props) => {
-    const { style = {}, ...rest } = props;
-    const defaultOverflow = rest.height || rest.maxHeight ? 'auto' : 'visible';
-    
-    
-    return WidgetFactory({
-        tag: 'div',
-        bgColor: colors.surface,
-        display: 'flex',
-        flexDirection: 'column',
-        // boxSizing: 'border-box',
-        // maxWidth: '100%',
-        // height: 'auto',
-        
-        // necessary know height an width
-        overflow: 'auto', // cover all widgets
-        style: {
-            ...style,
-            boxSizing: 'border-box'
-        },
-        ...rest
-    });
+  const { style = {}, ...rest } = props;
+
+  return WidgetFactory({
+    // tag: "div",
+    display: "flex",
+    flexDirection: "column",
+    boxSizing: "border-box",
+    backgroundColor: colors.surface,
+    ...style,
+    ...rest,
+  });
 };
 
 export default Container;

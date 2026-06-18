@@ -946,7 +946,8 @@ const MyApp = () => Scaffold({
 runApp(MyApp, 'root');
 `;
 
-export const fullAppJs = () => `// app.js - Full template (AppBar + Drawer + BottomNav)
+export const fullAppJs =
+  () => `// app.js - Full template (AppBar + Drawer + BottomNav)
 import { runApp, Scaffold, colors, useWindowSize } from 'flet-box';
 import { AppBarComponent } from './components/layouts/AppBarComponent.js';
 import { DrawerMenu } from './components/layouts/DrawerMenu.js';
@@ -996,7 +997,8 @@ const MyApp = () => Scaffold({
 runApp(MyApp, 'root');
 `;
 
-export const adaptiveAppJs = () => `// app.js - Adaptive template (mobile + desktop)
+export const adaptiveAppJs =
+  () => `// app.js - Adaptive template (mobile + desktop)
 import { runApp, Scaffold, colors, useWindowSize } from 'flet-box';
 import { AppBarComponent } from './components/layouts/AppBarComponent.js';
 import { DrawerMenu } from './components/layouts/DrawerMenu.js';
