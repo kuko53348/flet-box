@@ -1,4 +1,4 @@
-// widgets/Text.js
+// widgets/Text.js (corregido)
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 
@@ -16,8 +16,8 @@ export const Text = (props) => {
   let {
     text,
     value,
-    size,
     children,
+    size = 16, // ✅ valor por defecto
     color = colors.textSecondary,
     backgroundColor = "transparent",
     weight = "normal",
@@ -27,10 +27,8 @@ export const Text = (props) => {
     ...rest
   } = props;
 
-  // Get the actual text content
   const textContent = text || value || children || "";
 
-  // Determine base tag
   let baseTag = "span";
   const headingTags = {
     h1: "h1",
@@ -43,7 +41,6 @@ export const Text = (props) => {
   };
   if (type && headingTags[type]) baseTag = headingTags[type];
 
-  // Build CSS styles
   const cssStyles = {
     fontSize: size,
     fontWeight: weight,
@@ -54,11 +51,9 @@ export const Text = (props) => {
     padding: 0,
   };
 
-  // Add margin for headings and paragraphs
   if (type === "h1" || type === "h2") cssStyles.marginBottom = "0.5em";
   if (type === "p") cssStyles.marginBottom = "1em";
 
-  // Handle text decorations
   if (
     textStyles.includes("underline") &&
     textStyles.includes("strikethrough")
@@ -70,16 +65,14 @@ export const Text = (props) => {
     cssStyles.textDecoration = "line-through";
   }
 
-  // Create base element using WidgetFactory
+  // ✅ En lugar de 'textContent', usa 'text' (que está en translateProps)
   let element = WidgetFactory({
     tag: baseTag,
-    textContent: textContent,
-    // style: cssStyles,
+    text: textContent, // ✅ CAMBIADO: text en lugar de textContent
     ...cssStyles,
     ...rest,
   });
 
-  // Wrap with additional HTML tags for text styles (bold, italic, etc.)
   const orderedStyles = [...textStyles].reverse();
   for (const style of orderedStyles) {
     const tag = styleMap[style];

@@ -16,6 +16,547 @@
  */
 
 export const ALL_PROPS = [
+  // ==================== FONT FAMILY ====================
+  {
+    prop: "fontFamily",
+    domProp: "fontFamily",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+
+  // ==================== BACKGROUND (simple) ====================
+  {
+    prop: "background",
+    domProp: "background",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "backgroundAttachment",
+    domProp: "backgroundAttachment",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "backgroundOrigin",
+    domProp: "backgroundOrigin",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "backgroundClip",
+    domProp: "backgroundClip",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "backgroundBlendMode",
+    domProp: "backgroundBlendMode",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+
+  // ==================== FLOAT & CLEAR ====================
+  {
+    prop: "float",
+    domProp: "float",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "clear",
+    domProp: "clear",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+
+  // ==================== VERTICAL ALIGN ====================
+  {
+    prop: "verticalAlign",
+    domProp: "verticalAlign",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+
+  // ==================== LIST STYLE IMAGE ====================
+  {
+    prop: "listStyleImage",
+    domProp: "listStyleImage",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+
+  // ==================== COLUMNS ====================
+  {
+    prop: "columnCount",
+    domProp: "columnCount",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "columnWidth",
+    domProp: "columnWidth",
+    type: "style",
+    unit: "rem",
+    reactive: true,
+  },
+  {
+    prop: "columnGap",
+    domProp: "columnGap",
+    type: "style",
+    unit: "rem",
+    reactive: true,
+  },
+  {
+    prop: "columnRule",
+    domProp: "columnRule",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+
+  // ==================== TRANSFORM 3D ====================
+  {
+    prop: "transformStyle",
+    domProp: "transformStyle",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "transformBox",
+    domProp: "transformBox",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+
+  // ==================== FLEX ORDER ====================
+  {
+    prop: "order",
+    domProp: "order",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  // ==================== PRINT & PAGE BREAK ====================
+  {
+    prop: "orphans",
+    domProp: "orphans",
+    type: "style",
+    unit: "none",
+    reactive: false,
+  },
+  {
+    prop: "widows",
+    domProp: "widows",
+    type: "style",
+    unit: "none",
+    reactive: false,
+  },
+  {
+    prop: "pageBreakAfter",
+    domProp: "pageBreakAfter",
+    type: "style",
+    unit: "none",
+    reactive: false,
+  },
+  {
+    prop: "pageBreakBefore",
+    domProp: "pageBreakBefore",
+    type: "style",
+    unit: "none",
+    reactive: false,
+  },
+  {
+    prop: "pageBreakInside",
+    domProp: "pageBreakInside",
+    type: "style",
+    unit: "none",
+    reactive: false,
+  },
+
+  // ==================== SCROLL SNAP EXTRA ====================
+  {
+    prop: "scrollSnapAlign",
+    domProp: "scrollSnapAlign",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "scrollSnapStop",
+    domProp: "scrollSnapStop",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+
+  // ==================== TOUCH & SCROLL ====================
+  {
+    prop: "touchAction",
+    domProp: "touchAction",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "overscrollBehavior",
+    domProp: "overscrollBehavior",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "overscrollBehaviorX",
+    domProp: "overscrollBehaviorX",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "overscrollBehaviorY",
+    domProp: "overscrollBehaviorY",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  // ==================== SCROLLBAR STYLING ====================
+  {
+    prop: "scrollbarWidth",
+    domProp: "scrollbarWidth",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "scrollbarColor",
+    domProp: "scrollbarColor",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  // ==================== INPUT & SELECTION COLORS ====================
+  {
+    prop: "accentColor",
+    domProp: "accentColor",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "caretColor",
+    domProp: "caretColor",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "colorScheme",
+    domProp: "colorScheme",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  // ==================== CLIP & MASK ====================
+  {
+    prop: "clipPath",
+    domProp: "clipPath",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "mask",
+    domProp: "mask",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "maskImage",
+    domProp: "maskImage",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "maskSize",
+    domProp: "maskSize",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "maskPosition",
+    domProp: "maskPosition",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "maskRepeat",
+    domProp: "maskRepeat",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  // ==================== FLEXBOX EXTRA ====================
+  {
+    prop: "alignContent",
+    domProp: "alignContent",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "alignSelf",
+    domProp: "alignSelf",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "justifyItems",
+    domProp: "justifyItems",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "justifySelf",
+    domProp: "justifySelf",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "placeItems",
+    domProp: "placeItems",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "placeContent",
+    domProp: "placeContent",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "placeSelf",
+    domProp: "placeSelf",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  // ==================== GRID GAP ====================
+  {
+    prop: "rowGap",
+    domProp: "rowGap",
+    type: "style",
+    unit: "rem",
+    reactive: true,
+  },
+  {
+    prop: "columnGap",
+    domProp: "columnGap",
+    type: "style",
+    unit: "rem",
+    reactive: true,
+  },
+  // ==================== LOGICAL BOX SIZING ====================
+  {
+    prop: "blockSize",
+    domProp: "blockSize",
+    type: "style",
+    unit: "rem",
+    reactive: true,
+  },
+  {
+    prop: "inlineSize",
+    domProp: "inlineSize",
+    type: "style",
+    unit: "rem",
+    reactive: true,
+  },
+  {
+    prop: "minBlockSize",
+    domProp: "minBlockSize",
+    type: "style",
+    unit: "rem",
+    reactive: true,
+  },
+  {
+    prop: "maxBlockSize",
+    domProp: "maxBlockSize",
+    type: "style",
+    unit: "rem",
+    reactive: true,
+  },
+  {
+    prop: "minInlineSize",
+    domProp: "minInlineSize",
+    type: "style",
+    unit: "rem",
+    reactive: true,
+  },
+  {
+    prop: "maxInlineSize",
+    domProp: "maxInlineSize",
+    type: "style",
+    unit: "rem",
+    reactive: true,
+  }, // ==================== CONTAINER QUERIES ====================
+  {
+    prop: "contain",
+    domProp: "contain",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "contentVisibility",
+    domProp: "contentVisibility",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "container",
+    domProp: "container",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "containerType",
+    domProp: "containerType",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "containerName",
+    domProp: "containerName",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  // ==================== OFFSET / MOTION PATH ====================
+  {
+    prop: "offset",
+    domProp: "offset",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "offsetPath",
+    domProp: "offsetPath",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "offsetDistance",
+    domProp: "offsetDistance",
+    type: "style",
+    unit: "rem",
+    reactive: true,
+  },
+  {
+    prop: "offsetRotate",
+    domProp: "offsetRotate",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  // ==================== INDIVIDUAL FILTERS ====================
+  {
+    prop: "brightness",
+    domProp: "brightness",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "contrast",
+    domProp: "contrast",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "grayscale",
+    domProp: "grayscale",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "sepia",
+    domProp: "sepia",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "hueRotate",
+    domProp: "hueRotate",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "saturate",
+    domProp: "saturate",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "invert",
+    domProp: "invert",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "blur",
+    domProp: "blur",
+    type: "style",
+    unit: "px",
+    reactive: true,
+  },
+
+  // ==================== FILTERS ====================
+  {
+    prop: "filter",
+    domProp: "filter",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "backdropFilter",
+    domProp: "backdropFilter",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
   // ==================== DIMENSIONS ====================
   { prop: "w", domProp: "width", type: "style", unit: "rem", reactive: true },
   {
@@ -89,7 +630,6 @@ export const ALL_PROPS = [
     unit: "rem",
     reactive: true,
   },
-
   // ==================== SPACING ====================
   { prop: "p", domProp: "padding", type: "style", unit: "rem", reactive: true },
   {
@@ -255,6 +795,35 @@ export const ALL_PROPS = [
   },
   { prop: "gap", domProp: "gap", type: "style", unit: "rem", reactive: true },
 
+  {
+    prop: "ratio",
+    domProp: "aspectRatio",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "overflowAuto",
+    domProp: "overflow",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "overflowHidden",
+    domProp: "overflow",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "flexCenter",
+    domProp: "display",
+    type: "style",
+    unit: "none",
+    reactive: true,
+    expand: "flexCenter",
+  },
   // ==================== POSITION ====================
   {
     prop: "pos",
@@ -355,6 +924,11 @@ export const ALL_PROPS = [
   { prop: "message", domProp: "textContent", type: "text", reactive: true },
   { prop: "buttonText", domProp: "textContent", type: "text", reactive: true },
 
+  // ✅ These now correctly go to textContent (no duplicates)
+  { prop: "value", domProp: "textContent", type: "text", reactive: true },
+  { prop: "name", domProp: "textContent", type: "text", reactive: true },
+  { prop: "icon", domProp: "textContent", type: "text", reactive: true },
+
   {
     prop: "size",
     domProp: "fontSize",
@@ -445,6 +1019,200 @@ export const ALL_PROPS = [
     type: "style",
     unit: "none",
     reactive: true,
+  },
+  {
+    prop: "textOverflow",
+    domProp: "textOverflow",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "textShadow",
+    domProp: "textShadow",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "fontStyle",
+    domProp: "fontStyle",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "fontVariant",
+    domProp: "fontVariant",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "fontStretch",
+    domProp: "fontStretch",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "wordSpacing",
+    domProp: "wordSpacing",
+    type: "style",
+    unit: "rem",
+    reactive: true,
+  },
+  {
+    prop: "wordWrap",
+    domProp: "wordWrap",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "hyphens",
+    domProp: "hyphens",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "textRendering",
+    domProp: "textRendering",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "fontSmoothing",
+    domProp: "webkitFontSmoothing",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "textIndent",
+    domProp: "textIndent",
+    type: "style",
+    unit: "rem",
+    reactive: true,
+  },
+  // ==================== APPEARANCE & MISC ====================
+  {
+    prop: "appearance",
+    domProp: "appearance",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "mixBlendMode",
+    domProp: "mixBlendMode",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "isolation",
+    domProp: "isolation",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  // ==================== SCROLL ====================
+  {
+    prop: "scrollBehavior",
+    domProp: "scrollBehavior",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "scrollMargin",
+    domProp: "scrollMargin",
+    type: "style",
+    unit: "rem",
+    reactive: true,
+  },
+  {
+    prop: "scrollPadding",
+    domProp: "scrollPadding",
+    type: "style",
+    unit: "rem",
+    reactive: true,
+  },
+  {
+    prop: "scrollSnapType",
+    domProp: "scrollSnapType",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  // ==================== OUTLINE ====================
+  {
+    prop: "outline",
+    domProp: "outline",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "outlineWidth",
+    domProp: "outlineWidth",
+    type: "style",
+    unit: "px",
+    reactive: true,
+  },
+  {
+    prop: "outlineColor",
+    domProp: "outlineColor",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "outlineStyle",
+    domProp: "outlineStyle",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "outlineOffset",
+    domProp: "outlineOffset",
+    type: "style",
+    unit: "px",
+    reactive: true,
+  },
+  // ==================== CONTENT (CSS pseudo) ====================
+  {
+    prop: "content",
+    domProp: "content",
+    type: "style",
+    unit: "none",
+    reactive: false,
+  },
+  {
+    prop: "quotes",
+    domProp: "quotes",
+    type: "style",
+    unit: "none",
+    reactive: false,
+  },
+  // ==================== COUNTERS ====================
+  {
+    prop: "counterIncrement",
+    domProp: "counterIncrement",
+    type: "style",
+    unit: "none",
+    reactive: false,
+  },
+  {
+    prop: "counterReset",
+    domProp: "counterReset",
+    type: "style",
+    unit: "none",
+    reactive: false,
   },
 
   // ==================== FLEXBOX ====================
@@ -577,7 +1345,6 @@ export const ALL_PROPS = [
     reactive: true,
   },
 
-  // Individual corners
   {
     prop: "roundedTop",
     domProp: "borderTopLeftRadius",
@@ -628,12 +1395,19 @@ export const ALL_PROPS = [
     type: "style",
     unit: "none",
     reactive: true,
-  }, // handled separately
+  },
 
   // ==================== DISPLAY & LAYOUT ====================
   {
     prop: "display",
     domProp: "display",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "expand",
+    domProp: "flex",
     type: "style",
     unit: "none",
     reactive: true,
@@ -687,7 +1461,106 @@ export const ALL_PROPS = [
     unit: "none",
     reactive: true,
   },
+  {
+    prop: "boxSizing",
+    domProp: "boxSizing",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
 
+  {
+    prop: "resize",
+    domProp: "resize",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  // ==================== GRID ====================
+  {
+    prop: "gridTemplateColumns",
+    domProp: "gridTemplateColumns",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "gridTemplateRows",
+    domProp: "gridTemplateRows",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "gridTemplateAreas",
+    domProp: "gridTemplateAreas",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "gridAutoColumns",
+    domProp: "gridAutoColumns",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "gridAutoRows",
+    domProp: "gridAutoRows",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "gridAutoFlow",
+    domProp: "gridAutoFlow",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "gridColumn",
+    domProp: "gridColumn",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "gridRow",
+    domProp: "gridRow",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "gridColumnStart",
+    domProp: "gridColumnStart",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "gridColumnEnd",
+    domProp: "gridColumnEnd",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "gridRowStart",
+    domProp: "gridRowStart",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "gridRowEnd",
+    domProp: "gridRowEnd",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
   // ==================== BACKGROUND ====================
   {
     prop: "gradient",
@@ -724,12 +1597,137 @@ export const ALL_PROPS = [
     unit: "none",
     reactive: true,
   },
+  // ==================== TABLE ====================
+  {
+    prop: "tableLayout",
+    domProp: "tableLayout",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "borderCollapse",
+    domProp: "borderCollapse",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "borderSpacing",
+    domProp: "borderSpacing",
+    type: "style",
+    unit: "px",
+    reactive: true,
+  },
+  {
+    prop: "captionSide",
+    domProp: "captionSide",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "emptyCells",
+    domProp: "emptyCells",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
 
+  // ==================== LIST STYLES ====================
+
+  {
+    prop: "listStyle",
+    domProp: "listStyle",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "listStyleType",
+    domProp: "listStyleType",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "listStylePosition",
+    domProp: "listStylePosition",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  // ==================== IMAGES / OBJECT ====================
+  {
+    prop: "objectFit",
+    domProp: "objectFit",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "objectPosition",
+    domProp: "objectPosition",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  // ==================== ANIMATIONS & TRANSITIONS ====================
+  {
+    prop: "transition",
+    domProp: "transition",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "animation",
+    domProp: "animation",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "transform",
+    domProp: "transform",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "willChange",
+    domProp: "willChange",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "backfaceVisibility",
+    domProp: "backfaceVisibility",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "perspective",
+    domProp: "perspective",
+    type: "style",
+    unit: "px",
+    reactive: true,
+  },
+  // ==================== ARIA ATTRIBUTES ====================
+  { prop: "ariaLabel", domProp: "aria-label", type: "attribute" },
+  { prop: "ariaHidden", domProp: "aria-hidden", type: "attribute" },
+  { prop: "ariaExpanded", domProp: "aria-expanded", type: "attribute" },
+  { prop: "ariaControls", domProp: "aria-controls", type: "attribute" },
+  { prop: "ariaDescribedby", domProp: "aria-describedby", type: "attribute" },
+  { prop: "ariaLabelledby", domProp: "aria-labelledby", type: "attribute" },
   // ==================== HTML ATTRIBUTES ====================
+  // NOTE: 'value' and 'name' have been removed from here – they are now 'text' props.
   { prop: "id", domProp: "id", type: "attribute" },
   { prop: "className", domProp: "className", type: "attribute" },
   { prop: "class", domProp: "className", type: "attribute" },
-  { prop: "name", domProp: "name", type: "attribute" },
+  // name is now in TEXT section – remove duplicate
   { prop: "type", domProp: "type", type: "attribute" },
   { prop: "href", domProp: "href", type: "attribute" },
   { prop: "src", domProp: "src", type: "attribute" },
@@ -740,13 +1738,13 @@ export const ALL_PROPS = [
   { prop: "checked", domProp: "checked", type: "attribute" },
   { prop: "selected", domProp: "selected", type: "attribute" },
   { prop: "placeholder", domProp: "placeholder", type: "attribute" },
-  { prop: "value", domProp: "value", type: "attribute" },
+  // value is now in TEXT section – remove duplicate
   { prop: "min", domProp: "min", type: "attribute" },
   { prop: "max", domProp: "max", type: "attribute" },
   { prop: "step", domProp: "step", type: "attribute" },
   { prop: "pattern", domProp: "pattern", type: "attribute" },
   { prop: "role", domProp: "role", type: "attribute" },
-  { prop: "title", domProp: "title", type: "attribute" },
+  { prop: "title", domProp: "title", type: "attribute" }, // note: there's a text 'title' too – this one is the HTML attribute
   { prop: "lang", domProp: "lang", type: "attribute" },
   { prop: "dir", domProp: "dir", type: "attribute" },
   { prop: "tabIndex", domProp: "tabIndex", type: "attribute" },
@@ -785,46 +1783,100 @@ export const ALL_PROPS = [
   { prop: "child", domProp: "child", type: "special" },
   { prop: "children", domProp: "children", type: "special" },
   { prop: "style", domProp: "style", type: "special" },
+  // ==================== HTML ATTRIBUTES ====================
+  { prop: "target", domProp: "target", type: "attribute" },
+  { prop: "rel", domProp: "rel", type: "attribute" },
+  { prop: "download", domProp: "download", type: "attribute" },
+  { prop: "media", domProp: "media", type: "attribute" },
+  { prop: "crossOrigin", domProp: "crossOrigin", type: "attribute" },
+  { prop: "referrerPolicy", domProp: "referrerPolicy", type: "attribute" },
+  { prop: "async", domProp: "async", type: "attribute" },
+  { prop: "defer", domProp: "defer", type: "attribute" },
+  { prop: "integrity", domProp: "integrity", type: "attribute" },
+  { prop: "loading", domProp: "loading", type: "attribute" }, // 'lazy', 'eager'
+  { prop: "decoding", domProp: "decoding", type: "attribute" }, // 'sync', 'async', 'auto'
+  { prop: "fetchPriority", domProp: "fetchPriority", type: "attribute" }, // 'high', 'low', 'auto'
+  { prop: "inputMode", domProp: "inputMode", type: "attribute" }, // 'text', 'numeric', etc.
+  { prop: "autoCapitalize", domProp: "autoCapitalize", type: "attribute" },
+  { prop: "autoComplete", domProp: "autoComplete", type: "attribute" },
+  { prop: "autoFocus", domProp: "autoFocus", type: "attribute" }, // ✅ ya tienes autofocus
+  { prop: "autoPlay", domProp: "autoPlay", type: "attribute" },
+  { prop: "controls", domProp: "controls", type: "attribute" },
+  { prop: "loop", domProp: "loop", type: "attribute" },
+  { prop: "muted", domProp: "muted", type: "attribute" },
+  { prop: "poster", domProp: "poster", type: "attribute" },
+  { prop: "preload", domProp: "preload", type: "attribute" },
+  { prop: "playsInline", domProp: "playsInline", type: "attribute" },
+  { prop: "form", domProp: "form", type: "attribute" },
+  { prop: "formAction", domProp: "formAction", type: "attribute" },
+  { prop: "formMethod", domProp: "formMethod", type: "attribute" },
+  { prop: "formNoValidate", domProp: "formNoValidate", type: "attribute" },
+  { prop: "formTarget", domProp: "formTarget", type: "attribute" },
+  { prop: "accept", domProp: "accept", type: "attribute" },
+  { prop: "acceptCharset", domProp: "acceptCharset", type: "attribute" },
+  { prop: "encType", domProp: "encType", type: "attribute" },
+  { prop: "method", domProp: "method", type: "attribute" },
+  { prop: "action", domProp: "action", type: "attribute" },
+  { prop: "novalidate", domProp: "noValidate", type: "attribute" },
+  { prop: "multiple", domProp: "multiple", type: "attribute" },
+  { prop: "size", domProp: "size", type: "attribute" }, // ⚠️ cuidado: ya hay 'size' como fontSize (style)
+  { prop: "maxLength", domProp: "maxLength", type: "attribute" },
+  { prop: "minLength", domProp: "minLength", type: "attribute" },
+  { prop: "colspan", domProp: "colSpan", type: "attribute" },
+  { prop: "rowspan", domProp: "rowSpan", type: "attribute" },
+  { prop: "scope", domProp: "scope", type: "attribute" },
+  { prop: "headers", domProp: "headers", type: "attribute" },
+  // ==================== ADDITIONAL HTML ATTRIBUTES ====================
+  { prop: "sandbox", domProp: "sandbox", type: "attribute" },
+  { prop: "allow", domProp: "allow", type: "attribute" },
+  { prop: "allowFullscreen", domProp: "allowFullscreen", type: "attribute" },
+  {
+    prop: "allowPaymentRequest",
+    domProp: "allowPaymentRequest",
+    type: "attribute",
+  },
+  {
+    prop: "allowTransparency",
+    domProp: "allowTransparency",
+    type: "attribute",
+  },
+  { prop: "challenge", domProp: "challenge", type: "attribute" },
+  { prop: "keytype", domProp: "keytype", type: "attribute" },
+  { prop: "keyparams", domProp: "keyparams", type: "attribute" },
+  { prop: "manifest", domProp: "manifest", type: "attribute" },
+  { prop: "seamless", domProp: "seamless", type: "attribute" },
+  { prop: "srcdoc", domProp: "srcdoc", type: "attribute" },
+  { prop: "srclang", domProp: "srclang", type: "attribute" },
+  { prop: "srcset", domProp: "srcset", type: "attribute" },
+  { prop: "sizes", domProp: "sizes", type: "attribute" },
+  { prop: "crossorigin", domProp: "crossorigin", type: "attribute" },
 ];
 
 // ============================================================
 // DERIVED MAPS
 // ============================================================
 
-/** Map: custom prop name → definition */
 export const PROP_MAP = Object.fromEntries(ALL_PROPS.map((p) => [p.prop, p]));
-
-/** Map: DOM property name → definition (useful for reverse lookups) */
 export const DOM_PROP_MAP = Object.fromEntries(
   ALL_PROPS.map((p) => [p.domProp, p]),
 );
 
-/** List of all style props (custom names) */
 export const STYLE_PROPS = ALL_PROPS.filter((p) => p.type === "style").map(
   (p) => p.prop,
 );
-
-/** List of all attribute props (custom names) */
 export const ATTRIBUTE_PROPS = ALL_PROPS.filter(
   (p) => p.type === "attribute",
 ).map((p) => p.prop);
-
-/** List of all event props (custom names) */
 export const EVENT_PROPS = ALL_PROPS.filter((p) => p.type === "event").map(
   (p) => p.prop,
 );
-
-/** List of all text props (custom names) */
 export const TEXT_PROPS = ALL_PROPS.filter((p) => p.type === "text").map(
   (p) => p.prop,
 );
-
-/** List of all reactive props (custom names) */
 export const REACTIVE_PROPS = ALL_PROPS.filter((p) => p.reactive).map(
   (p) => p.prop,
 );
 
-/** Map: DOM prop → unit for style props */
 export const UNIT_MAP = Object.fromEntries(
   ALL_PROPS.filter((p) => p.type === "style" && p.unit).map((p) => [
     p.domProp,
@@ -832,31 +1884,18 @@ export const UNIT_MAP = Object.fromEntries(
   ]),
 );
 
-/** Set of attribute DOM names (for quick membership checks) */
 export const ATTRIBUTE_DOM_SET = new Set(
   ALL_PROPS.filter((p) => p.type === "attribute").map((p) => p.domProp),
 );
-
-/** Set of event DOM names */
 export const EVENT_DOM_SET = new Set(
   ALL_PROPS.filter((p) => p.type === "event").map((p) => p.domProp),
 );
-
-/** Set of text custom names */
 export const TEXT_PROP_SET = new Set(TEXT_PROPS);
 
 // ============================================================
 // LOOKUP FUNCTION WITH WARNING
 // ============================================================
 
-/**
- * Look up a prop definition by its custom name.
- *
- * @param {string} propName - The custom prop name (e.g., 'w', 'onClick').
- * @returns {object|null} The prop definition, or null if not found.
- *
- * If the prop is not found, a warning is logged to the console.
- */
 export function getPropDefinition(propName) {
   const def = PROP_MAP[propName];
   if (!def) {
@@ -868,10 +1907,6 @@ export function getPropDefinition(propName) {
   }
   return def;
 }
-
-// ============================================================
-// DEFAULT EXPORT
-// ============================================================
 
 export default {
   ALL_PROPS,

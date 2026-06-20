@@ -1,28 +1,53 @@
-// app.js - Versión visible
-import { runApp, Container, Text } from "./index.js";
+// app.js - Prueba de visibilidad de texto e iconos
+import { runApp, Container, Text, Icon, colors } from "./index.js";
 
 const App = () => {
   return Container({
-    // ✅ Fondo oscuro
-    // bg: "#1a1a2e",
-    // ✅ Centrado
+    // Fondo oscuro para todo el cuerpo
+    bgColor: "#1a1a2e",
+    // Centrar vertical y horizontalmente
     justifyContent: "center",
     alignItems: "center",
+    // Ocupa toda la pantalla
     expand: true,
-    // height: "100vh",
-    // ✅ Ocupa toda la pantalla
-    // height: "100vh",
-    // ✅ Contenedor interno con fondo visible
+
     child: Container({
-      bgColor: "#16213e", // ✅ Fondo visible
-      padding: 30, // ✅ Padding
-      rounded: 12, // ✅ Bordes redondeados
-      child: Text({
-        text: "Hello", // ✅ Texto
-        color: "#e94560", // ✅ Color visible (rojo/rosa)
-        size: 32, // ✅ Tamaño grande
-        weight: "bold", // ✅ Negrita
-      }),
+      // Fondo visible (azul oscuro)
+      bgCOlor: "#16213e",
+      padding: 30,
+      rounded: 12,
+      // Contenido apilado verticalmente
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      gap: 16,
+      children: [
+        // 🔤 Texto grande y visible
+        Text({
+          text: "¡Hola FletBox!",
+          color: "#e94560", // Rojo/rosa vibrante
+          size: 32, // Tamaño grande
+          weight: "bold",
+        }),
+        // 📝 Texto secundario
+        Text({
+          text: "Esto es un texto visible",
+          color: colors.textSecondary,
+          size: 16,
+        }),
+        // 🎨 Icono (usando 'icon' o 'name')
+        Icon({
+          icon: "favorite", // o 'name: "favorite"'
+          size: 48,
+          color: "#e94560",
+        }),
+        // 🏠 Otro icono con 'name'
+        Icon({
+          name: "home",
+          size: 36,
+          color: "#4ade80",
+        }),
+      ],
     }),
   });
 };
