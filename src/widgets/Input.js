@@ -1,6 +1,5 @@
-// widgets/Input.js - Versión completa con colores del tema
+// widgets/Input.js - Versión adaptada a la nueva arquitectura
 import { WidgetFactory } from "../widget-factory/index.js";
-// import { createWidget } from '../widget-factory/index.js';
 import { colors } from "../utils/themes.js";
 import { Icon } from "./Icon.js";
 import { TextInputValidator } from "../utils/TextInputValidator.js";
@@ -128,7 +127,6 @@ export const Input = (props) => {
   const updateValidationUI = (valid) => {
     if (!inputWrapper) return;
 
-    // Border color based on theme
     let borderColorValue = colors.border;
     if (error) {
       borderColorValue = colors.danger;
@@ -144,7 +142,6 @@ export const Input = (props) => {
       inputWrapper.style.borderBottomColor = borderColorValue;
     }
 
-    // Validation icon
     if (showValidationIcon && validationIcon) {
       if (currentValue && validation !== "none") {
         validationIcon.textContent = isValid ? "✓" : "✗";
@@ -155,7 +152,6 @@ export const Input = (props) => {
       }
     }
 
-    // Error message
     if (errorMessageElement) {
       if (validationMessage && showValidationMessage && !isValid && !error) {
         errorMessageElement.textContent = validationMessage;
@@ -190,35 +186,37 @@ export const Input = (props) => {
     if (onChange) onChange(filtered, event);
   };
 
-  // Main container
-  const container = WidgetFactory({
-    tag: "div",
-    style: {
+  // ========== CONTAINER PRINCIPAL ==========
+  const container = WidgetFactory(
+    "div",
+    {
       display: "inline-flex",
       flexDirection: "column",
       gap: "4px",
       width: fullWidth ? "100%" : "auto",
       ...rest.style,
     },
-  });
+    {},
+  );
 
-  // Label
+  // ========== LABEL ==========
   if (label) {
     const requiredMark = required ? " *" : "";
-    const labelEl = WidgetFactory({
-      tag: "label",
-      textContent: label + requiredMark,
-      style: {
+    const labelEl = WidgetFactory(
+      "label",
+      {
+        textContent: label + requiredMark,
         fontSize: "12px",
         fontWeight: "500",
         color: error ? colors.danger : colors.textSecondary,
         marginBottom: "2px",
       },
-    });
+      {},
+    );
     container.appendChild(labelEl);
   }
 
-  // Input wrapper styles based on variant
+  // ========== WRAPPER ==========
   let wrapperStyles = {
     display: "flex",
     alignItems: "center",
@@ -236,19 +234,15 @@ export const Input = (props) => {
     wrapperStyles.borderBottom = `1px solid ${error ? colors.danger : colors.border}`;
     wrapperStyles.borderRadius = "0";
   } else {
-    // outlined (default)
     wrapperStyles.backgroundColor = "transparent";
     wrapperStyles.borderRadius =
       typeof borderRadius === "number" ? `${borderRadius}px` : borderRadius;
     wrapperStyles.border = `1px solid ${error ? colors.danger : colors.border}`;
   }
 
-  inputWrapper = WidgetFactory({
-    tag: "div",
-    style: wrapperStyles,
-  });
+  inputWrapper = WidgetFactory("div", wrapperStyles, {});
 
-  // Left icon
+  // ========== ICONO IZQUIERDO ==========
   if (iconLeft) {
     const iconEl = Icon({
       name: iconLeft,
@@ -260,15 +254,15 @@ export const Input = (props) => {
     inputWrapper.appendChild(iconEl);
   }
 
-  // Input element
-  inputElement = WidgetFactory({
-    tag: "input",
-    type: type,
-    value: currentValue,
-    placeholder: placeholder,
-    disabled: disabled,
-    readOnly: readonly,
-    style: {
+  // ========== INPUT ==========
+  inputElement = WidgetFactory(
+    "input",
+    {
+      type: type,
+      value: currentValue,
+      placeholder: placeholder,
+      disabled: disabled,
+      readOnly: readonly,
       flex: 1,
       padding: sz.padding,
       fontSize: sz.fontSize,
@@ -279,7 +273,8 @@ export const Input = (props) => {
       width: "100%",
       color: disabled ? colors.textDisabled : colors.text,
     },
-  });
+    {},
+  );
 
   inputElement.oninput = (e) => handleInput(e.target.value, e);
   inputElement.onfocus = (e) => {
@@ -311,12 +306,12 @@ export const Input = (props) => {
 
   inputWrapper.appendChild(inputElement);
 
-  // Validation icon
+  // ========== ICONO DE VALIDACIÓN ==========
   if (showValidationIcon && validation !== "none") {
-    validationIcon = WidgetFactory({
-      tag: "span",
-      textContent: "",
-      style: {
+    validationIcon = WidgetFactory(
+      "span",
+      {
+        textContent: "",
         width: "24px",
         fontSize: "16px",
         display: "none",
@@ -324,17 +319,18 @@ export const Input = (props) => {
         justifyContent: "center",
         marginRight: "8px",
       },
-    });
+      {},
+    );
     inputWrapper.appendChild(validationIcon);
   }
 
-  // Right icon
+  // ========== ICONO DERECHO ==========
   if (iconRight) {
     const iconEl = Icon({
       name: iconRight,
       size: iconSize || sz.iconSize,
       color: iconColor,
-      style: { marginRight: "12px" },
+      marginRight: "12px",
     });
     if (onIconPress) iconEl.onclick = onIconPress;
     inputWrapper.appendChild(iconEl);
@@ -342,20 +338,21 @@ export const Input = (props) => {
 
   container.appendChild(inputWrapper);
 
-  // Error message
-  errorMessageElement = WidgetFactory({
-    tag: "span",
-    textContent: "",
-    style: {
+  // ========== MENSAJE DE ERROR ==========
+  errorMessageElement = WidgetFactory(
+    "span",
+    {
+      textContent: "",
       fontSize: "11px",
       color: colors.danger,
       marginTop: "2px",
       display: "none",
     },
-  });
+    {},
+  );
   container.appendChild(errorMessageElement);
 
-  // Public methods
+  // ========== MÉTODOS PÚBLICOS ==========
   container.getValue = () => currentValue;
   container.setValue = (newValue) => {
     currentValue = newValue;

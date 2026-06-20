@@ -68,16 +68,14 @@ export const Scaffold = (props) => {
 
   const container = WidgetFactory({
     tag: "div",
-    style: {
-      display: "flex",
-      flexDirection: "column",
-      width: "100%",
-      height: "100vh",
-      backgroundColor: backgroundColor,
-      position: "relative",
-      overflow: "hidden",
-      ...rest.style,
-    },
+    display: "flex",
+    flexDirection: "column",
+    width: "100%",
+    height: "100vh",
+    backgroundColor: backgroundColor,
+    position: "relative",
+    overflow: "hidden",
+    ...rest.style,
     ...rest,
   });
 
@@ -94,7 +92,7 @@ export const Scaffold = (props) => {
 
   const makeFullSize = (widget) => {
     if (widget && widget.style) {
-      widget.style.flex = "1";
+      widget.style.flex = "1"; // ← Esto debería funcionar
       widget.style.width = "100%";
       widget.style.display = "flex";
       widget.style.flexDirection = "column";

@@ -1,5 +1,5 @@
 // ============================================================
-// 📋 READ: Obtener estilos
+// 📋 READ: Get styles
 // ============================================================
 
 export function getStyles(el, prop) {
@@ -16,54 +16,72 @@ export function getStyles(el, prop) {
 }
 
 // ============================================================
-// ➕ CREATE / UPDATE: Asignar estilos (COMPATIBLE)
+// ➕ CREATE / UPDATE: Assign styles
 // ============================================================
 
-/**
- * Convierte un valor a formato CSS válido
- * - Array → "12px 24px"
- * - Número → "16px"
- * - String → se queda igual
- * - null/undefined → se ignora
- */
-const toCSSValue = (value) => {
+const toCSSValue = (key, value) => {
   if (value === undefined || value === null) return null;
+
+  // ✅ Array → "12px 24px"
   if (Array.isArray(value)) {
     return value.map((v) => (typeof v === "number" ? `${v}px` : v)).join(" ");
   }
+
+  // ✅ Number → apply unit or no unit
   if (typeof value === "number") {
-    return `${value}px`;
+    // ✅ Props that should NOT have units
+    const noUnitProps = new Set([
+      "flex",
+      "flexGrow",
+      "flexShrink",
+      "order",
+      "zIndex",
+      "opacity",
+      "fontWeight",
+      "lineHeight",
+      "scale",
+      "rotate",
+      "rotateX",
+      "rotateY",
+      "rotateZ",
+    ]);
+
+    if (noUnitProps.has(key)) {
+      return value; // ✅ No unit
+    }
+    return `${value}px`; // ✅ Add px
   }
+
+  // ✅ String → keep as is
   return value;
 };
 
 export function setStyles(el, prop, value) {
-  // ✅ Validar elemento
+  // ✅ Validate element
   if (!el || !el.style) return el;
 
-  // ✅ Caso 1: string (prop + value)
+  // ✅ Case 1: string (prop + value)
   if (typeof prop === "string") {
-    const cssValue = toCSSValue(value);
+    const cssValue = toCSSValue(prop, value);
     if (cssValue !== null) {
       try {
         el.style[prop] = cssValue;
       } catch (e) {
-        // Silenciar error
+        // Silently ignore errors
       }
     }
     return el;
   }
 
-  // ✅ Caso 2: objeto de estilos
+  // ✅ Case 2: styles object
   if (typeof prop === "object" && prop !== null) {
-    // ✅ Recorrer todas las propiedades
     for (const [key, val] of Object.entries(prop)) {
-      const cssValue = toCSSValue(val);
+      const cssValue = toCSSValue(key, val);
       if (cssValue !== null) {
         try {
           el.style[key] = cssValue;
         } catch (e) {
-          // Silenciar error
+          // Silently ignore errors
         }
       }
     }
@@ -73,7 +91,7 @@ export function setStyles(el, prop, value) {
 }
 
 // ============================================================
-// 🔄 TOGGLE: Alternar estilos
+// 🔄 TOGGLE: Toggle styles
 // ============================================================
 
 export function updateStyle(el, prop, val1, val2) {
@@ -81,13 +99,13 @@ export function updateStyle(el, prop, val1, val2) {
 
   const current = el.style[prop] || "";
   const newValue = current === val1 ? val2 : val1;
-  const cssValue = toCSSValue(newValue);
+  const cssValue = toCSSValue(prop, newValue);
 
   if (cssValue !== null) {
     try {
       el.style[prop] = cssValue;
     } catch (e) {
-      // Silenciar error
+      // Silently ignore errors
     }
   }
 
@@ -95,7 +113,7 @@ export function updateStyle(el, prop, val1, val2) {
 }
 
 // ============================================================
-// 🗑️ DELETE: Eliminar estilos
+// 🗑️ DELETE: Remove styles
 // ============================================================
 
 export function removeStyles(el, prop) {
@@ -123,7 +141,7 @@ export function removeStyles(el, prop) {
 }
 
 // ============================================================
-// 🔍 UTILITY: Verificar estilo
+// 🔍 UTILITY: Check styles
 // ============================================================
 
 export function hasStyle(el, prop) {
@@ -131,15 +149,15 @@ export function hasStyle(el, prop) {
   return el.style[prop] !== "";
 }
 
-export function logStyles(el, label = "Estilos") {
+export function logStyles(el, label = "Styles") {
   if (!el) {
-    console.warn("⚠️ Elemento no válido");
+    console.warn("⚠️ Invalid element");
     return null;
   }
   const styles = getStyles(el);
   console.log(`📋 ${label}:`);
   if (Object.keys(styles).length === 0) {
-    console.log("  (Sin estilos inline)");
+    console.log("  (No inline styles)");
   } else {
     Object.entries(styles).forEach(([p, v]) => console.log(`  ${p}: ${v}`));
   }

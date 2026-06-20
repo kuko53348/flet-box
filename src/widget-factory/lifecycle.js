@@ -6,19 +6,35 @@ export const addLifecycle = (widget) => {
   widget.onMount = (fn) => {
     if (typeof fn === "function") widget._mountFns.push(fn);
   };
-
   widget.onUnmount = (fn) => {
     if (typeof fn === "function") widget._unmountFns.push(fn);
   };
 
-  // Detectar inserción en el DOM
-  const observer = new MutationObserver(() => {
-    if (document.body.contains(widget)) {
-      widget._mountFns.forEach((fn) => fn(widget));
+  // Observer
+  let observer = null;
+  const startObserver = () => {
+    if (observer) observer.disconnect();
+    observer = new MutationObserver(() => {
+      if (document.body.contains(widget)) {
+        widget._mountFns.forEach((fn) => fn(widget));
+        if (observer) observer.disconnect();
+        observer = null;
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  };
+  startObserver();
+
+  // Cleanup
+  widget._cleanup = () => {
+    if (observer) {
       observer.disconnect();
+      observer = null;
     }
-  });
-  observer.observe(document.body, { childList: true, subtree: true });
+    widget._unmountFns.forEach((fn) => fn(widget));
+    widget._mountFns = [];
+    widget._unmountFns = [];
+  };
 
   return widget;
 };

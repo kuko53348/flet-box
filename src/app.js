@@ -9,7 +9,7 @@ const App = () => {
     justifyContent: "center",
     alignItems: "center",
     expand: true,
-    height: "100vh",
+    // height: "100vh",
     // ✅ Ocupa toda la pantalla
     // height: "100vh",
     // ✅ Contenedor interno con fondo visible

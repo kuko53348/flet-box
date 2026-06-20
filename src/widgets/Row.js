@@ -5,6 +5,7 @@ export const Row = (props) => {
   const { style = {}, ...rest } = props;
 
   return WidgetFactory({
+    tag: "div",
     display: "flex",
     flexDirection: "row",
     width: "100%",

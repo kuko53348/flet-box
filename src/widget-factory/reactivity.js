@@ -12,6 +12,7 @@ export const REACTIVE_PROPS = [
   "title",
   "value",
   "placeholder",
+  "expand",
 
   // Colors & Backgrounds
   "color",

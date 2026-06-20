@@ -5,7 +5,7 @@ export const Column = (props) => {
   const { style = {}, ...rest } = props;
 
   return WidgetFactory({
-    // tag: "div",
+    tag: "div",
     display: "flex",
     flexDirection: "column",
     boxSizing: "border-box",

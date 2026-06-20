@@ -5,6 +5,8 @@
 │   ├── commands
 │   │   ├── create.js
 │   │   ├── createBundle.js
+│   │   ├── createComponent.js
+│   │   ├── createScreen.js
 │   │   ├── package.js
 │   │   └── runServer.js
 │   ├── package.json
@@ -107,16 +109,23 @@
 │   ├── animations
 │   │   ├── AnimatedBox.js
 │   │   ├── AnimatedText.js
+│   │   ├── MatrixRain.js
 │   │   ├── ParallaxBox.js
 │   │   ├── animate.js
 │   │   └── index.js
 │   ├── app.js
 │   ├── assets
+│   │   ├── icon-1024-maskable.png
+│   │   ├── icon-192-maskable.png
+│   │   ├── icon-192.png
+│   │   ├── icon-512-maskable.png
+│   │   ├── icon-512.png
 │   │   └── logo.png
-│   ├── chart.js
 │   ├── core
+│   │   ├── App.js
 │   │   ├── hmr-client.js
 │   │   ├── index.js
+│   │   ├── pwa.js
 │   │   └── runApp.js
 │   ├── create-index.sh
 │   ├── fonts
@@ -125,8 +134,10 @@
 │   ├── index.d.ts
 │   ├── index.js
 │   ├── navigations
+│   │   ├── AdaptiveScaffold.js
 │   │   ├── AppBar.js
 │   │   ├── BottomNavigation.js
+│   │   ├── CollapsibleSideBar.js
 │   │   ├── Drawer.js
 │   │   ├── DrawerItem.js
 │   │   ├── Router.js
@@ -140,7 +151,6 @@
 │   │   ├── http.js
 │   │   └── index.js
 │   ├── tools
-│   │   ├── animate.js
 │   │   ├── animation.js
 │   │   ├── array.js
 │   │   ├── border.js
@@ -149,6 +159,7 @@
 │   │   ├── createList.js
 │   │   ├── delay.js
 │   │   ├── device.js
+│   │   ├── dict.js
 │   │   ├── dimensions.js
 │   │   ├── filter.js
 │   │   ├── flex.js
@@ -161,6 +172,7 @@
 │   │   ├── os.js
 │   │   ├── padding.js
 │   │   ├── random.js
+│   │   ├── ref.js
 │   │   ├── rgba.js
 │   │   ├── shadow.js
 │   │   ├── string.js
@@ -174,30 +186,36 @@
 │   │   ├── getWidgetProps.js
 │   │   ├── index.js
 │   │   ├── markdownParser.js
+│   │   ├── mediaTime.js
 │   │   ├── navigation.js
 │   │   ├── stackPosition.js
+│   │   ├── stopWebRefresh.js
 │   │   ├── syntaxHighlight.js
 │   │   ├── themes.js
 │   │   ├── units.js
 │   │   └── visualEffects.js
-│   ├── widget-builder
+│   ├── widget-factory
+│   │   ├── addChildren.js
 │   │   ├── assignProps.js
-│   │   ├── children.js
 │   │   ├── createWidget.js
 │   │   ├── effects.js
-│   │   ├── events.js
 │   │   ├── index.js
 │   │   ├── lifecycle.js
-│   │   ├── parentable.js
+│   │   ├── makeParentable.js
+│   │   ├── pixTool.js
+│   │   ├── processProps.js
 │   │   ├── reactivity.js
+│   │   ├── remTool.js
+│   │   ├── stackPosition.js
+│   │   ├── stringTool.js
+│   │   ├── tools.js
 │   │   ├── translateProps.js
-│   │   └── utils.js
-│   ├── widget-factory
-│   │   ├── WidgetFactory.js
-│   │   └── index.js
+│   │   ├── unitTool.js
+│   │   └── widgetFactory.js
 │   └── widgets
 │       ├── Accordion.js
 │       ├── AlertDialog.js
+│       ├── Audio.js
 │       ├── Avatar.js
 │       ├── Badge.js
 │       ├── BottomSheet.js
@@ -207,6 +225,8 @@
 │       ├── Chart.js
 │       ├── Checkbox.js
 │       ├── Chip.js
+│       ├── CircularBar.js
+│       ├── CircularChart.js
 │       ├── CodeViewer.js
 │       ├── Column.js
 │       ├── Container.js
@@ -221,9 +241,9 @@
 │       ├── Image.js
 │       ├── Input.js
 │       ├── Inspector.js
+│       ├── InstallButton.js
 │       ├── ListTile.js
 │       ├── ListView.js
-│       ├── MarkDown.js
 │       ├── Markdown.js
 │       ├── Modal.js
 │       ├── Pagination.js
@@ -241,8 +261,9 @@
 │       ├── Text.js
 │       ├── Tooltip.js
 │       ├── TreeView.js
+│       ├── Video.js
 │       └── index.js
 ├── tree.txt
 └── useNplist.sh
 
-34 directories, 212 files
+33 directories, 234 files

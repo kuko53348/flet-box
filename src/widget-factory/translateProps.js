@@ -3,7 +3,7 @@
  */
 
 // Map: custom → DOM
-const propMap = {
+export const propMap = {
   // Dimensions
   w: "width",
   h: "height",
@@ -32,8 +32,6 @@ const propMap = {
   // Position
   pos: "position",
   z: "zIndex",
-
-  // expand: "flex", // expand: true → flex: 1
 
   // Borders
   gradient: "background",
@@ -83,14 +81,14 @@ const propMap = {
   onInput: "oninput",
 };
 
-export function translateProps(props) {
-  const result = {};
-
-  for (const [key, value] of Object.entries(props)) {
-    // Si existe en el mapa, usa el nombre DOM, sino mantiene el original
-    const domKey = propMap[key] || key;
-    result[domKey] = value;
-  }
-
-  return result;
-}
+// export function translateProps(props) {
+//   const result = {};
+//
+//   for (const [key, value] of Object.entries(props)) {
+//     // Si existe en el mapa, usa el nombre DOM, sino mantiene el original
+//     const domKey = propMap[key] || key;
+//     result[domKey] = value;
+//   }
+//
+//   return result;
+// }
