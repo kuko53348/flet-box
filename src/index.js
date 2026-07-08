@@ -79,6 +79,7 @@ export {
   fromJSON,
   fromEntries,
   ref,
+  print,
 } from "./tools/index.js";
 
 // ========== UTILS ==========

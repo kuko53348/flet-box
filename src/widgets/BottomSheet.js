@@ -1,4 +1,4 @@
-// widgets/BottomSheet.js - Versión corregida y completa
+// widgets/BottomSheet.js - Versión corregida (con stopPropagation)
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 import { Row } from "./Row.js";
@@ -35,7 +35,7 @@ export const BottomSheet = (props) => {
     headerPadding = "0 16px 8px 16px",
     contentPadding = "0 16px",
     actionPadding = "12px 16px",
-    dragHandlePadding = "12px 0 8px 0",
+    dragHandlePadding = "14px 0 8px 0",
     dragHandleWidth = 40,
     dragHandleHeight = 4,
 
@@ -59,7 +59,7 @@ export const BottomSheet = (props) => {
   let startY = 0;
   let currentY = 0;
 
-  // Overlay
+  // ✅ Overlay con onclick
   overlay = WidgetFactory({
     position: "fixed",
     top: 0,
@@ -71,18 +71,22 @@ export const BottomSheet = (props) => {
     opacity: 0,
     visibility: "hidden",
     transition: `opacity ${animationDuration}ms ease, visibility ${animationDuration}ms ease`,
-    onclick: () => {
-      if (closeOnOverlayClick) close();
-    },
+    // onclick: (e) => {
+    //   // ✅ Solo cerrar si el clic fue directamente en el overlay (no en el sheet)
+    //   if (e.target === overlay && closeOnOverlayClick) {
+    //     close();
+    //   }
+    // },
   });
 
-  // Drag handle
+  // ✅ Drag handle con stopPropagation
   const dragHandle = showDragHandle
     ? WidgetFactory({
         display: "flex",
         justifyContent: "center",
         padding: dragHandlePadding,
         cursor: "grab",
+        onclick: (e) => e.stopPropagation(), // ✅ Evita que el clic llegue al overlay
         child: WidgetFactory({
           width: dragHandleWidth,
           height: dragHandleHeight,
@@ -101,7 +105,7 @@ export const BottomSheet = (props) => {
         size: 18,
         weight: "bold",
         color: headerTextColor,
-        style: { flex: 1 },
+        flex: 1,
       }),
     );
   }
@@ -110,7 +114,7 @@ export const BottomSheet = (props) => {
       name: "close",
       size: 22,
       color: colors.textSecondary,
-      style: { cursor: "pointer" },
+      cursor: "pointer",
     });
     closeBtn.onclick = () => close();
     headerChildren.push(closeBtn);
@@ -121,10 +125,8 @@ export const BottomSheet = (props) => {
       ? Row({
           alignItems: "center",
           justifyContent: "space-between",
-          style: {
-            padding: headerPadding,
-            borderBottom: title ? `1px solid ${headerBorderColor}` : "none",
-          },
+          padding: headerPadding,
+          borderBottom: title ? `1px solid ${headerBorderColor}` : "none",
           children: headerChildren,
         })
       : null;
@@ -136,31 +138,28 @@ export const BottomSheet = (props) => {
           alignItems: "center",
           justifyContent: "flex-end",
           gap: 8,
-          style: {
-            padding: actionPadding,
-            borderTop: `1px solid ${actionBorderColor}`,
-            marginTop: "auto",
-          },
+          padding: actionPadding,
+          borderTop: `1px solid ${actionBorderColor}`,
+          marginTop: "auto",
           children: actions,
         })
       : null;
 
   // Content wrapper
   const contentWrapper = Container({
-    style: {
-      flex: 1,
-      overflow: "auto",
-      padding: contentPadding,
-    },
+    flex: 1,
+    overflow: "auto",
+    padding: contentPadding,
     child: content,
   });
 
-  // BottomSheet container
+  // ✅ SheetContainer con stopPropagation
   sheetContainer = WidgetFactory({
     position: "fixed",
     bottom: 0,
     left: 0,
     right: 0,
+    paddingBottom: 12,
     backgroundColor: backgroundColor,
     borderRadius: `${borderRadius}px ${borderRadius}px 0 0`,
     boxShadow: shadow,
@@ -172,11 +171,13 @@ export const BottomSheet = (props) => {
     flexDirection: "column",
     zIndex: zIndex,
     overflow: "hidden",
+    // onclick: (e) => e.stopPropagation(), // ✅ Evita que el clic llegue al overlay
   });
 
   // Body
   const sheetBody = Column({
-    style: { height: "100%" },
+    height: "100%",
+    gap: 12,
     children: [dragHandle, header, contentWrapper, actionsElement].filter(
       Boolean,
     ),
@@ -188,6 +189,8 @@ export const BottomSheet = (props) => {
 
   // Drag handlers
   const onTouchStart = (e) => {
+    // ✅ Prevenir que el evento de arrastre se propague al overlay
+    e.stopPropagation();
     startY = e.touches ? e.touches[0].clientY : e.clientY;
     currentY = startY;
     sheetContainer.style.transition = "none";
@@ -195,6 +198,7 @@ export const BottomSheet = (props) => {
 
   const onTouchMove = (e) => {
     if (!closeOnDragDown) return;
+    e.preventDefault();
     const moveY = e.touches ? e.touches[0].clientY : e.clientY;
     const delta = moveY - startY;
     if (delta > 0) {
@@ -205,7 +209,8 @@ export const BottomSheet = (props) => {
     }
   };
 
-  const onTouchEnd = () => {
+  const onTouchEnd = (e) => {
+    e.stopPropagation();
     sheetContainer.style.transition = `transform ${animationDuration}ms ease`;
     const delta = currentY - startY;
     if (delta > 100) {
@@ -229,7 +234,7 @@ export const BottomSheet = (props) => {
 
     if (closeOnDragDown && dragHandle) {
       dragHandle.addEventListener("mousedown", onTouchStart);
-      dragHandle.addEventListener("mousemove", onTouchMove);
+      // dragHandle.addEventListener("mousemove", onTouchMove);
       dragHandle.addEventListener("mouseup", onTouchEnd);
       dragHandle.addEventListener("touchstart", onTouchStart);
       dragHandle.addEventListener("touchmove", onTouchMove);
@@ -250,7 +255,7 @@ export const BottomSheet = (props) => {
 
     if (closeOnDragDown && dragHandle) {
       dragHandle.removeEventListener("mousedown", onTouchStart);
-      dragHandle.removeEventListener("mousemove", onTouchMove);
+      // dragHandle.removeEventListener("mousemove", onTouchMove);
       dragHandle.removeEventListener("mouseup", onTouchEnd);
       dragHandle.removeEventListener("touchstart", onTouchStart);
       dragHandle.removeEventListener("touchmove", onTouchMove);

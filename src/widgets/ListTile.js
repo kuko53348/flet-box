@@ -76,7 +76,8 @@ export const ListTile = (props) => {
       ? Column({
           gap: 2,
           alignItems: "flex-start",
-          style: { flex: 1, minWidth: 0 },
+          flex: 1,
+          minWidth: 0,
           children: textChildren,
         })
       : null;
@@ -90,19 +91,17 @@ export const ListTile = (props) => {
   const contentRow = Row({
     alignItems: "center",
     gap: gap,
-    style: {
-      padding: `${paddingVertical}px ${paddingHorizontal}px`,
-      width: "100%",
-      boxSizing: "border-box",
-    },
+    padding: `${paddingVertical}px ${paddingHorizontal}px`,
+    width: "100%",
+    boxSizing: "border-box",
     children: rowChildren,
   });
 
   // Main tile using WidgetFactory
   const tile = WidgetFactory({
+    tag: "div",
     backgroundColor: selected ? selectedBgColor : bgColor,
-    borderRadius:
-      typeof borderRadius === "number" ? `${borderRadius}px` : borderRadius,
+    borderRadius: borderRadius,
     cursor: isInteractive ? "pointer" : "default",
     opacity: disabled ? 0.6 : 1,
     boxShadow:
@@ -156,7 +155,7 @@ export const ListTile = (props) => {
   // Add divider if needed
   if (divider) {
     const dividerLine = WidgetFactory({
-      height: "1px",
+      height: 1,
       backgroundColor: colors.border,
       marginLeft: `${paddingHorizontal}px`,
       width: `calc(100% - ${paddingHorizontal}px)`,

@@ -1,81 +1,89 @@
-// widgets/Divider.js - Versión completa con WidgetFactory (sin Container)
+// widgets/Divider.js - Optimized version
 import { WidgetFactory } from "../widget-factory/index.js";
-
-// Color por defecto (no depende de temas para evitar errores de inicialización)
-const DEFAULT_COLOR = "#e2e8f0";
+import { colors } from "../utils/themes.js";
 
 export const Divider = (props = {}) => {
   const {
-    color = DEFAULT_COLOR,
+    color = colors.surface,
     thickness = 1,
     margin = 16,
     orientation = "horizontal",
-    style = {},
+    width = "100%",
+    height = "100%",
+    flexShrink = 0,
+    marginTop: propMarginTop,
+    marginBottom: propMarginBottom,
+    marginLeft: propMarginLeft,
+    marginRight: propMarginRight,
     ...rest
   } = props;
 
   const isHorizontal = orientation === "horizontal";
-  const finalThickness =
-    typeof thickness === "number" ? `${thickness}px` : thickness;
 
-  // Procesar margen (número, string u objeto)
-  let marginStyle = "";
+  // Determine margin values with proper priority:
+  // 1. Individual props (marginTop, marginBottom, etc.)
+  // 2. margin object (margin.top, margin.bottom, etc.)
+  // 3. margin number (applied to all sides)
+  // 4. Default values
+
+  let finalMarginTop = propMarginTop ?? 0;
+  let finalMarginBottom = propMarginBottom ?? 0;
+  let finalMarginLeft = propMarginLeft ?? 0;
+  let finalMarginRight = propMarginRight ?? 0;
+
   if (typeof margin === "number") {
-    marginStyle = isHorizontal ? `${margin}px 0` : `0 ${margin}px`;
-  } else if (typeof margin === "string") {
-    marginStyle = margin;
+    if (isHorizontal) {
+      finalMarginTop = margin;
+      finalMarginBottom = margin;
+    } else {
+      finalMarginLeft = margin;
+      finalMarginRight = margin;
+    }
   } else if (margin && typeof margin === "object") {
-    const top =
-      margin.top !== undefined
-        ? typeof margin.top === "number"
-          ? `${margin.top}px`
-          : margin.top
-        : "0";
-    const right =
-      margin.right !== undefined
-        ? typeof margin.right === "number"
-          ? `${margin.right}px`
-          : margin.right
-        : "0";
-    const bottom =
-      margin.bottom !== undefined
-        ? typeof margin.bottom === "number"
-          ? `${margin.bottom}px`
-          : margin.bottom
-        : "0";
-    const left =
-      margin.left !== undefined
-        ? typeof margin.left === "number"
-          ? `${margin.left}px`
-          : margin.left
-        : "0";
-    marginStyle = `${top} ${right} ${bottom} ${left}`;
-  } else {
-    marginStyle = isHorizontal ? "16px 0" : "0 16px";
+    if (isHorizontal) {
+      finalMarginTop = margin.top ?? finalMarginTop;
+      finalMarginBottom = margin.bottom ?? finalMarginBottom;
+    } else {
+      finalMarginLeft = margin.left ?? finalMarginLeft;
+      finalMarginRight = margin.right ?? finalMarginRight;
+    }
   }
 
-  const baseStyle = {
-    backgroundColor: color,
-    flexShrink: 0,
-    ...style,
-  };
+  // If margin is a string, use it directly (overrides everything)
+  const useMarginString = typeof margin === "string";
 
-  if (isHorizontal) {
-    baseStyle.height = finalThickness;
-    baseStyle.width = "100%";
-    baseStyle.margin = marginStyle;
-  } else {
-    baseStyle.width = finalThickness;
-    baseStyle.height = "100%";
-    baseStyle.minHeight = "1px"; // para que se vea en contenedores flex
-    baseStyle.margin = marginStyle;
-  }
-
-  return WidgetFactory({
+  // Create widget
+  const widget = WidgetFactory({
     tag: "div",
-    style: baseStyle,
+    backgroundColor: color,
+    flexShrink: flexShrink,
     ...rest,
   });
+
+  // Apply divider-specific props
+  if (isHorizontal) {
+    widget.update({
+      height: thickness,
+      width: width,
+      marginTop: finalMarginTop,
+      marginBottom: finalMarginBottom,
+    });
+  } else {
+    widget.update({
+      width: thickness,
+      height: height,
+      minHeight: 1,
+      marginLeft: finalMarginLeft,
+      marginRight: finalMarginRight,
+    });
+  }
+
+  // If margin is a string, apply it directly (overrides individual margins)
+  if (useMarginString) {
+    widget.update({ margin: margin });
+  }
+
+  return widget;
 };
 
 export default Divider;

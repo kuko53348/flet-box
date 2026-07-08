@@ -9,19 +9,17 @@ import { assignProps } from "./assignProps.js";
 import { stackPosition } from "./stackPosition.js";
 import { addChildren, removePropChildren } from "./addChildren.js";
 
-export function WidgetFactory(tag, customProps = {}, baseStyles = {}) {
-  // ✅ NORMALIZE TAG (compatible with both forms)
+export function WidgetFactory(tag, customProps = {}) {
+  // ✅ Normalización de tag
   let finalTag = tag;
   let finalProps = customProps;
 
-  // If tag is an object (form: { tag: 'div', ... })
   if (typeof tag === "object" && tag !== null) {
     if (tag.tag) {
       finalTag = tag.tag;
       finalProps = { ...tag, ...customProps };
       delete finalProps.tag;
     } else {
-      // If object without tag, use 'div'
       console.warn(
         "⚠️ WidgetFactory: tag is object without .tag, using 'div'",
         tag,
@@ -31,7 +29,6 @@ export function WidgetFactory(tag, customProps = {}, baseStyles = {}) {
     }
   }
 
-  // ✅ Ensure tag is a string
   if (typeof finalTag !== "string") {
     console.warn(
       "⚠️ WidgetFactory: tag is not a string, using 'div'",
@@ -40,11 +37,12 @@ export function WidgetFactory(tag, customProps = {}, baseStyles = {}) {
     finalTag = "div";
   }
 
-  // ✅ Create widget
+  // ✅ Crear widget base
   const widget = createWidget(finalTag, {});
-
-  // ✅ Add _widgetName for Inspector
   widget._widgetName = finalTag.charAt(0).toUpperCase() + finalTag.slice(1);
+
+  // ✅ Inicializar flag de actualización
+  widget._updating = false;
 
   makeParentable(widget);
   addLifecycle(widget);
@@ -52,11 +50,8 @@ export function WidgetFactory(tag, customProps = {}, baseStyles = {}) {
   widget._originalProps = { ...finalProps };
   widget._events = [];
 
-  if (Object.keys(baseStyles).length > 0) {
-    assignProps(widget, { style: baseStyles });
-  }
-
-  const initialProps = processProps(finalProps);
+  // ✅ Procesar props iniciales
+  const initialProps = processProps(finalProps, finalTag);
   assignProps(widget, initialProps);
   stackPosition(widget, finalProps);
 
@@ -74,29 +69,38 @@ export function WidgetFactory(tag, customProps = {}, baseStyles = {}) {
     finalProps.ref(widget);
   }
 
+  // ✅ Método update con flag
   widget.update = (newProps = {}) => {
-    const merged = { ...widget._originalProps, ...newProps };
-    widget._originalProps = merged;
-    const processed = processProps(merged);
-    assignProps(widget, processed);
-    stackPosition(widget, merged);
+    if (widget._updating) return widget;
+    widget._updating = true;
 
-    if (newProps.child !== undefined || newProps.children !== undefined) {
-      removePropChildren(widget);
+    try {
+      const merged = { ...widget._originalProps, ...newProps };
+      widget._originalProps = merged;
 
-      if (newProps.child !== undefined) {
-        addChildren(widget, newProps.child);
+      const processed = processProps(merged, finalTag);
+      assignProps(widget, processed);
+      stackPosition(widget, merged);
+
+      if (newProps.child !== undefined || newProps.children !== undefined) {
+        removePropChildren(widget);
+
+        if (newProps.child !== undefined) {
+          addChildren(widget, newProps.child);
+        }
+
+        if (newProps.children !== undefined) {
+          addChildren(widget, newProps.children);
+        }
       }
 
-      if (newProps.children !== undefined) {
-        addChildren(widget, newProps.children);
+      applyEffects(widget);
+
+      if (newProps.ref && typeof newProps.ref === "function") {
+        newProps.ref(widget);
       }
-    }
-
-    applyEffects(widget);
-
-    if (newProps.ref && typeof newProps.ref === "function") {
-      newProps.ref(widget);
+    } finally {
+      widget._updating = false;
     }
 
     return widget;
@@ -104,8 +108,11 @@ export function WidgetFactory(tag, customProps = {}, baseStyles = {}) {
 
   widget.getProps = () => ({ ...widget._originalProps });
 
+  // ✅ Reactividad con verificación del flag
   makeReactive(widget, (changedProps) => {
-    widget.update(changedProps);
+    if (!widget._updating) {
+      widget.update(changedProps);
+    }
   });
 
   return widget;

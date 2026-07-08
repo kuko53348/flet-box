@@ -33,15 +33,12 @@ export const ListView = (props) => {
   // Elemento base
   const element = WidgetFactory({
     tag: "div",
-    style: {
-      width: typeof width === "number" ? `${width}px` : width,
-      height: typeof height === "number" ? `${height}px` : height,
-      display: "flex",
-      flex: expand ? 1 : undefined,
-      flexDirection: "column",
-      overflow: "hidden",
-      ...rest.style,
-    },
+    width: width,
+    height: height,
+    display: "flex",
+    flex: expand ? 1 : undefined,
+    flexDirection: "column",
+    overflow: "hidden",
     ...rest,
   });
 

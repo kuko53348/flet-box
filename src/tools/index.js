@@ -17,6 +17,7 @@ export { mapList, repeat, range } from "./mapList.js";
 export { memo, memoWithKey, clearMemo } from "./memo.js";
 export { os } from "./os.js";
 export { default as padding } from "./padding.js";
+export { print } from "./print.js";
 export { random } from "./random.js";
 export { default as rgba } from "./rgba.js";
 export { default as shadow } from "./shadow.js";

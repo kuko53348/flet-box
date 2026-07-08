@@ -1,5 +1,6 @@
 // widgets/Modal.js - Con colores por defecto mejorados
 import { WidgetFactory } from "../widget-factory/index.js";
+import { transition } from "../tools/index.js";
 import { colors } from "../utils/themes.js";
 import { Container } from "./Container.js";
 import { Column } from "./Column.js";
@@ -15,26 +16,32 @@ const ModalOverlay = ({
   zIndex = 9998,
   overlayColor,
 }) => {
+  // main modal transparent
   return WidgetFactory({
     tag: "div",
-    style: {
-      position: "fixed",
-      top: "0",
-      left: "0",
-      width: "100%",
-      height: "100%",
-      backgroundColor: overlayColor || colors.overlay,
-      zIndex: zIndex,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      opacity: "0",
-      visibility: "hidden",
-      transition: "opacity 0.3s ease, visibility 0.3s ease",
-    },
-    onclick: () => {
-      if (closeOnOverlayClick) onClose();
-    },
+    position: "fixed",
+    top: "0",
+    left: "0",
+    width: "100%",
+    height: "100%",
+    backgroundColor: overlayColor || colors.overlay,
+    zIndex: zIndex,
+    // blur: 12,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    opacity: "0",
+    visibility: "hidden",
+    transition: transition({
+      property: "opacity",
+      duration: 0.3,
+      timing: "ease",
+      delay: 0.1,
+    }),
+    // transition: "opacity 0.3s ease, visibility 0.3s ease",
+    // onclick: () => {
+    //   if (closeOnOverlayClick) onClose();
+    // },
   });
 };
 
@@ -54,9 +61,9 @@ const ModalHeader = ({
       Text({
         text: title,
         size: 18,
-        weight: "600",
+        weight: "80%",
         color: headerTextColor || colors.text,
-        style: { flex: 1 },
+        flex: 1,
       }),
     );
   }
@@ -67,11 +74,15 @@ const ModalHeader = ({
       color: headerTextColor || colors.textSecondary,
       cursor: "pointer",
       onclick: onClose,
-      style: {
-        transition: "opacity 0.2s ease",
-        borderRadius: "50%",
-        padding: "4px",
-      },
+      transition: transition({
+        property: "opacity",
+        duration: 0.2,
+        timing: "ease",
+        delay: 0.1,
+      }),
+      // transition: "opacity 0.2s ease",
+      borderRadius: "50%",
+      padding: 4,
     });
     // Hover effect for close button
     closeIcon.addEventListener("mouseenter", () => {
@@ -102,7 +113,8 @@ const ModalHeader = ({
         borderBottom: finalBorder,
         flexShrink: 0,
         boxShadow: headerShadow,
-        style: { position: "relative", zIndex: 1 },
+        position: "relative",
+        zIndex: 1,
         children,
       })
     : null;
@@ -115,15 +127,13 @@ const ModalContent = ({
   contentElevation,
 }) => {
   const wrapper = Container({
-    style: {
-      flex: 1,
-      overflow: "auto",
-      padding: padding,
-      backgroundColor: contentBgColor || "transparent",
-      boxShadow: contentElevation
-        ? `inset 0 ${contentElevation}px ${contentElevation * 2}px rgba(0,0,0,0.02)`
-        : "none",
-    },
+    flex: 1,
+    overflow: "auto",
+    padding: padding,
+    backgroundColor: contentBgColor || "transparent",
+    boxShadow: contentElevation
+      ? `inset 0 ${contentElevation}px ${contentElevation * 2}px rgba(0,0,0,0.02)`
+      : "none",
   });
 
   if (content) {
@@ -171,7 +181,8 @@ const ModalFooter = ({
     borderTop: finalBorder,
     flexShrink: 0,
     boxShadow: footerShadow,
-    style: { position: "relative", zIndex: 1 },
+    position: "relative",
+    zIndex: 1,
     children: actions,
   });
 };
@@ -219,6 +230,7 @@ const ModalContainer = ({
     boxShadow: finalShadow,
     transform: "scale(0.9)",
     opacity: 0,
+
     transition:
       "transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1), opacity 0.3s ease",
   };
@@ -232,8 +244,8 @@ const ModalContainer = ({
 
   return WidgetFactory({
     tag: "div",
-    style: containerStyle,
     children,
+    ...containerStyle,
   });
 };
 
@@ -266,19 +278,19 @@ export const Modal = (props = {}) => {
 
     // Padding del contenido
     padding = "20px",
-    contentBgColor = null,
+    contentBgColor = colors.surface,
     contentElevation = 0, // ← Sombra interior opcional
 
     // Header personalizable
     showCloseButton = true,
-    headerBgColor = null,
+    headerBgColor = colors.surface,
     headerTextColor = null,
     headerBorder = null,
     headerPadding = null,
     headerElevation = 0,
 
     // Footer personalizable
-    footerBgColor = null,
+    footerBgColor = colors.surface,
     footerBorder = null,
     footerPadding = null,
     footerElevation = 0,
@@ -446,14 +458,12 @@ export const Modal = (props = {}) => {
             children: [
               WidgetFactory({
                 tag: "div",
-                style: {
-                  width: "32px",
-                  height: "32px",
-                  border: `2px solid ${colors.border}`,
-                  borderTop: `2px solid ${colors.primary}`,
-                  borderRadius: "50%",
-                  animation: "modal-spin 0.8s linear infinite",
-                },
+                width: 32,
+                height: 32,
+                border: `2px solid ${colors.border}`,
+                borderTop: `2px solid ${colors.primary}`,
+                borderRadius: 32,
+                animation: "modal-spin 0.8s linear infinite",
               }),
               Text({
                 text: loadingText,

@@ -123,11 +123,9 @@ export const Stepper = (props) => {
 
       const stepColumn = Column({
         alignItems: "center",
-        style: {
-          flex: needsWrap ? "auto" : 1,
-          minWidth: needsWrap ? "80px" : "0",
-          cursor: "pointer",
-        },
+        flex: needsWrap ? "auto" : 1,
+        minWidth: needsWrap ? "80px" : "0",
+        cursor: "pointer",
         onclick: () => goToStep(idx),
         children: [indicator, label].filter(Boolean),
       });
@@ -136,17 +134,15 @@ export const Stepper = (props) => {
         stepsContainer.appendChild(stepColumn);
         if (!isLast && !needsWrap) {
           const connector = Container({
-            style: {
-              flex: 1,
-              height: "2px",
-              minWidth: "10px",
-              backgroundColor:
-                idx < currentStep ? colors.success : colors.gray300,
-            },
+            flex: 1,
+            height: "2px",
+            minWidth: "10px",
+            backgroundColor:
+              idx < currentStep ? colors.success : colors.gray300,
           });
           stepsContainer.appendChild(connector);
         } else if (!isLast && needsWrap) {
-          const spacer = Container({ style: { width: "8px" } });
+          const spacer = Container({ width: 8 });
           stepsContainer.appendChild(spacer);
         }
       } else {
@@ -242,30 +238,26 @@ export const Stepper = (props) => {
   }
 
   const container = WidgetFactory({
-    style: { ...style, ...rest.style },
+    ...style,
     ...rest,
   });
 
   // Steps wrapper with horizontal scroll
   const stepsWrapper = WidgetFactory({
     tag: "div",
-    style: {
-      overflowX: "auto",
-      overflowY: "visible",
-      width: "100%",
-    },
+    overflowX: "auto",
+    overflowY: "visible",
+    width: "100%",
   });
 
   stepsContainer =
     orientation === "horizontal"
       ? Row({
           alignItems: "center",
-          style: {
-            display: "flex",
-            flexDirection: "row",
-            minWidth: "min-content",
-            width: "100%",
-          },
+          display: "flex",
+          flexDirection: "row",
+          minWidth: "min-content",
+          width: "100%",
         })
       : Column({ gap: 16 });
 
@@ -274,11 +266,12 @@ export const Stepper = (props) => {
   // Content container
   contentContainer = Container({
     child: steps[currentStep]?.content || null,
-    style: { width: "100%", overflow: "auto" },
+    width: "100%",
+    overflow: "auto",
   });
 
   // Navigation container
-  navContainer = Container({ style: { width: "100%" } });
+  navContainer = Container({ width: "100%" });
 
   container.appendChild(stepsWrapper);
   container.appendChild(contentContainer);

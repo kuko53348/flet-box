@@ -1,18 +1,23 @@
-// widgets/Column.js
+// widgets/Column.js - Clean version
 import { WidgetFactory } from "../widget-factory/index.js";
 
-export const Column = (props) => {
-  const { style = {}, ...rest } = props;
+export const Column = (props = {}) => {
+  const {
+    display = "flex",
+    flexDirection = "column",
+    width = "100%",
+    height = "auto",
+    boxSizing = "border-box",
+    ...rest
+  } = props;
 
   return WidgetFactory({
     tag: "div",
-    display: "flex",
-    flexDirection: "column",
-    boxSizing: "border-box",
-    width: "100%",
-    height: "auto",
-    // boxSizing: "border-box",
-    ...style,
+    display: display,
+    flexDirection: flexDirection,
+    width: width,
+    height: height,
+    boxSizing: boxSizing,
     ...rest,
   });
 };

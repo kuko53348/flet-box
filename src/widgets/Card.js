@@ -1,17 +1,29 @@
-// widgets/Card.js
+// widgets/Card.js - Clean version
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 import { border } from "../tools/index.js";
 
-export const Card = (props) => {
-  const { elevation = 2, padding = 16, borderRadius = 12, ...rest } = props;
+export const Card = (props = {}) => {
+  const {
+    elevation = 2,
+    padding = 16,
+    borderRadius = 12,
+    bgColor = colors.surface,
+    borderColor = colors.border,
+    borderWidth = 1,
+    borderStyle = "solid",
+    showBorder = true,
+    ...rest
+  } = props;
 
   return WidgetFactory({
-    bgColor: colors.surface,
+    backgroundColor: bgColor,
     borderRadius: borderRadius,
     padding: padding,
     elevation: elevation,
-    border: border(1, "solid", colors.border), // ← opcional
+    border: showBorder ? border(borderWidth, borderStyle, borderColor) : "none",
     ...rest,
   });
 };
+
+export default Card;

@@ -315,14 +315,12 @@ export const Accordion = (props) => {
   // Wrapper con animación de altura
   contentWrapper = WidgetFactory({
     tag: "div",
-    style: {
-      overflow: "hidden",
-      transition: animate
-        ? `height ${currentAnimationDuration}ms cubic-bezier(0.4, 0, 0.2, 1)`
-        : "none",
-      height: isExpanded ? "auto" : "0",
-      display: isExpanded ? "block" : "none",
-    },
+    overflow: "hidden",
+    transition: animate
+      ? `height ${currentAnimationDuration}ms cubic-bezier(0.4, 0, 0.2, 1)`
+      : "none",
+    height: isExpanded ? "auto" : "0",
+    display: isExpanded ? "block" : "none",
   });
 
   // Contenido interior (sin animación, solo se oculta/muestra)

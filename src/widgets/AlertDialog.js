@@ -3,21 +3,20 @@ import { Modal } from "./Modal.js";
 import { Button } from "./Button.js";
 import { Text } from "./Text.js";
 import { Column } from "./Column.js";
-import { Row } from "./Row.js";
 import { Icon } from "./Icon.js";
 import { colors } from "../utils/themes.js";
 
 export const AlertDialog = (props) => {
-  const {
+  let {
     title,
     message,
-    confirmText = "Aceptar",
-    cancelText = "Cancelar",
     onConfirm,
     onCancel,
     onClose,
     variant = "normal", // 'normal', 'danger', 'warning', 'success'
     showCancel = true,
+    confirmText = "Accept",
+    cancelText = "Cancel",
     ...rest
   } = props;
 
@@ -69,7 +68,7 @@ export const AlertDialog = (props) => {
         fontWeight: "bold",
         color: colors.textSecondary,
         textAlign: "center",
-        style: { marginTop: 8 },
+        marginTop: 8,
       }),
     ],
   });
@@ -81,8 +80,9 @@ export const AlertDialog = (props) => {
     actions.push(
       Button({
         text: cancelText,
-        variant: "outlined",
-        color: colors.textSecondary,
+        borderColor: colors.danger,
+        variant: "filled",
+        color: colors.danger,
         onPress: () => {
           if (onCancel) onCancel();
           closeModal();
@@ -95,7 +95,10 @@ export const AlertDialog = (props) => {
     Button({
       text: confirmText,
       variant: "filled",
-      color: variantStyle.confirm,
+
+      bgColor: variantStyle.confirm,
+      color: colors.text,
+      borderColor: colors.surface,
       onPress: () => {
         if (onConfirm) onConfirm();
         closeModal();

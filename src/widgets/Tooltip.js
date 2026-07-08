@@ -1,4 +1,4 @@
-// widgets/Tooltip.js - Con cierre en scroll y resize
+// widgets/Tooltip.js - Corregido (usando text en lugar de textContent)
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 
@@ -36,7 +36,6 @@ export const Tooltip = (props) => {
   let timeoutId = null;
   let isVisible = false;
 
-  // ==== NUEVAS FUNCIONES PARA OCULTAR EN SCROLL / RESIZE ====
   let scrollHandler = null;
   let resizeHandler = null;
 
@@ -46,10 +45,10 @@ export const Tooltip = (props) => {
     }
   };
 
-  // ==== CREAR TOOLTIP ====
   const createTooltip = () => {
     if (tooltipElement) return tooltipElement;
 
+    // ✅ CORREGIDO: usar "text" en lugar de "textContent"
     const content = WidgetFactory({
       backgroundColor: bgColor,
       borderRadius:
@@ -61,7 +60,7 @@ export const Tooltip = (props) => {
         borderWidth > 0 ? `${borderWidth}px solid ${borderColor}` : "none",
       child: WidgetFactory({
         tag: "span",
-        textContent: text,
+        text: text, // ✅ "text" es la prop correcta en FletBox
         fontSize: typeof fontSize === "number" ? `${fontSize}px` : fontSize,
         color: textColor,
         textAlign: textAlign,
@@ -160,7 +159,6 @@ export const Tooltip = (props) => {
         break;
     }
 
-    // Boundary checking
     if (left < 10) left = 10;
     if (left + tooltipRect.width > window.innerWidth - 10) {
       left = window.innerWidth - tooltipRect.width - 10;
@@ -192,10 +190,9 @@ export const Tooltip = (props) => {
 
       isVisible = true;
 
-      // ==== AÑADIR LISTENERS DE SCROLL Y RESIZE ====
       scrollHandler = hideOnScrollOrResize;
       resizeHandler = hideOnScrollOrResize;
-      window.addEventListener("scroll", scrollHandler, true); // capture true para capturar cualquier scroll
+      window.addEventListener("scroll", scrollHandler, true);
       window.addEventListener("resize", resizeHandler);
     }, delay);
   };
@@ -211,7 +208,6 @@ export const Tooltip = (props) => {
       tooltipElement.style.visibility = "hidden";
       isVisible = false;
 
-      // ==== REMOVER LISTENERS ====
       if (scrollHandler) {
         window.removeEventListener("scroll", scrollHandler, true);
         scrollHandler = null;
@@ -223,7 +219,6 @@ export const Tooltip = (props) => {
     }
   };
 
-  // ==== ASIGNAR EVENTOS AL CHILD ====
   const wrappedChild = child;
 
   wrappedChild.addEventListener("mouseenter", showTooltip);
@@ -237,7 +232,6 @@ export const Tooltip = (props) => {
     if (tooltipElement && tooltipElement.parentNode) {
       tooltipElement.parentNode.removeChild(tooltipElement);
     }
-    // Limpiar listeners globales
     if (scrollHandler)
       window.removeEventListener("scroll", scrollHandler, true);
     if (resizeHandler) window.removeEventListener("resize", resizeHandler);
@@ -248,7 +242,6 @@ export const Tooltip = (props) => {
     if (originalCleanup) originalCleanup();
   };
 
-  // Métodos públicos
   wrappedChild.showTooltip = showTooltip;
   wrappedChild.hideTooltip = hideTooltip;
   wrappedChild.updateContent = (newText) => {

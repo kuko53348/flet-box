@@ -1,4 +1,10 @@
 // tools/string.js
+export const startsWith = (str, prefix) => str.startsWith(prefix);
+export const endsWith = (str, suffix) => str.endsWith(suffix);
+export const includes = (str, substr) => str.includes(substr);
+export const split = (str, separator) => str.split(separator);
+export const join = (arr, separator) => arr.join(separator);
+export const trim = (str) => str.trim();
 
 /**
  * Capitalize first letter of a string

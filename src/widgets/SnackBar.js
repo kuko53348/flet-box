@@ -1,5 +1,6 @@
 // widgets/SnackBar.js - Versión definitiva con colores del tema
 import { WidgetFactory } from "../widget-factory/index.js";
+import { border } from "../tools/index.js";
 import { colors } from "../utils/themes.js";
 
 // Colores de respaldo (si el tema aún no está inicializado)
@@ -40,7 +41,7 @@ export function SnackBar(options) {
     textColor: customText,
     actionColor: customAction,
     dismissible = false,
-    borderRadius = 8,
+    borderRadius = 16,
     padding = "12px 16px",
     margin = 16,
     elevation = 2,
@@ -53,28 +54,28 @@ export function SnackBar(options) {
   // Presets usando colores del tema (con fallback)
   const presets = {
     normal: {
-      bg: getThemeColor("gray800", FALLBACK.gray800),
-      text: FALLBACK.white,
-      action: getThemeColor("primary", FALLBACK.primary),
+      bg: colors.surface,
+      text: colors.text,
+      action: colors.primary,
     },
     success: {
-      bg: getThemeColor("success", FALLBACK.success),
-      text: FALLBACK.white,
-      action: FALLBACK.white,
+      bg: colors.success,
+      text: colors.text,
+      action: colors.primary,
     },
     error: {
-      bg: getThemeColor("danger", FALLBACK.danger),
-      text: FALLBACK.white,
-      action: FALLBACK.white,
+      bg: colors.danger,
+      text: colors.text,
+      action: colors.primary,
     },
     warning: {
-      bg: getThemeColor("warning", FALLBACK.warning),
-      text: getThemeColor("gray900", FALLBACK.gray900),
+      bg: colors.warning,
+      text: colors.text,
       action: getThemeColor("gray900", FALLBACK.gray900),
     },
     info: {
-      bg: getThemeColor("info", FALLBACK.info),
-      text: FALLBACK.white,
+      bg: colors.info,
+      text: colors.text,
       action: FALLBACK.white,
     },
   };
@@ -89,12 +90,14 @@ export function SnackBar(options) {
     tag: "div",
     position: "fixed",
     left: `${margin}px`,
+    borderRadius: borderRadius,
     right: `${margin}px`,
     [position]: `${margin}px`,
     backgroundColor: finalBg,
     borderRadius:
       typeof borderRadius === "number" ? `${borderRadius}px` : borderRadius,
     padding: padding,
+    border: border(1, "solid", colors.gray100),
     zIndex: zIndex,
     boxShadow:
       elevation === 0
@@ -109,8 +112,8 @@ export function SnackBar(options) {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: "16px",
-    fontSize: "14px",
+    gap: 16,
+    fontSize: 14,
     lineHeight: "1.4",
     color: finalText,
     fontFamily: "system-ui, -apple-system, sans-serif",
@@ -121,7 +124,7 @@ export function SnackBar(options) {
   const messageEl = WidgetFactory({
     tag: "span",
     flex: 1,
-    textContent: message,
+    text: message,
     wordBreak: "break-word",
   });
   snackbar.appendChild(messageEl);
@@ -134,12 +137,12 @@ export function SnackBar(options) {
       backgroundColor: "transparent",
       border: "none",
       color: finalAction,
-      fontSize: "14px",
-      fontWeight: "500",
+      fontSize: 14,
+      fontWeight: 500,
       cursor: "pointer",
       padding: "4px 8px",
       margin: "-4px -8px -4px 0",
-      borderRadius: "4px",
+      borderRadius: 4,
       transition: "opacity 0.2s ease",
       textContent: action,
       onclick: () => {
