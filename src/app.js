@@ -1,19 +1,21 @@
-// app.js - Botón que se modifica a sí mismo
-import { runApp, Container, Button } from "./index.js";
+// app.js - Asignación directa
+import { runApp, Container, colors, Button } from "./index.js";
 
 const App = () => {
   let clickCount = 0;
 
   const miBoton = Button({
-    text: "Click me",
-    onPress: (btn) => {
+    text: "Click me hello",
+    bgColor: colors.surface,
+    onPress: () => {
       clickCount++;
-      btn.text = `Clicked ${clickCount} times`;
 
-      // Cambia color después de 5 clicks
+      // ✅ Asigna directamente al widget reactivo
+      miBoton.text = `Clicked ${clickCount} times`;
+
       if (clickCount >= 5) {
-        btn.bgColor = "#ff4444";
-        btn.textColor = "white";
+        miBoton.bgColor = "#ff4444";
+        miBoton.textColor = "white";
       }
     },
   });

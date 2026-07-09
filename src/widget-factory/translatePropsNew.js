@@ -1,5 +1,5 @@
 // core/translateProps.js
-import { warnUnknownProp, setPropNames } from "./warnings.js";
+
 /**
  * CENTRAL PROP DATABASE
  *
@@ -850,6 +850,7 @@ export const ALL_PROPS = [
 // ============================================================
 // DERIVED MAPS
 // ============================================================
+
 /** Map: custom prop name → definition */
 export const PROP_MAP = Object.fromEntries(ALL_PROPS.map((p) => [p.prop, p]));
 
@@ -907,16 +908,30 @@ export const TEXT_PROP_SET = new Set(TEXT_PROPS);
 // ============================================================
 // LOOKUP FUNCTION WITH WARNING
 // ============================================================
-setPropNames(Object.keys(PROP_MAP));
 
-export function getPropDefinition(propName, context = {}) {
+/**
+ * Look up a prop definition by its custom name.
+ *
+ * @param {string} propName - The custom prop name (e.g., 'w', 'onClick').
+ * @returns {object|null} The prop definition, or null if not found.
+ *
+ * If the prop is not found, a warning is logged to the console.
+ */
+export function getPropDefinition(propName) {
   const def = PROP_MAP[propName];
   if (!def) {
-    warnUnknownProp(propName, context);
+    console.warn(
+      `⚠️ [FletBox] Unknown prop: "${propName}". ` +
+        `Check your spelling or add it to the prop database.`,
+    );
     return null;
   }
   return def;
 }
+
+// ============================================================
+// DEFAULT EXPORT
+// ============================================================
 
 export default {
   ALL_PROPS,
