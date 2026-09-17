@@ -9,15 +9,14 @@ import { c } from "../utils/colors.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-});
-const question = (q) => new Promise((resolve) => rl.question(q, resolve));
-
 export const packageManager = async () => {
   const PACKAGE = "flet-box";
   const PKG_PATH = path.join(__dirname, "../..");
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+  const question = (q) => new Promise((resolve) => rl.question(q, resolve));
 
   while (true) {
     console.clear();

@@ -89,15 +89,18 @@ export const DrawerItem = (props) => {
   };
 
   unsubscribeRouter = subscribe(() => checkActive());
-  unsubscribeGlobal = selectionEvent.addEventListener(
-    "drawer-item-selected",
-    (e) => {
-      if (isSelected && e.detail.id !== label) {
-        isSelected = false;
-        updateUI();
-      }
-    },
-  );
+  const handleGlobalSelection = (e) => {
+    if (isSelected && e.detail.id !== label) {
+      isSelected = false;
+      updateUI();
+    }
+  };
+  selectionEvent.addEventListener("drawer-item-selected", handleGlobalSelection);
+  unsubscribeGlobal = () =>
+    selectionEvent.removeEventListener(
+      "drawer-item-selected",
+      handleGlobalSelection,
+    );
 
   checkActive(); // estado inicial
 

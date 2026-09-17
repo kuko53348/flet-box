@@ -45,7 +45,81 @@ declare module 'flet-box' {
     initialState: T | (() => T),
     widget?: Widget,
     propName?: string
-  ): [T, (value: T | ((prev: T) => T)) => void];
+  ): [
+    T,
+    (value: T | ((prev: T) => T)) => void,
+    (callback: (newValue: T, oldValue: T) => void) => () => void
+  ];
+
+  export function useWatchState<T>(
+    key: string,
+    callback: (newValue: T, oldValue: T) => void
+  ): () => void;
+
+  // =========================================================================
+  // Frontend services
+  // =========================================================================
+  export function saveRam<T>(key: string, value: T): boolean;
+  export function getRam<T>(key: string): T | null;
+  export function getAllRam(): Record<string, any>;
+  export function getAllRamKeys(): string[];
+  export function hasRam(key: string): boolean;
+  export function updateRam<T>(key: string, value: T): boolean;
+  export function deleteRam(key: string): boolean;
+  export function clearAllRam(): boolean;
+  export function subscribeRam<T>(
+    callback: (key: string | null, newValue: T | null, oldValue: T | null) => void
+  ): () => void;
+  export function getRamItemCount(): number;
+  export function isRamAvailable(): boolean;
+
+  export function saveSession<T>(key: string, value: T): boolean;
+  export function getSession<T>(key: string): T | null;
+  export function getSessionSync<T>(key: string): T | null;
+  export function updateSession<T>(key: string, value: T): boolean;
+  export function deleteSession(key: string): boolean;
+  export function clearAllSession(): boolean;
+  export function hasSession(key: string): boolean;
+  export function getAllSessionKeys(): string[];
+  export function getAllSessionData(): Record<string, any>;
+  export function getSessionSize(): number;
+  export function deleteSessionByPrefix(prefix: string): number;
+  export function deleteSessionBySuffix(suffix: string): number;
+  export function getSessionItemCount(): number;
+  export function isSessionAvailable(): boolean;
+
+  export function saveData<T>(key: string, value: T): boolean;
+  export function getData<T>(key: string): T | null;
+  export function getDataSync<T>(key: string): T | null;
+  export function updateData<T>(key: string, value: T): boolean;
+  export function deleteData(key: string): boolean;
+  export function clearAllData(): boolean;
+  export function hasData(key: string): boolean;
+  export function getAllKeys(): string[];
+  export function getAllData(): Record<string, any>;
+  export function getStorageSize(): number;
+  export function deleteDataByPrefix(prefix: string): number;
+  export function deleteDataBySuffix(suffix: string): number;
+  export function getItemCount(): number;
+  export function isStorageAvailable(): boolean;
+
+  export interface HttpRequestOptions extends RequestInit {
+    body?: any;
+    headers?: Record<string, string>;
+    params?: Record<string, string | number | boolean | null | undefined>;
+    timeout?: number;
+  }
+
+  export function httpRequest<T = any>(
+    method: string,
+    url: string,
+    options?: HttpRequestOptions
+  ): Promise<T>;
+  export function httpGet<T = any>(url: string, options?: HttpRequestOptions): Promise<T>;
+  export function httpPost<T = any>(url: string, options?: HttpRequestOptions): Promise<T>;
+  export function httpPut<T = any>(url: string, options?: HttpRequestOptions): Promise<T>;
+  export function httpPatch<T = any>(url: string, options?: HttpRequestOptions): Promise<T>;
+  export function httpDelete<T = any>(url: string, options?: HttpRequestOptions): Promise<T>;
 
   // =========================================================================
   // Layouts

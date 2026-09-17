@@ -10,6 +10,7 @@ let history = [];
 let listeners = [];
 let currentParams = {};
 let currentQuery = {};
+let removePopStateListener = null;
 
 // ========== UTILIDADES ==========
 
@@ -101,7 +102,10 @@ export const initRouter = (routesConfig, initialPath = null) => {
   }
 
   // Extraer query params de la URL actual
-  currentQuery = extractQueryParams(window.location.search);
+  currentQuery =
+    typeof window !== "undefined"
+      ? extractQueryParams(window.location.search)
+      : extractQueryParams(urlPath);
 
   // Actualizar la URL en el navegador SOLO si es necesario
   if (
@@ -112,7 +116,9 @@ export const initRouter = (routesConfig, initialPath = null) => {
   }
 
   // Escuchar eventos de navegación del navegador (popstate)
-  window.addEventListener("popstate", (event) => {
+  if (typeof window !== "undefined") {
+    if (removePopStateListener) removePopStateListener();
+    const handlePopState = (event) => {
     const path = event.state?.path || window.location.pathname;
     if (path !== currentPath) {
       currentPath = path;
@@ -121,7 +127,11 @@ export const initRouter = (routesConfig, initialPath = null) => {
       currentQuery = extractQueryParams(window.location.search);
       notify();
     }
-  });
+    };
+    window.addEventListener("popstate", handlePopState);
+    removePopStateListener = () =>
+      window.removeEventListener("popstate", handlePopState);
+  }
 
   notify();
 };
@@ -257,6 +267,10 @@ const notify = (extraParams = {}) => {
 };
 
 export const clearRouter = () => {
+  if (removePopStateListener) {
+    removePopStateListener();
+    removePopStateListener = null;
+  }
   routes = {};
   currentPath = "/";
   history = [];

@@ -131,7 +131,12 @@ export const clearAllSession = () => {
  * @returns {boolean} - true si existe
  */
 export const hasSession = (key) => {
-  return sessionStorage.getItem(key) !== null;
+  try {
+    return sessionStorage.getItem(key) !== null;
+  } catch (error) {
+    console.error("Error checking session data:", error);
+    return false;
+  }
 };
 
 /**

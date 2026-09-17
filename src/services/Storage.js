@@ -130,7 +130,12 @@ export const clearAllData = () => {
  * @returns {boolean} - true si existe
  */
 export const hasData = (key) => {
-  return localStorage.getItem(key) !== null;
+  try {
+    return localStorage.getItem(key) !== null;
+  } catch (error) {
+    console.error("Error checking data:", error);
+    return false;
+  }
 };
 
 /**

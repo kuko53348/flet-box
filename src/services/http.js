@@ -278,8 +278,11 @@
 async function httpRequest(method, url, options = {}) {
   const { body, headers = {}, params = {}, timeout = 30000, ...rest } = options;
 
-  const queryString = new URLSearchParams(params).toString();
-  const finalUrl = queryString ? `${url}?${queryString}` : url;
+  const queryString = new URLSearchParams(
+    Object.entries(params).filter(([, value]) => value !== null && value !== undefined),
+  ).toString();
+  const separator = url.includes("?") ? "&" : "?";
+  const finalUrl = queryString ? `${url}${separator}${queryString}` : url;
 
   const config = {
     method: method.toUpperCase(),
@@ -291,8 +294,8 @@ async function httpRequest(method, url, options = {}) {
     ...rest,
   };
 
-  if (body) {
-    config.body = JSON.stringify(body);
+  if (body !== undefined) {
+    config.body = typeof body === "string" ? body : JSON.stringify(body);
   }
 
   try {

@@ -229,13 +229,14 @@ export const Tabs = (props) => {
     updateContent();
   };
 
-  // Inicializar posición
-  setTimeout(() => {
+  let initialPositionTimer = setTimeout(() => {
+    initialPositionTimer = null;
     updateSliderPosition();
   }, 16);
 
   // Recalcular en resize (usando requestAnimationFrame para evitar múltiples llamadas)
-  let resizeTimeout;
+  let resizeTimeout = null;
+  let resizeObserver = null;
   const handleResize = () => {
     clearTimeout(resizeTimeout);
     resizeTimeout = setTimeout(() => {
@@ -248,20 +249,17 @@ export const Tabs = (props) => {
 
   // También si el contenido cambia dinámicamente (por ej. fonts cargadas)
   if (typeof ResizeObserver !== "undefined") {
-    const resizeObserver = new ResizeObserver(() => updateSliderPosition());
+    resizeObserver = new ResizeObserver(() => updateSliderPosition());
     if (tabsWrapperRef) resizeObserver.observe(tabsWrapperRef);
-    // Limpiar en cleanup
-    const originalCleanup = container._cleanup;
-    container._cleanup = () => {
-      resizeObserver.disconnect();
-      if (originalCleanup) originalCleanup();
-    };
   }
 
-  // Limpiar resize listener
+  // Limpiar listeners, observers y timers
   const originalCleanup = container._cleanup;
   container._cleanup = () => {
+    if (initialPositionTimer) clearTimeout(initialPositionTimer);
+    if (resizeTimeout) clearTimeout(resizeTimeout);
     window.removeEventListener("resize", handleResize);
+    if (resizeObserver) resizeObserver.disconnect();
     if (originalCleanup) originalCleanup();
   };
 

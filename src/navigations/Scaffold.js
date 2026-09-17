@@ -90,6 +90,15 @@ export const Scaffold = (props) => {
   let currentBottomBar = null;
   let currentFab = null;
 
+  const clearContainer = (target) => {
+    if (!target) return;
+    while (target.firstChild) {
+      const child = target.firstChild;
+      if (typeof child._cleanup === "function") child._cleanup();
+      target.removeChild(child);
+    }
+  };
+
   const makeFullSize = (widget) => {
     if (widget && widget.style) {
       widget.style.flex = "1"; // ← Esto debería funcionar
@@ -104,8 +113,7 @@ export const Scaffold = (props) => {
   // Update functions
   const updateAppBar = (cfg) => {
     if (!appBarContainer) return;
-    while (appBarContainer.firstChild)
-      appBarContainer.removeChild(appBarContainer.firstChild);
+    clearContainer(appBarContainer);
     if (cfg === false) {
       appBarContainer.style.display = "none";
       return;
@@ -141,8 +149,7 @@ export const Scaffold = (props) => {
 
   const updateBottomBar = (cfg) => {
     if (!bottomBarContainer) return;
-    while (bottomBarContainer.firstChild)
-      bottomBarContainer.removeChild(bottomBarContainer.firstChild);
+    clearContainer(bottomBarContainer);
     if (cfg === false) {
       bottomBarContainer.style.display = "none";
       return;
@@ -157,8 +164,7 @@ export const Scaffold = (props) => {
 
   const updateFab = (cfg) => {
     if (!fabContainer) return;
-    while (fabContainer.firstChild)
-      fabContainer.removeChild(fabContainer.firstChild);
+    clearContainer(fabContainer);
     if (cfg === false) {
       fabContainer.style.display = "none";
       return;
@@ -173,8 +179,7 @@ export const Scaffold = (props) => {
 
   const updateLeftBar = (cfg) => {
     if (!leftNavBarContainer) return;
-    while (leftNavBarContainer.firstChild)
-      leftNavBarContainer.removeChild(leftNavBarContainer.firstChild);
+    clearContainer(leftNavBarContainer);
     if (cfg === false) {
       leftNavBarContainer.style.display = "none";
       if (mainContentContainer) mainContentContainer.style.width = "";
@@ -194,8 +199,7 @@ export const Scaffold = (props) => {
 
   const updateRightBar = (cfg) => {
     if (!rightNavBarContainer) return;
-    while (rightNavBarContainer.firstChild)
-      rightNavBarContainer.removeChild(rightNavBarContainer.firstChild);
+    clearContainer(rightNavBarContainer);
     if (cfg === false) {
       rightNavBarContainer.style.display = "none";
       return;
@@ -210,8 +214,7 @@ export const Scaffold = (props) => {
 
   const updateBody = () => {
     if (!mainContentContainer) return;
-    while (mainContentContainer.firstChild)
-      mainContentContainer.removeChild(mainContentContainer.firstChild);
+    clearContainer(mainContentContainer);
 
     if (isRouterMode) {
       const routeConfig = getCurrentRoute();
@@ -339,6 +342,12 @@ export const Scaffold = (props) => {
 
   container._cleanup = () => {
     if (unsubscribe) unsubscribe();
+    clearContainer(appBarContainer);
+    clearContainer(mainContentContainer);
+    clearContainer(bottomBarContainer);
+    clearContainer(fabContainer);
+    clearContainer(leftNavBarContainer);
+    clearContainer(rightNavBarContainer);
     if (container._drawer?.parentNode)
       container._drawer.parentNode.removeChild(container._drawer);
   };

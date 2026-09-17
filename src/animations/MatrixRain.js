@@ -16,6 +16,40 @@ export const MatrixRain = (props = {}) => {
   let animationId = null;
   let drops = [];
   let columns = 0;
+  let resizeObserver = null;
+
+  const getCanvasSize = () => {
+    const parent = canvas?.parentElement;
+    if (position === "absolute" && parent) {
+      const rect = parent.getBoundingClientRect();
+      return {
+        width: Math.max(1, Math.round(rect.width)),
+        height: Math.max(1, Math.round(rect.height)),
+      };
+    }
+    return {
+      width: window.innerWidth,
+      height: window.innerHeight,
+    };
+  };
+
+  const resizeCanvas = () => {
+    if (!canvas) return;
+    if (
+      position === "absolute" &&
+      !resizeObserver &&
+      typeof ResizeObserver !== "undefined" &&
+      canvas.parentElement
+    ) {
+      resizeObserver = new ResizeObserver(resizeCanvas);
+      resizeObserver.observe(canvas.parentElement);
+    }
+    const { width, height } = getCanvasSize();
+    canvas.width = width;
+    canvas.height = height;
+    columns = Math.floor(canvas.width / fontSize);
+    drops = Array.from({ length: columns }, () => Math.random() * -100);
+  };
 
   const getRandomChar = () => chars[Math.floor(Math.random() * chars.length)];
 
@@ -27,8 +61,7 @@ export const MatrixRain = (props = {}) => {
 
   const init = () => {
     canvas = document.createElement("canvas");
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    resizeCanvas();
     canvas.style.display = "block";
     canvas.style.position = position;
     canvas.style.top = "0";
@@ -36,11 +69,6 @@ export const MatrixRain = (props = {}) => {
     canvas.style.zIndex = zIndex;
 
     ctx = canvas.getContext("2d");
-
-    columns = Math.floor(canvas.width / fontSize);
-    for (let i = 0; i < columns; i++) {
-      drops[i] = Math.random() * -100;
-    }
 
     draw();
   };
@@ -76,24 +104,20 @@ export const MatrixRain = (props = {}) => {
 
   // Manejar resize
   const handleResize = () => {
-    if (canvas) {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      const newColumns = Math.floor(canvas.width / fontSize);
-      const newDrops = [];
-      for (let i = 0; i < newColumns; i++) {
-        newDrops[i] = Math.random() * -100;
-      }
-      drops = newDrops;
-    }
+    resizeCanvas();
   };
 
   window.addEventListener("resize", handleResize);
+  if (position === "absolute" && typeof ResizeObserver !== "undefined") {
+    resizeObserver = new ResizeObserver(resizeCanvas);
+    if (canvas.parentElement) resizeObserver.observe(canvas.parentElement);
+  }
 
   // Limpiar al desmontar
   const cleanup = () => {
     if (animationId) cancelAnimationFrame(animationId);
     window.removeEventListener("resize", handleResize);
+    if (resizeObserver) resizeObserver.disconnect();
     if (canvas && canvas.parentNode) canvas.parentNode.removeChild(canvas);
   };
 

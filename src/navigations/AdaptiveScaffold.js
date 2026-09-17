@@ -84,7 +84,7 @@ export const AdaptiveScaffold = (props) => {
 
   return Scaffold({
     appBar,
-    drawer: originalDrawer,
+    drawer: isMobile ? drawerInstance || originalDrawer : originalDrawer,
     leftNavBar: finalLeftNavBar,
     rightNavBar: finalRightNavBar,
     bottomBar,

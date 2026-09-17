@@ -5,7 +5,6 @@ import { dimensions } from "../tools/dimensions.js";
 import { colors } from "../utils/themes.js";
 
 let drawerInstance = null;
-let isOpen = false;
 
 export const Drawer = (props = {}) => {
   const {
@@ -28,6 +27,8 @@ export const Drawer = (props = {}) => {
   } = props;
 
   const element = document.createElement("div");
+  let isOpen = false;
+  let closeTimer = null;
   element.style.position = "fixed";
   element.style.top = "0";
   element.style.left = "0";
@@ -145,11 +146,16 @@ export const Drawer = (props = {}) => {
   const close = () => {
     if (!isOpen) return;
     isOpen = false;
+    if (closeTimer) {
+      clearTimeout(closeTimer);
+      closeTimer = null;
+    }
     drawerPanel.style.transform =
       position === "left" ? "translateX(-100%)" : "translateX(100%)";
     overlay.style.opacity = "0";
-    setTimeout(() => {
+    closeTimer = setTimeout(() => {
       element.style.display = "none";
+      closeTimer = null;
       if (onClose) onClose();
     }, 300);
     if (closeOnEsc) document.removeEventListener("keydown", handleKeyDown);
@@ -158,6 +164,10 @@ export const Drawer = (props = {}) => {
   const open = () => {
     if (isOpen) return;
     isOpen = true;
+    if (closeTimer) {
+      clearTimeout(closeTimer);
+      closeTimer = null;
+    }
     element.style.display = "block";
     void element.offsetHeight;
     overlay.style.opacity = "1";
@@ -172,7 +182,9 @@ export const Drawer = (props = {}) => {
   };
 
   const destroy = () => {
+    if (closeTimer) clearTimeout(closeTimer);
     if (closeOnEsc) document.removeEventListener("keydown", handleKeyDown);
+    removeResizeListener();
     if (element.parentNode) element.parentNode.removeChild(element);
   };
 
@@ -184,7 +196,7 @@ export const Drawer = (props = {}) => {
     element.style.width = `${dimensions.width}px`;
     element.style.height = `${dimensions.height}px`;
   };
-  dimensions.addListener(handleResize);
+  const removeResizeListener = dimensions.addListener(handleResize);
 
   const instance = { open, close, toggle, destroy, element };
   drawerInstance = instance;
@@ -213,7 +225,6 @@ export const destroyDrawer = () => {
   if (drawerInstance) {
     drawerInstance.destroy();
     drawerInstance = null;
-    isOpen = false;
   }
 };
 

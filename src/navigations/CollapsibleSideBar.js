@@ -9,6 +9,7 @@ import { colors } from "../utils/themes.js";
 export const CollapsibleSideBar = ({
   children,
   expanded = true,
+  id,
   widthExpanded = 260,
   widthCollapsed = 60,
   iconSize = 24,
@@ -17,19 +18,25 @@ export const CollapsibleSideBar = ({
   borderRight = `1px solid ${colors.border}`,
   ...rest
 }) => {
-  const [isExpanded, setIsExpanded] = useState("collapsible-sidebar", expanded);
+  const [stateValue, setIsExpanded] = useState(
+    id ? `collapsible-sidebar:${id}` : "collapsible-sidebar",
+    expanded,
+  );
+  let expandedState = Boolean(stateValue.valueOf());
 
   const toggle = () => {
-    const newState = !isExpanded;
+    const newState = !expandedState;
+    expandedState = newState;
     setIsExpanded(newState);
     if (onToggle) onToggle(newState);
   };
 
-  const currentWidth = isExpanded ? widthExpanded : widthCollapsed;
+  const currentWidth = expandedState ? widthExpanded : widthCollapsed;
 
   // Usar WidgetFactory para el contenedor principal
   const container = WidgetFactory({
     tag: "div",
+    id,
     style: {
       width:
         typeof currentWidth === "number" ? `${currentWidth}px` : currentWidth,
@@ -52,7 +59,7 @@ export const CollapsibleSideBar = ({
     cursor: "pointer",
     onclick: toggle,
     child: Icon({
-      name: isExpanded ? "chevron_left" : "chevron_right",
+      name: expandedState ? "chevron_left" : "chevron_right",
       size: iconSize,
       color: colors.textSecondary,
     }),
@@ -63,9 +70,9 @@ export const CollapsibleSideBar = ({
   const contentWrapper = Container({
     flex: 1,
     width: "100%",
-    opacity: isExpanded ? 1 : 0,
+    opacity: expandedState ? 1 : 0,
     transition: "opacity 0.2s ease",
-    pointerEvents: isExpanded ? "auto" : "none",
+    pointerEvents: expandedState ? "auto" : "none",
     overflow: "auto",
     child: children,
   });

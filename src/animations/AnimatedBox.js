@@ -466,8 +466,7 @@ export const AnimatedBox = ({
     };
 
     if (effect === "backgroundColor") {
-      console.log();
-      // child.style.backgroundColor = firstAnim.from;
+      child.style.backgroundColor = firstAnim.from;
     } else if (effect === "borderRadius") {
       setInitialStyle("borderRadius", firstAnim.from);
     } else if (effect === "color") {

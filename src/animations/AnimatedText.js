@@ -50,11 +50,9 @@ export const AnimatedText = ({
     // Crear un nuevo widget Text para esta letra, copiando todas las props originales
     // y forzando el texto a una sola letra.
     const letterWidget = Text({
+      ...originalProps,
       text: letter,
-      size: originalProps.size,
-      color: originalProps.color,
-      weight: originalProps.weight,
-      style: originalProps.style,
+      children: undefined,
     });
 
     // Ajustar display según orientación

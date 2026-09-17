@@ -1,0 +1,62 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+.cache/
+.tmp/
+
+# Logs and reports
+*.log
+logs/
+logAttack.txt
+reporte_ataques.txt
+vulnerabilidades.txt
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+
+# Local databases and runtime data
+*.db
+*.sqlite
+*.sqlite3
+storage/
+
+# Capacitor and Android generated files
+android/.gradle/
+android/.idea/
+android/build/
+android/app/build/
+android/capacitor-cordova-android-plugins/
+android/local.properties
+android/*.iml
+
+# iOS generated files
+ios/App/Pods/
+ios/App/build/
+ios/App/DerivedData/
+ios/App/*.xcworkspace/xcuserdata/
+
+# IDE and OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.swp
+*.swo
+
+# Coverage and test artifacts
+coverage/
+.nyc_output/
+
+# Temporary files
+*.tmp
+*.temp

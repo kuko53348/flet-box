@@ -53,6 +53,38 @@ const getEasing = (type, t) => {
   return easings[type]?.(t) ?? t;
 };
 
+const readAnimatedValue = (widget, property) => {
+  if (property === "scale") return 1;
+  if (widget?.style && property in widget.style) {
+    return widget.style[property];
+  }
+  return widget?.[property];
+};
+
+const writeAnimatedValue = (widget, property, value) => {
+  if (!widget) return;
+  if (property === "scale") {
+    widget.style.transform = `scale(${value})`;
+    return;
+  }
+  if (widget.style && property in widget.style) {
+    const unitlessProperties = new Set([
+      "opacity",
+      "zIndex",
+      "fontWeight",
+      "lineHeight",
+      "flexGrow",
+      "flexShrink",
+    ]);
+    widget.style[property] =
+      typeof value === "number" && !unitlessProperties.has(property)
+        ? `${value}px`
+        : value;
+    return;
+  }
+  widget[property] = value;
+};
+
 // ========== FIRE AND FORGET (No Promise) ==========
 // Use for simple animations where you don't need to know when they finish
 export const animate = (
@@ -64,7 +96,7 @@ export const animate = (
   easing = "linear",
 ) => {
   const startTime = performance.now();
-  const startValue = from !== undefined ? from : widget[property];
+  const startValue = from !== undefined ? from : readAnimatedValue(widget, property);
   const endValue = to;
 
   const step = (currentTime) => {
@@ -73,7 +105,7 @@ export const animate = (
     const easedProgress = getEasing(easing, progress);
     const currentValue = interpolate(startValue, endValue, easedProgress);
 
-    widget[property] = currentValue;
+    writeAnimatedValue(widget, property, currentValue);
 
     if (progress < 1) {
       requestAnimationFrame(step);
@@ -95,7 +127,7 @@ export const animateAsync = (
 ) => {
   return new Promise((resolve) => {
     const startTime = performance.now();
-    const startValue = from !== undefined ? from : widget[property];
+    const startValue = from !== undefined ? from : readAnimatedValue(widget, property);
     const endValue = to;
 
     const step = (currentTime) => {
@@ -104,7 +136,7 @@ export const animateAsync = (
       const easedProgress = getEasing(easing, progress);
       const currentValue = interpolate(startValue, endValue, easedProgress);
 
-      widget[property] = currentValue;
+      writeAnimatedValue(widget, property, currentValue);
 
       if (progress < 1) {
         requestAnimationFrame(step);

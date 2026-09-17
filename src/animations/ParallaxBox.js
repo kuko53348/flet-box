@@ -26,6 +26,16 @@ export const ParallaxBox = (props) => {
   let targetX = 0;
   let targetY = 0;
   let animatedContent = null;
+  let initialTimer = null;
+  const transitionTimers = new Set();
+
+  const clearTransitionLater = () => {
+    const timer = setTimeout(() => {
+      transitionTimers.delete(timer);
+      if (animatedContent) animatedContent.style.transition = "";
+    }, duration);
+    transitionTimers.add(timer);
+  };
 
   const applyTransform = (x, y, animate = true) => {
     if (disabled) return;
@@ -63,9 +73,7 @@ export const ParallaxBox = (props) => {
       } else {
         animatedContent.style.transition = "none";
       }
-      setTimeout(() => {
-        if (animatedContent) animatedContent.style.transition = "";
-      }, duration);
+      clearTransitionLater();
     }
   };
 
@@ -79,9 +87,7 @@ export const ParallaxBox = (props) => {
       } else {
         animatedContent.style.transition = "none";
       }
-      setTimeout(() => {
-        if (animatedContent) animatedContent.style.transition = "";
-      }, duration);
+      clearTransitionLater();
     }
     if (onParallaxMove) onParallaxMove({ x: 0, y: 0 });
   };
@@ -179,7 +185,10 @@ export const ParallaxBox = (props) => {
   // Attach event listeners
   if (type === "scroll") {
     window.addEventListener("scroll", handleScroll);
-    setTimeout(() => handleScroll(), 100);
+    initialTimer = setTimeout(() => {
+      initialTimer = null;
+      handleScroll();
+    }, 100);
   } else if (type === "mouse" || type === "hover") {
     container.addEventListener("mousemove", handleMouseMove);
     container.addEventListener("mouseleave", handleMouseLeave);
@@ -221,6 +230,9 @@ export const ParallaxBox = (props) => {
       }
     }
     if (animationFrame) cancelAnimationFrame(animationFrame);
+    if (initialTimer) clearTimeout(initialTimer);
+    transitionTimers.forEach((timer) => clearTimeout(timer));
+    transitionTimers.clear();
     if (originalCleanup) originalCleanup();
   };
 
