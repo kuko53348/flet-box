@@ -1,53 +1,113 @@
-// app.js - Demo de Icon
-import { Container, runApp, Icon, Icons, Text, Row, Column } from './index.js';
+// app.js
+import { runApp, Container, Column, Row, Icon, Text, colors } from './index.js';
 
-const MyApp = () => {
-    // Ejemplo con diferentes iconos
-    const demo = Column({
+const App = () => {
+    return Container({
+        width: '100%',
+        minHeight: '100vh',
         justifyContent: 'center',
         alignItems: 'center',
-        gap: 20,
-        width: '100%',
-        height: '100vh',
-        bgColor: '#1a1a2e',
-        children: [
-            Text({ textContent: '🎨 ICONOS', fontSize: 24, color: '#ffffff', fontWeight: 'bold' }),
-            
-            // Iconos básicos
-            Row({ gap: 20, children: [
-                Icon({ name: 'home', size: 32, color: '#ff0066' }),
-                Icon({ name: 'search', size: 32, color: '#00ff88' }),
-                Icon({ name: 'settings', size: 32, color: '#ffcc00' }),
-                Icon({ name: 'favorite', size: 32, color: '#ff0066' }),
-                Icon({ name: 'star', size: 32, color: '#ffcc00' })
-            ]}),
-            
-            // Iconos con diferentes tamaños
-            Row({ gap: 20, children: [
-                Icon({ name: 'home', size: 16, color: '#ffffff' }),
-                Icon({ name: 'home', size: 24, color: '#ffffff' }),
-                Icon({ name: 'home', size: 32, color: '#ffffff' }),
-                Icon({ name: 'home', size: 48, color: '#ffffff' })
-            ]}),
-            
-            // Usando Icons predefinidos
-            Row({ gap: 20, children: [
-                Icons.Home({ size: 32, color: '#ff0066' }),
-                Icons.Search({ size: 32, color: '#00ff88' }),
-                Icons.Settings({ size: 32, color: '#ffcc00' }),
-                Icons.Star({ size: 32, color: '#ffff00' })
-            ]}),
-            
-            // Iconos con texto
-            Row({ gap: 20, children: [
-                Container({ children: [Icon({ name: 'home', size: 20 }), Text({ textContent: ' Inicio', color: '#fff' })] }),
-                Container({ children: [Icon({ name: 'settings', size: 20 }), Text({ textContent: ' Ajustes', color: '#fff' })] }),
-                Container({ children: [Icon({ name: 'user', size: 20 }), Text({ textContent: ' Perfil', color: '#fff' })] })
-            ]})
-        ]
+        bgColor: colors.background,
+        padding: 20,
+        child: Column({
+            gap: 30,
+            alignItems: 'center',
+            children: [
+                Text({ 
+                    text: '🎨 Icon Demo', 
+                    size: 28, 
+                    weight: 'bold', 
+                    color: colors.primary 
+                }),
+                
+                Row({
+                    gap: 20,
+                    alignItems: 'center',
+                    children: [
+                        Icon({ name: 'favorite', size: 32, color: colors.danger }),
+                        Icon({ name: 'star', size: 32, color: colors.warning }),
+                        Icon({ name: 'home', size: 32, color: colors.primary }),
+                        Icon({ name: 'settings', size: 32, color: colors.textSecondary }),
+                        Icon({ name: 'person', size: 32, color: colors.success })
+                    ]
+                }),
+                
+                Row({
+                    gap: 16,
+                    alignItems: 'center',
+                    children: [
+                        Icon({ 
+                            name: 'thumb_up', 
+                            size: 48, 
+                            color: colors.primary,
+                            onClick: () => alert('👍 Like!'),
+                            style: { cursor: 'pointer' }
+                        }),
+                        Icon({ 
+                            name: 'delete', 
+                            size: 48, 
+                            color: colors.danger,
+                            onClick: () => alert('🗑️ Delete!'),
+                            style: { cursor: 'pointer' }
+                        }),
+                        Icon({ 
+                            name: 'edit', 
+                            size: 48, 
+                            color: colors.success,
+                            onClick: () => alert('✏️ Edit!'),
+                            style: { cursor: 'pointer' }
+                        })
+                    ]
+                }),
+                
+                Text({ 
+                    text: 'Click on the icons below 👇', 
+                    size: 12, 
+                    color: colors.textSecondary 
+                }),
+                
+                Row({
+                    gap: 12,
+                    children: [
+                        Icon({ 
+                            name: 'refresh', 
+                            size: 24,
+                            color: colors.primary,
+                            padding: 8,
+                            bgColor: colors.gray100,
+                            borderRadius: 8,
+                            onClick: () => alert('Refreshing...')
+                        }),
+                        Icon({ 
+                            name: 'add', 
+                            size: 24,
+                            color: colors.success,
+                            padding: 8,
+                            bgColor: colors.gray100,
+                            borderRadius: 8,
+                            onClick: () => alert('Add new item')
+                        }),
+                        Icon({ 
+                            name: 'close', 
+                            size: 24,
+                            color: colors.danger,
+                            padding: 8,
+                            bgColor: colors.gray100,
+                            borderRadius: 8,
+                            onClick: () => alert('Close')
+                        })
+                    ]
+                }),
+                
+                Text({ 
+                    text: 'All icons support: padding, margin, bgColor, borderRadius, onClick', 
+                    size: 10, 
+                    color: colors.textDisabled,
+                    align: 'center'
+                })
+            ]
+        })
     });
-
-    return demo;
 };
 
-runApp(MyApp, 'root');
+runApp(App, 'root');

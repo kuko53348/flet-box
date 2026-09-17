@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>FletBox PSP</title>
+  
+  <!-- CSS básico (todo aquí) -->
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #f0f0f0; font-family: sans-serif; padding: 10px; }
+    
+    /* Layout con tablas (alternativa a flex) */
+    .container { display: table; width: 100%; }
+    .row { display: table-row; }
+    .col { display: table-cell; padding: 4px; vertical-align: top; }
+    
+    /* Componentes */
+    .card { background: white; padding: 16px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px; }
+    .btn { background: #4CAF50; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px; }
+    .btn:hover { background: #45a049; }
+    .text-center { text-align: center; }
+    .mt-10 { margin-top: 10px; }
+    .mb-10 { margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  
+  <!-- TODO EL JS EN UN SOLO ARCHIVO -->
+  <script src="app.js"></script>
+  
+  <!-- Iniciar app -->
+  <script>
+    if (window.FletBox) {
+      window.FletBox.runApp(window.FletBox.App, 'root');
+    } else {
+      console.error('❌ FletBox no cargado');
+      document.getElementById('root').innerHTML = 
+        '<div class="card"><h2>❌ Error</h2><p>No se pudo cargar la app</p></div>';
+    }
+  </script>
+</body>
+</html>

@@ -90,7 +90,7 @@ export function SnackBar(options) {
     tag: "div",
     position: "fixed",
     left: `${margin}px`,
-    borderRadius: borderRadius,
+    // borderRadius: borderRadius,
     right: `${margin}px`,
     [position]: `${margin}px`,
     backgroundColor: finalBg,

@@ -1,0 +1,51 @@
+.
+├── app.js
+├── core
+│   ├── Api.js
+│   ├── createDoc.js
+│   ├── expressServer.js
+│   ├── index.js
+│   ├── rateLimit.js
+│   ├── runSecureServer.js
+│   ├── runServer.js
+│   ├── security
+│   │   ├── analizer.js
+│   │   ├── auth.js
+│   │   ├── blacklist.js
+│   │   ├── database.js
+│   │   ├── headers.js
+│   │   ├── index.js
+│   │   ├── jwt.js
+│   │   ├── maliciousPatterns.js
+│   │   ├── middleware.js
+│   │   ├── roles.js
+│   │   ├── sanitize.js
+│   │   └── validation.js
+│   └── server.js
+├── demo.md
+├── package.json
+├── run.sh
+├── ssl
+│   ├── server.crt
+│   └── server.key
+├── tools
+│   ├── Database.js
+│   ├── auth.js
+│   ├── betterSqlite.js
+│   ├── cache.js
+│   ├── csv.js
+│   ├── email.js
+│   ├── index.js
+│   ├── logger.js
+│   ├── pdf.js
+│   ├── queue.js
+│   ├── sms.js
+│   ├── speechToText.js
+│   ├── storage.js
+│   ├── textToSpeech.js
+│   ├── translator.js
+│   ├── validator.js
+│   └── webSocket.js
+└── tree.txt
+
+5 directories, 44 files

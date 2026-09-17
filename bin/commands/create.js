@@ -153,7 +153,7 @@ export const createProject = async (projectName, rawArgs = []) => {
       // DrawerMenu (use modular version for adaptive/full, simple for basic)
       if (template === "basic") {
         createFile(
-          path.join(projectPath, "src/components/DrawerMenu.js"),
+          path.join(projectPath, "src/components/layouts/DrawerMenu.js"),
           templates.drawerMenuJs(),
         ); // original simple
       } else {

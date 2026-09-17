@@ -50,7 +50,7 @@ import { runApp, Scaffold, AppBar, BottomNavigation, colors, Icon, goTo, openDra
 import { RootScreen } from './screens/RootScreen.js';
 import { HomeScreen } from './screens/HomeScreen.js';
 import { AboutScreen } from './screens/AboutScreen.js';
-import { DrawerMenu } from './components/DrawerMenu.js';
+import { DrawerMenu } from './components/layouts/DrawerMenu.js';
 
 // ========== CUSTOM APPBAR (commented out) ==========
 /*
@@ -368,7 +368,7 @@ export const AboutScreen = () => {
 export default AboutScreen;
 `;
 
-export const drawerMenuJs = () => `// components/DrawerMenu.js
+export const drawerMenuJs = () => `// components/layouts/DrawerMenu.js
 import { Drawer, DrawerItem, Container, Column, Text, Icon, colors, closeDrawer } from 'flet-box';
 
 export const DrawerMenu = () => {
@@ -725,7 +725,8 @@ npm run dev
 ├── src/
 │   ├── app.js
 │   ├── components/
-│   │   └── DrawerMenu.js
+│   │   └── layouts/
+│   │       └── DrawerMenu.js
 │   ├── screens/
 │   │   ├── RootScreen.js
 │   │   ├── HomeScreen.js
@@ -928,7 +929,11 @@ export const basicAppJs = () => `// app.js - Basic template (AppBar + Drawer)
 import { runApp, Scaffold, colors } from 'flet-box';
 import { AppBarComponent } from './components/layouts/AppBarComponent.js';
 import { DrawerMenu } from './components/layouts/DrawerMenu.js';
-import { RootScreen, HomeScreen, AboutScreen } from './screens/index.js';
+
+// make sure to export all screens in screens/index.js for easier imports
+import RootScreen from './screens/RootScreen.js';
+import HomeScreen from './screens/HomeScreen.js';
+import AboutScreen from './screens/AboutScreen.js';
 
 const routes = {
     '/': RootScreen,
@@ -952,7 +957,11 @@ import { runApp, Scaffold, colors, useWindowSize } from 'flet-box';
 import { AppBarComponent } from './components/layouts/AppBarComponent.js';
 import { DrawerMenu } from './components/layouts/DrawerMenu.js';
 import { BottomNav } from './components/layouts/BottomNav.js';
-import { RootScreen, HomeScreen, AboutScreen } from './screens/index.js';
+
+// make sure to export all screens in screens/index.js for easier imports
+import RootScreen from './screens/RootScreen.js';
+import HomeScreen from './screens/HomeScreen.js';
+import AboutScreen from './screens/AboutScreen.js';
 
 const routes = {
     '/': RootScreen,
@@ -1004,7 +1013,12 @@ import { AppBarComponent } from './components/layouts/AppBarComponent.js';
 import { DrawerMenu } from './components/layouts/DrawerMenu.js';
 import { BottomNav } from './components/layouts/BottomNav.js';
 import { Sidebar } from './components/layouts/Sidebar.js';
-import { RootScreen, HomeScreen, AboutScreen, ProfileScreen } from './screens/index.js';
+
+// make sure to export all screens in screens/index.js for easier imports
+import RootScreen from './screens/RootScreen.js';
+import HomeScreen from './screens/HomeScreen.js';
+import AboutScreen from './screens/AboutScreen.js';
+import ProfileScreen from './screens/ProfileScreen.js';
 
 const routes = {
     '/': RootScreen,
