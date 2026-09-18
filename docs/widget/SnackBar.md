@@ -1,220 +1,115 @@
 # SnackBar
 
 ## Overview
-`SnackBar` is a ready-to-use building block. Think of it like a LEGO piece: give it some props, place it inside another widget, and FletBox creates the browser element for you.
-
-You do not need to write HTML or manually change the DOM to use this widget. You call the widget as a JavaScript function and pass an object between `{` and `}`.
-
-## Learn it in one minute
-
-1. Import the widget from `flet-box`.
-2. Call it with `WidgetName({ ... })`.
-3. Add props to describe its content, size, color, spacing, and behavior.
-4. Put it inside `Container`, `Row`, `Column`, or another widget.
-
-```javascript
-import { Column, Container, Text } from "flet-box";
-
-const welcomeCard = Container({
-    padding: 20,
-    margin: 16,
-    bgColor: "#ffffff",
-    borderRadius: 12,
-    child: Column({
-        gap: 8,
-        children: [
-            Text({ text: "My first FletBox screen", size: 24, weight: "bold" }),
-            Text({ text: "Widgets are small building blocks. Put them inside each other to build a screen." }),
-        ],
-    }),
-});
-```
+`SnackBar` shows a temporary notification bar fixed to the top or bottom edge of the viewport. Calling it is the action: it immediately builds a `<div>` bar (message + optional action button + optional close button), appends it to `document.body`, animates it in, and schedules auto-dismiss after `duration` ms. It returns a controller object `{ close, show, getElement }` — not an element you place in your tree.
 
 ## When to use
-Use `SnackBar` when you need this kind of interface element. Start with the smallest example, then add one prop at a time. You can copy the example, change the text or color, and see the result immediately.
+- Confirm a completed action without interrupting the user ("Item saved").
+- Report a transient error, optionally with an `action` button like Retry or Undo.
+- Any short, self-dismissing message that doesn't need a decision.
 
-## Common props
-
-- `children` / `child`: content rendered inside the widget.
-- `id`: DOM id for the element.
-- `className`: CSS class names applied to the element.
-- `ref`: callback that receives the underlying DOM node.
-- `onClick` / event handlers: native browser event callbacks.
-- `disabled`: disables interaction when supported.
-
-## Full prop list
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `message` | `Any` | - | Body text or notification content. |
-| `variant` | `Any` | - | Visual variation or style preset. |
-| `duration` | `Any` | - | Property used by the SnackBar component. |
-| `open` | `Any` | false | Whether the widget is visible or active. |
-| `children` | `Any` | - | Property used by the SnackBar component. |
-| `id` | `Any` | - | Property used by the SnackBar component. |
-| `className` | `Any` | - | Property used by the SnackBar component. |
-| `ref` | `Any` | - | Property used by the SnackBar component. |
-| `onClick` | `Any` | - | Property used by the SnackBar component. |
-| `disabled` | `Any` | false | Disables interaction and shows the non-interactive state. |
-
-## How props work
-
-A prop is simply an instruction inside the object passed to the widget. The name tells FletBox what to change, and the value tells it how to change it.
+## Import
 
 ```javascript
-SnackBar({
-    padding: 16,              // space inside the widget
-    margin: "8px 0",         // space outside the widget
-    bgColor: "#eff6ff",      // background color
-    width: "100%",           // CSS size or a number of pixels
-    children: [],             // widgets placed inside it
-    onPress: () => {         // what to do after a press
-        console.log("Hello");
-    },
-});
+import { SnackBar } from "flet-box";
 ```
-
-You do not need to use every prop. Begin with the required props, then add optional props only when you need them.
-
-## Example usage
-
-```javascript
-import { SnackBar, Text } from "flet-box";
-
-const example = SnackBar({
-  open: true,
-  child: Text({ text: "Example" })
-});
-```
-
-## Examples from the FletBox snippet library
-
-The examples below come from the FletBox snippet library. The prop table is based on `src/index.d.ts`. When an example and the type declaration use different names, prefer the type declaration and verify the implementation.
 
 ## Basic example
 
 The smallest useful version. Start here if this widget is new to you.
 
 ```javascript
-SnackBar({ message: "Hello" })
+import { SnackBar } from "flet-box";
+
+SnackBar({ message: "Item saved" });
 ```
 
-## Everyday example
+## Props
 
-A practical version with the props most applications usually need.
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `message` | string | — | Notification text. |
+| `action` | string | — | Action button label. Clicking it fires `onAction`, then closes the bar. |
+| `onAction` | function | — | Action button handler. |
+| `duration` | number (ms) | `3000` | Auto-dismiss delay. `0` (or negative) keeps the bar until `close()`. |
+| `type` | `'normal'`, `'success'`, `'error'`, `'warning'`, `'info'` | `'normal'` | Color preset from the theme: `normal` → `colors.surface`, `success` → `colors.success`, `error` → `colors.danger`, `warning` → `colors.warning`, `info` → `colors.info`. |
+| `position` | `'bottom'`, `'top'` | `'bottom'` | Screen edge the bar slides in from. |
+| `backgroundColor` | Color | preset | Overrides the `type` background. |
+| `textColor` | Color | `colors.text` | Message color. |
+| `actionColor` | Color | preset | Action button color. |
+| `dismissible` | boolean | `false` | Adds a `✕` close button — only when `action` is not set. |
+| `borderRadius` | number or string | `16` | Corner radius in pixels. |
+| `padding` | string | `'12px 16px'` | Inner padding. |
+| `margin` | number | `16` | Distance from the screen edges in pixels (left, right, and top/bottom). |
+| `elevation` | number | `2` | Shadow depth: `0 e px 2·e px rgba(0,0,0,0.15)`; `0` removes the shadow. |
+| `animationDuration` | number (ms) | `300` | Slide/fade duration, also the delay before the element is removed on close. |
+| `zIndex` | number | `10000` | Stacking order — above `Modal` (9998) and `BottomSheet` (9999). |
+| `onShow` | function | — | Fires right after the bar starts showing. |
+| `onClose` | function | — | Fires when the bar finishes closing (after the animation). |
+
+This widget returns a controller object, not an element, so [common props](COMMON_PROPS.md) do not apply to it; unrecognized options are ignored.
+
+## Instance methods
+
+The returned controller exposes:
+
+- `close()` — cancels the auto-dismiss timer, animates the bar out, and removes it from `document.body` after `animationDuration` ms (then fires `onClose`).
+- `show()` — replays the slide/fade-in animation (and fires `onShow`).
+- `getElement()` — returns the bar's `<div>` so you can style or inspect it directly.
+
+## Examples
+
+### Everyday example
 
 ```javascript
-SnackBar({ message: "Item saved", type: "success", duration: 2000 })
-```
+import { Button, SnackBar } from "flet-box";
 
-## Full example
-
-A larger example showing advanced styling, layout, events, and customization.
-
-```javascript
-SnackBar({
-    message: "Network error",
-    action: { label: "Retry", onPress: () => retry() },
-    duration: 5000,
-    type: "error",
-    position: "top",
-    backgroundColor: "#ff4444",
-    textColor: "#fff",
-    actionColor: "#ffcc00",
-    dismissible: true,
-    borderRadius: 12,
-    padding: "14px 20px",
-    margin: 20,
-    elevation: 4,
-    onShow: () => analytics.log("snackbar_shown"),
-    onClose: () => console.log("closed")
-})
-```
-
-
-## Common layout and styling examples
-
-The following example shows how common FletBox props work together. Numeric spacing values are interpreted as pixels, while strings can use CSS units and shorthand values.
-
-```javascript
-import { Button, Column, Container, Row, Text } from "flet-box";
-
-const panel = Container({
-    width: "100%",          // number values are pixels; strings accept CSS units
-    padding: 24,            // 24px on every side
-    margin: "16px auto",   // CSS shorthand: vertical and horizontal spacing
-    bgColor: "#f8fafc",    // background color
-    borderRadius: 12,
-    elevation: 2,
-    gap: 12,
-    child: Column({
-        children: [
-            Text({ text: "Account settings", size: 24, weight: "bold" }),
-            Row({
-                gap: 8,
-                justifyContent: "space-between",
-                children: [
-                    Text({ text: "Update your profile" }),
-                    Button({
-                        text: "Save",
-                        bgColor: "#2563eb",
-                        color: "#ffffff",
-                        onPress: () => console.log("saved"),
-                    }),
-                ],
-            }),
-        ],
-    }),
+Button({
+  text: "Save",
+  onPress: () => SnackBar({ message: "Changes saved", type: "success", duration: 2000 }),
 });
 ```
 
-### Common prop quick reference
+### Full example
 
-- `padding: 24` adds `24px` inside the widget on all sides.
-- `padding: "8px 16px"` uses CSS shorthand for vertical and horizontal spacing.
-- `margin: "16px auto"` adds outside spacing and can center a fixed-width element.
-- `bgColor: "#f8fafc"` sets the background color. Color tokens and CSS colors can be used.
-- `color: "#111827"` sets the foreground or text color when supported.
-- `width: 320` means `320px`; `width: "100%"` uses a CSS percentage.
-- `children` is an array of widgets; `child` is useful when a component accepts one child.
-- `gap: 12` controls the space between children in layout widgets.
-- `onPress` and `onClick` receive event callbacks for interactive behavior.
+```javascript
+import { SnackBar, colors } from "flet-box";
 
-## Beginner tips
+const bar = SnackBar({
+  message: "Connection lost. Reconnecting...",
+  type: "error",
+  position: "top",
+  action: "Retry",
+  onAction: () => console.log("retrying"),
+  duration: 5000,
+  backgroundColor: "#1e293b",
+  textColor: "#ffffff",
+  actionColor: colors.warning,
+  borderRadius: 12,
+  margin: 24,
+  elevation: 4,
+  onShow: () => console.log("visible"),
+  onClose: () => console.log("dismissed"),
+});
 
-- Change one value at a time so you can see what each prop does.
-- Use `Text` to check that your layout is in the place you expect.
-- Use `Container` for a box, `Row` for items side by side, and `Column` for items one below another.
-- Use `padding` when content needs breathing room inside a box.
-- Use `margin` when you need space between this widget and its neighbors.
-- Use `bgColor` to make the boundaries of a box easy to see while learning.
-- If a prop is optional, leaving it out lets FletBox use its default behavior.
+// bar.close();            // dismiss early
+// bar.getElement();       // the fixed-position <div>
+```
 
-## Common mistakes
+## Notes
 
-- Do not put plain text where a widget is expected unless the widget explicitly accepts strings.
-- Use `children: [ ... ]` for several child widgets and `child: widget` for one child when the widget supports both.
-- Check spelling carefully: `onPress`, `onClick`, and `onChange` are different events.
-- If a helper such as `padding()` or `margin()` is not available in your import list, use a number or CSS string first.
-
-## Behavior notes
-- Integrates cleanly with FletBox runtime semantics and DOM rendering.
-- Can be nested inside layout widgets and combined with other components.
-- Uses the same direct prop and event conventions as the rest of the framework.
-- Keeps the API simple and readable for composing interfaces fast.
-
-## Accessibility
-- Prefer clear labels and readable text for interactive controls.
-- Respect the `disabled` state and keyboard behavior when available.
-- Keep state changes understandable for screen readers and assistive technology.
+- There is no "create then open" step — the bar shows as soon as you call `SnackBar(...)` and each call creates a brand-new element. There is no queue: several calls stack on top of each other at the same edge.
+- The bar spans nearly the full width (`left`/`right` set to `margin`), Material-style.
+- `dismissible` only adds the `✕` button when no `action` is present; the action button already closes the bar.
+- The slide-in runs inside a `requestAnimationFrame`, so computed `opacity`/`transform` reach their final values one frame after creation — the DOM insertion itself is synchronous.
+- `close()` removes the element from the DOM only after `animationDuration` ms; `onClose` fires at that point.
 
 ## Related widgets
-- [Container](Container.md)
-- [Row](Row.md)
-- [Column](Column.md)
-- [Stack](Stack.md)
-- [Text](Text.md)
+- [Tooltip](Tooltip.md)
+- [Modal](Modal.md)
+- [AlertDialog](AlertDialog.md)
 - [Button](Button.md)
+- [Badge](Badge.md)
 
 ---
 

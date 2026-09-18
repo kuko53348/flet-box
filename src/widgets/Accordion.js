@@ -441,7 +441,11 @@ export const Accordion = (props) => {
     if (resizeObserver) resizeObserver.disconnect();
     if (contentWrapper && contentWrapper._cleanup) contentWrapper._cleanup();
   };
-  container._cleanup = cleanup;
+  const originalCleanup = container._cleanup;
+  container._cleanup = () => {
+    cleanup();
+    if (originalCleanup) originalCleanup();
+  };
 
   return container;
 };

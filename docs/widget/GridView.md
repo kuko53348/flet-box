@@ -1,206 +1,116 @@
 # GridView
 
 ## Overview
-`GridView` is a ready-to-use building block. Think of it like a LEGO piece: give it some props, place it inside another widget, and FletBox creates the browser element for you.
-
-You do not need to write HTML or manually change the DOM to use this widget. You call the widget as a JavaScript function and pass an object between `{` and `}`.
-
-## Learn it in one minute
-
-1. Import the widget from `flet-box`.
-2. Call it with `WidgetName({ ... })`.
-3. Add props to describe its content, size, color, spacing, and behavior.
-4. Put it inside `Container`, `Row`, `Column`, or another widget.
-
-```javascript
-import { Column, Container, Text } from "flet-box";
-
-const welcomeCard = Container({
-    padding: 20,
-    margin: 16,
-    bgColor: "#ffffff",
-    borderRadius: 12,
-    child: Column({
-        gap: 8,
-        children: [
-            Text({ text: "My first FletBox screen", size: 24, weight: "bold" }),
-            Text({ text: "Widgets are small building blocks. Put them inside each other to build a screen." }),
-        ],
-    }),
-});
-```
+`GridView` renders a virtualized, multi-column grid. It is a thin wrapper around `ListView` with `wrapItems: true`: it maps `columns` → `crossAxisCount`, `itemHeight` → `itemSize`, and `spacing` → `gap`, then forwards everything else. That means it shares `ListView`'s virtualization, header/footer/empty slots, infinite scroll, pull-to-refresh, and instance methods.
 
 ## When to use
-Use `GridView` when you need this kind of interface element. Start with the smallest example, then add one prop at a time. You can copy the example, change the text or color, and see the result immediately.
+- Show items in a multi-column grid (a gallery or product grid) while keeping virtualization.
+- You want `ListView`'s infinite scroll or pull-to-refresh in a grid layout.
 
-## Common props
-
-- `children` / `child`: content rendered inside the widget.
-- `id`: DOM id for the element.
-- `className`: CSS class names applied to the element.
-- `ref`: callback that receives the underlying DOM node.
-- `onClick` / event handlers: native browser event callbacks.
-- `disabled`: disables interaction when supported.
-
-## Full prop list
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `columns` | `number` | [] | Column definitions or list of columns. |
-| `spacing` | `number` | - | Property used by the GridView component. |
-| `itemHeight` | `number` | - | Property used by the GridView component. |
-
-## How props work
-
-A prop is simply an instruction inside the object passed to the widget. The name tells FletBox what to change, and the value tells it how to change it.
+## Import
 
 ```javascript
-GridView({
-    padding: 16,              // space inside the widget
-    margin: "8px 0",         // space outside the widget
-    bgColor: "#eff6ff",      // background color
-    width: "100%",           // CSS size or a number of pixels
-    children: [],             // widgets placed inside it
-    onPress: () => {         // what to do after a press
-        console.log("Hello");
-    },
-});
+import { GridView } from "flet-box";
 ```
-
-You do not need to use every prop. Begin with the required props, then add optional props only when you need them.
-
-## Example usage
-
-```javascript
-import { GridView, Text } from "flet-box";
-
-const example = GridView({
-  data: [],
-  child: Text({ text: "Example" })
-});
-```
-
-## Examples from the FletBox snippet library
-
-The examples below come from the FletBox snippet library. The prop table is based on `src/index.d.ts`. When an example and the type declaration use different names, prefer the type declaration and verify the implementation.
 
 ## Basic example
 
 The smallest useful version. Start here if this widget is new to you.
 
 ```javascript
-GridView({ data: ["A", "B"], renderItem: (item) => Text({ text: item }), columns: 2 })
-```
+import { GridView, Text } from "flet-box";
 
-## Everyday example
-
-A practical version with the props most applications usually need.
-
-```javascript
-GridView({ data: images, renderItem: (img) => Image({ src: img }), columns: 3, spacing: 8 })
-```
-
-## Full example
-
-A larger example showing advanced styling, layout, events, and customization.
-
-```javascript
 GridView({
-    data: gallery,
-    renderItem: (item) => Card({ child: Image({ src: item.url, fit: "cover" }) }),
-    columns: 4,
-    spacing: 12,
-    itemHeight: 180,
-    onEndReached: () => fetchMore(),
-    onRefresh: (done) => refresh(done),
-    ListHeaderComponent: () => Text("Gallery")
-})
-```
-
-
-## Common layout and styling examples
-
-The following example shows how common FletBox props work together. Numeric spacing values are interpreted as pixels, while strings can use CSS units and shorthand values.
-
-```javascript
-import { Button, Column, Container, Row, Text } from "flet-box";
-
-const panel = Container({
-    width: "100%",          // number values are pixels; strings accept CSS units
-    padding: 24,            // 24px on every side
-    margin: "16px auto",   // CSS shorthand: vertical and horizontal spacing
-    bgColor: "#f8fafc",    // background color
-    borderRadius: 12,
-    elevation: 2,
-    gap: 12,
-    child: Column({
-        children: [
-            Text({ text: "Account settings", size: 24, weight: "bold" }),
-            Row({
-                gap: 8,
-                justifyContent: "space-between",
-                children: [
-                    Text({ text: "Update your profile" }),
-                    Button({
-                        text: "Save",
-                        bgColor: "#2563eb",
-                        color: "#ffffff",
-                        onPress: () => console.log("saved"),
-                    }),
-                ],
-            }),
-        ],
-    }),
+  data: ["A", "B", "C", "D"],
+  columns: 2,
+  renderItem: (item) => Text({ text: item }),
 });
 ```
 
-### Common prop quick reference
+## Props
 
-- `padding: 24` adds `24px` inside the widget on all sides.
-- `padding: "8px 16px"` uses CSS shorthand for vertical and horizontal spacing.
-- `margin: "16px auto"` adds outside spacing and can center a fixed-width element.
-- `bgColor: "#f8fafc"` sets the background color. Color tokens and CSS colors can be used.
-- `color: "#111827"` sets the foreground or text color when supported.
-- `width: 320` means `320px`; `width: "100%"` uses a CSS percentage.
-- `children` is an array of widgets; `child` is useful when a component accepts one child.
-- `gap: 12` controls the space between children in layout widgets.
-- `onPress` and `onClick` receive event callbacks for interactive behavior.
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `columns` | number | `2` | Number of grid columns (maps to `ListView`'s `crossAxisCount`). |
+| `itemHeight` | number | `150` | Cell height in pixels (maps to `itemSize`). |
+| `spacing` | number | `8` | Space between cells in pixels (maps to `gap`). |
 
-## Beginner tips
+Every other prop is forwarded to `ListView` — `data`, `renderItem`, `height`, `bufferSize`, `onEndReached`, `onEndReachedThreshold`, `onRefresh`, `ListHeaderComponent`/`ListFooterComponent`/`ListEmptyComponent`, and the rest. See [ListView](ListView.md). It also accepts every [common prop](COMMON_PROPS.md): layout, spacing, size, color, typography, borders, shadow, events, `child`/`children`, `ref`, and `style`.
 
-- Change one value at a time so you can see what each prop does.
-- Use `Text` to check that your layout is in the place you expect.
-- Use `Container` for a box, `Row` for items side by side, and `Column` for items one below another.
-- Use `padding` when content needs breathing room inside a box.
-- Use `margin` when you need space between this widget and its neighbors.
-- Use `bgColor` to make the boundaries of a box easy to see while learning.
-- If a prop is optional, leaving it out lets FletBox use its default behavior.
+## Instance methods
 
-## Common mistakes
+Because `GridView` returns a `ListView` element, it exposes the same members:
 
-- Do not put plain text where a widget is expected unless the widget explicitly accepts strings.
-- Use `children: [ ... ]` for several child widgets and `child: widget` for one child when the widget supports both.
-- Check spelling carefully: `onPress`, `onClick`, and `onChange` are different events.
-- If a helper such as `padding()` or `margin()` is not available in your import list, use a number or CSS string first.
+- `updateData(newData)` — intended to replace the dataset and re-render. Currently broken (see the `ListView` Notes).
+- `scrollToIndex(index, animated = true)` — scrolls to a given cell index.
+- `scrollToStart(animated = true)` / `scrollToEnd(animated = true)` — scroll to the top/bottom.
+- `data` (getter is safe) and `refreshing` — reactive properties. The `data` setter shares the `ListView` recursion bug. See [ListView](ListView.md).
 
-## Behavior notes
-- Integrates cleanly with FletBox runtime semantics and DOM rendering.
-- Can be nested inside layout widgets and combined with other components.
-- Uses the same direct prop and event conventions as the rest of the framework.
-- Keeps the API simple and readable for composing interfaces fast.
+## Examples
 
-## Accessibility
-- Prefer clear labels and readable text for interactive controls.
-- Respect the `disabled` state and keyboard behavior when available.
-- Keep state changes understandable for screen readers and assistive technology.
+### Everyday example
+
+```javascript
+import { Card, GridView, Text } from "flet-box";
+
+const items = ["One", "Two", "Three", "Four"];
+
+GridView({
+  data: items,
+  columns: 2,
+  itemHeight: 80,
+  spacing: 12,
+  renderItem: (item) => Card({ child: Text({ text: item }) }),
+});
+```
+
+### Full example
+
+```javascript
+import { Card, Column, GridView, Image, Text } from "flet-box";
+
+const gallery = [
+  { url: "/1.jpg", title: "One" },
+  { url: "/2.jpg", title: "Two" },
+];
+
+const grid = GridView({
+  data: gallery,
+  columns: 4,
+  itemHeight: 180,
+  spacing: 12,
+  height: 600,
+  renderItem: (item) =>
+    Card({
+      padding: 0,
+      child: Column({
+        children: [
+          Image({ src: item.url, height: 140, fit: "cover" }),
+          Text({ text: item.title, padding: 8 }),
+        ],
+      }),
+    }),
+  ListHeaderComponent: () => Text({ text: "Gallery", type: "h2" }),
+  onEndReached: () => console.log("load more"),
+});
+
+grid.scrollToIndex(8);
+```
+
+## Notes
+
+- `GridView` is a wrapper: it calls `ListView` with `wrapItems: true` and translates `columns`/`itemHeight`/`spacing` into `crossAxisCount`/`itemSize`/`gap`. All other props pass straight through.
+- It is virtualized exactly like `ListView` — only visible cells (plus `bufferSize`) are in the DOM, and cells render on mount, not synchronously at construction.
+- `itemHeight` is the full cell height used for the scroll math; make sure it matches what your `renderItem` actually produces.
+- All `ListView` behaviors and caveats apply (`renderItem` is required, `expand` does not change `height`, and so on). See [ListView](ListView.md).
+- It inherits the `ListView` `updateData()`/`data`-setter recursion bug: read `data`, but do not assign it or call `updateData()` — recreate the grid to change the dataset. See [ListView](ListView.md).
 
 ## Related widgets
-- [Container](Container.md)
-- [Row](Row.md)
+- [ListView](ListView.md)
+- [Card](Card.md)
+- [Image](Image.md)
+- [ListTile](ListTile.md)
 - [Column](Column.md)
-- [Stack](Stack.md)
-- [Text](Text.md)
-- [Button](Button.md)
 
 ---
 

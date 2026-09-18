@@ -10,6 +10,8 @@ export const InstallButton = (props) => {
     borderRadius = 28,
     padding = "12px 24px",
     bottom = 20,
+    backgroundColor,
+    color,
     onInstalled,
     onClick,
     ...rest
@@ -75,23 +77,36 @@ export const InstallButton = (props) => {
   });
 
   // Escuchar eventos
-  window.addEventListener("beforeinstallprompt", (e) => {
+  const handleBeforeInstallPrompt = (e) => {
     e.preventDefault();
     deferredPrompt = e;
     showButton();
-  });
+  };
 
-  window.addEventListener("appinstalled", () => {
+  const handleAppInstalled = () => {
     isInstalled = true;
     hideButton();
     if (onInstalled) onInstalled();
-  });
+  };
+
+  window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+  window.addEventListener("appinstalled", handleAppInstalled);
 
   // Limpiar
   const cleanup = () => {
+    window.removeEventListener(
+      "beforeinstallprompt",
+      handleBeforeInstallPrompt,
+    );
+    window.removeEventListener("appinstalled", handleAppInstalled);
     if (button && button.remove) button.remove();
   };
-  window.addEventListener("beforeunload", cleanup);
+
+  const originalCleanup = button._cleanup;
+  button._cleanup = () => {
+    cleanup();
+    if (originalCleanup) originalCleanup();
+  };
 
   return button;
 };

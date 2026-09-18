@@ -25,20 +25,42 @@ export const runApp = (
   // }
 
   let currentMainContainer = null;
-  let currentUnsubscribe = null;
+  let unsubscribeTheme = null;
+  let unwatchSystemTheme = null;
 
-  setGlobalRender(() => {
-    renderApp();
-  });
+  // Libera recursivamente los recursos de todo el árbol antes de reconstruirlo.
+  // El `_cleanup` del corazón NO es recursivo y el MutationObserver no lo invoca,
+  // así que sin este barrido cada re-render (setState / cambio de tema) abandonaría
+  // los listeners/rAF/timers de los descendientes. Dispara también los handlers de
+  // onUnmount (Slider/ListView liberan ahí) antes del `_cleanup` de cada widget.
+  const teardownTree = (rootEl) => {
+    if (!rootEl) return;
+    const walk = (el) => {
+      const kids = el.children ? Array.from(el.children) : [];
+      for (const kid of kids) walk(kid);
+      if (Array.isArray(el._unmountFns) && el._unmountFns.length) {
+        const fns = el._unmountFns;
+        el._unmountFns = [];
+        for (const fn of fns) {
+          try {
+            fn(el);
+          } catch (_) {}
+        }
+      }
+      if (typeof el._cleanup === "function") {
+        try {
+          el._cleanup();
+        } catch (_) {}
+      }
+    };
+    walk(rootEl);
+  };
 
   const renderApp = () => {
-    if (currentMainContainer && currentMainContainer.parentNode) {
-      if (currentMainContainer._cleanup) currentMainContainer._cleanup();
-      currentMainContainer.remove();
-    }
-    if (currentUnsubscribe) {
-      currentUnsubscribe();
-      currentUnsubscribe = null;
+    if (currentMainContainer) {
+      teardownTree(currentMainContainer);
+      if (currentMainContainer.parentNode) currentMainContainer.remove();
+      currentMainContainer = null;
     }
 
     const appContent = typeof App === "function" ? App() : App;
@@ -61,8 +83,12 @@ export const runApp = (
     currentMainContainer = mainContainer;
   };
 
+  setGlobalRender(() => {
+    renderApp();
+  });
+
   applySystemTheme();
-  watchSystemTheme();
+  unwatchSystemTheme = watchSystemTheme();
 
   root.style.margin = "0";
   root.style.padding = "0";
@@ -73,6 +99,9 @@ export const runApp = (
   root.style.backgroundColor = colors.background;
   root.style.color = colors.text;
   root.style.transition = "background-color 0.3s ease, color 0.3s ease";
+
+  // Liberar cualquier árbol previo (p. ej. de un runApp anterior / HMR) antes de vaciar.
+  Array.from(root.children).forEach((child) => teardownTree(child));
   root.innerHTML = "";
 
   // 🔥 INICIALIZAR ROUTER si se proporcionan rutas
@@ -82,19 +111,33 @@ export const runApp = (
 
   renderApp();
 
-  const unsubscribeTheme = subscribeTheme(() => {
+  // La suscripción de tema vive en el ámbito de runApp (NO encadenada a un
+  // contenedor transitorio), porque renderApp() reconstruye el contenedor en cada
+  // cambio; si se encadenara al primer contenedor, se auto-cancelaría tras un uso.
+  unsubscribeTheme = subscribeTheme(() => {
     root.style.backgroundColor = colors.background;
     root.style.color = colors.text;
     renderApp();
   });
 
-  const originalCleanup = currentMainContainer?._cleanup;
-  if (currentMainContainer) {
-    currentMainContainer._cleanup = () => {
-      if (unsubscribeTheme) unsubscribeTheme();
-      if (originalCleanup) originalCleanup();
-    };
-  }
+  // Handle de teardown para desmontar la app limpiamente.
+  return {
+    destroy: () => {
+      if (unsubscribeTheme) {
+        unsubscribeTheme();
+        unsubscribeTheme = null;
+      }
+      if (unwatchSystemTheme) {
+        unwatchSystemTheme();
+        unwatchSystemTheme = null;
+      }
+      if (currentMainContainer) {
+        teardownTree(currentMainContainer);
+        if (currentMainContainer.parentNode) currentMainContainer.remove();
+        currentMainContainer = null;
+      }
+    },
+  };
 };
 
 // Resto de funciones auxiliares (insertBy, prependBy, etc.) se mantienen igual

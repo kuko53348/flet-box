@@ -1,255 +1,154 @@
 # DataTable
 
 ## Overview
-`DataTable` is a ready-to-use building block. Think of it like a LEGO piece: give it some props, place it inside another widget, and FletBox creates the browser element for you.
-
-You do not need to write HTML or manually change the DOM to use this widget. You call the widget as a JavaScript function and pass an object between `{` and `}`.
-
-## Learn it in one minute
-
-1. Import the widget from `flet-box`.
-2. Call it with `WidgetName({ ... })`.
-3. Add props to describe its content, size, color, spacing, and behavior.
-4. Put it inside `Container`, `Row`, `Column`, or another widget.
-
-```javascript
-import { Column, Container, Text } from "flet-box";
-
-const welcomeCard = Container({
-    padding: 20,
-    margin: 16,
-    bgColor: "#ffffff",
-    borderRadius: 12,
-    child: Column({
-        gap: 8,
-        children: [
-            Text({ text: "My first FletBox screen", size: 24, weight: "bold" }),
-            Text({ text: "Widgets are small building blocks. Put them inside each other to build a screen." }),
-        ],
-    }),
-});
-```
+`DataTable` renders a real HTML `<table>` — `<thead>` with one `<th>` per column and `<tbody>` with one `<tr>` per row — wrapped in a `<div>` that scrolls horizontally (`width: 100%; overflow-x: auto`). Columns come from `columns` and data from `rows`: each cell is read as `row[key]`, so rows are **objects keyed by the column key**, not arrays. Cell text is written with `textContent`, striping, hover, borders, per-column alignment, and per-column formatters are all built in.
 
 ## When to use
-Use `DataTable` when you need this kind of interface element. Start with the smallest example, then add one prop at a time. You can copy the example, change the text or color, and see the result immediately.
+- Show a list of records (users, invoices, logs) with labelled, aligned columns.
+- Format values per column with `format(value, row)` — currency, dates, uppercasing.
+- React to a row being clicked with `onRowClick(row, index)`.
 
-## Common props
-
-- `children` / `child`: content rendered inside the widget.
-- `id`: DOM id for the element.
-- `className`: CSS class names applied to the element.
-- `ref`: callback that receives the underlying DOM node.
-- `onClick` / event handlers: native browser event callbacks.
-- `disabled`: disables interaction when supported.
-
-## Full prop list
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `width` | `Size` | - | Property used by the DataTable component. |
-| `height` | `Size` | - | Property used by the DataTable component. |
-| `size` | `number` | - | Component size or preset. |
-| `padding` | `Padding` | - | Internal spacing around the component. |
-| `margin` | `Margin` | - | External spacing around the component. |
-| `bgColor` | `Color` | - | Background color applied to the element. |
-| `color` | `Color` | - | Color value or theme token. |
-| `borderRadius` | `number \| string` | - | Property used by the DataTable component. |
-| `elevation` | `number` | - | Property used by the DataTable component. |
-| `shadow` | `string` | - | Property used by the DataTable component. |
-| `opacity` | `number` | - | Property used by the DataTable component. |
-| `visible` | `boolean` | false | Property used by the DataTable component. |
-| `disabled` | `boolean` | false | Disables interaction and shows the non-interactive state. |
-| `onPress` | `(widget: Widget) => void` | - | Callback fired when the widget is pressed. |
-| `onClick` | `(widget: Widget) => void` | - | Property used by the DataTable component. |
-| `id` | `string` | - | Property used by the DataTable component. |
-| `className` | `string` | - | Property used by the DataTable component. |
-| `ref` | `(widget: Widget) => void` | - | Property used by the DataTable component. |
-| `disableTransform` | `boolean` | - | Property used by the DataTable component. |
-| `columns` | `(string \| DataTableColumn)[]` | [] | Column definitions or list of columns. |
-| `rows` | `Record<string, any>[]` | [] | Data rows used by table-like widgets. |
-| `striped` | `boolean` | false | Property used by the DataTable component. |
-| `hoverable` | `boolean` | false | Property used by the DataTable component. |
-| `bordered` | `boolean` | false | Property used by the DataTable component. |
-| `onRowClick` | `(row: any, index: number) => void` | - | Property used by the DataTable component. |
-| `headerBgColor` | `Color` | - | Property used by the DataTable component. |
-| `headerTextColor` | `Color` | - | Property used by the DataTable component. |
-| `headerFontWeight` | `string` | - | Property used by the DataTable component. |
-| `headerFontSize` | `number` | - | Property used by the DataTable component. |
-| `rowBgColor` | `Color` | - | Property used by the DataTable component. |
-| `rowTextColor` | `Color` | - | Property used by the DataTable component. |
-| `rowFontSize` | `number` | - | Property used by the DataTable component. |
-| `stripedRowBgColor` | `Color` | - | Property used by the DataTable component. |
-| `hoverRowBgColor` | `Color` | - | Property used by the DataTable component. |
-| `borderColor` | `Color` | - | Property used by the DataTable component. |
-| `borderWidth` | `number` | - | Property used by the DataTable component. |
-| `cellPadding` | `Padding` | - | Property used by the DataTable component. |
-| `headerCellPadding` | `Padding` | - | Property used by the DataTable component. |
-
-## How props work
-
-A prop is simply an instruction inside the object passed to the widget. The name tells FletBox what to change, and the value tells it how to change it.
+## Import
 
 ```javascript
-DataTable({
-    padding: 16,              // space inside the widget
-    margin: "8px 0",         // space outside the widget
-    bgColor: "#eff6ff",      // background color
-    width: "100%",           // CSS size or a number of pixels
-    children: [],             // widgets placed inside it
-    onPress: () => {         // what to do after a press
-        console.log("Hello");
-    },
-});
+import { DataTable } from "flet-box";
 ```
-
-You do not need to use every prop. Begin with the required props, then add optional props only when you need them.
-
-## Example usage
-
-```javascript
-import { DataTable, Text } from "flet-box";
-
-const example = DataTable({
-  child: Text({ text: "Example" })
-});
-```
-
-## Examples from the FletBox snippet library
-
-The examples below come from the FletBox snippet library. The prop table is based on `src/index.d.ts`. When an example and the type declaration use different names, prefer the type declaration and verify the implementation.
 
 ## Basic example
 
 The smallest useful version. Start here if this widget is new to you.
 
 ```javascript
-DataTable({ columns: ["Name", "Age"], rows: [{ Name: "John", Age: 30 }] })
-```
+import { DataTable } from "flet-box";
 
-## Everyday example
-
-A practical version with the props most applications usually need.
-
-```javascript
-DataTable({ columns: [{ key: "id", label: "ID" }, { key: "name", label: "Name" }], rows: users, onRowClick: (row) => console.log(row) })
-```
-
-## Full example
-
-A larger example showing advanced styling, layout, events, and customization.
-
-```javascript
 DataTable({
-    columns: [
-        { key: "id", label: "#", align: "center" },
-        { key: "name", label: "Name", format: (val) => val.toUpperCase() },
-        { key: "status", label: "Status", align: "center" }
-    ],
-    rows: userList,
-    striped: true,
-    hoverable: true,
-    bordered: true,
-    onRowClick: (row, idx) => selectUser(row),
-    headerBgColor: colors.gray100,
-    headerTextColor: colors.text,
-    headerFontWeight: "bold",
-    headerFontSize: 14,
-    rowBgColor: "transparent",
-    rowTextColor: colors.text,
-    rowFontSize: 13,
-    stripedRowBgColor: colors.gray50,
-    hoverRowBgColor: `${colors.primary}10`,
-    borderColor: colors.border,
-    borderWidth: 1,
-    cellPadding: "8px 12px",
-    headerCellPadding: "12px"
-})
-```
-
-
-## Common layout and styling examples
-
-The following example shows how common FletBox props work together. Numeric spacing values are interpreted as pixels, while strings can use CSS units and shorthand values.
-
-```javascript
-import { Button, Column, Container, Row, Text } from "flet-box";
-
-const panel = Container({
-    width: "100%",          // number values are pixels; strings accept CSS units
-    padding: 24,            // 24px on every side
-    margin: "16px auto",   // CSS shorthand: vertical and horizontal spacing
-    bgColor: "#f8fafc",    // background color
-    borderRadius: 12,
-    elevation: 2,
-    gap: 12,
-    child: Column({
-        children: [
-            Text({ text: "Account settings", size: 24, weight: "bold" }),
-            Row({
-                gap: 8,
-                justifyContent: "space-between",
-                children: [
-                    Text({ text: "Update your profile" }),
-                    Button({
-                        text: "Save",
-                        bgColor: "#2563eb",
-                        color: "#ffffff",
-                        onPress: () => console.log("saved"),
-                    }),
-                ],
-            }),
-        ],
-    }),
+  columns: ["name", "age"],
+  rows: [{ name: "Ada", age: 36 }],
 });
 ```
 
-### Common prop quick reference
+## Props
 
-- `padding: 24` adds `24px` inside the widget on all sides.
-- `padding: "8px 16px"` uses CSS shorthand for vertical and horizontal spacing.
-- `margin: "16px auto"` adds outside spacing and can center a fixed-width element.
-- `bgColor: "#f8fafc"` sets the background color. Color tokens and CSS colors can be used.
-- `color: "#111827"` sets the foreground or text color when supported.
-- `width: 320` means `320px`; `width: "100%"` uses a CSS percentage.
-- `children` is an array of widgets; `child` is useful when a component accepts one child.
-- `gap: 12` controls the space between children in layout widgets.
-- `onPress` and `onClick` receive event callbacks for interactive behavior.
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `columns` | array of `string` or `{ key, label, align?, format? }` | — (required) | Column definitions. A plain string is used as both the header label and the row key. An object uses `label` for the header and `key` to read the cell; `align` sets `text-align`, `format(value, row)` returns the cell text. |
+| `rows` | array of objects | — (required) | Row records. Cells are read as `row[key]`; a missing key renders an empty cell. Values are stringified with `String(value)`. |
+| `striped` | boolean | `true` | Paints odd rows (index 1, 3, …) with `stripedRowBgColor`. |
+| `hoverable` | boolean | `true` | Adds a `background-color 0.2s` transition and swaps the row to `hoverRowBgColor` on `mouseenter`. |
+| `bordered` | boolean | `true` | Draws a `borderWidth` solid `borderColor` outline around the `<table>`. Header and cell bottom borders are always drawn. |
+| `onRowClick` | `(row, index) => void` | — | Click handler per row; also sets `cursor: pointer` on every `<tr>`. |
+| `headerBgColor` | Color | `colors.gray100` | `<th>` background. |
+| `headerTextColor` | Color | `colors.text` | `<th>` color. |
+| `headerFontWeight` | string | `'bold'` | `<th>` font weight. |
+| `headerFontSize` | number or string | `14` | `<th>` font size; a number becomes px. |
+| `rowBgColor` | Color | `'transparent'` | Background of even rows. |
+| `rowTextColor` | Color | `colors.text` | `<td>` color. |
+| `rowFontSize` | number or string | `13` | `<td>` font size; a number becomes px. |
+| `stripedRowBgColor` | Color | `colors.gray50` | Background of odd rows when `striped`. |
+| `hoverRowBgColor` | Color | `` `${colors.primary}10` `` | Row background while hovered (8-digit hex: primary at ~6% alpha). |
+| `borderColor` | Color | `colors.border` | Table outline, header underline (2px), and cell bottom borders. |
+| `borderWidth` | number | `1` | Outline and cell border thickness in pixels. |
+| `cellPadding` | string | `'10px 12px'` | CSS padding shorthand applied to every `<td>`. |
+| `headerCellPadding` | string | `'12px'` | CSS padding applied to every `<th>`. |
 
-## Beginner tips
+These are the props specific to `DataTable`. It also accepts every [common prop](COMMON_PROPS.md): layout, spacing, size, color, typography, borders, shadow, events, `child`/`children`, `ref`, and `style`. Common props land on the scroll wrapper, not on the `<table>`.
 
-- Change one value at a time so you can see what each prop does.
-- Use `Text` to check that your layout is in the place you expect.
-- Use `Container` for a box, `Row` for items side by side, and `Column` for items one below another.
-- Use `padding` when content needs breathing room inside a box.
-- Use `margin` when you need space between this widget and its neighbors.
-- Use `bgColor` to make the boundaries of a box easy to see while learning.
-- If a prop is optional, leaving it out lets FletBox use its default behavior.
+## Instance methods
 
-## Common mistakes
+The returned wrapper element exposes:
 
-- Do not put plain text where a widget is expected unless the widget explicitly accepts strings.
-- Use `children: [ ... ]` for several child widgets and `child: widget` for one child when the widget supports both.
-- Check spelling carefully: `onPress`, `onClick`, and `onChange` are different events.
-- If a helper such as `padding()` or `margin()` is not available in your import list, use a number or CSS string first.
+- `updateData(newRows)` — replaces the rows and rebuilds `<tbody>` in place (header untouched).
+- `updateColumns(newColumns)` — replaces the columns, rebuilds `<thead>`, then re-renders the body with the current rows.
 
-## Behavior notes
-- Integrates cleanly with FletBox runtime semantics and DOM rendering.
-- Can be nested inside layout widgets and combined with other components.
-- Uses the same direct prop and event conventions as the rest of the framework.
-- Keeps the API simple and readable for composing interfaces fast.
+## Examples
 
-## Accessibility
-- Prefer clear labels and readable text for interactive controls.
-- Respect the `disabled` state and keyboard behavior when available.
-- Keep state changes understandable for screen readers and assistive technology.
+### Everyday example
+
+```javascript
+import { DataTable, colors } from "flet-box";
+
+DataTable({
+  columns: [
+    { key: "id", label: "#", align: "center" },
+    { key: "name", label: "Name" },
+    { key: "role", label: "Role" },
+  ],
+  rows: [
+    { id: 1, name: "Ada Lovelace", role: "Engineer" },
+    { id: 2, name: "Alan Turing", role: "Researcher" },
+  ],
+  onRowClick: (row, index) => console.log("clicked", index, row.name),
+  headerBgColor: colors.gray100,
+  rowFontSize: 14,
+});
+```
+
+### Full example
+
+```javascript
+import { Column, DataTable, Text, colors } from "flet-box";
+
+const users = [
+  { id: 1, name: "ada", amount: 1200, active: true },
+  { id: 2, name: "alan", amount: 850.5, active: false },
+  { id: 3, name: "grace", amount: 2400, active: true },
+];
+
+const table = DataTable({
+  columns: [
+    { key: "id", label: "#", align: "center" },
+    { key: "name", label: "Name", format: (value) => value.toUpperCase() },
+    {
+      key: "amount",
+      label: "Amount",
+      align: "right",
+      format: (value) => `$${value.toFixed(2)}`,
+    },
+    { key: "active", label: "Active", align: "center", format: (v) => (v ? "yes" : "no") },
+  ],
+  rows: users,
+  striped: true,
+  hoverable: true,
+  bordered: true,
+  onRowClick: (row) => console.log("selected", row.id),
+  headerBgColor: colors.gray100,
+  headerTextColor: colors.text,
+  headerFontWeight: "bold",
+  headerFontSize: 14,
+  rowTextColor: colors.text,
+  rowFontSize: 13,
+  stripedRowBgColor: colors.gray50,
+  borderColor: colors.border,
+  borderWidth: 1,
+  cellPadding: "8px 12px",
+  headerCellPadding: "12px",
+});
+
+// Later, swap in fresh data without recreating the widget:
+// table.updateData([...users, { id: 4, name: "edsger", amount: 10, active: true }]);
+
+Column({
+  gap: 8,
+  children: [Text({ text: "Users", type: "h2", size: 20 }), table],
+});
+```
+
+## Notes
+
+- `columns` and `rows` have **no defaults**: omitting either throws, because the source iterates them directly.
+- Rows are keyed objects. `rows: [["Ada", 36]]` renders empty cells unless your columns use numeric keys (`{ key: 0, label: "Name" }`).
+- Cells are text-only. Both the raw value and whatever `format` returns go through `textContent`, so HTML in your data is escaped and you cannot put widgets in a cell.
+- `updateData`/`updateColumns` mutate the arrays you passed in (`rows.length = 0; rows.push(...)`), so keep your own copy if you need the original.
+- The header underline is always `2px solid borderColor`; `bordered` only controls the outer table outline.
+- The wrapper is `overflow-x: auto`, so a table wider than its parent scrolls instead of breaking the layout.
 
 ## Related widgets
-- [Container](Container.md)
-- [Row](Row.md)
-- [Column](Column.md)
-- [Stack](Stack.md)
-- [Text](Text.md)
-- [Button](Button.md)
+- [Chart](Chart.md)
+- [CircularChart](CircularChart.md)
+- [ListView](ListView.md)
+- [ListTile](ListTile.md)
+- [TreeView](TreeView.md)
+- [CodeViewer](CodeViewer.md)
 
 ---
 

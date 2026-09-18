@@ -1,226 +1,100 @@
 # InstallButton
 
 ## Overview
-`InstallButton` is a ready-to-use building block. Think of it like a LEGO piece: give it some props, place it inside another widget, and FletBox creates the browser element for you.
-
-You do not need to write HTML or manually change the DOM to use this widget. You call the widget as a JavaScript function and pass an object between `{` and `}`.
-
-## Learn it in one minute
-
-1. Import the widget from `flet-box`.
-2. Call it with `WidgetName({ ... })`.
-3. Add props to describe its content, size, color, spacing, and behavior.
-4. Put it inside `Container`, `Row`, `Column`, or another widget.
-
-```javascript
-import { Column, Container, Text } from "flet-box";
-
-const welcomeCard = Container({
-    padding: 20,
-    margin: 16,
-    bgColor: "#ffffff",
-    borderRadius: 12,
-    child: Column({
-        gap: 8,
-        children: [
-            Text({ text: "My first FletBox screen", size: 24, weight: "bold" }),
-            Text({ text: "Widgets are small building blocks. Put them inside each other to build a screen." }),
-        ],
-    }),
-});
-```
+`InstallButton` renders a `Button` wired to the browser's PWA install flow. It listens on `window` for `beforeinstallprompt`, keeps the deferred prompt, and reveals itself; pressing the button calls `prompt()` and awaits `userChoice`. If the user accepts — or the browser fires `appinstalled` — it calls `onInstalled` and hides itself again. The widget returns the underlying `<button>` element, so anything you can do to a `Button` you can do here.
 
 ## When to use
-Use `InstallButton` when you need this kind of interface element. Start with the smallest example, then add one prop at a time. You can copy the example, change the text or color, and see the result immediately.
+- Offering "Add to Home Screen" or desktop install for a progressive web app.
+- You want the install affordance to appear only when the browser says installation is actually possible.
+- Placing a floating install pill at the bottom of the screen without writing the prompt plumbing yourself.
 
-## Common props
-
-- `children` / `child`: content rendered inside the widget.
-- `id`: DOM id for the element.
-- `className`: CSS class names applied to the element.
-- `ref`: callback that receives the underlying DOM node.
-- `onClick` / event handlers: native browser event callbacks.
-- `disabled`: disables interaction when supported.
-
-## Full prop list
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `width` | `Size` | - | Property used by the InstallButton component. |
-| `height` | `Size` | - | Property used by the InstallButton component. |
-| `size` | `number` | - | Component size or preset. |
-| `padding` | `Padding` | - | Internal spacing around the component. |
-| `margin` | `Margin` | - | External spacing around the component. |
-| `bgColor` | `Color` | - | Background color applied to the element. |
-| `color` | `Color` | - | Color value or theme token. |
-| `borderRadius` | `number \| string` | - | Property used by the InstallButton component. |
-| `elevation` | `number` | - | Property used by the InstallButton component. |
-| `shadow` | `string` | - | Property used by the InstallButton component. |
-| `opacity` | `number` | - | Property used by the InstallButton component. |
-| `visible` | `boolean` | false | Property used by the InstallButton component. |
-| `disabled` | `boolean` | false | Disables interaction and shows the non-interactive state. |
-| `onPress` | `(widget: Widget) => void` | - | Callback fired when the widget is pressed. |
-| `onClick` | `(widget: Widget) => void` | - | Property used by the InstallButton component. |
-| `id` | `string` | - | Property used by the InstallButton component. |
-| `className` | `string` | - | Property used by the InstallButton component. |
-| `ref` | `(widget: Widget) => void` | - | Property used by the InstallButton component. |
-| `disableTransform` | `boolean` | - | Property used by the InstallButton component. |
-| `text` | `string` | - | Visible text content rendered by the widget. |
-| `variant` | `'filled' \| 'outlined' \| 'text'` | - | Visual variation or style preset. |
-| `bottom` | `number` | - | Property used by the InstallButton component. |
-| `onInstalled` | `() => void` | - | Property used by the InstallButton component. |
-
-## How props work
-
-A prop is simply an instruction inside the object passed to the widget. The name tells FletBox what to change, and the value tells it how to change it.
+## Import
 
 ```javascript
-InstallButton({
-    padding: 16,              // space inside the widget
-    margin: "8px 0",         // space outside the widget
-    bgColor: "#eff6ff",      // background color
-    width: "100%",           // CSS size or a number of pixels
-    children: [],             // widgets placed inside it
-    onPress: () => {         // what to do after a press
-        console.log("Hello");
-    },
-});
+import { InstallButton } from "flet-box";
 ```
-
-You do not need to use every prop. Begin with the required props, then add optional props only when you need them.
-
-## Example usage
-
-```javascript
-import { InstallButton, Text } from "flet-box";
-
-const example = InstallButton({
-  text: "Example value",
-  child: Text({ text: "Example" })
-});
-```
-
-## Examples from the FletBox snippet library
-
-The examples below come from the FletBox snippet library. The prop table is based on `src/index.d.ts`. When an example and the type declaration use different names, prefer the type declaration and verify the implementation.
 
 ## Basic example
 
 The smallest useful version. Start here if this widget is new to you.
 
 ```javascript
-InstallButton()
+import { InstallButton } from "flet-box";
+
+InstallButton({ onInstalled: () => console.log("installed") });
 ```
 
-## Everyday example
+## Props
 
-A practical version with the props most applications usually need.
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `text` | string | `'📲 Install'` | Button label; forwarded to `Button`. |
+| `variant` | `'filled'`, `'outlined'`, `'text'` | `'filled'` | Forwarded to `Button`. |
+| `size` | `'small'`, `'medium'`, `'large'` | `'medium'` | Forwarded to `Button`. |
+| `borderRadius` | number | `28` | Corner radius in pixels; forwarded to `Button`. |
+| `padding` | number, `[v, h]`, or string | `'12px 24px'` | Forwarded to `Button`, overriding its size preset. |
+| `bottom` | number | `20` | Pixel offset from the viewport bottom used in the button's fixed-position style block. |
+| `backgroundColor` | Color | — | Maps to `Button`'s `bgColor`. |
+| `color` | Color | — | Label and icon color. |
+| `onInstalled` | `() => void` | — | Fires when the user accepts the prompt, and again when the browser reports `appinstalled`. |
+| `onClick` | `() => void` | — | Fires on every press, after the install attempt (accepted, dismissed, or no prompt available). |
+
+Every other prop is forwarded to [Button](Button.md).
+
+These are the props specific to `InstallButton`. It also accepts every [common prop](COMMON_PROPS.md): layout, spacing, size, color, typography, borders, shadow, events, `child`/`children`, `ref`, and `style`.
+
+## Examples
+
+### Everyday example
 
 ```javascript
-InstallButton({ text: "📲 Get App", variant: "filled", onInstalled: () => trackInstall() })
-```
+import { InstallButton } from "flet-box";
 
-## Full example
-
-A larger example showing advanced styling, layout, events, and customization.
-
-```javascript
 InstallButton({
-    text: "Install FletBox App",
-    variant: "filled",
-    size: "large",
-    borderRadius: 32,
-    padding: "12px 24px",
-    bottom: 24,
-    onInstalled: () => showSnackBar("Installed!"),
-    onClick: () => analytics.track("install_click")
-})
-```
-
-
-## Common layout and styling examples
-
-The following example shows how common FletBox props work together. Numeric spacing values are interpreted as pixels, while strings can use CSS units and shorthand values.
-
-```javascript
-import { Button, Column, Container, Row, Text } from "flet-box";
-
-const panel = Container({
-    width: "100%",          // number values are pixels; strings accept CSS units
-    padding: 24,            // 24px on every side
-    margin: "16px auto",   // CSS shorthand: vertical and horizontal spacing
-    bgColor: "#f8fafc",    // background color
-    borderRadius: 12,
-    elevation: 2,
-    gap: 12,
-    child: Column({
-        children: [
-            Text({ text: "Account settings", size: 24, weight: "bold" }),
-            Row({
-                gap: 8,
-                justifyContent: "space-between",
-                children: [
-                    Text({ text: "Update your profile" }),
-                    Button({
-                        text: "Save",
-                        bgColor: "#2563eb",
-                        color: "#ffffff",
-                        onPress: () => console.log("saved"),
-                    }),
-                ],
-            }),
-        ],
-    }),
+  text: "Install app",
+  onInstalled: () => console.log("thanks for installing"),
+  onClick: () => console.log("install button pressed"),
 });
 ```
 
-### Common prop quick reference
+### Full example
 
-- `padding: 24` adds `24px` inside the widget on all sides.
-- `padding: "8px 16px"` uses CSS shorthand for vertical and horizontal spacing.
-- `margin: "16px auto"` adds outside spacing and can center a fixed-width element.
-- `bgColor: "#f8fafc"` sets the background color. Color tokens and CSS colors can be used.
-- `color: "#111827"` sets the foreground or text color when supported.
-- `width: 320` means `320px`; `width: "100%"` uses a CSS percentage.
-- `children` is an array of widgets; `child` is useful when a component accepts one child.
-- `gap: 12` controls the space between children in layout widgets.
-- `onPress` and `onClick` receive event callbacks for interactive behavior.
+```javascript
+import { InstallButton, SnackBar, colors } from "flet-box";
 
-## Beginner tips
+InstallButton({
+  text: "Get the app",
+  variant: "filled",
+  size: "large",
+  backgroundColor: colors.primary,
+  color: "#ffffff",
+  borderRadius: 32,
+  padding: "14px 28px",
+  bottom: 24,
+  onInstalled: () => SnackBar({ message: "Installed. Enjoy!", type: "success" }),
+  onClick: () => console.log("install_click"),
+});
+```
 
-- Change one value at a time so you can see what each prop does.
-- Use `Text` to check that your layout is in the place you expect.
-- Use `Container` for a box, `Row` for items side by side, and `Column` for items one below another.
-- Use `padding` when content needs breathing room inside a box.
-- Use `margin` when you need space between this widget and its neighbors.
-- Use `bgColor` to make the boundaries of a box easy to see while learning.
-- If a prop is optional, leaving it out lets FletBox use its default behavior.
+## Notes
 
-## Common mistakes
-
-- Do not put plain text where a widget is expected unless the widget explicitly accepts strings.
-- Use `children: [ ... ]` for several child widgets and `child: widget` for one child when the widget supports both.
-- Check spelling carefully: `onPress`, `onClick`, and `onChange` are different events.
-- If a helper such as `padding()` or `margin()` is not available in your import list, use a number or CSS string first.
-
-## Behavior notes
-- Integrates cleanly with FletBox runtime semantics and DOM rendering.
-- Can be nested inside layout widgets and combined with other components.
-- Uses the same direct prop and event conventions as the rest of the framework.
-- Keeps the API simple and readable for composing interfaces fast.
-
-## Accessibility
-- Prefer clear labels and readable text for interactive controls.
-- Respect the `disabled` state and keyboard behavior when available.
-- Keep state changes understandable for screen readers and assistive technology.
+- Nothing is shown until the browser fires `beforeinstallprompt`. In browsers that never fire it — or once the app is already installed — the button stays out of sight.
+- The handler calls `event.preventDefault()` on `beforeinstallprompt`, which suppresses the browser's own install banner so this button is the only affordance.
+- The button is built with an inline style block: `position: fixed`, `bottom: {bottom}px`, centered with `left: 50%` plus `translateX(-50%)`, `z-index: 10000`, a drop shadow, and `opacity: 0` / `visibility: hidden` / `display: none`. Reveal and hide write those three properties directly on the element.
+- The deferred prompt is consumed: it is set to `null` after the first `prompt()`, so a second press only runs `onClick`.
+- `onInstalled` can fire twice for one install — once from the accepted `userChoice` and once from the `appinstalled` event.
+- `onClick` runs regardless of whether an install prompt was available, so it is safe for analytics.
+- Do not pass `onPress`. The remaining props are spread onto `Button` **after** the internal `onPress` handler, so your own `onPress` replaces it and the install prompt never fires. Use `onClick`.
+- For the same reason, passing your own `style` prop replaces the internal style block wholesale and loses the fixed positioning and hidden state. Use the explicit props (`bottom`, `backgroundColor`, `borderRadius`, `padding`) instead.
+- `_cleanup()` removes both window listeners and the button; the framework calls it when the widget is torn down.
+- The browser only fires `beforeinstallprompt` for a served page (not `file://`) with a valid manifest and service worker.
 
 ## Related widgets
-- [Container](Container.md)
-- [Row](Row.md)
-- [Column](Column.md)
-- [Stack](Stack.md)
-- [Text](Text.md)
 - [Button](Button.md)
+- [FloatingActionButton](FloatingActionButton.md)
+- [SnackBar](SnackBar.md)
+- [AlertDialog](AlertDialog.md)
+- [Icon](Icon.md)
 
 ---
 

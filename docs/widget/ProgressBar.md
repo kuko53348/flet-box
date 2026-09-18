@@ -1,236 +1,121 @@
 # ProgressBar
 
 ## Overview
-`ProgressBar` is a ready-to-use building block. Think of it like a LEGO piece: give it some props, place it inside another widget, and FletBox creates the browser element for you.
-
-You do not need to write HTML or manually change the DOM to use this widget. You call the widget as a JavaScript function and pass an object between `{` and `}`.
-
-## Learn it in one minute
-
-1. Import the widget from `flet-box`.
-2. Call it with `WidgetName({ ... })`.
-3. Add props to describe its content, size, color, spacing, and behavior.
-4. Put it inside `Container`, `Row`, `Column`, or another widget.
-
-```javascript
-import { Column, Container, Text } from "flet-box";
-
-const welcomeCard = Container({
-    padding: 20,
-    margin: 16,
-    bgColor: "#ffffff",
-    borderRadius: 12,
-    child: Column({
-        gap: 8,
-        children: [
-            Text({ text: "My first FletBox screen", size: 24, weight: "bold" }),
-            Text({ text: "Widgets are small building blocks. Put them inside each other to build a screen." }),
-        ],
-    }),
-});
-```
+`ProgressBar` renders a horizontal progress indicator as real DOM: a flex `<div>` container holding a track `<div>` (default 8px tall, `colors.border`) with a fill `<div>` inside it (`colors.primary`), plus optional label and percentage spans. The fill's width is a percentage of `value / max` and transitions over 0.3s, so updates animate automatically. It also supports striped and fully indeterminate (loading) modes. The returned element exposes `getValue()`, `setValue()`, `updateProgress()`, and a `value` property.
 
 ## When to use
-Use `ProgressBar` when you need this kind of interface element. Start with the smallest example, then add one prop at a time. You can copy the example, change the text or color, and see the result immediately.
+- Show determinate progress: uploads, downloads, multi-step forms, quotas.
+- Show an ongoing loading state with no known percentage (`indeterminate: true`).
+- Display a labeled metric inline, e.g. storage used.
 
-## Common props
-
-- `children` / `child`: content rendered inside the widget.
-- `id`: DOM id for the element.
-- `className`: CSS class names applied to the element.
-- `ref`: callback that receives the underlying DOM node.
-- `onClick` / event handlers: native browser event callbacks.
-- `disabled`: disables interaction when supported.
-
-## Full prop list
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `width` | `Size` | - | Property used by the ProgressBar component. |
-| `height` | `Size` | - | Property used by the ProgressBar component. |
-| `size` | `number` | - | Component size or preset. |
-| `padding` | `Padding` | - | Internal spacing around the component. |
-| `margin` | `Margin` | - | External spacing around the component. |
-| `bgColor` | `Color` | - | Background color applied to the element. |
-| `color` | `Color` | - | Color value or theme token. |
-| `borderRadius` | `number \| string` | - | Property used by the ProgressBar component. |
-| `elevation` | `number` | - | Property used by the ProgressBar component. |
-| `shadow` | `string` | - | Property used by the ProgressBar component. |
-| `opacity` | `number` | - | Property used by the ProgressBar component. |
-| `visible` | `boolean` | false | Property used by the ProgressBar component. |
-| `disabled` | `boolean` | false | Disables interaction and shows the non-interactive state. |
-| `onPress` | `(widget: Widget) => void` | - | Callback fired when the widget is pressed. |
-| `onClick` | `(widget: Widget) => void` | - | Property used by the ProgressBar component. |
-| `id` | `string` | - | Property used by the ProgressBar component. |
-| `className` | `string` | - | Property used by the ProgressBar component. |
-| `ref` | `(widget: Widget) => void` | - | Property used by the ProgressBar component. |
-| `disableTransform` | `boolean` | - | Property used by the ProgressBar component. |
-| `value` | `number` | - | Current value controlled by the widget. |
-| `max` | `number` | - | Property used by the ProgressBar component. |
-| `backgroundColor` | `Color` | - | Property used by the ProgressBar component. |
-| `label` | `string` | - | Label or caption shown near the control. |
-| `showValue` | `boolean` | false | Property used by the ProgressBar component. |
-| `valuePosition` | `'left' \| 'right' \| 'top' \| 'bottom'` | - | Property used by the ProgressBar component. |
-| `indeterminate` | `boolean` | false | Property used by the ProgressBar component. |
-| `striped` | `boolean` | false | Property used by the ProgressBar component. |
-| `animatedStripes` | `boolean` | false | Property used by the ProgressBar component. |
-
-## How props work
-
-A prop is simply an instruction inside the object passed to the widget. The name tells FletBox what to change, and the value tells it how to change it.
+## Import
 
 ```javascript
-ProgressBar({
-    padding: 16,              // space inside the widget
-    margin: "8px 0",         // space outside the widget
-    bgColor: "#eff6ff",      // background color
-    width: "100%",           // CSS size or a number of pixels
-    children: [],             // widgets placed inside it
-    onPress: () => {         // what to do after a press
-        console.log("Hello");
-    },
-});
+import { ProgressBar } from "flet-box";
 ```
-
-You do not need to use every prop. Begin with the required props, then add optional props only when you need them.
-
-## Example usage
-
-```javascript
-import { ProgressBar, Text } from "flet-box";
-
-const example = ProgressBar({
-  value: 1,
-  child: Text({ text: "Example" })
-});
-```
-
-## Examples from the FletBox snippet library
-
-The examples below come from the FletBox snippet library. The prop table is based on `src/index.d.ts`. When an example and the type declaration use different names, prefer the type declaration and verify the implementation.
 
 ## Basic example
 
 The smallest useful version. Start here if this widget is new to you.
 
 ```javascript
-ProgressBar({ value: 50 })
+import { ProgressBar } from "flet-box";
+
+ProgressBar({ value: 50 });
 ```
 
-## Everyday example
+## Props
 
-A practical version with the props most applications usually need.
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | number | `0` | Current progress, clamped to `0`–`max` (the minimum is always 0). |
+| `max` | number | `100` | Value that counts as 100%. |
+| `height` | number or string | `8` | Track height in pixels. |
+| `width` | number or string | `'100%'` | Container width. |
+| `color` | Color | `colors.primary` | Fill color. |
+| `backgroundColor` | Color | `colors.border` | Track color. |
+| `borderRadius` | number or string | `height / 2` | Corner radius of track and fill (fully rounded by default). |
+| `label` | string | — | Small 12px caption span placed by `valuePosition`. |
+| `showValue` | boolean | `false` | Renders a rounded `NN%` span (suppressed when `indeterminate`). |
+| `valuePosition` | `'left'`, `'right'`, `'top'`, `'bottom'` | `'right'` | Where the label/percentage sit. `top`/`bottom` stack the container vertically. |
+| `indeterminate` | boolean | `false` | Loading mode: a 50%-wide striped fill slides back and forth forever; `value` updates are ignored. |
+| `striped` | boolean | `false` | Diagonal white stripe pattern on the fill. |
+| `animatedStripes` | boolean | `false` | Scrolls the stripes (0.5s loop; forced on in `indeterminate` mode at 1.5s). |
+
+These are the props specific to `ProgressBar`. It also accepts every [common prop](COMMON_PROPS.md): layout, spacing, size, color, typography, borders, shadow, events, `child`/`children`, `ref`, and `style` — applied to the outer container.
+
+## Instance methods
+
+The returned element exposes:
+
+- `getValue()` — current (clamped) value.
+- `setValue(newValue)` / `updateProgress(newValue)` — set progress; clamps to `0`–`max`, resizes the fill, and refreshes the percentage span. Ignored when `indeterminate`.
+- `value` — property accessor; `bar.value = 40` is equivalent to `setValue(40)`.
+
+## Examples
+
+### Everyday example
 
 ```javascript
-ProgressBar({ value: progress, max: 100, height: 8, color: colors.primary, showValue: true })
+import { ProgressBar, colors } from "flet-box";
+
+const bar = ProgressBar({
+  value: 30,
+  max: 100,
+  height: 10,
+  color: colors.primary,
+  label: "Uploading",
+  showValue: true,
+});
+
+// Later, as bytes arrive:
+bar.setValue(75);
 ```
 
-## Full example
-
-A larger example showing advanced styling, layout, events, and customization.
+### Full example
 
 ```javascript
-ProgressBar({
-    value: 65,
-    max: 100,
-    height: 12,
-    width: "100%",
-    color: colors.success,
-    backgroundColor: colors.border,
-    borderRadius: 6,
-    label: "Uploading",
-    showValue: true,
-    valuePosition: "right",
-    indeterminate: false,
-    striped: true,
-    animatedStripes: true
-})
-```
+import { Column, ProgressBar, colors } from "flet-box";
 
-
-## Common layout and styling examples
-
-The following example shows how common FletBox props work together. Numeric spacing values are interpreted as pixels, while strings can use CSS units and shorthand values.
-
-```javascript
-import { Button, Column, Container, Row, Text } from "flet-box";
-
-const panel = Container({
-    width: "100%",          // number values are pixels; strings accept CSS units
-    padding: 24,            // 24px on every side
-    margin: "16px auto",   // CSS shorthand: vertical and horizontal spacing
-    bgColor: "#f8fafc",    // background color
-    borderRadius: 12,
-    elevation: 2,
-    gap: 12,
-    child: Column({
-        children: [
-            Text({ text: "Account settings", size: 24, weight: "bold" }),
-            Row({
-                gap: 8,
-                justifyContent: "space-between",
-                children: [
-                    Text({ text: "Update your profile" }),
-                    Button({
-                        text: "Save",
-                        bgColor: "#2563eb",
-                        color: "#ffffff",
-                        onPress: () => console.log("saved"),
-                    }),
-                ],
-            }),
-        ],
+Column({
+  gap: 16,
+  children: [
+    // Determinate, striped and animated, value above the track
+    ProgressBar({
+      value: 65,
+      max: 100,
+      height: 12,
+      borderRadius: 6,
+      color: colors.success,
+      backgroundColor: colors.border,
+      striped: true,
+      animatedStripes: true,
+      label: "Install",
+      showValue: true,
+      valuePosition: "top",
+      width: 320,
     }),
+
+    // Indeterminate loading bar
+    ProgressBar({ indeterminate: true, height: 6, color: colors.info }),
+  ],
 });
 ```
 
-### Common prop quick reference
+## Notes
 
-- `padding: 24` adds `24px` inside the widget on all sides.
-- `padding: "8px 16px"` uses CSS shorthand for vertical and horizontal spacing.
-- `margin: "16px auto"` adds outside spacing and can center a fixed-width element.
-- `bgColor: "#f8fafc"` sets the background color. Color tokens and CSS colors can be used.
-- `color: "#111827"` sets the foreground or text color when supported.
-- `width: 320` means `320px`; `width: "100%"` uses a CSS percentage.
-- `children` is an array of widgets; `child` is useful when a component accepts one child.
-- `gap: 12` controls the space between children in layout widgets.
-- `onPress` and `onClick` receive event callbacks for interactive behavior.
-
-## Beginner tips
-
-- Change one value at a time so you can see what each prop does.
-- Use `Text` to check that your layout is in the place you expect.
-- Use `Container` for a box, `Row` for items side by side, and `Column` for items one below another.
-- Use `padding` when content needs breathing room inside a box.
-- Use `margin` when you need space between this widget and its neighbors.
-- Use `bgColor` to make the boundaries of a box easy to see while learning.
-- If a prop is optional, leaving it out lets FletBox use its default behavior.
-
-## Common mistakes
-
-- Do not put plain text where a widget is expected unless the widget explicitly accepts strings.
-- Use `children: [ ... ]` for several child widgets and `child: widget` for one child when the widget supports both.
-- Check spelling carefully: `onPress`, `onClick`, and `onChange` are different events.
-- If a helper such as `padding()` or `margin()` is not available in your import list, use a number or CSS string first.
-
-## Behavior notes
-- Integrates cleanly with FletBox runtime semantics and DOM rendering.
-- Can be nested inside layout widgets and combined with other components.
-- Uses the same direct prop and event conventions as the rest of the framework.
-- Keeps the API simple and readable for composing interfaces fast.
-
-## Accessibility
-- Prefer clear labels and readable text for interactive controls.
-- Respect the `disabled` state and keyboard behavior when available.
-- Keep state changes understandable for screen readers and assistive technology.
+- `value` is clamped to `[0, max]` at build time and on every update; there is no `min` prop.
+- The percentage shown with `showValue` is `Math.round(value / max * 100)`.
+- `indeterminate` overrides the fill width (50%), forces stripes, injects the `indeterminate-progress` keyframes, and makes `setValue`/`updateProgress`/`value =` no-ops.
+- Stripe and indeterminate animations inject global `<style>` tags (`#progress-stripes-style`, `#indeterminate-progress-style`) into `document.head` once.
+- `valuePosition: 'top' | 'bottom'` flips the container to `flex-direction: column`; the label and value spans move to the start of the children for `left`/`top` and the end for `right`/`bottom`.
 
 ## Related widgets
-- [Container](Container.md)
-- [Row](Row.md)
-- [Column](Column.md)
-- [Stack](Stack.md)
+- [CircularBar](CircularBar.md)
+- [Skeleton](Skeleton.md)
 - [Text](Text.md)
-- [Button](Button.md)
+- [Container](Container.md)
+- [Slider](Slider.md)
 
 ---
 

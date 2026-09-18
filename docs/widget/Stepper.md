@@ -1,247 +1,153 @@
 # Stepper
 
 ## Overview
-`Stepper` is a ready-to-use building block. Think of it like a LEGO piece: give it some props, place it inside another widget, and FletBox creates the browser element for you.
-
-You do not need to write HTML or manually change the DOM to use this widget. You call the widget as a JavaScript function and pass an object between `{` and `}`.
-
-## Learn it in one minute
-
-1. Import the widget from `flet-box`.
-2. Call it with `WidgetName({ ... })`.
-3. Add props to describe its content, size, color, spacing, and behavior.
-4. Put it inside `Container`, `Row`, `Column`, or another widget.
-
-```javascript
-import { Column, Container, Text } from "flet-box";
-
-const welcomeCard = Container({
-    padding: 20,
-    margin: 16,
-    bgColor: "#ffffff",
-    borderRadius: 12,
-    child: Column({
-        gap: 8,
-        children: [
-            Text({ text: "My first FletBox screen", size: 24, weight: "bold" }),
-            Text({ text: "Widgets are small building blocks. Put them inside each other to build a screen." }),
-        ],
-    }),
-});
-```
+`Stepper` renders a multi-step flow: a rail of step indicators, a content panel for the active step, and a Back/Next/Finish navigation row. You drive it with a `steps` array — each entry supplies a `label`, an optional `content` widget, and an optional `icon`. With the default `circles` variant, completed steps turn green with a check mark and the active one is filled with `colors.primary`; clicking any step jumps straight to it. The returned element exposes `next`, `back`, `goTo`, and `getActiveStep`.
 
 ## When to use
-Use `Stepper` when you need this kind of interface element. Start with the smallest example, then add one prop at a time. You can copy the example, change the text or color, and see the result immediately.
+- Wizards and multi-screen forms: account setup, checkout, onboarding.
+- Any flow where the user should see their progress and move forward or backward through numbered stages.
+- A rail beside a tall form with `orientation: "vertical"`.
 
-## Common props
-
-- `children` / `child`: content rendered inside the widget.
-- `id`: DOM id for the element.
-- `className`: CSS class names applied to the element.
-- `ref`: callback that receives the underlying DOM node.
-- `onClick` / event handlers: native browser event callbacks.
-- `disabled`: disables interaction when supported.
-
-## Full prop list
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `width` | `Size` | - | Property used by the Stepper component. |
-| `height` | `Size` | - | Property used by the Stepper component. |
-| `size` | `number` | - | Component size or preset. |
-| `padding` | `Padding` | - | Internal spacing around the component. |
-| `margin` | `Margin` | - | External spacing around the component. |
-| `bgColor` | `Color` | - | Background color applied to the element. |
-| `color` | `Color` | - | Color value or theme token. |
-| `borderRadius` | `number \| string` | - | Property used by the Stepper component. |
-| `elevation` | `number` | - | Property used by the Stepper component. |
-| `shadow` | `string` | - | Property used by the Stepper component. |
-| `opacity` | `number` | - | Property used by the Stepper component. |
-| `visible` | `boolean` | false | Property used by the Stepper component. |
-| `disabled` | `boolean` | false | Disables interaction and shows the non-interactive state. |
-| `onPress` | `(widget: Widget) => void` | - | Callback fired when the widget is pressed. |
-| `onClick` | `(widget: Widget) => void` | - | Property used by the Stepper component. |
-| `id` | `string` | - | Property used by the Stepper component. |
-| `className` | `string` | - | Property used by the Stepper component. |
-| `ref` | `(widget: Widget) => void` | - | Property used by the Stepper component. |
-| `disableTransform` | `boolean` | - | Property used by the Stepper component. |
-| `steps` | `Array<{ label: string; content: Widget; icon?: string }>` | [] | Step entries for wizard or stepper patterns. |
-| `activeStep` | `number` | - | Property used by the Stepper component. |
-| `onStepChange` | `(index: number) => void` | - | Property used by the Stepper component. |
-| `orientation` | `'horizontal' \| 'vertical'` | - | Property used by the Stepper component. |
-| `variant` | `'circles' \| 'numbers' \| 'icons'` | - | Visual variation or style preset. |
-| `showLabels` | `boolean` | false | Property used by the Stepper component. |
-| `showNavigation` | `boolean` | - | Property used by the Stepper component. |
-| `nextLabel` | `string` | - | Property used by the Stepper component. |
-| `backLabel` | `string` | - | Property used by the Stepper component. |
-| `finishLabel` | `string` | - | Property used by the Stepper component. |
-| `onFinish` | `() => void` | - | Property used by the Stepper component. |
-| `border` | `string` | - | Property used by the Stepper component. |
-| `borderColor` | `Color` | - | Property used by the Stepper component. |
-| `borderWidth` | `number` | - | Property used by the Stepper component. |
-
-## How props work
-
-A prop is simply an instruction inside the object passed to the widget. The name tells FletBox what to change, and the value tells it how to change it.
+## Import
 
 ```javascript
-Stepper({
-    padding: 16,              // space inside the widget
-    margin: "8px 0",         // space outside the widget
-    bgColor: "#eff6ff",      // background color
-    width: "100%",           // CSS size or a number of pixels
-    children: [],             // widgets placed inside it
-    onPress: () => {         // what to do after a press
-        console.log("Hello");
-    },
-});
+import { Stepper } from "flet-box";
 ```
-
-You do not need to use every prop. Begin with the required props, then add optional props only when you need them.
-
-## Example usage
-
-```javascript
-import { Stepper, Text } from "flet-box";
-
-const example = Stepper({
-  child: Text({ text: "Example" })
-});
-```
-
-## Examples from the FletBox snippet library
-
-The examples below come from the FletBox snippet library. The prop table is based on `src/index.d.ts`. When an example and the type declaration use different names, prefer the type declaration and verify the implementation.
 
 ## Basic example
 
 The smallest useful version. Start here if this widget is new to you.
 
 ```javascript
-Stepper({ steps: [{ label: "Step 1", content: Text("Content") }] })
-```
+import { Stepper, Text } from "flet-box";
 
-## Everyday example
-
-A practical version with the props most applications usually need.
-
-```javascript
-Stepper({ steps: [{ label: "Info", content: InfoForm() }, { label: "Confirm", content: ConfirmForm() }], activeStep: 0, onStepChange: setStep })
-```
-
-## Full example
-
-A larger example showing advanced styling, layout, events, and customization.
-
-```javascript
 Stepper({
-    steps: [
-        { label: "Personal", content: PersonalForm(), icon: "person" },
-        { label: "Payment", content: PaymentForm(), icon: "credit_card" },
-        { label: "Done", content: SuccessMessage(), icon: "check_circle" }
-    ],
-    activeStep: step,
-    onStepChange: (idx) => setStep(idx),
-    orientation: "horizontal",
-    variant: "circles",
-    showLabels: true,
-    showNavigation: true,
-    nextLabel: "Continue",
-    backLabel: "Back",
-    finishLabel: "Submit",
-    onFinish: () => submitForm(),
-    bgColor: colors.surface,
-    borderRadius: 24,
-    border: border(1, "solid", colors.border),
-    padding: 24,
-    width: "100%"
-})
-```
-
-
-## Common layout and styling examples
-
-The following example shows how common FletBox props work together. Numeric spacing values are interpreted as pixels, while strings can use CSS units and shorthand values.
-
-```javascript
-import { Button, Column, Container, Row, Text } from "flet-box";
-
-const panel = Container({
-    width: "100%",          // number values are pixels; strings accept CSS units
-    padding: 24,            // 24px on every side
-    margin: "16px auto",   // CSS shorthand: vertical and horizontal spacing
-    bgColor: "#f8fafc",    // background color
-    borderRadius: 12,
-    elevation: 2,
-    gap: 12,
-    child: Column({
-        children: [
-            Text({ text: "Account settings", size: 24, weight: "bold" }),
-            Row({
-                gap: 8,
-                justifyContent: "space-between",
-                children: [
-                    Text({ text: "Update your profile" }),
-                    Button({
-                        text: "Save",
-                        bgColor: "#2563eb",
-                        color: "#ffffff",
-                        onPress: () => console.log("saved"),
-                    }),
-                ],
-            }),
-        ],
-    }),
+  steps: [
+    { label: "Account", content: Text({ text: "Create your account" }) },
+    { label: "Profile", content: Text({ text: "Tell us about you" }) },
+  ],
 });
 ```
 
-### Common prop quick reference
+## Props
 
-- `padding: 24` adds `24px` inside the widget on all sides.
-- `padding: "8px 16px"` uses CSS shorthand for vertical and horizontal spacing.
-- `margin: "16px auto"` adds outside spacing and can center a fixed-width element.
-- `bgColor: "#f8fafc"` sets the background color. Color tokens and CSS colors can be used.
-- `color: "#111827"` sets the foreground or text color when supported.
-- `width: 320` means `320px`; `width: "100%"` uses a CSS percentage.
-- `children` is an array of widgets; `child` is useful when a component accepts one child.
-- `gap: 12` controls the space between children in layout widgets.
-- `onPress` and `onClick` receive event callbacks for interactive behavior.
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `steps` | `Array<{ label: string, content?: Widget, icon?: string }>` | `[]` | The steps, in order. `content` is the widget shown in the panel while that step is active. `icon` is only read by the `icons` variant. |
+| `activeStep` | number | `0` | Initial index, clamped to `0 … steps.length - 1`. |
+| `onStepChange` | `(index: number) => void` | — | Fires on every step change: navigation buttons, `next()`/`back()`/`goTo()`, or a click on a step. Not fired for the initial `activeStep`. |
+| `onFinish` | `() => void` | — | Fires when the Finish button on the last step is pressed. |
+| `orientation` | `'horizontal'`, `'vertical'` | `'horizontal'` | Rail direction. Horizontal uses a `Row`, vertical a `Column` with a 16px gap. |
+| `variant` | `'circles'`, `'numbers'`, `'icons'` | `'circles'` | Indicator style. Any other value falls back to the icon indicator. |
+| `showLabels` | boolean | `true` | Renders each `label` under its indicator. |
+| `showNavigation` | boolean | `true` | Accepted but currently unused — the navigation row is always rendered. |
+| `nextLabel` | string | `'Next'` | Label of the forward button. |
+| `backLabel` | string | `'Back'` | Label of the backward button (hidden on the first step). |
+| `finishLabel` | string | `'Finish'` | Label of the last-step button; it replaces Next. |
+| `bgColor` | Color | `colors.surface` | Background of the outer panel. |
+| `borderRadius` | number | `16` | Corner radius in pixels. |
+| `border` | string | — | Full CSS border shorthand. When set it replaces `borderWidth`/`borderColor`. |
+| `borderColor` | Color | `colors.border` | Border color when `border` is not given. |
+| `borderWidth` | number | `1` | Border width in pixels when `border` is not given. |
+| `shadow` | string | — | CSS `box-shadow` for the outer panel. |
+| `padding` | number or string | `20` | Inner spacing of the outer panel. |
+| `margin` | number or string | `0` | Outer spacing. |
+| `width` | number or string | `'100%'` | Panel width. |
 
-## Beginner tips
+These are the props specific to `Stepper`. It also accepts every [common prop](COMMON_PROPS.md): layout, spacing, size, color, typography, borders, shadow, events, `child`/`children`, `ref`, and `style`.
 
-- Change one value at a time so you can see what each prop does.
-- Use `Text` to check that your layout is in the place you expect.
-- Use `Container` for a box, `Row` for items side by side, and `Column` for items one below another.
-- Use `padding` when content needs breathing room inside a box.
-- Use `margin` when you need space between this widget and its neighbors.
-- Use `bgColor` to make the boundaries of a box easy to see while learning.
-- If a prop is optional, leaving it out lets FletBox use its default behavior.
+## Instance methods
 
-## Common mistakes
+The returned element exposes:
 
-- Do not put plain text where a widget is expected unless the widget explicitly accepts strings.
-- Use `children: [ ... ]` for several child widgets and `child: widget` for one child when the widget supports both.
-- Check spelling carefully: `onPress`, `onClick`, and `onChange` are different events.
-- If a helper such as `padding()` or `margin()` is not available in your import list, use a number or CSS string first.
+- `next()` — advances one step. No-op on the last step. Fires `onStepChange`.
+- `back()` — steps back one. No-op on the first step. There is no `prev()`.
+- `goTo(index)` — jumps to `index`. Out-of-range indexes are ignored. Fires `onStepChange`.
+- `getActiveStep()` — returns the current step index.
 
-## Behavior notes
-- Integrates cleanly with FletBox runtime semantics and DOM rendering.
-- Can be nested inside layout widgets and combined with other components.
-- Uses the same direct prop and event conventions as the rest of the framework.
-- Keeps the API simple and readable for composing interfaces fast.
+## Examples
 
-## Accessibility
-- Prefer clear labels and readable text for interactive controls.
-- Respect the `disabled` state and keyboard behavior when available.
-- Keep state changes understandable for screen readers and assistive technology.
+### Everyday example
+
+```javascript
+import { Column, Input, Stepper, Text } from "flet-box";
+
+Stepper({
+  steps: [
+    {
+      label: "Details",
+      content: Column({
+        gap: 8,
+        children: [Text({ text: "Your name" }), Input({ label: "Full name" })],
+      }),
+    },
+    {
+      label: "Confirm",
+      content: Text({ text: "Check the details and finish." }),
+    },
+  ],
+  activeStep: 0,
+  nextLabel: "Continue",
+  finishLabel: "Submit",
+  onStepChange: (index) => console.log("step", index),
+  onFinish: () => console.log("submitted"),
+});
+```
+
+### Full example
+
+```javascript
+import { Column, Stepper, Text, colors } from "flet-box";
+
+const step = (label, icon, body) => ({
+  label,
+  icon,
+  content: Column({ gap: 8, children: [Text({ text: body, size: 15 })] }),
+});
+
+Stepper({
+  steps: [
+    step("Personal", "person", "Who are you?"),
+    step("Payment", "credit_card", "How will you pay?"),
+    step("Done", "check_circle", "All set."),
+  ],
+  activeStep: 0,
+  orientation: "horizontal",
+  variant: "circles",
+  showLabels: true,
+  nextLabel: "Continue",
+  backLabel: "Back",
+  finishLabel: "Submit",
+  onStepChange: (index) => console.log("step", index),
+  onFinish: () => console.log("submitted"),
+  bgColor: colors.card,
+  borderRadius: 24,
+  borderWidth: 1,
+  borderColor: colors.border,
+  shadow: "0 6px 12px rgba(0,0,0,0.08)",
+  padding: 24,
+  width: "100%",
+});
+```
+
+## Notes
+
+- The element has exactly three children, in order: the rail wrapper, the content panel, and the navigation panel.
+- The rail sits inside a horizontally scrollable wrapper. When `steps.length * 80` exceeds the wrapper's width, the rail switches to a compact mode: each step is pinned to an 80px minimum and the flexible connector lines are replaced by 8px spacers.
+- Connectors between steps turn `colors.success` once the step before them is completed.
+- `steps: []` leaves the internal index at `-1`, so the rail and content stay empty and only a Finish button renders. Always pass at least one step.
+- The content and navigation panels are built with `Container`, so they inherit the default `colors.surface` background regardless of the `bgColor` you pass to the Stepper.
+- In `vertical` orientation each row renders the label twice — once under the indicator (when `showLabels` is on) and once beside it. Pass `showLabels: false` to avoid the duplicate.
+- A 1px solid border is always drawn unless you pass `border`. Use `border: "none"` to remove it.
+- Clicking a step indicator always jumps to it; there is no built-in "only completed steps are clickable" rule.
+- `variant: "circles"` indicators are 32px discs: `colors.primary` when active, `colors.success` with a white check when completed, `colors.gray300` otherwise.
 
 ## Related widgets
-- [Container](Container.md)
-- [Row](Row.md)
-- [Column](Column.md)
-- [Stack](Stack.md)
-- [Text](Text.md)
+- [Pagination](Pagination.md)
+- [ProgressBar](ProgressBar.md)
+- [Accordion](Accordion.md)
 - [Button](Button.md)
+- [Column](Column.md)
 
 ---
 

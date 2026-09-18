@@ -300,7 +300,13 @@ export const markdownToWidgets = (text, options = {}) => {
 export const parseMarkdownToWidgets = markdownToWidgets;
 export const parseMarkdown = (text) => text;
 export const parseInlineMarkdown = (text) => text;
-export const escapeHtml = (text) => text;
+export const escapeHtml = (text) =>
+  String(text)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 
 // Exportación por defecto
 export default {

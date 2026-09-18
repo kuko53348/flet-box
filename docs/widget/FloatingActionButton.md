@@ -1,234 +1,125 @@
 # FloatingActionButton
 
 ## Overview
-`FloatingActionButton` is a ready-to-use building block. Think of it like a LEGO piece: give it some props, place it inside another widget, and FletBox creates the browser element for you.
-
-You do not need to write HTML or manually change the DOM to use this widget. You call the widget as a JavaScript function and pass an object between `{` and `}`.
-
-## Learn it in one minute
-
-1. Import the widget from `flet-box`.
-2. Call it with `WidgetName({ ... })`.
-3. Add props to describe its content, size, color, spacing, and behavior.
-4. Put it inside `Container`, `Row`, `Column`, or another widget.
-
-```javascript
-import { Column, Container, Text } from "flet-box";
-
-const welcomeCard = Container({
-    padding: 20,
-    margin: 16,
-    bgColor: "#ffffff",
-    borderRadius: 12,
-    child: Column({
-        gap: 8,
-        children: [
-            Text({ text: "My first FletBox screen", size: 24, weight: "bold" }),
-            Text({ text: "Widgets are small building blocks. Put them inside each other to build a screen." }),
-        ],
-    }),
-});
-```
+`FloatingActionButton` (FAB) renders a circular, elevated action button as a `Container` `<div>` — not a native `<button>` — holding a Material `Icon` (default `add`). With `extended: true` and a `label` it becomes a pill-shaped button with text. Despite the name it does **not** float by itself: it is an ordinary element you position yourself, typically absolutely inside a [Stack](Stack.md) or with the common `position`/`bottom`/`right` props. `onPress` is the click handler; hover scales the button to 1.05 when a handler is set.
 
 ## When to use
-Use `FloatingActionButton` when you need this kind of interface element. Start with the smallest example, then add one prop at a time. You can copy the example, change the text or color, and see the result immediately.
+- The screen's primary action: create, compose, add.
+- A persistent call-to-action anchored to a corner of the layout.
+- An icon-only action that needs more emphasis than a plain [Button](Button.md).
 
-## Common props
-
-- `children` / `child`: content rendered inside the widget.
-- `id`: DOM id for the element.
-- `className`: CSS class names applied to the element.
-- `ref`: callback that receives the underlying DOM node.
-- `onClick` / event handlers: native browser event callbacks.
-- `disabled`: disables interaction when supported.
-
-## Full prop list
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `width` | `Size` | - | Property used by the FloatingActionButton component. |
-| `height` | `Size` | - | Property used by the FloatingActionButton component. |
-| `size` | `number` | - | Component size or preset. |
-| `padding` | `Padding` | - | Internal spacing around the component. |
-| `margin` | `Margin` | - | External spacing around the component. |
-| `bgColor` | `Color` | - | Background color applied to the element. |
-| `color` | `Color` | - | Color value or theme token. |
-| `borderRadius` | `number \| string` | - | Property used by the FloatingActionButton component. |
-| `elevation` | `number` | - | Property used by the FloatingActionButton component. |
-| `shadow` | `string` | - | Property used by the FloatingActionButton component. |
-| `opacity` | `number` | - | Property used by the FloatingActionButton component. |
-| `visible` | `boolean` | false | Property used by the FloatingActionButton component. |
-| `disabled` | `boolean` | false | Disables interaction and shows the non-interactive state. |
-| `onPress` | `(widget: Widget) => void` | - | Callback fired when the widget is pressed. |
-| `onClick` | `(widget: Widget) => void` | - | Property used by the FloatingActionButton component. |
-| `id` | `string` | - | Property used by the FloatingActionButton component. |
-| `className` | `string` | - | Property used by the FloatingActionButton component. |
-| `ref` | `(widget: Widget) => void` | - | Property used by the FloatingActionButton component. |
-| `disableTransform` | `boolean` | - | Property used by the FloatingActionButton component. |
-| `icon` | `string \| Widget` | - | Property used by the FloatingActionButton component. |
-| `label` | `string` | - | Label or caption shown near the control. |
-| `backgroundColor` | `Color` | - | Property used by the FloatingActionButton component. |
-| `foregroundColor` | `Color` | - | Property used by the FloatingActionButton component. |
-| `mini` | `boolean` | - | Property used by the FloatingActionButton component. |
-| `extended` | `boolean` | - | Property used by the FloatingActionButton component. |
-| `position` | `'bottomRight' \| 'bottomLeft' \| 'topRight' \| 'topLeft'` | - | Property used by the FloatingActionButton component. |
-
-## How props work
-
-A prop is simply an instruction inside the object passed to the widget. The name tells FletBox what to change, and the value tells it how to change it.
+## Import
 
 ```javascript
-FloatingActionButton({
-    padding: 16,              // space inside the widget
-    margin: "8px 0",         // space outside the widget
-    bgColor: "#eff6ff",      // background color
-    width: "100%",           // CSS size or a number of pixels
-    children: [],             // widgets placed inside it
-    onPress: () => {         // what to do after a press
-        console.log("Hello");
-    },
-});
+import { FloatingActionButton } from "flet-box";
 ```
-
-You do not need to use every prop. Begin with the required props, then add optional props only when you need them.
-
-## Example usage
-
-```javascript
-import { FloatingActionButton, Text } from "flet-box";
-
-const example = FloatingActionButton({
-  child: Text({ text: "Example" })
-});
-```
-
-## Examples from the FletBox snippet library
-
-The examples below come from the FletBox snippet library. The prop table is based on `src/index.d.ts`. When an example and the type declaration use different names, prefer the type declaration and verify the implementation.
 
 ## Basic example
 
 The smallest useful version. Start here if this widget is new to you.
 
 ```javascript
-FloatingActionButton({ icon: "add", onPress: () => console.log("add") })
+import { FloatingActionButton } from "flet-box";
+
+FloatingActionButton({ icon: "add", onPress: () => console.log("add") });
 ```
 
-## Everyday example
+## Props
 
-A practical version with the props most applications usually need.
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `icon` | string | `'add'` | Material Icon name rendered inside the button. |
+| `label` | string | — | Text label; only rendered when `extended: true`. |
+| `onPress` | function | — | Click handler. Also enables the hover scale effect. Ignored when `disabled`. |
+| `backgroundColor` | Color | `colors.primary` | Button background. |
+| `foregroundColor` | Color | `'#ffffff'` | Icon and label color. |
+| `elevation` | number | `6` | Shadow depth, mapped to `0 e/2px epx rgba(0,0,0,0.3)` (not a CSS value). |
+| `borderRadius` | number | `48` | Radius applied to the inner icon surface (the button itself is `50%` round, or 24px when extended). |
+| `padding` | number | `12` | Padding of the inner icon, in pixels. |
+| `mini` | boolean | `false` | Shrinks the button from 56px to 40px (icon 24px → 20px). |
+| `extended` | boolean | `false` | Pill mode: auto width, `0 20px` padding, 24px radius, icon + `label` in a row. |
+| `disabled` | boolean | `false` | Opacity 0.6, `not-allowed` cursor, and no click/hover listeners. |
 
-```javascript
-FloatingActionButton({
-    icon: "add",
-    label: "Create",
-    onPress: () => createItem(),
-    position: "bottomRight",
-})
-```
+These are the props specific to `FloatingActionButton`. It also accepts every [common prop](COMMON_PROPS.md): layout, spacing, size, color, typography, borders, shadow, events, `child`/`children`, `ref`, and `style` — applied to the button container (use them, e.g. `position: "absolute"`, `bottom`, `right`, to make it float).
 
-## Full example
+## Examples
 
-A larger example showing advanced styling, layout, events, and customization.
-
-```javascript
-FloatingActionButton({
-    icon: Icon({ name: "edit" }),
-    label: "New note",
-    extended: true,
-    backgroundColor: colors.primary,
-    foregroundColor: "#ffffff",
-    elevation: 6,
-    margin: 24,
-    position: "bottomRight",
-    onPress: () => openEditor(),
-})
-```
-
-
-## Common layout and styling examples
-
-The following example shows how common FletBox props work together. Numeric spacing values are interpreted as pixels, while strings can use CSS units and shorthand values.
+### Everyday example
 
 ```javascript
-import { Button, Column, Container, Row, Text } from "flet-box";
+import { FloatingActionButton, Stack, Text } from "flet-box";
 
-const panel = Container({
-    width: "100%",          // number values are pixels; strings accept CSS units
-    padding: 24,            // 24px on every side
-    margin: "16px auto",   // CSS shorthand: vertical and horizontal spacing
-    bgColor: "#f8fafc",    // background color
-    borderRadius: 12,
-    elevation: 2,
-    gap: 12,
-    child: Column({
-        children: [
-            Text({ text: "Account settings", size: 24, weight: "bold" }),
-            Row({
-                gap: 8,
-                justifyContent: "space-between",
-                children: [
-                    Text({ text: "Update your profile" }),
-                    Button({
-                        text: "Save",
-                        bgColor: "#2563eb",
-                        color: "#ffffff",
-                        onPress: () => console.log("saved"),
-                    }),
-                ],
-            }),
-        ],
+Stack({
+  width: "100%",
+  height: 300,
+  children: [
+    Text({ text: "Screen content", padding: 16 }),
+    FloatingActionButton({
+      icon: "edit",
+      position: "absolute",
+      bottom: 16,
+      right: 16,
+      onPress: () => console.log("edit"),
     }),
+  ],
 });
 ```
 
-### Common prop quick reference
+### Full example
 
-- `padding: 24` adds `24px` inside the widget on all sides.
-- `padding: "8px 16px"` uses CSS shorthand for vertical and horizontal spacing.
-- `margin: "16px auto"` adds outside spacing and can center a fixed-width element.
-- `bgColor: "#f8fafc"` sets the background color. Color tokens and CSS colors can be used.
-- `color: "#111827"` sets the foreground or text color when supported.
-- `width: 320` means `320px`; `width: "100%"` uses a CSS percentage.
-- `children` is an array of widgets; `child` is useful when a component accepts one child.
-- `gap: 12` controls the space between children in layout widgets.
-- `onPress` and `onClick` receive event callbacks for interactive behavior.
+```javascript
+import { Column, FloatingActionButton, colors } from "flet-box";
 
-## Beginner tips
+Column({
+  gap: 16,
+  alignItems: "flex-start",
+  children: [
+    // Standard 56px round FAB
+    FloatingActionButton({
+      icon: "add",
+      backgroundColor: colors.primary,
+      elevation: 8,
+      onPress: () => console.log("create"),
+    }),
 
-- Change one value at a time so you can see what each prop does.
-- Use `Text` to check that your layout is in the place you expect.
-- Use `Container` for a box, `Row` for items side by side, and `Column` for items one below another.
-- Use `padding` when content needs breathing room inside a box.
-- Use `margin` when you need space between this widget and its neighbors.
-- Use `bgColor` to make the boundaries of a box easy to see while learning.
-- If a prop is optional, leaving it out lets FletBox use its default behavior.
+    // Mini FAB
+    FloatingActionButton({
+      icon: "favorite",
+      mini: true,
+      backgroundColor: colors.danger,
+      onPress: () => console.log("like"),
+    }),
 
-## Common mistakes
+    // Extended pill with label
+    FloatingActionButton({
+      icon: "navigate_next",
+      label: "Continue",
+      extended: true,
+      backgroundColor: "#111827",
+      foregroundColor: "#ffffff",
+      onPress: () => console.log("next step"),
+    }),
 
-- Do not put plain text where a widget is expected unless the widget explicitly accepts strings.
-- Use `children: [ ... ]` for several child widgets and `child: widget` for one child when the widget supports both.
-- Check spelling carefully: `onPress`, `onClick`, and `onChange` are different events.
-- If a helper such as `padding()` or `margin()` is not available in your import list, use a number or CSS string first.
+    // Disabled state
+    FloatingActionButton({ icon: "delete", disabled: true }),
+  ],
+});
+```
 
-## Behavior notes
-- Integrates cleanly with FletBox runtime semantics and DOM rendering.
-- Can be nested inside layout widgets and combined with other components.
-- Uses the same direct prop and event conventions as the rest of the framework.
-- Keeps the API simple and readable for composing interfaces fast.
+## Notes
 
-## Accessibility
-- Prefer clear labels and readable text for interactive controls.
-- Respect the `disabled` state and keyboard behavior when available.
-- Keep state changes understandable for screen readers and assistive technology.
+- The element is a `div` styled as a button; there is no native `<button>` semantics — add `aria-label` via common props for accessibility, especially in icon-only mode.
+- The hover scale(1.05) and the click listener are only attached when `onPress` is provided and `disabled` is false.
+- `extended: true` without `label` renders the pill shape with just the icon.
+- `elevation` is a shadow preset multiplier (`box-shadow: 0 elevation/2 px elevation px rgba(0,0,0,0.3)`), not the `0–5` scale used by [Button](Button.md).
+- Icons require the Material Icons font (see [Icon](Icon.md)).
 
 ## Related widgets
-- [Container](Container.md)
-- [Row](Row.md)
-- [Column](Column.md)
-- [Stack](Stack.md)
-- [Text](Text.md)
 - [Button](Button.md)
+- [Icon](Icon.md)
+- [Stack](Stack.md)
+- [Container](Container.md)
+- [Tooltip](Tooltip.md)
 
 ---
 

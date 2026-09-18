@@ -1,235 +1,104 @@
 # Badge
 
 ## Overview
-`Badge` is a ready-to-use building block. Think of it like a LEGO piece: give it some props, place it inside another widget, and FletBox creates the browser element for you.
-
-You do not need to write HTML or manually change the DOM to use this widget. You call the widget as a JavaScript function and pass an object between `{` and `}`.
-
-## Learn it in one minute
-
-1. Import the widget from `flet-box`.
-2. Call it with `WidgetName({ ... })`.
-3. Add props to describe its content, size, color, spacing, and behavior.
-4. Put it inside `Container`, `Row`, `Column`, or another widget.
-
-```javascript
-import { Column, Container, Text } from "flet-box";
-
-const welcomeCard = Container({
-    padding: 20,
-    margin: 16,
-    bgColor: "#ffffff",
-    borderRadius: 12,
-    child: Column({
-        gap: 8,
-        children: [
-            Text({ text: "My first FletBox screen", size: 24, weight: "bold" }),
-            Text({ text: "Widgets are small building blocks. Put them inside each other to build a screen." }),
-        ],
-    }),
-});
-```
+`Badge` decorates a `child` with a small count pill. When there is something to show, it wraps `child` in a `Stack` (`display: inline-block`, `position: relative`) and overlays an absolutely-positioned pill on one of four corners. When there is nothing to show (no `value`, or a `value` of `0`/`""` while `showZero` is false), it returns `child` unchanged — no wrapper. So the returned element is either the `Stack` wrapper or your bare `child`.
 
 ## When to use
-Use `Badge` when you need this kind of interface element. Start with the smallest example, then add one prop at a time. You can copy the example, change the text or color, and see the result immediately.
+- Show an unread count or alert on an icon (a bell, a cart, an avatar).
+- Overlay a small numeric or string label on the corner of another widget.
 
-## Common props
-
-- `children` / `child`: content rendered inside the widget.
-- `id`: DOM id for the element.
-- `className`: CSS class names applied to the element.
-- `ref`: callback that receives the underlying DOM node.
-- `onClick` / event handlers: native browser event callbacks.
-- `disabled`: disables interaction when supported.
-
-## Full prop list
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `width` | `Size` | - | Property used by the Badge component. |
-| `height` | `Size` | - | Property used by the Badge component. |
-| `size` | `number` | - | Component size or preset. |
-| `padding` | `Padding` | - | Internal spacing around the component. |
-| `margin` | `Margin` | - | External spacing around the component. |
-| `bgColor` | `Color` | - | Background color applied to the element. |
-| `color` | `Color` | - | Color value or theme token. |
-| `borderRadius` | `number \| string` | - | Property used by the Badge component. |
-| `elevation` | `number` | - | Property used by the Badge component. |
-| `shadow` | `string` | - | Property used by the Badge component. |
-| `opacity` | `number` | - | Property used by the Badge component. |
-| `visible` | `boolean` | false | Property used by the Badge component. |
-| `disabled` | `boolean` | false | Disables interaction and shows the non-interactive state. |
-| `onPress` | `(widget: Widget) => void` | - | Callback fired when the widget is pressed. |
-| `onClick` | `(widget: Widget) => void` | - | Property used by the Badge component. |
-| `id` | `string` | - | Property used by the Badge component. |
-| `className` | `string` | - | Property used by the Badge component. |
-| `ref` | `(widget: Widget) => void` | - | Property used by the Badge component. |
-| `disableTransform` | `boolean` | - | Property used by the Badge component. |
-| `value` | `string \| number` | - | Current value controlled by the widget. |
-| `child` | `Widget` | - | Property used by the Badge component. |
-| `position` | `'top-right' \| 'top-left' \| 'bottom-right' \| 'bottom-left'` | - | Property used by the Badge component. |
-| `offset` | `number` | - | Property used by the Badge component. |
-| `borderWidth` | `number` | - | Property used by the Badge component. |
-| `borderColor` | `Color` | - | Property used by the Badge component. |
-| `showZero` | `boolean` | - | Property used by the Badge component. |
-| `max` | `number` | - | Property used by the Badge component. |
-
-## How props work
-
-A prop is simply an instruction inside the object passed to the widget. The name tells FletBox what to change, and the value tells it how to change it.
+## Import
 
 ```javascript
-Badge({
-    padding: 16,              // space inside the widget
-    margin: "8px 0",         // space outside the widget
-    bgColor: "#eff6ff",      // background color
-    width: "100%",           // CSS size or a number of pixels
-    children: [],             // widgets placed inside it
-    onPress: () => {         // what to do after a press
-        console.log("Hello");
-    },
-});
+import { Badge } from "flet-box";
 ```
-
-You do not need to use every prop. Begin with the required props, then add optional props only when you need them.
-
-## Example usage
-
-```javascript
-import { Badge, Text } from "flet-box";
-
-const example = Badge({
-  label: "Example value",
-  child: Text({ text: "Example" })
-});
-```
-
-## Examples from the FletBox snippet library
-
-The examples below come from the FletBox snippet library. The prop table is based on `src/index.d.ts`. When an example and the type declaration use different names, prefer the type declaration and verify the implementation.
 
 ## Basic example
 
 The smallest useful version. Start here if this widget is new to you.
 
 ```javascript
-Badge({ value: 3, child: Icon({ name: "notifications" }) })
+import { Badge, Icon } from "flet-box";
+
+Badge({ value: 3, child: Icon({ name: "notifications" }) });
 ```
 
-## Everyday example
+## Props
 
-A practical version with the props most applications usually need.
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | number or string | — | Badge content. Numbers above `max` render as `"<max>+"`. |
+| `child` | Widget | — | The element to decorate (must be an `HTMLElement`). |
+| `bgColor` | Color | `colors.secondary` | Pill background color. |
+| `color` | Color | `colors.text` | Pill text color. |
+| `size` | number | `20` | Pill height and min-width in pixels; the text is `size * 0.55`. |
+| `position` | `'top-right'`, `'top-left'`, `'bottom-right'`, `'bottom-left'` | `'top-right'` | Corner the pill sits on. |
+| `offset` | number | `0` | Pushes the pill outward from the corner. |
+| `borderWidth` | number | `2` | Pill border width in pixels. |
+| `borderColor` | Color | `colors.surface` | Pill border color (the ring that separates it from the child). |
+| `showZero` | boolean | `false` | Whether a `value` of `0` is shown. |
+| `max` | number | `99` | Numeric values above this render as `"<max>+"`. |
+
+These are the props specific to `Badge`. It also accepts every [common prop](COMMON_PROPS.md): layout, spacing, size, color, typography, borders, shadow, events, `child`/`children`, `ref`, and `style`.
+
+## Instance methods
+
+When the badge is shown (a `Stack` wrapper is returned), that wrapper exposes:
+
+- `updateValue(newValue)` — sets the pill text (applying `max`) and shows or hides the pill.
+
+If `Badge` returned the bare `child` instead (nothing to show), there is no `updateValue`.
+
+## Examples
+
+### Everyday example
 
 ```javascript
+import { Badge, Icon, colors } from "flet-box";
+
 Badge({
-    value: 3,
-    child: Icon({ name: "notifications" }),
-    position: "top-right",
-    bgColor: colors.danger,
-})
-```
-
-## Full example
-
-A larger example showing advanced styling, layout, events, and customization.
-
-```javascript
-Badge({
-    value: 12,
-    child: Icon({ name: "shopping_cart", size: 28 }),
-    position: "top-right",
-    offset: 6,
-    max: 99,
-    showZero: false,
-    borderWidth: 2,
-    borderColor: colors.surface,
-})
-```
-
-
-## Common layout and styling examples
-
-The following example shows how common FletBox props work together. Numeric spacing values are interpreted as pixels, while strings can use CSS units and shorthand values.
-
-```javascript
-import { Button, Column, Container, Row, Text } from "flet-box";
-
-const panel = Container({
-    width: "100%",          // number values are pixels; strings accept CSS units
-    padding: 24,            // 24px on every side
-    margin: "16px auto",   // CSS shorthand: vertical and horizontal spacing
-    bgColor: "#f8fafc",    // background color
-    borderRadius: 12,
-    elevation: 2,
-    gap: 12,
-    child: Column({
-        children: [
-            Text({ text: "Account settings", size: 24, weight: "bold" }),
-            Row({
-                gap: 8,
-                justifyContent: "space-between",
-                children: [
-                    Text({ text: "Update your profile" }),
-                    Button({
-                        text: "Save",
-                        bgColor: "#2563eb",
-                        color: "#ffffff",
-                        onPress: () => console.log("saved"),
-                    }),
-                ],
-            }),
-        ],
-    }),
+  value: 5,
+  bgColor: colors.danger,
+  child: Icon({ name: "shopping_cart", size: 28 }),
 });
 ```
 
-### Common prop quick reference
+### Full example
 
-- `padding: 24` adds `24px` inside the widget on all sides.
-- `padding: "8px 16px"` uses CSS shorthand for vertical and horizontal spacing.
-- `margin: "16px auto"` adds outside spacing and can center a fixed-width element.
-- `bgColor: "#f8fafc"` sets the background color. Color tokens and CSS colors can be used.
-- `color: "#111827"` sets the foreground or text color when supported.
-- `width: 320` means `320px`; `width: "100%"` uses a CSS percentage.
-- `children` is an array of widgets; `child` is useful when a component accepts one child.
-- `gap: 12` controls the space between children in layout widgets.
-- `onPress` and `onClick` receive event callbacks for interactive behavior.
+```javascript
+import { Badge, Icon, colors } from "flet-box";
 
-## Beginner tips
+const bell = Badge({
+  value: 120,
+  max: 99,
+  size: 22,
+  position: "top-right",
+  offset: 4,
+  bgColor: colors.danger,
+  borderColor: colors.surface,
+  child: Icon({ name: "notifications", size: 32 }),
+});
 
-- Change one value at a time so you can see what each prop does.
-- Use `Text` to check that your layout is in the place you expect.
-- Use `Container` for a box, `Row` for items side by side, and `Column` for items one below another.
-- Use `padding` when content needs breathing room inside a box.
-- Use `margin` when you need space between this widget and its neighbors.
-- Use `bgColor` to make the boundaries of a box easy to see while learning.
-- If a prop is optional, leaving it out lets FletBox use its default behavior.
+// value 120 with max 99 renders "99+"
+// bell.updateValue(0); // hides the pill (showZero defaults to false)
+```
 
-## Common mistakes
+## Notes
 
-- Do not put plain text where a widget is expected unless the widget explicitly accepts strings.
-- Use `children: [ ... ]` for several child widgets and `child: widget` for one child when the widget supports both.
-- Check spelling carefully: `onPress`, `onClick`, and `onChange` are different events.
-- If a helper such as `padding()` or `margin()` is not available in your import list, use a number or CSS string first.
-
-## Behavior notes
-- Integrates cleanly with FletBox runtime semantics and DOM rendering.
-- Can be nested inside layout widgets and combined with other components.
-- Uses the same direct prop and event conventions as the rest of the framework.
-- Keeps the API simple and readable for composing interfaces fast.
-
-## Accessibility
-- Prefer clear labels and readable text for interactive controls.
-- Respect the `disabled` state and keyboard behavior when available.
-- Keep state changes understandable for screen readers and assistive technology.
+- When there is nothing to show, `Badge` returns `child` directly (or `null` if there is no child) — no `Stack` wrapper and no `updateValue`. The pill is hidden when `value` is `undefined`/`null`/`""`, or when it is the number `0` and `showZero` is false.
+- When shown with a valid `child`, the return value is a `Stack` (`display: inline-block`, `position: relative`) containing your child plus the absolutely-positioned pill.
+- `max` only affects numbers: a numeric `value` greater than `max` renders as `"<max>+"` (for example `120` → `"99+"`). Strings are shown as-is.
+- The pill is a factory `div` with a `Text` inside; `borderWidth`/`borderColor` draw the ring that separates it from the child.
+- If `child` is not an `HTMLElement`, `Badge` logs a warning and returns just the pill.
+- When neither `bgColor` nor `color` is passed, the pill subscribes to theme changes; the subscription is torn down on cleanup.
+- The pill overlays the child with absolute positioning plus a `transform`, so it can extend beyond the child's box; `offset` nudges it further out.
 
 ## Related widgets
-- [Container](Container.md)
-- [Row](Row.md)
-- [Column](Column.md)
+- [Avatar](Avatar.md)
+- [Chip](Chip.md)
+- [Icon](Icon.md)
 - [Stack](Stack.md)
 - [Text](Text.md)
-- [Button](Button.md)
 
 ---
 

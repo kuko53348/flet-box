@@ -2,7 +2,14 @@
 // FletBox Kids - Ultra simple: solo recibe UN widget
 
 export const App = (widget) => {
-  const root = document.getElementById("root") || document.body;
+  let root = document.getElementById("root");
+  if (!root) {
+    // Nunca vaciar document.body (borraría scripts/markup del host);
+    // crear un contenedor raíz dedicado en su lugar.
+    root = document.createElement("div");
+    root.id = "root";
+    document.body.appendChild(root);
+  }
   root.innerHTML = "";
   root.style.margin = "0";
   root.style.padding = "0";

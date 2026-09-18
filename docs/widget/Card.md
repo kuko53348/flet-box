@@ -1,230 +1,112 @@
 # Card
 
 ## Overview
-`Card` is a ready-to-use building block. Think of it like a LEGO piece: give it some props, place it inside another widget, and FletBox creates the browser element for you.
-
-You do not need to write HTML or manually change the DOM to use this widget. You call the widget as a JavaScript function and pass an object between `{` and `}`.
-
-## Learn it in one minute
-
-1. Import the widget from `flet-box`.
-2. Call it with `WidgetName({ ... })`.
-3. Add props to describe its content, size, color, spacing, and behavior.
-4. Put it inside `Container`, `Row`, `Column`, or another widget.
-
-```javascript
-import { Column, Container, Text } from "flet-box";
-
-const welcomeCard = Container({
-    padding: 20,
-    margin: 16,
-    bgColor: "#ffffff",
-    borderRadius: 12,
-    child: Column({
-        gap: 8,
-        children: [
-            Text({ text: "My first FletBox screen", size: 24, weight: "bold" }),
-            Text({ text: "Widgets are small building blocks. Put them inside each other to build a screen." }),
-        ],
-    }),
-});
-```
+`Card` renders a `<div>` pre-styled as a raised surface: a `colors.surface` background, `12px` rounded corners, `16px` of inner padding, and a 1px `colors.border` border. Think of it as a `Container` with sensible card defaults — you compose any widgets inside it with `child`/`children`. It has no behavior of its own beyond styling.
 
 ## When to use
-Use `Card` when you need this kind of interface element. Start with the smallest example, then add one prop at a time. You can copy the example, change the text or color, and see the result immediately.
+- Group related content (a profile, a product, a form section) on a distinct bordered surface.
+- Wrap content that should read as a "card" with rounded corners and breathing room, without hand-writing the styles.
 
-## Common props
-
-- `children` / `child`: content rendered inside the widget.
-- `id`: DOM id for the element.
-- `className`: CSS class names applied to the element.
-- `ref`: callback that receives the underlying DOM node.
-- `onClick` / event handlers: native browser event callbacks.
-- `disabled`: disables interaction when supported.
-
-## Full prop list
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `width` | `Size` | - | Property used by the Card component. |
-| `height` | `Size` | - | Property used by the Card component. |
-| `size` | `number` | - | Component size or preset. |
-| `padding` | `Padding` | - | Internal spacing around the component. |
-| `margin` | `Margin` | - | External spacing around the component. |
-| `bgColor` | `Color` | - | Background color applied to the element. |
-| `color` | `Color` | - | Color value or theme token. |
-| `borderRadius` | `number \| string` | - | Property used by the Card component. |
-| `elevation` | `number` | - | Property used by the Card component. |
-| `shadow` | `string` | - | Property used by the Card component. |
-| `opacity` | `number` | - | Property used by the Card component. |
-| `visible` | `boolean` | false | Property used by the Card component. |
-| `disabled` | `boolean` | false | Disables interaction and shows the non-interactive state. |
-| `onPress` | `(widget: Widget) => void` | - | Callback fired when the widget is pressed. |
-| `onClick` | `(widget: Widget) => void` | - | Property used by the Card component. |
-| `id` | `string` | - | Property used by the Card component. |
-| `className` | `string` | - | Property used by the Card component. |
-| `ref` | `(widget: Widget) => void` | - | Property used by the Card component. |
-| `disableTransform` | `boolean` | - | Property used by the Card component. |
-| `child` | `Widget` | - | Property used by the Card component. |
-| `children` | `Widget[]` | - | Property used by the Card component. |
-
-## How props work
-
-A prop is simply an instruction inside the object passed to the widget. The name tells FletBox what to change, and the value tells it how to change it.
+## Import
 
 ```javascript
-Card({
-    padding: 16,              // space inside the widget
-    margin: "8px 0",         // space outside the widget
-    bgColor: "#eff6ff",      // background color
-    width: "100%",           // CSS size or a number of pixels
-    children: [],             // widgets placed inside it
-    onPress: () => {         // what to do after a press
-        console.log("Hello");
-    },
-});
+import { Card } from "flet-box";
 ```
-
-You do not need to use every prop. Begin with the required props, then add optional props only when you need them.
-
-## Example usage
-
-```javascript
-import { Card, Text } from "flet-box";
-
-const example = Card({
-  title: "Example value",
-  child: Text({ text: "Example" })
-});
-```
-
-## Examples from the FletBox snippet library
-
-The examples below come from the FletBox snippet library. The prop table is based on `src/index.d.ts`. When an example and the type declaration use different names, prefer the type declaration and verify the implementation.
 
 ## Basic example
 
 The smallest useful version. Start here if this widget is new to you.
 
 ```javascript
-Card({ child: Text("Card content") })
+import { Card, Text } from "flet-box";
+
+Card({ child: Text({ text: "Card content" }) });
 ```
 
-## Everyday example
+## Props
 
-A practical version with the props most applications usually need.
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `padding` | number | `16` | Inner spacing in pixels. |
+| `borderRadius` | number | `12` | Corner radius in pixels. |
+| `bgColor` | Color | `colors.surface` | Background color. |
+| `showBorder` | boolean | `true` | When `false`, the border is removed (`border: none`). |
+| `borderWidth` | number | `1` | Border thickness in pixels (only when `showBorder`). |
+| `borderStyle` | string | `'solid'` | CSS border style (only when `showBorder`). |
+| `borderColor` | Color | `colors.border` | Border color (only when `showBorder`). |
+| `elevation` | number | `2` | Shadow level forwarded to the factory. See Notes — it does not currently render a visible shadow. |
+
+These are the props specific to `Card`. It also accepts every [common prop](COMMON_PROPS.md): layout, spacing, size, color, typography, borders, shadow, events, `child`/`children`, `ref`, and `style`.
+
+## Examples
+
+### Everyday example
 
 ```javascript
-Card({ elevation: 2, padding: 16, child: Text({ text: "Card title", weight: "bold" }) })
-```
+import { Card, Column, Text, colors } from "flet-box";
 
-## Full example
-
-A larger example showing advanced styling, layout, events, and customization.
-
-```javascript
 Card({
-    width: 320,
-    padding: 0,
-    bgColor: colors.surface,
-    borderRadius: 20,
-    elevation: 4,
-    shadow: shadow(0, 6, 12, 0, "rgba(0,0,0,0.1)"),
-    onPress: () => console.log("card clicked"),
-    child: Column({
-        children: [
-            Image({ src: "cover.jpg", height: 180, fit: "cover", borderRadiusTop: 20 }),
-            Container({ padding: 16, child: Text({ text: "Title", size: 18, weight: "bold" }) }),
-            Container({ padding: 16, child: Text({ text: "Description", color: colors.textSecondary }) })
-        ]
-    })
-})
-```
-
-
-## Common layout and styling examples
-
-The following example shows how common FletBox props work together. Numeric spacing values are interpreted as pixels, while strings can use CSS units and shorthand values.
-
-```javascript
-import { Button, Column, Container, Row, Text } from "flet-box";
-
-const panel = Container({
-    width: "100%",          // number values are pixels; strings accept CSS units
-    padding: 24,            // 24px on every side
-    margin: "16px auto",   // CSS shorthand: vertical and horizontal spacing
-    bgColor: "#f8fafc",    // background color
-    borderRadius: 12,
-    elevation: 2,
-    gap: 12,
-    child: Column({
-        children: [
-            Text({ text: "Account settings", size: 24, weight: "bold" }),
-            Row({
-                gap: 8,
-                justifyContent: "space-between",
-                children: [
-                    Text({ text: "Update your profile" }),
-                    Button({
-                        text: "Save",
-                        bgColor: "#2563eb",
-                        color: "#ffffff",
-                        onPress: () => console.log("saved"),
-                    }),
-                ],
-            }),
-        ],
-    }),
+  padding: 20,
+  borderRadius: 16,
+  bgColor: colors.surface,
+  child: Column({
+    gap: 6,
+    children: [
+      Text({ text: "Account", size: 18, weight: "bold" }),
+      Text({ text: "jane@example.com", color: colors.textSecondary }),
+    ],
+  }),
 });
 ```
 
-### Common prop quick reference
+### Full example
 
-- `padding: 24` adds `24px` inside the widget on all sides.
-- `padding: "8px 16px"` uses CSS shorthand for vertical and horizontal spacing.
-- `margin: "16px auto"` adds outside spacing and can center a fixed-width element.
-- `bgColor: "#f8fafc"` sets the background color. Color tokens and CSS colors can be used.
-- `color: "#111827"` sets the foreground or text color when supported.
-- `width: 320` means `320px`; `width: "100%"` uses a CSS percentage.
-- `children` is an array of widgets; `child` is useful when a component accepts one child.
-- `gap: 12` controls the space between children in layout widgets.
-- `onPress` and `onClick` receive event callbacks for interactive behavior.
+```javascript
+import { Button, Card, Column, Divider, Row, Text, colors } from "flet-box";
 
-## Beginner tips
+Card({
+  width: 320,
+  padding: 0,
+  borderRadius: 20,
+  showBorder: false,
+  child: Column({
+    children: [
+      Text({ text: "Pro plan", size: 20, weight: "bold", padding: 20 }),
+      Divider({ margin: 0, color: colors.border }),
+      Column({
+        gap: 8,
+        padding: 20,
+        children: [
+          Text({ text: "Unlimited projects", color: colors.textSecondary }),
+          Text({ text: "Priority support", color: colors.textSecondary }),
+        ],
+      }),
+      Row({
+        padding: 20,
+        justifyContent: "flex-end",
+        children: [
+          Button({ text: "Upgrade", onPress: () => console.log("upgrade") }),
+        ],
+      }),
+    ],
+  }),
+});
+```
 
-- Change one value at a time so you can see what each prop does.
-- Use `Text` to check that your layout is in the place you expect.
-- Use `Container` for a box, `Row` for items side by side, and `Column` for items one below another.
-- Use `padding` when content needs breathing room inside a box.
-- Use `margin` when you need space between this widget and its neighbors.
-- Use `bgColor` to make the boundaries of a box easy to see while learning.
-- If a prop is optional, leaving it out lets FletBox use its default behavior.
+## Notes
 
-## Common mistakes
-
-- Do not put plain text where a widget is expected unless the widget explicitly accepts strings.
-- Use `children: [ ... ]` for several child widgets and `child: widget` for one child when the widget supports both.
-- Check spelling carefully: `onPress`, `onClick`, and `onChange` are different events.
-- If a helper such as `padding()` or `margin()` is not available in your import list, use a number or CSS string first.
-
-## Behavior notes
-- Integrates cleanly with FletBox runtime semantics and DOM rendering.
-- Can be nested inside layout widgets and combined with other components.
-- Uses the same direct prop and event conventions as the rest of the framework.
-- Keeps the API simple and readable for composing interfaces fast.
-
-## Accessibility
-- Prefer clear labels and readable text for interactive controls.
-- Respect the `disabled` state and keyboard behavior when available.
-- Keep state changes understandable for screen readers and assistive technology.
+- Renders a plain `<div>`; it is effectively a `Container` pre-styled with `colors.surface`, `borderRadius: 12`, `padding: 16`, and a 1px `colors.border` border.
+- `showBorder: false` sets `border: none`. Otherwise the border string is built from `borderWidth`, `borderStyle`, and `borderColor`.
+- `elevation` is forwarded to the widget factory, but unlike `Button` (which maps `0`–`5` to a preset shadow table) `Card` does not convert it into a real `box-shadow`, so it has no visible effect. Use the common `shadow`/`boxShadow` prop when you need an actual shadow.
+- Numeric props are pixels via the framework's rem/16 system: `padding: 16` becomes `1rem`, which computes to `16px`.
 
 ## Related widgets
 - [Container](Container.md)
-- [Row](Row.md)
 - [Column](Column.md)
-- [Stack](Stack.md)
+- [Row](Row.md)
+- [Divider](Divider.md)
+- [ListTile](ListTile.md)
 - [Text](Text.md)
-- [Button](Button.md)
 
 ---
 

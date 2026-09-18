@@ -358,6 +358,7 @@ export const Scaffold = (props) => {
   // Observar todo el contenido de la estructura
   observer.observe(container, { childList: true, subtree: true });
 
+  const originalCleanup = container._cleanup;
   container._cleanup = () => {
     observer.disconnect(); // Detener el observador al destruir el Scaffold
     if (unsubscribe) unsubscribe();
@@ -369,6 +370,7 @@ export const Scaffold = (props) => {
     clearContainer(rightNavBarContainer);
     if (container._drawer?.parentNode)
       container._drawer.parentNode.removeChild(container._drawer);
+    if (originalCleanup) originalCleanup();
   };
 
   container.updateLeftNavBar = updateLeftBar;

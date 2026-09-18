@@ -1,233 +1,112 @@
 # Skeleton
 
 ## Overview
-`Skeleton` is a ready-to-use building block. Think of it like a LEGO piece: give it some props, place it inside another widget, and FletBox creates the browser element for you.
-
-You do not need to write HTML or manually change the DOM to use this widget. You call the widget as a JavaScript function and pass an object between `{` and `}`.
-
-## Learn it in one minute
-
-1. Import the widget from `flet-box`.
-2. Call it with `WidgetName({ ... })`.
-3. Add props to describe its content, size, color, spacing, and behavior.
-4. Put it inside `Container`, `Row`, `Column`, or another widget.
-
-```javascript
-import { Column, Container, Text } from "flet-box";
-
-const welcomeCard = Container({
-    padding: 20,
-    margin: 16,
-    bgColor: "#ffffff",
-    borderRadius: 12,
-    child: Column({
-        gap: 8,
-        children: [
-            Text({ text: "My first FletBox screen", size: 24, weight: "bold" }),
-            Text({ text: "Widgets are small building blocks. Put them inside each other to build a screen." }),
-        ],
-    }),
-});
-```
+`Skeleton` renders loading placeholders: gray `<div>` blocks that mimic the shape of content that hasn't arrived yet. It returns a full-width flex-column container holding `count` copies of the chosen `variant` — simple blocks (`text`, `circular`, `avatar`, `image`, `button`) or pre-composed layouts (`card`, `listTile`). Each block animates with a CSS `pulse` (opacity breathe) or a `wave` (moving gradient shimmer) injected once into `document.head` as `#skeleton-styles`.
 
 ## When to use
-Use `Skeleton` when you need this kind of interface element. Start with the smallest example, then add one prop at a time. You can copy the example, change the text or color, and see the result immediately.
+- Show a loading state that mirrors the real layout: article lines, avatars, cards, list rows.
+- Replace spinners when you know the shape of the incoming content.
+- Render N repeated placeholders with `count` and `gap` while a list loads.
 
-## Common props
-
-- `children` / `child`: content rendered inside the widget.
-- `id`: DOM id for the element.
-- `className`: CSS class names applied to the element.
-- `ref`: callback that receives the underlying DOM node.
-- `onClick` / event handlers: native browser event callbacks.
-- `disabled`: disables interaction when supported.
-
-## Full prop list
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `width` | `Size` | - | Property used by the Skeleton component. |
-| `height` | `Size` | - | Property used by the Skeleton component. |
-| `size` | `number` | - | Component size or preset. |
-| `padding` | `Padding` | - | Internal spacing around the component. |
-| `margin` | `Margin` | - | External spacing around the component. |
-| `bgColor` | `Color` | - | Background color applied to the element. |
-| `color` | `Color` | - | Color value or theme token. |
-| `borderRadius` | `number \| string` | - | Property used by the Skeleton component. |
-| `elevation` | `number` | - | Property used by the Skeleton component. |
-| `shadow` | `string` | - | Property used by the Skeleton component. |
-| `opacity` | `number` | - | Property used by the Skeleton component. |
-| `visible` | `boolean` | false | Property used by the Skeleton component. |
-| `disabled` | `boolean` | false | Disables interaction and shows the non-interactive state. |
-| `onPress` | `(widget: Widget) => void` | - | Callback fired when the widget is pressed. |
-| `onClick` | `(widget: Widget) => void` | - | Property used by the Skeleton component. |
-| `id` | `string` | - | Property used by the Skeleton component. |
-| `className` | `string` | - | Property used by the Skeleton component. |
-| `ref` | `(widget: Widget) => void` | - | Property used by the Skeleton component. |
-| `disableTransform` | `boolean` | - | Property used by the Skeleton component. |
-| `variant` | `'text' \| 'circular' \| 'avatar' \| 'image' \| 'card' \| 'listTile' \| 'button'` | - | Visual variation or style preset. |
-| `animation` | `'pulse' \| 'wave' \| 'none'` | - | Property used by the Skeleton component. |
-| `count` | `number` | - | Property used by the Skeleton component. |
-| `gap` | `number` | - | Space between child items. |
-| `highlightColor` | `Color` | - | Property used by the Skeleton component. |
-| `shimmerColor` | `Color` | - | Property used by the Skeleton component. |
-| `pulseDuration` | `string` | - | Property used by the Skeleton component. |
-| `waveDuration` | `string` | - | Property used by the Skeleton component. |
-
-## How props work
-
-A prop is simply an instruction inside the object passed to the widget. The name tells FletBox what to change, and the value tells it how to change it.
+## Import
 
 ```javascript
-Skeleton({
-    padding: 16,              // space inside the widget
-    margin: "8px 0",         // space outside the widget
-    bgColor: "#eff6ff",      // background color
-    width: "100%",           // CSS size or a number of pixels
-    children: [],             // widgets placed inside it
-    onPress: () => {         // what to do after a press
-        console.log("Hello");
-    },
-});
+import { Skeleton } from "flet-box";
 ```
-
-You do not need to use every prop. Begin with the required props, then add optional props only when you need them.
-
-## Example usage
-
-```javascript
-import { Skeleton, Text } from "flet-box";
-
-const example = Skeleton({
-  child: Text({ text: "Example" })
-});
-```
-
-## Examples from the FletBox snippet library
-
-The examples below come from the FletBox snippet library. The prop table is based on `src/index.d.ts`. When an example and the type declaration use different names, prefer the type declaration and verify the implementation.
 
 ## Basic example
 
 The smallest useful version. Start here if this widget is new to you.
 
 ```javascript
-Skeleton({})
+import { Skeleton } from "flet-box";
+
+Skeleton({ variant: "text", count: 3 });
 ```
 
-## Everyday example
+## Props
 
-A practical version with the props most applications usually need.
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `variant` | `'text'`, `'circular'`, `'avatar'`, `'image'`, `'card'`, `'listTile'`, `'button'` | `'text'` | Placeholder shape. `card` and `listTile` are composite layouts; the rest are single blocks. |
+| `width` | number or string | variant default | Block width (numbers are pixels). Ignored by the composite `card`/`listTile` variants. |
+| `height` | number or string | variant default | Block height. Ignored by `card`/`listTile`. |
+| `borderRadius` | number or string | variant default | Corner radius (`'50%'` for circular shapes). Ignored by `card`/`listTile`. |
+| `animation` | `'pulse'`, `'wave'`, `'none'` | `'pulse'` | `pulse` breathes opacity 1→0.5→1; `wave` slides a `bgColor`/`highlightColor` gradient; `none` is static. |
+| `count` | number | `1` | How many placeholder blocks to render. |
+| `gap` | number | `8` | Vertical gap between blocks in pixels. |
+| `bgColor` | Color | `colors.gray200` | Base block color (and the wave's edge color). |
+| `highlightColor` | Color | `colors.gray100` | Wave shimmer highlight. |
+| `shimmerColor` | Color | `colors.gray300` | Accepted but currently unused by the pulse/wave styles. |
+| `pulseDuration` | string | `'1.5s'` | CSS duration of the pulse loop. |
+| `waveDuration` | string | `'1.5s'` | CSS duration of the wave loop. |
 
-```javascript
-Skeleton({ variant: "card", count: 3, gap: 16 })
-```
+Variant defaults: `text` 100%×16px (r4), `circular` 48×48px (round), `avatar` 40×40px (round), `image` 100%×150px (r8), `button` 120×36px (r24), `card` 100%×120px image area + two text lines, `listTile` 40px avatar + two text lines.
 
-## Full example
+`Skeleton` builds a fixed internal structure and does not forward extra props, so [common props](COMMON_PROPS.md) do not reach the container — wrap it in a `Container` when you need outer spacing or styling.
 
-A larger example showing advanced styling, layout, events, and customization.
+## Examples
 
-```javascript
-Skeleton({
-    variant: "listTile",
-    width: "100%",
-    height: null,
-    borderRadius: 12,
-    animation: "wave",
-    count: 5,
-    gap: 12,
-    bgColor: colors.gray200,
-    highlightColor: colors.gray100,
-    shimmerColor: colors.gray300,
-    pulseDuration: "1.2s",
-    waveDuration: "1.8s"
-})
-```
-
-
-## Common layout and styling examples
-
-The following example shows how common FletBox props work together. Numeric spacing values are interpreted as pixels, while strings can use CSS units and shorthand values.
+### Everyday example
 
 ```javascript
-import { Button, Column, Container, Row, Text } from "flet-box";
+import { Column, Skeleton } from "flet-box";
 
-const panel = Container({
-    width: "100%",          // number values are pixels; strings accept CSS units
-    padding: 24,            // 24px on every side
-    margin: "16px auto",   // CSS shorthand: vertical and horizontal spacing
-    bgColor: "#f8fafc",    // background color
-    borderRadius: 12,
-    elevation: 2,
-    gap: 12,
-    child: Column({
-        children: [
-            Text({ text: "Account settings", size: 24, weight: "bold" }),
-            Row({
-                gap: 8,
-                justifyContent: "space-between",
-                children: [
-                    Text({ text: "Update your profile" }),
-                    Button({
-                        text: "Save",
-                        bgColor: "#2563eb",
-                        color: "#ffffff",
-                        onPress: () => console.log("saved"),
-                    }),
-                ],
-            }),
-        ],
-    }),
+// Fake "loading article" placeholder
+Column({
+  gap: 12,
+  children: [
+    Skeleton({ variant: "image", height: 180 }),
+    Skeleton({ variant: "text", count: 3, gap: 8 }),
+  ],
 });
 ```
 
-### Common prop quick reference
+### Full example
 
-- `padding: 24` adds `24px` inside the widget on all sides.
-- `padding: "8px 16px"` uses CSS shorthand for vertical and horizontal spacing.
-- `margin: "16px auto"` adds outside spacing and can center a fixed-width element.
-- `bgColor: "#f8fafc"` sets the background color. Color tokens and CSS colors can be used.
-- `color: "#111827"` sets the foreground or text color when supported.
-- `width: 320` means `320px`; `width: "100%"` uses a CSS percentage.
-- `children` is an array of widgets; `child` is useful when a component accepts one child.
-- `gap: 12` controls the space between children in layout widgets.
-- `onPress` and `onClick` receive event callbacks for interactive behavior.
+```javascript
+import { Column, Row, Skeleton, colors } from "flet-box";
 
-## Beginner tips
+const listPlaceholder = Row({
+  gap: 12,
+  alignItems: "center",
+  children: [
+    Skeleton({ variant: "avatar", animation: "wave" }),
+    Column({
+      gap: 6,
+      children: [
+        Skeleton({ variant: "text", width: "60%", height: 14 }),
+        Skeleton({ variant: "text", width: "40%", height: 12 }),
+      ],
+    }),
+  ],
+});
 
-- Change one value at a time so you can see what each prop does.
-- Use `Text` to check that your layout is in the place you expect.
-- Use `Container` for a box, `Row` for items side by side, and `Column` for items one below another.
-- Use `padding` when content needs breathing room inside a box.
-- Use `margin` when you need space between this widget and its neighbors.
-- Use `bgColor` to make the boundaries of a box easy to see while learning.
-- If a prop is optional, leaving it out lets FletBox use its default behavior.
+Column({
+  gap: 16,
+  children: [
+    Skeleton({ variant: "card", animation: "wave", waveDuration: "1.8s" }),
+    Skeleton({ variant: "listTile", count: 3, gap: 12 }),
+    Skeleton({ variant: "button", bgColor: colors.gray300, animation: "none" }),
+    listPlaceholder,
+  ],
+});
+```
 
-## Common mistakes
+## Notes
 
-- Do not put plain text where a widget is expected unless the widget explicitly accepts strings.
-- Use `children: [ ... ]` for several child widgets and `child: widget` for one child when the widget supports both.
-- Check spelling carefully: `onPress`, `onClick`, and `onChange` are different events.
-- If a helper such as `padding()` or `margin()` is not available in your import list, use a number or CSS string first.
-
-## Behavior notes
-- Integrates cleanly with FletBox runtime semantics and DOM rendering.
-- Can be nested inside layout widgets and combined with other components.
-- Uses the same direct prop and event conventions as the rest of the framework.
-- Keeps the API simple and readable for composing interfaces fast.
-
-## Accessibility
-- Prefer clear labels and readable text for interactive controls.
-- Respect the `disabled` state and keyboard behavior when available.
-- Keep state changes understandable for screen readers and assistive technology.
+- The returned element is always the outer column container, even for `count: 1` — the placeholder block is its first child.
+- `card` and `listTile` ignore `width`/`height`/`borderRadius`; their internal parts (avatar 40px, image 120px, text lines at 80%/60%/90%/70% widths) are fixed. Use `count` to repeat them.
+- The `skeleton-pulse` and `skeleton-wave` keyframes are injected once into `document.head` (`#skeleton-styles`) and shared by all skeletons.
+- `wave` sets its own `background` gradient, which replaces the flat `bgColor` background while animating.
+- Unknown `variant` values fall back to a 100%×20px block (r4).
 
 ## Related widgets
-- [Container](Container.md)
-- [Row](Row.md)
+- [ProgressBar](ProgressBar.md)
+- [CircularBar](CircularBar.md)
+- [Card](Card.md)
+- [ListTile](ListTile.md)
 - [Column](Column.md)
-- [Stack](Stack.md)
-- [Text](Text.md)
-- [Button](Button.md)
 
 ---
 

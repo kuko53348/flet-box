@@ -199,8 +199,10 @@ export const BottomNavigation = (props) => {
     return getCurrentPath();
   };
 
+  const originalCleanup = container._cleanup;
   container._cleanup = () => {
     if (unsubscribe) unsubscribe();
+    if (originalCleanup) originalCleanup();
   };
 
   return container;

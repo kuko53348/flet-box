@@ -33,20 +33,21 @@ export const device = {
 
   // Listen for orientation changes
   onOrientationChange: (callback) => {
-    window.addEventListener("orientationchange", () => {
-      callback(device.orientation());
-    });
+    const handler = () => callback(device.orientation());
+    window.addEventListener("orientationchange", handler);
+    return () => window.removeEventListener("orientationchange", handler);
   },
 
   // Listen for resize events
   onResize: (callback) => {
-    window.addEventListener("resize", () => {
+    const handler = () =>
       callback({
         width: window.innerWidth,
         height: window.innerHeight,
         orientation: device.orientation(),
       });
-    });
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
   },
 };
 

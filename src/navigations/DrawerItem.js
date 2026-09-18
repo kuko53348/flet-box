@@ -115,7 +115,7 @@ export const DrawerItem = (props) => {
     role: "button",
     tabIndex: 0,
     "aria-selected": isSelected.toString(),
-    onkeydown: (e) => {
+    onKeyDown: (e) => {
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault(); 
         handleClick();
@@ -123,10 +123,10 @@ export const DrawerItem = (props) => {
     },
     // ----------------------------------------
     onclick: handleClick,
-    onmouseenter: (e) => {
+    onHover: (e) => {
       if (!isSelected) e.currentTarget.style.backgroundColor = hintColor;
     },
-    onmouseleave: (e) => {
+    onHoverEnd: (e) => {
       if (!isSelected) e.currentTarget.style.backgroundColor = "transparent";
     },
     ...rest,

@@ -144,7 +144,7 @@ export const Tabs = (props) => {
       role: "tab",
       tabIndex: 0,
       "aria-selected": isActive.toString(),
-      onkeydown: (e) => {
+      onKeyDown: (e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           if (currentIndex !== idx) {

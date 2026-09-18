@@ -1,12 +1,13 @@
 // src/core/pwa.js - PWA functions listas para onPress
 let deferredPrompt = null;
 
-// Listen for install event
-window.addEventListener("beforeinstallprompt", (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-  console.log("📱 PWA ready to install");
-});
+// Listen for install event (only in a browser; keep the module importable in Node/SSR/tests)
+if (typeof window !== "undefined") {
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+  });
+}
 
 // Check if already installed
 export const isPWAInstalled = () => {

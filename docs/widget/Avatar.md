@@ -1,233 +1,110 @@
 # Avatar
 
 ## Overview
-`Avatar` is a ready-to-use building block. Think of it like a LEGO piece: give it some props, place it inside another widget, and FletBox creates the browser element for you.
-
-You do not need to write HTML or manually change the DOM to use this widget. You call the widget as a JavaScript function and pass an object between `{` and `}`.
-
-## Learn it in one minute
-
-1. Import the widget from `flet-box`.
-2. Call it with `WidgetName({ ... })`.
-3. Add props to describe its content, size, color, spacing, and behavior.
-4. Put it inside `Container`, `Row`, `Column`, or another widget.
-
-```javascript
-import { Column, Container, Text } from "flet-box";
-
-const welcomeCard = Container({
-    padding: 20,
-    margin: 16,
-    bgColor: "#ffffff",
-    borderRadius: 12,
-    child: Column({
-        gap: 8,
-        children: [
-            Text({ text: "My first FletBox screen", size: 24, weight: "bold" }),
-            Text({ text: "Widgets are small building blocks. Put them inside each other to build a screen." }),
-        ],
-    }),
-});
-```
+`Avatar` renders a `<div>` (inline-flex, centered, `overflow: hidden`) that shows a user's picture, an icon, or their initials. Content is chosen by priority: `src` renders a cover-fit `Image`; otherwise `icon` renders a Material `Icon`; otherwise `name` renders an initials `Text`; otherwise a default `"person"` icon is shown. `shape` controls the corner radius.
 
 ## When to use
-Use `Avatar` when you need this kind of interface element. Start with the smallest example, then add one prop at a time. You can copy the example, change the text or color, and see the result immediately.
+- Show a user's profile picture, or fall back to their initials when there is no picture.
+- Represent a person, team, or account in a list, header, or comment.
 
-## Common props
-
-- `children` / `child`: content rendered inside the widget.
-- `id`: DOM id for the element.
-- `className`: CSS class names applied to the element.
-- `ref`: callback that receives the underlying DOM node.
-- `onClick` / event handlers: native browser event callbacks.
-- `disabled`: disables interaction when supported.
-
-## Full prop list
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `width` | `Size` | - | Property used by the Avatar component. |
-| `height` | `Size` | - | Property used by the Avatar component. |
-| `size` | `number` | - | Component size or preset. |
-| `padding` | `Padding` | - | Internal spacing around the component. |
-| `margin` | `Margin` | - | External spacing around the component. |
-| `bgColor` | `Color` | - | Background color applied to the element. |
-| `color` | `Color` | - | Color value or theme token. |
-| `borderRadius` | `number \| string` | - | Property used by the Avatar component. |
-| `elevation` | `number` | - | Property used by the Avatar component. |
-| `shadow` | `string` | - | Property used by the Avatar component. |
-| `opacity` | `number` | - | Property used by the Avatar component. |
-| `visible` | `boolean` | false | Property used by the Avatar component. |
-| `disabled` | `boolean` | false | Disables interaction and shows the non-interactive state. |
-| `onPress` | `(widget: Widget) => void` | - | Callback fired when the widget is pressed. |
-| `onClick` | `(widget: Widget) => void` | - | Property used by the Avatar component. |
-| `id` | `string` | - | Property used by the Avatar component. |
-| `className` | `string` | - | Property used by the Avatar component. |
-| `ref` | `(widget: Widget) => void` | - | Property used by the Avatar component. |
-| `disableTransform` | `boolean` | - | Property used by the Avatar component. |
-| `src` | `string` | - | Resource URL for media or image content. |
-| `name` | `string` | - | Identifier or label for the element. |
-| `icon` | `string` | - | Property used by the Avatar component. |
-| `textColor` | `Color` | - | Property used by the Avatar component. |
-| `shape` | `'circle' \| 'rounded' \| 'square'` | - | Property used by the Avatar component. |
-| `online` | `boolean` | - | Property used by the Avatar component. |
-| `offline` | `boolean` | - | Property used by the Avatar component. |
-| `badge` | `string \| number` | - | Property used by the Avatar component. |
-| `badgeColor` | `Color` | - | Property used by the Avatar component. |
-
-## How props work
-
-A prop is simply an instruction inside the object passed to the widget. The name tells FletBox what to change, and the value tells it how to change it.
+## Import
 
 ```javascript
-Avatar({
-    padding: 16,              // space inside the widget
-    margin: "8px 0",         // space outside the widget
-    bgColor: "#eff6ff",      // background color
-    width: "100%",           // CSS size or a number of pixels
-    children: [],             // widgets placed inside it
-    onPress: () => {         // what to do after a press
-        console.log("Hello");
-    },
-});
+import { Avatar } from "flet-box";
 ```
-
-You do not need to use every prop. Begin with the required props, then add optional props only when you need them.
-
-## Example usage
-
-```javascript
-import { Avatar, Text } from "flet-box";
-
-const example = Avatar({
-  src: "https://example.com/image.jpg",
-  child: Text({ text: "Example" })
-});
-```
-
-## Examples from the FletBox snippet library
-
-The examples below come from the FletBox snippet library. The prop table is based on `src/index.d.ts`. When an example and the type declaration use different names, prefer the type declaration and verify the implementation.
 
 ## Basic example
 
 The smallest useful version. Start here if this widget is new to you.
 
 ```javascript
-Avatar({ name: "User" })
+import { Avatar } from "flet-box";
+
+Avatar({ name: "Jane Doe" });
 ```
 
-## Everyday example
+## Props
 
-A practical version with the props most applications usually need.
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `src` | string | — | Image URL. When set, renders a cover-fit `Image`. |
+| `name` | string | — | Full name; its initials are shown when there is no `src`/`icon`. |
+| `icon` | string | — | Material icon name; used when there is no `src`. |
+| `size` | number | `40` | Width and height in pixels. Also scales the initials (`size * 0.4`) and icon (`size * 0.5`). |
+| `fontSize` | number | `16` | Base font-size on the container. |
+| `shape` | `'circle'`, `'rounded'`, `'square'` | `'circle'` | Corner radius: `50%`, `size * 0.2`px, or `0`. |
+| `bgColor` | Color | `colors.primary` | Background color. |
+| `textColor` | Color | `colors.text` | Color of the initials or icon. |
+| `onPress` | function | — | Click handler; adds a pointer cursor and a hover scale. |
 
-```javascript
-Avatar({ src: "profile.jpg", size: 48, shape: "circle" })
-```
+These are the props specific to `Avatar`. It also accepts every [common prop](COMMON_PROPS.md): layout, spacing, size, color, typography, borders, shadow, events, `child`/`children`, `ref`, and `style`.
 
-## Full example
+## Instance methods
 
-A larger example showing advanced styling, layout, events, and customization.
+The returned element exposes:
 
-```javascript
-Avatar({
-    name: "John Doe",
-    size: 64,
-    bgColor: colors.secondary,
-    textColor: "#fff",
-    shape: "rounded",
-    online: true,
-    badge: "3",
-    badgeColor: colors.danger,
-    onPress: () => goToProfile(),
-    id: "user-avatar"
-})
-```
+- `updateContent(newProps)` — updates `src`/`name`/`icon`/`bgColor`/`size` and rebuilds the inner content (image, icon, or initials) in place.
 
+## Examples
 
-## Common layout and styling examples
-
-The following example shows how common FletBox props work together. Numeric spacing values are interpreted as pixels, while strings can use CSS units and shorthand values.
+### Everyday example
 
 ```javascript
-import { Button, Column, Container, Row, Text } from "flet-box";
+import { Avatar, Row, Text } from "flet-box";
 
-const panel = Container({
-    width: "100%",          // number values are pixels; strings accept CSS units
-    padding: 24,            // 24px on every side
-    margin: "16px auto",   // CSS shorthand: vertical and horizontal spacing
-    bgColor: "#f8fafc",    // background color
-    borderRadius: 12,
-    elevation: 2,
-    gap: 12,
-    child: Column({
-        children: [
-            Text({ text: "Account settings", size: 24, weight: "bold" }),
-            Row({
-                gap: 8,
-                justifyContent: "space-between",
-                children: [
-                    Text({ text: "Update your profile" }),
-                    Button({
-                        text: "Save",
-                        bgColor: "#2563eb",
-                        color: "#ffffff",
-                        onPress: () => console.log("saved"),
-                    }),
-                ],
-            }),
-        ],
-    }),
+Row({
+  gap: 12,
+  alignItems: "center",
+  children: [
+    Avatar({ src: "/jane.jpg", size: 48 }),
+    Text({ text: "Jane Doe", weight: "bold" }),
+  ],
 });
 ```
 
-### Common prop quick reference
+### Full example
 
-- `padding: 24` adds `24px` inside the widget on all sides.
-- `padding: "8px 16px"` uses CSS shorthand for vertical and horizontal spacing.
-- `margin: "16px auto"` adds outside spacing and can center a fixed-width element.
-- `bgColor: "#f8fafc"` sets the background color. Color tokens and CSS colors can be used.
-- `color: "#111827"` sets the foreground or text color when supported.
-- `width: 320` means `320px`; `width: "100%"` uses a CSS percentage.
-- `children` is an array of widgets; `child` is useful when a component accepts one child.
-- `gap: 12` controls the space between children in layout widgets.
-- `onPress` and `onClick` receive event callbacks for interactive behavior.
+```javascript
+import { Avatar, Column, colors } from "flet-box";
 
-## Beginner tips
+const avatar = Avatar({
+  name: "John Doe",
+  size: 64,
+  shape: "rounded",
+  bgColor: colors.secondary,
+  textColor: "#ffffff",
+  onPress: () => console.log("open profile"),
+});
 
-- Change one value at a time so you can see what each prop does.
-- Use `Text` to check that your layout is in the place you expect.
-- Use `Container` for a box, `Row` for items side by side, and `Column` for items one below another.
-- Use `padding` when content needs breathing room inside a box.
-- Use `margin` when you need space between this widget and its neighbors.
-- Use `bgColor` to make the boundaries of a box easy to see while learning.
-- If a prop is optional, leaving it out lets FletBox use its default behavior.
+Column({
+  gap: 12,
+  alignItems: "center",
+  children: [
+    avatar,
+    Avatar({ icon: "group", size: 48, bgColor: colors.info }),
+    Avatar({ size: 40 }), // no src/icon/name -> default "person" icon
+  ],
+});
 
-## Common mistakes
+// avatar.updateContent({ name: "Alice Smith" }); // initials become "AS"
+```
 
-- Do not put plain text where a widget is expected unless the widget explicitly accepts strings.
-- Use `children: [ ... ]` for several child widgets and `child: widget` for one child when the widget supports both.
-- Check spelling carefully: `onPress`, `onClick`, and `onChange` are different events.
-- If a helper such as `padding()` or `margin()` is not available in your import list, use a number or CSS string first.
+## Notes
 
-## Behavior notes
-- Integrates cleanly with FletBox runtime semantics and DOM rendering.
-- Can be nested inside layout widgets and combined with other components.
-- Uses the same direct prop and event conventions as the rest of the framework.
-- Keeps the API simple and readable for composing interfaces fast.
-
-## Accessibility
-- Prefer clear labels and readable text for interactive controls.
-- Respect the `disabled` state and keyboard behavior when available.
-- Keep state changes understandable for screen readers and assistive technology.
+- Renders a `<div>` with `display: inline-flex`, centered content, and `overflow: hidden`.
+- Content priority is `src` → `icon` → `name` → a default `"person"` icon. Only one is shown.
+- Initials: two or more words take the first initial of the first and last word, uppercased ("John Doe" → "JD"); a single word takes its first character; an empty or missing name yields "?".
+- `shape` sets the radius: `circle` → `50%`, `rounded` → `size * 0.2`px, `square` → `0`.
+- `size` drives width/height and scales the inner content (initials use `size * 0.4`, icons use `size * 0.5`); `fontSize` only sets the container's base font-size.
+- `onPress` adds a pointer cursor and a hover `scale(1.05)` effect.
+- Icons require the Material Icons font (see [Icon](Icon.md)).
 
 ## Related widgets
-- [Container](Container.md)
-- [Row](Row.md)
-- [Column](Column.md)
-- [Stack](Stack.md)
+- [Badge](Badge.md)
+- [Icon](Icon.md)
+- [Image](Image.md)
+- [ListTile](ListTile.md)
 - [Text](Text.md)
-- [Button](Button.md)
 
 ---
 

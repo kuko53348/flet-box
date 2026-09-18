@@ -22,14 +22,16 @@ export const Audio = (props) => {
   const audio = WidgetFactory({
     tag: "audio",
     src: src,
-    autoplay: autoplay,
-    controls: controls,
-    loop: loop,
-    muted: muted,
-    volume: volume,
-    preload: "metadata",
     ...rest,
   });
+
+  // Media attributes are element properties, not CSS — apply them directly.
+  audio.controls = Boolean(controls);
+  audio.loop = Boolean(loop);
+  audio.muted = Boolean(muted);
+  audio.autoplay = Boolean(autoplay);
+  audio.preload = "metadata";
+  audio.volume = typeof volume === "number" ? volume : 1;
 
   const nativePlay = audio.play.bind(audio);
   const nativePause = audio.pause.bind(audio);

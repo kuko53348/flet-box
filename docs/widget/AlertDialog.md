@@ -1,218 +1,119 @@
 # AlertDialog
 
 ## Overview
-`AlertDialog` is a ready-to-use building block. Think of it like a LEGO piece: give it some props, place it inside another widget, and FletBox creates the browser element for you.
-
-You do not need to write HTML or manually change the DOM to use this widget. You call the widget as a JavaScript function and pass an object between `{` and `}`.
-
-## Learn it in one minute
-
-1. Import the widget from `flet-box`.
-2. Call it with `WidgetName({ ... })`.
-3. Add props to describe its content, size, color, spacing, and behavior.
-4. Put it inside `Container`, `Row`, `Column`, or another widget.
-
-```javascript
-import { Column, Container, Text } from "flet-box";
-
-const welcomeCard = Container({
-    padding: 20,
-    margin: 16,
-    bgColor: "#ffffff",
-    borderRadius: 12,
-    child: Column({
-        gap: 8,
-        children: [
-            Text({ text: "My first FletBox screen", size: 24, weight: "bold" }),
-            Text({ text: "Widgets are small building blocks. Put them inside each other to build a screen." }),
-        ],
-    }),
-});
-```
+`AlertDialog` is a pre-composed confirmation dialog built on top of [Modal](Modal.md): a centered 320px panel with a large variant icon, a bold title, a message, and a row of Cancel/Confirm buttons. It does **not** return an element — it returns a controller object `{ open, close, modal }`, and its hidden overlay is attached to `document.body` as soon as you create it. Call `open()` when you want the user to decide something.
 
 ## When to use
-Use `AlertDialog` when you need this kind of interface element. Start with the smallest example, then add one prop at a time. You can copy the example, change the text or color, and see the result immediately.
+- Ask for confirmation before a destructive or irreversible action (`variant: "danger"`).
+- Report a blocking result: success, warning, or an informational message.
+- Any decision that needs explicit `onConfirm` / `onCancel` handling.
 
-## Common props
-
-- `children` / `child`: content rendered inside the widget.
-- `id`: DOM id for the element.
-- `className`: CSS class names applied to the element.
-- `ref`: callback that receives the underlying DOM node.
-- `onClick` / event handlers: native browser event callbacks.
-- `disabled`: disables interaction when supported.
-
-## Full prop list
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `title` | `string` | - | Primary title text for the widget. |
-| `message` | `string` | - | Body text or notification content. |
-| `confirmText` | `string` | - | Property used by the AlertDialog component. |
-| `cancelText` | `string` | - | Property used by the AlertDialog component. |
-| `onConfirm` | `() => void` | - | Property used by the AlertDialog component. |
-| `onCancel` | `() => void` | - | Property used by the AlertDialog component. |
-| `onClose` | `() => void` | - | Callback fired when the widget closes. |
-| `variant` | `'normal' \| 'danger' \| 'warning' \| 'success'` | - | Visual variation or style preset. |
-| `showCancel` | `boolean` | - | Property used by the AlertDialog component. |
-| `width` | `number` | - | Property used by the AlertDialog component. |
-| `borderRadius` | `number` | - | Property used by the AlertDialog component. |
-
-## How props work
-
-A prop is simply an instruction inside the object passed to the widget. The name tells FletBox what to change, and the value tells it how to change it.
+## Import
 
 ```javascript
-AlertDialog({
-    padding: 16,              // space inside the widget
-    margin: "8px 0",         // space outside the widget
-    bgColor: "#eff6ff",      // background color
-    width: "100%",           // CSS size or a number of pixels
-    children: [],             // widgets placed inside it
-    onPress: () => {         // what to do after a press
-        console.log("Hello");
-    },
-});
+import { AlertDialog } from "flet-box";
 ```
-
-You do not need to use every prop. Begin with the required props, then add optional props only when you need them.
-
-## Example usage
-
-```javascript
-import { AlertDialog, Text } from "flet-box";
-
-const example = AlertDialog({
-  title: "Example value",
-  open: true,
-  child: Text({ text: "Example" })
-});
-```
-
-## Examples from the FletBox snippet library
-
-The examples below come from the FletBox snippet library. The prop table is based on `src/index.d.ts`. When an example and the type declaration use different names, prefer the type declaration and verify the implementation.
 
 ## Basic example
 
 The smallest useful version. Start here if this widget is new to you.
 
 ```javascript
-AlertDialog({ title: "Alert", message: "Something happened" })
+import { AlertDialog } from "flet-box";
+
+const dialog = AlertDialog({
+  title: "Delete item?",
+  message: "This action cannot be undone.",
+  onConfirm: () => console.log("confirmed"),
+});
+
+dialog.open();
 ```
 
-## Everyday example
+## Props
 
-A practical version with the props most applications usually need.
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `title` | string | — | Heading text, rendered bold at 24px. |
+| `message` | string | — | Body text, rendered at 18px in `colors.textSecondary`. |
+| `onConfirm` | function | — | Fires when the confirm button is pressed, right before the dialog closes. |
+| `onCancel` | function | — | Fires when the cancel button is pressed, right before the dialog closes. |
+| `onClose` | function | — | Fires whenever the underlying modal closes. |
+| `variant` | `'normal'`, `'danger'`, `'warning'`, `'success'` | `'normal'` | Picks the icon, icon color, and confirm-button color: `normal` → `info`/`colors.primary`, `danger` → `warning`/`colors.danger`, `warning` → `error`/`colors.warning`, `success` → `check_circle`/`colors.success`. |
+| `showCancel` | boolean | `true` | Whether the cancel button is rendered. |
+| `confirmText` | string | `'Accept'` | Confirm button label. |
+| `cancelText` | string | `'Cancel'` | Cancel button label. |
+
+Any extra props are forwarded to the underlying [Modal](Modal.md) (e.g. `width`, `borderRadius`, `zIndex`, `overlayColor`); the dialog itself defaults to `width: 320`, `borderRadius: 24`, and no header close button. This widget returns a controller object, not an element, so [common props](COMMON_PROPS.md) do not apply to it directly.
+
+## Instance methods
+
+The returned controller exposes:
+
+- `open()` — shows the dialog (delegates to `modal.open()`).
+- `close()` — hides the dialog.
+- `modal` — the full [Modal](Modal.md) instance: `toggle()`, `destroy()`, `isOpen`, `updateContent()`, `setLoading()`, etc.
+
+## Examples
+
+### Everyday example
 
 ```javascript
-AlertDialog({ title: "Delete?", message: "Are you sure?", onConfirm: deleteItem })
+import { AlertDialog, Button } from "flet-box";
+
+const confirmDelete = AlertDialog({
+  title: "Delete account?",
+  message: "All of your data will be permanently removed.",
+  variant: "danger",
+  confirmText: "Delete",
+  cancelText: "Keep it",
+  onConfirm: () => console.log("account deleted"),
+  onCancel: () => console.log("kept"),
+});
+
+Button({ text: "Delete account", onPress: () => confirmDelete.open() });
 ```
 
-## Full example
-
-A larger example showing advanced styling, layout, events, and customization.
+### Full example
 
 ```javascript
-AlertDialog({
-    title: "Confirm deletion",
-    message: "This action cannot be undone.",
-    confirmText: "Delete",
-    cancelText: "Keep",
-    onConfirm: () => deletePermanently(),
-    onCancel: () => console.log("cancelled"),
-    variant: "danger",
-    showCancel: true,
-    width: 360,
-    borderRadius: 28,
-    onClose: () => cleanup()
-})
-```
+import { AlertDialog, Button, Column } from "flet-box";
 
+const dialog = AlertDialog({
+  title: "Upload complete",
+  message: "3 files were uploaded successfully.",
+  variant: "success",
+  confirmText: "Done",
+  showCancel: false,          // single-action dialog
+  width: 360,                  // forwarded to Modal
+  borderRadius: 28,            // forwarded to Modal
+  onConfirm: () => console.log("closed with Done"),
+  onClose: () => console.log("dialog closed"),
+});
 
-## Common layout and styling examples
-
-The following example shows how common FletBox props work together. Numeric spacing values are interpreted as pixels, while strings can use CSS units and shorthand values.
-
-```javascript
-import { Button, Column, Container, Row, Text } from "flet-box";
-
-const panel = Container({
-    width: "100%",          // number values are pixels; strings accept CSS units
-    padding: 24,            // 24px on every side
-    margin: "16px auto",   // CSS shorthand: vertical and horizontal spacing
-    bgColor: "#f8fafc",    // background color
-    borderRadius: 12,
-    elevation: 2,
-    gap: 12,
-    child: Column({
-        children: [
-            Text({ text: "Account settings", size: 24, weight: "bold" }),
-            Row({
-                gap: 8,
-                justifyContent: "space-between",
-                children: [
-                    Text({ text: "Update your profile" }),
-                    Button({
-                        text: "Save",
-                        bgColor: "#2563eb",
-                        color: "#ffffff",
-                        onPress: () => console.log("saved"),
-                    }),
-                ],
-            }),
-        ],
-    }),
+Column({
+  gap: 12,
+  children: [
+    Button({ text: "Show success dialog", onPress: () => dialog.open() }),
+    Button({ text: "Remove from DOM", variant: "outlined", onPress: () => dialog.modal.destroy() }),
+  ],
 });
 ```
 
-### Common prop quick reference
+## Notes
 
-- `padding: 24` adds `24px` inside the widget on all sides.
-- `padding: "8px 16px"` uses CSS shorthand for vertical and horizontal spacing.
-- `margin: "16px auto"` adds outside spacing and can center a fixed-width element.
-- `bgColor: "#f8fafc"` sets the background color. Color tokens and CSS colors can be used.
-- `color: "#111827"` sets the foreground or text color when supported.
-- `width: 320` means `320px`; `width: "100%"` uses a CSS percentage.
-- `children` is an array of widgets; `child` is useful when a component accepts one child.
-- `gap: 12` controls the space between children in layout widgets.
-- `onPress` and `onClick` receive event callbacks for interactive behavior.
-
-## Beginner tips
-
-- Change one value at a time so you can see what each prop does.
-- Use `Text` to check that your layout is in the place you expect.
-- Use `Container` for a box, `Row` for items side by side, and `Column` for items one below another.
-- Use `padding` when content needs breathing room inside a box.
-- Use `margin` when you need space between this widget and its neighbors.
-- Use `bgColor` to make the boundaries of a box easy to see while learning.
-- If a prop is optional, leaving it out lets FletBox use its default behavior.
-
-## Common mistakes
-
-- Do not put plain text where a widget is expected unless the widget explicitly accepts strings.
-- Use `children: [ ... ]` for several child widgets and `child: widget` for one child when the widget supports both.
-- Check spelling carefully: `onPress`, `onClick`, and `onChange` are different events.
-- If a helper such as `padding()` or `margin()` is not available in your import list, use a number or CSS string first.
-
-## Behavior notes
-- Integrates cleanly with FletBox runtime semantics and DOM rendering.
-- Can be nested inside layout widgets and combined with other components.
-- Uses the same direct prop and event conventions as the rest of the framework.
-- Keeps the API simple and readable for composing interfaces fast.
-
-## Accessibility
-- Prefer clear labels and readable text for interactive controls.
-- Respect the `disabled` state and keyboard behavior when available.
-- Keep state changes understandable for screen readers and assistive technology.
+- Creating the dialog immediately appends its (hidden) overlay to `document.body`; it is not part of your widget tree. Call `modal.destroy()` to remove it from the DOM for good.
+- Both buttons close the dialog automatically — your `onConfirm`/`onCancel` handlers don't need to.
+- The variant icon uses the Material Icons font (see [Icon](Icon.md)).
+- The cancel button is rendered with `colors.danger` text regardless of `variant`.
+- Pressing `Escape` closes the dialog (inherited from `Modal`'s `closeOnEsc`).
 
 ## Related widgets
-- [Container](Container.md)
-- [Row](Row.md)
-- [Column](Column.md)
-- [Stack](Stack.md)
-- [Text](Text.md)
+- [Modal](Modal.md)
+- [BottomSheet](BottomSheet.md)
+- [SnackBar](SnackBar.md)
 - [Button](Button.md)
+- [Icon](Icon.md)
 
 ---
 

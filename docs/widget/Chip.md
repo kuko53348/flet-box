@@ -1,233 +1,111 @@
 # Chip
 
 ## Overview
-`Chip` is a ready-to-use building block. Think of it like a LEGO piece: give it some props, place it inside another widget, and FletBox creates the browser element for you.
-
-You do not need to write HTML or manually change the DOM to use this widget. You call the widget as a JavaScript function and pass an object between `{` and `}`.
-
-## Learn it in one minute
-
-1. Import the widget from `flet-box`.
-2. Call it with `WidgetName({ ... })`.
-3. Add props to describe its content, size, color, spacing, and behavior.
-4. Put it inside `Container`, `Row`, `Column`, or another widget.
-
-```javascript
-import { Column, Container, Text } from "flet-box";
-
-const welcomeCard = Container({
-    padding: 20,
-    margin: 16,
-    bgColor: "#ffffff",
-    borderRadius: 12,
-    child: Column({
-        gap: 8,
-        children: [
-            Text({ text: "My first FletBox screen", size: 24, weight: "bold" }),
-            Text({ text: "Widgets are small building blocks. Put them inside each other to build a screen." }),
-        ],
-    }),
-});
-```
+`Chip` renders a compact pill for a tag, filter, or attribute. The returned element is an outer `<div>` (`display: inline-block`) wrapping an inner `Row` that holds an optional leading `Icon`, the `label` `Text`, and an optional delete ("close") icon. `variant` switches between filled (a colored background) and outlined (transparent with a colored border).
 
 ## When to use
-Use `Chip` when you need this kind of interface element. Start with the smallest example, then add one prop at a time. You can copy the example, change the text or color, and see the result immediately.
+- Show tags, keywords, filters, or selected attributes.
+- Offer a removable token (with `onDelete`) or a tappable filter chip (with `onPress`).
 
-## Common props
-
-- `children` / `child`: content rendered inside the widget.
-- `id`: DOM id for the element.
-- `className`: CSS class names applied to the element.
-- `ref`: callback that receives the underlying DOM node.
-- `onClick` / event handlers: native browser event callbacks.
-- `disabled`: disables interaction when supported.
-
-## Full prop list
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `width` | `Size` | - | Property used by the Chip component. |
-| `height` | `Size` | - | Property used by the Chip component. |
-| `size` | `number` | - | Component size or preset. |
-| `padding` | `Padding` | - | Internal spacing around the component. |
-| `margin` | `Margin` | - | External spacing around the component. |
-| `bgColor` | `Color` | - | Background color applied to the element. |
-| `color` | `Color` | - | Color value or theme token. |
-| `borderRadius` | `number \| string` | - | Property used by the Chip component. |
-| `elevation` | `number` | - | Property used by the Chip component. |
-| `shadow` | `string` | - | Property used by the Chip component. |
-| `opacity` | `number` | - | Property used by the Chip component. |
-| `visible` | `boolean` | false | Property used by the Chip component. |
-| `disabled` | `boolean` | false | Disables interaction and shows the non-interactive state. |
-| `onPress` | `(widget: Widget) => void` | - | Callback fired when the widget is pressed. |
-| `onClick` | `(widget: Widget) => void` | - | Property used by the Chip component. |
-| `id` | `string` | - | Property used by the Chip component. |
-| `className` | `string` | - | Property used by the Chip component. |
-| `ref` | `(widget: Widget) => void` | - | Property used by the Chip component. |
-| `disableTransform` | `boolean` | - | Property used by the Chip component. |
-| `label` | `string` | - | Label or caption shown near the control. |
-| `icon` | `string` | - | Property used by the Chip component. |
-| `onDelete` | `() => void` | - | Property used by the Chip component. |
-| `variant` | `'filled' \| 'outlined'` | - | Visual variation or style preset. |
-| `textColor` | `Color` | - | Property used by the Chip component. |
-| `borderColor` | `Color` | - | Property used by the Chip component. |
-| `gap` | `number` | - | Space between child items. |
-
-## How props work
-
-A prop is simply an instruction inside the object passed to the widget. The name tells FletBox what to change, and the value tells it how to change it.
+## Import
 
 ```javascript
-Chip({
-    padding: 16,              // space inside the widget
-    margin: "8px 0",         // space outside the widget
-    bgColor: "#eff6ff",      // background color
-    width: "100%",           // CSS size or a number of pixels
-    children: [],             // widgets placed inside it
-    onPress: () => {         // what to do after a press
-        console.log("Hello");
-    },
-});
+import { Chip } from "flet-box";
 ```
-
-You do not need to use every prop. Begin with the required props, then add optional props only when you need them.
-
-## Example usage
-
-```javascript
-import { Chip, Text } from "flet-box";
-
-const example = Chip({
-  label: "Example value",
-  child: Text({ text: "Example" })
-});
-```
-
-## Examples from the FletBox snippet library
-
-The examples below come from the FletBox snippet library. The prop table is based on `src/index.d.ts`. When an example and the type declaration use different names, prefer the type declaration and verify the implementation.
 
 ## Basic example
 
 The smallest useful version. Start here if this widget is new to you.
 
 ```javascript
-Chip({ label: "Tag" })
+import { Chip } from "flet-box";
+
+Chip({ label: "Tag" });
 ```
 
-## Everyday example
+## Props
 
-A practical version with the props most applications usually need.
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `label` | string | — | Chip text. |
+| `icon` | string | — | Leading Material icon name. |
+| `variant` | `'filled'`, `'outlined'` | `'filled'` | Filled = colored background; outlined = transparent with a colored border. |
+| `color` | Color | `colors.primary` | Filled background, or the outlined border/text color. |
+| `textColor` | Color | — | Overrides the label/icon color. Defaults: filled → `#fff`, outlined → `color`. |
+| `borderColor` | Color | — | Outlined border color (defaults to `color`). |
+| `onPress` | function | — | Click handler; makes the chip tappable (pointer cursor + hover). |
+| `onDelete` | function | — | Adds a trailing "close" icon; clicking it fires `onDelete` and stops propagation. |
+| `borderRadius` | number | `32` | Corner radius in pixels. |
+| `padding` | number or string | `'4px 12px'` | Inner padding of the pill. |
+| `gap` | number | `4` | Space between the icon, label, and delete button. |
+| `size` | number | `12` | Font size (and icon size) in pixels. |
+| `elevation` | number | `0` | When greater than 0, adds a `box-shadow` to the pill. |
 
-```javascript
-Chip({ label: "React", icon: "star", onDelete: () => removeTag() })
-```
+These are the props specific to `Chip`. It also accepts every [common prop](COMMON_PROPS.md): layout, spacing, size, color, typography, borders, shadow, events, `child`/`children`, `ref`, and `style`.
 
-## Full example
+## Examples
 
-A larger example showing advanced styling, layout, events, and customization.
-
-```javascript
-Chip({
-    label: "FletBox",
-    icon: "rocket_launch",
-    onPress: () => filterBy("fletbox"),
-    onDelete: () => removeFilter(),
-    variant: "outlined",
-    color: colors.primary,
-    textColor: colors.primary,
-    borderColor: colors.primary,
-    size: "medium",
-    borderRadius: 32,
-    elevation: 1,
-    gap: 6
-})
-```
-
-
-## Common layout and styling examples
-
-The following example shows how common FletBox props work together. Numeric spacing values are interpreted as pixels, while strings can use CSS units and shorthand values.
+### Everyday example
 
 ```javascript
-import { Button, Column, Container, Row, Text } from "flet-box";
+import { Chip, Row } from "flet-box";
 
-const panel = Container({
-    width: "100%",          // number values are pixels; strings accept CSS units
-    padding: 24,            // 24px on every side
-    margin: "16px auto",   // CSS shorthand: vertical and horizontal spacing
-    bgColor: "#f8fafc",    // background color
-    borderRadius: 12,
-    elevation: 2,
-    gap: 12,
-    child: Column({
-        children: [
-            Text({ text: "Account settings", size: 24, weight: "bold" }),
-            Row({
-                gap: 8,
-                justifyContent: "space-between",
-                children: [
-                    Text({ text: "Update your profile" }),
-                    Button({
-                        text: "Save",
-                        bgColor: "#2563eb",
-                        color: "#ffffff",
-                        onPress: () => console.log("saved"),
-                    }),
-                ],
-            }),
-        ],
-    }),
+Row({
+  gap: 8,
+  children: [
+    Chip({ label: "React", icon: "star" }),
+    Chip({ label: "Vue", variant: "outlined" }),
+    Chip({ label: "Svelte", onDelete: () => console.log("removed") }),
+  ],
 });
 ```
 
-### Common prop quick reference
+### Full example
 
-- `padding: 24` adds `24px` inside the widget on all sides.
-- `padding: "8px 16px"` uses CSS shorthand for vertical and horizontal spacing.
-- `margin: "16px auto"` adds outside spacing and can center a fixed-width element.
-- `bgColor: "#f8fafc"` sets the background color. Color tokens and CSS colors can be used.
-- `color: "#111827"` sets the foreground or text color when supported.
-- `width: 320` means `320px`; `width: "100%"` uses a CSS percentage.
-- `children` is an array of widgets; `child` is useful when a component accepts one child.
-- `gap: 12` controls the space between children in layout widgets.
-- `onPress` and `onClick` receive event callbacks for interactive behavior.
+```javascript
+import { Chip, Row, colors } from "flet-box";
 
-## Beginner tips
+Row({
+  gap: 8,
+  children: [
+    Chip({
+      label: "FletBox",
+      icon: "rocket_launch",
+      variant: "filled",
+      color: colors.primary,
+      size: 14,
+      elevation: 2,
+      onPress: () => console.log("filter by fletbox"),
+    }),
+    Chip({
+      label: "Removable",
+      variant: "outlined",
+      color: colors.danger,
+      borderColor: colors.danger,
+      textColor: colors.danger,
+      borderRadius: 8,
+      onDelete: () => console.log("remove"),
+    }),
+  ],
+});
+```
 
-- Change one value at a time so you can see what each prop does.
-- Use `Text` to check that your layout is in the place you expect.
-- Use `Container` for a box, `Row` for items side by side, and `Column` for items one below another.
-- Use `padding` when content needs breathing room inside a box.
-- Use `margin` when you need space between this widget and its neighbors.
-- Use `bgColor` to make the boundaries of a box easy to see while learning.
-- If a prop is optional, leaving it out lets FletBox use its default behavior.
+## Notes
 
-## Common mistakes
-
-- Do not put plain text where a widget is expected unless the widget explicitly accepts strings.
-- Use `children: [ ... ]` for several child widgets and `child: widget` for one child when the widget supports both.
-- Check spelling carefully: `onPress`, `onClick`, and `onChange` are different events.
-- If a helper such as `padding()` or `margin()` is not available in your import list, use a number or CSS string first.
-
-## Behavior notes
-- Integrates cleanly with FletBox runtime semantics and DOM rendering.
-- Can be nested inside layout widgets and combined with other components.
-- Uses the same direct prop and event conventions as the rest of the framework.
-- Keeps the API simple and readable for composing interfaces fast.
-
-## Accessibility
-- Prefer clear labels and readable text for interactive controls.
-- Respect the `disabled` state and keyboard behavior when available.
-- Keep state changes understandable for screen readers and assistive technology.
+- Two layers: the returned element is an outer `<div>` (`display: inline-block`) that carries the cursor and click handler, wrapping an inner `Row` that draws the visible pill. Visual props such as `borderRadius`, `padding`, and `elevation` land on the inner pill, not the outer element.
+- `variant: "filled"` (default) uses `color` as the background with white text; `variant: "outlined"` is transparent with a `1px solid` border in `borderColor` (default `color`) and text in `textColor` (default `color`).
+- `onDelete` appends a Material `"close"` icon; clicking it calls `onDelete` and `stopPropagation`, so it will not also trigger `onPress`.
+- `onPress` adds a pointer cursor and a hover effect (filled dims to 0.85 opacity; outlined tints the background).
+- `size` is the label font size in pixels and also the leading icon size; the delete icon is `size - 2`.
+- `elevation > 0` builds a real `box-shadow` on the pill (`0 Npx 2Npx rgba(0,0,0,0.1)`).
+- Icons require the Material Icons font (see [Icon](Icon.md)).
 
 ## Related widgets
-- [Container](Container.md)
-- [Row](Row.md)
-- [Column](Column.md)
-- [Stack](Stack.md)
-- [Text](Text.md)
+- [Badge](Badge.md)
 - [Button](Button.md)
+- [Row](Row.md)
+- [Icon](Icon.md)
+- [Text](Text.md)
 
 ---
 

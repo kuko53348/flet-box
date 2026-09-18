@@ -456,7 +456,11 @@ export const Dropdown = (props) => {
   const cleanup = () => {
     closeMenu();
   };
-  container._cleanup = cleanup;
+  const originalCleanup = container._cleanup;
+  container._cleanup = () => {
+    cleanup();
+    if (originalCleanup) originalCleanup();
+  };
 
   return container;
 };

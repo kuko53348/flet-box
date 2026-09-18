@@ -1,254 +1,159 @@
 # Accordion
 
 ## Overview
-`Accordion` is a ready-to-use building block. Think of it like a LEGO piece: give it some props, place it inside another widget, and FletBox creates the browser element for you.
-
-You do not need to write HTML or manually change the DOM to use this widget. You call the widget as a JavaScript function and pass an object between `{` and `}`.
-
-## Learn it in one minute
-
-1. Import the widget from `flet-box`.
-2. Call it with `WidgetName({ ... })`.
-3. Add props to describe its content, size, color, spacing, and behavior.
-4. Put it inside `Container`, `Row`, `Column`, or another widget.
-
-```javascript
-import { Column, Container, Text } from "flet-box";
-
-const welcomeCard = Container({
-    padding: 20,
-    margin: 16,
-    bgColor: "#ffffff",
-    borderRadius: 12,
-    child: Column({
-        gap: 8,
-        children: [
-            Text({ text: "My first FletBox screen", size: 24, weight: "bold" }),
-            Text({ text: "Widgets are small building blocks. Put them inside each other to build a screen." }),
-        ],
-    }),
-});
-```
+`Accordion` renders a clickable title bar with a chevron and a collapsible content region below it. Give it a `title` and the widgets to reveal in `children`. Expansion animates the content height over `animationDuration` milliseconds, and clicking the title bar toggles it. The returned element exposes an `expanded` property plus `setExpanded`, `toggle`, and `update`.
 
 ## When to use
-Use `Accordion` when you need this kind of interface element. Start with the smallest example, then add one prop at a time. You can copy the example, change the text or color, and see the result immediately.
+- FAQ lists, settings groups, and filter panels — content that should stay hidden until asked for.
+- Long pages that need to be broken into titled, collapsible sections.
+- Match the surrounding surface with `variant`: `contained` (filled card), `outlined` (bordered), `ghost` (no background or border).
 
-## Common props
-
-- `children` / `child`: content rendered inside the widget.
-- `id`: DOM id for the element.
-- `className`: CSS class names applied to the element.
-- `ref`: callback that receives the underlying DOM node.
-- `onClick` / event handlers: native browser event callbacks.
-- `disabled`: disables interaction when supported.
-
-## Full prop list
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `width` | `Size` | - | Property used by the Accordion component. |
-| `height` | `Size` | - | Property used by the Accordion component. |
-| `size` | `number` | - | Component size or preset. |
-| `padding` | `Padding` | - | Internal spacing around the component. |
-| `margin` | `Margin` | - | External spacing around the component. |
-| `bgColor` | `Color` | - | Background color applied to the element. |
-| `color` | `Color` | - | Color value or theme token. |
-| `borderRadius` | `number \| string` | - | Property used by the Accordion component. |
-| `elevation` | `number` | - | Property used by the Accordion component. |
-| `shadow` | `string` | - | Property used by the Accordion component. |
-| `opacity` | `number` | - | Property used by the Accordion component. |
-| `visible` | `boolean` | false | Property used by the Accordion component. |
-| `disabled` | `boolean` | false | Disables interaction and shows the non-interactive state. |
-| `onPress` | `(widget: Widget) => void` | - | Callback fired when the widget is pressed. |
-| `onClick` | `(widget: Widget) => void` | - | Property used by the Accordion component. |
-| `id` | `string` | - | Property used by the Accordion component. |
-| `className` | `string` | - | Property used by the Accordion component. |
-| `ref` | `(widget: Widget) => void` | - | Property used by the Accordion component. |
-| `disableTransform` | `boolean` | - | Property used by the Accordion component. |
-| `title` | `string \| Widget` | - | Primary title text for the widget. |
-| `children` | `Widget` | - | Property used by the Accordion component. |
-| `expanded` | `boolean` | false | Property used by the Accordion component. |
-| `onToggle` | `(expanded: boolean) => void` | - | Property used by the Accordion component. |
-| `variant` | `'contained' \| 'outlined' \| 'ghost'` | - | Visual variation or style preset. |
-| `expandedColor` | `Color` | - | Property used by the Accordion component. |
-| `titleColor` | `Color` | - | Property used by the Accordion component. |
-| `titleSize` | `number` | - | Property used by the Accordion component. |
-| `titleWeight` | `string` | - | Property used by the Accordion component. |
-| `titlePadding` | `string` | - | Property used by the Accordion component. |
-| `contentPadding` | `string` | - | Property used by the Accordion component. |
-| `iconCollapsed` | `string` | - | Property used by the Accordion component. |
-| `iconExpanded` | `string` | - | Property used by the Accordion component. |
-| `iconColor` | `Color` | - | Property used by the Accordion component. |
-| `iconSize` | `number` | - | Property used by the Accordion component. |
-| `divider` | `boolean` | - | Property used by the Accordion component. |
-| `animate` | `boolean` | false | Property used by the Accordion component. |
-| `animationDuration` | `number` | - | Property used by the Accordion component. |
-
-## How props work
-
-A prop is simply an instruction inside the object passed to the widget. The name tells FletBox what to change, and the value tells it how to change it.
+## Import
 
 ```javascript
-Accordion({
-    padding: 16,              // space inside the widget
-    margin: "8px 0",         // space outside the widget
-    bgColor: "#eff6ff",      // background color
-    width: "100%",           // CSS size or a number of pixels
-    children: [],             // widgets placed inside it
-    onPress: () => {         // what to do after a press
-        console.log("Hello");
-    },
-});
+import { Accordion } from "flet-box";
 ```
-
-You do not need to use every prop. Begin with the required props, then add optional props only when you need them.
-
-## Example usage
-
-```javascript
-import { Accordion, Text } from "flet-box";
-
-const example = Accordion({
-  items: [],
-  child: Text({ text: "Example" })
-});
-```
-
-## Examples from the FletBox snippet library
-
-The examples below come from the FletBox snippet library. The prop table is based on `src/index.d.ts`. When an example and the type declaration use different names, prefer the type declaration and verify the implementation.
 
 ## Basic example
 
 The smallest useful version. Start here if this widget is new to you.
 
 ```javascript
-Accordion({ title: "Section", children: Text("Content") })
-```
+import { Accordion, Text } from "flet-box";
 
-## Everyday example
-
-A practical version with the props most applications usually need.
-
-```javascript
-Accordion({ title: "Details", children: Text("Hidden info"), expanded: false, onToggle: (exp) => console.log(exp) })
-```
-
-## Full example
-
-A larger example showing advanced styling, layout, events, and customization.
-
-```javascript
 Accordion({
-    title: "Advanced settings",
-    children: Column({ children: [Input({ placeholder: "API Key" }), Slider({})] }),
-    expanded: true,
-    onToggle: (exp) => setExpanded(exp),
-    variant: "contained",
-    borderRadius: 16,
-    bgColor: colors.surface,
-    expandedColor: colors.primary,
-    titleColor: colors.text,
-    titleSize: 16,
-    titleWeight: "600",
-    titlePadding: "16px 20px",
-    contentPadding: "20px",
-    iconCollapsed: "chevron_right",
-    iconExpanded: "expand_more",
-    iconColor: colors.textSecondary,
-    iconSize: 24,
-    divider: true,
-    disabled: false,
-    animate: true,
-    animationDuration: 400,
-    elevation: 2
-})
-```
-
-
-## Common layout and styling examples
-
-The following example shows how common FletBox props work together. Numeric spacing values are interpreted as pixels, while strings can use CSS units and shorthand values.
-
-```javascript
-import { Button, Column, Container, Row, Text } from "flet-box";
-
-const panel = Container({
-    width: "100%",          // number values are pixels; strings accept CSS units
-    padding: 24,            // 24px on every side
-    margin: "16px auto",   // CSS shorthand: vertical and horizontal spacing
-    bgColor: "#f8fafc",    // background color
-    borderRadius: 12,
-    elevation: 2,
-    gap: 12,
-    child: Column({
-        children: [
-            Text({ text: "Account settings", size: 24, weight: "bold" }),
-            Row({
-                gap: 8,
-                justifyContent: "space-between",
-                children: [
-                    Text({ text: "Update your profile" }),
-                    Button({
-                        text: "Save",
-                        bgColor: "#2563eb",
-                        color: "#ffffff",
-                        onPress: () => console.log("saved"),
-                    }),
-                ],
-            }),
-        ],
-    }),
+  title: "Shipping options",
+  children: [Text({ text: "Standard — 3 to 5 days" })],
 });
 ```
 
-### Common prop quick reference
+## Props
 
-- `padding: 24` adds `24px` inside the widget on all sides.
-- `padding: "8px 16px"` uses CSS shorthand for vertical and horizontal spacing.
-- `margin: "16px auto"` adds outside spacing and can center a fixed-width element.
-- `bgColor: "#f8fafc"` sets the background color. Color tokens and CSS colors can be used.
-- `color: "#111827"` sets the foreground or text color when supported.
-- `width: 320` means `320px`; `width: "100%"` uses a CSS percentage.
-- `children` is an array of widgets; `child` is useful when a component accepts one child.
-- `gap: 12` controls the space between children in layout widgets.
-- `onPress` and `onClick` receive event callbacks for interactive behavior.
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `title` | string | — | Text shown in the header bar. |
+| `children` | Widget or array of Widgets | — | Content revealed on expand. Must be `children`, not `child` (see Notes). |
+| `expanded` | boolean | `false` | Initial state. |
+| `onToggle` | `(expanded: boolean) => void` | — | Fires when the expand/collapse animation completes. |
+| `variant` | `'contained'`, `'outlined'`, `'ghost'` | `'contained'` | `contained` fills the panel with `bgColor`; `outlined` draws a border and no fill; `ghost` draws neither. |
+| `borderRadius` | number | `8` | Corner radius in pixels; the panel clips its content. |
+| `bgColor` | Color | `colors.surface` | Panel background (`contained` only). |
+| `titleColor` | Color | `colors.text` | Title color while collapsed. |
+| `expandedColor` | Color | `colors.primary` | Title color while expanded. In `contained` the header is also tinted with this color plus a `10` alpha suffix, so pass a 6-digit hex. |
+| `border` | string | `null` | Explicit CSS border shorthand; wins over `variant`. |
+| `borderColor` | Color | `colors.border` | Border color used by `outlined`. |
+| `borderWidth` | number | `1` | Border width in pixels used by `outlined`. |
+| `titleSize` | number | `14` | Title font size in pixels. |
+| `titleWeight` | string or number | `'500'` | Title font weight. |
+| `titlePadding` | string | `'12px 16px'` | CSS padding of the header bar. |
+| `contentPadding` | string | `'16px'` | CSS padding of the content region. |
+| `iconCollapsed` | string | `'chevron_right'` | Material Icon name used while collapsed. |
+| `iconExpanded` | string | `'expand_more'` | Material Icon name used while expanded. |
+| `iconColor` | Color | `colors.textSecondary` | Chevron color. |
+| `iconSize` | number | `20` | Chevron size in pixels. |
+| `divider` | boolean | `true` | Draws a 1px top border on the content while expanded. |
+| `dividerColor` | Color | `colors.border` | Divider color. |
+| `disabled` | boolean | `false` | Blocks toggling; the header shows a `not-allowed` cursor at 0.5 opacity. |
+| `animate` | boolean | `true` | Height transition, chevron transition, and a `ResizeObserver` that re-measures open content. |
+| `animationDuration` | number | `300` | Animation length in milliseconds. |
+| `elevation` | number `0`–`4` | `0` | Preset shadow level (not a CSS value). Levels above 4 fall back to level 2. |
 
-## Beginner tips
+These are the props specific to `Accordion`. It also accepts every [common prop](COMMON_PROPS.md): layout, spacing, size, color, typography, borders, shadow, events, `child`/`children`, `ref`, and `style`.
 
-- Change one value at a time so you can see what each prop does.
-- Use `Text` to check that your layout is in the place you expect.
-- Use `Container` for a box, `Row` for items side by side, and `Column` for items one below another.
-- Use `padding` when content needs breathing room inside a box.
-- Use `margin` when you need space between this widget and its neighbors.
-- Use `bgColor` to make the boundaries of a box easy to see while learning.
-- If a prop is optional, leaving it out lets FletBox use its default behavior.
+## Instance methods
 
-## Common mistakes
+The returned element exposes:
 
-- Do not put plain text where a widget is expected unless the widget explicitly accepts strings.
-- Use `children: [ ... ]` for several child widgets and `child: widget` for one child when the widget supports both.
-- Check spelling carefully: `onPress`, `onClick`, and `onChange` are different events.
-- If a helper such as `padding()` or `margin()` is not available in your import list, use a number or CSS string first.
+- `expanded` — getter returns the current state; the setter expands or collapses (and fires `onToggle`).
+- `disabled` — getter/setter for the disabled flag.
+- `setExpanded(value, triggerCallback = true)` — expands or collapses; pass `false` as the second argument to skip `onToggle`.
+- `toggle()` — flips the state. Ignored while `disabled` or mid-animation.
+- `update(newProps)` — patches `title`, `children`, `disabled`, `variant`, colors, paddings, icons, divider, border, `borderRadius`, `elevation`, and `animationDuration` in place.
+- `_cleanup()` — disconnects the internal `ResizeObserver`.
 
-## Behavior notes
-- Integrates cleanly with FletBox runtime semantics and DOM rendering.
-- Can be nested inside layout widgets and combined with other components.
-- Uses the same direct prop and event conventions as the rest of the framework.
-- Keeps the API simple and readable for composing interfaces fast.
+## Examples
 
-## Accessibility
-- Prefer clear labels and readable text for interactive controls.
-- Respect the `disabled` state and keyboard behavior when available.
-- Keep state changes understandable for screen readers and assistive technology.
+### Everyday example
+
+```javascript
+import { Accordion, Column, Text } from "flet-box";
+
+Column({
+  gap: 8,
+  children: [
+    Accordion({
+      title: "What is FletBox?",
+      children: [Text({ text: "A minimalist vanilla-JS UI framework." })],
+    }),
+    Accordion({
+      title: "Do I need a build step?",
+      children: [Text({ text: "No. Import the widgets and call them." })],
+    }),
+  ],
+});
+```
+
+### Full example
+
+```javascript
+import { Accordion, Column, Input, Text, colors } from "flet-box";
+
+const panel = Accordion({
+  title: "Advanced search",
+  children: [
+    Column({
+      gap: 12,
+      children: [
+        Input({ label: "Keyword" }),
+        Text({ text: "Filters are applied on submit.", size: 13 }),
+      ],
+    }),
+  ],
+  expanded: true,
+  variant: "outlined",
+  borderColor: colors.border,
+  borderWidth: 1,
+  borderRadius: 12,
+  titleSize: 16,
+  titleWeight: "600",
+  titleColor: colors.text,
+  expandedColor: colors.primary,
+  titlePadding: "14px 18px",
+  contentPadding: "18px",
+  iconCollapsed: "add",
+  iconExpanded: "remove",
+  iconColor: colors.textSecondary,
+  iconSize: 22,
+  divider: true,
+  dividerColor: colors.border,
+  elevation: 2,
+  animate: true,
+  animationDuration: 250,
+  onToggle: (open) => console.log("open:", open),
+});
+
+// panel.expanded = false;   panel.toggle();   panel.update({ title: "Filters" });
+```
+
+## Notes
+
+- Use `children`. `Accordion` reads `children` from its props; a `child` prop falls through to the outer container and is appended **above** the title bar.
+- The element has exactly two children: the title bar (a `Row`) and the animated content wrapper.
+- `setExpanded(true)` flips `expanded` synchronously, but the height animation runs across two timeouts (about 10ms plus `animationDuration`). Collapse clears `expanded` only inside the first timeout, so collapsing is *not* synchronous.
+- `onToggle` fires at the end of the animation, not on click.
+- While animating, `toggle()` and `setExpanded()` are ignored — a rapid second click does not queue another move.
+- With `animate: true` a `ResizeObserver` watches the content, so an open panel re-measures itself when its children change size.
+- The chevron is a Material Icons span whose glyph comes from its text content, written once from `expanded`. Toggling rewrites only the span's `name` attribute, so the arrow does not visually flip.
+- `update({ disabled })` changes behavior immediately, but the header's cursor and opacity refresh only on the next full repaint (a `title` change or a finished animation).
+- `elevation: 0` sets `box-shadow: none`; `1`–`4` map to preset shadows.
+- `update({ children })` only appends items that are DOM elements or strings; anything else is dropped.
 
 ## Related widgets
-- [Container](Container.md)
-- [Row](Row.md)
-- [Column](Column.md)
-- [Stack](Stack.md)
-- [Text](Text.md)
-- [Button](Button.md)
+- [Stepper](Stepper.md)
+- [TreeView](TreeView.md)
+- [Card](Card.md)
+- [ListTile](ListTile.md)
+- [Divider](Divider.md)
 
 ---
 

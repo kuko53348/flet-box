@@ -450,11 +450,14 @@ export const Chart = (props) => {
     updateOverflow();
   };
 
-  window.addEventListener("resize", () => {
-    setTimeout(drawWithOverflow, 50);
-  });
+  let windowResizeTimeout;
+  const handleWindowResize = () => {
+    if (windowResizeTimeout) clearTimeout(windowResizeTimeout);
+    windowResizeTimeout = setTimeout(drawWithOverflow, 50);
+  };
+  window.addEventListener("resize", handleWindowResize);
 
-  setTimeout(drawWithOverflow, 100);
+  const initialDrawTimeout = setTimeout(drawWithOverflow, 100);
 
   container.updateData = (newData, newLabels) => {
     data.length = 0;
@@ -467,6 +470,19 @@ export const Chart = (props) => {
   };
 
   container.redraw = drawWithOverflow;
+
+  const originalCleanup = container._cleanup;
+  container._cleanup = () => {
+    if (drawTimeout) clearTimeout(drawTimeout);
+    if (windowResizeTimeout) clearTimeout(windowResizeTimeout);
+    if (initialDrawTimeout) clearTimeout(initialDrawTimeout);
+    resizeObserver?.disconnect();
+    window.removeEventListener("resize", handleWindowResize);
+    if (isCandle) {
+      scrollContainer.removeEventListener("scroll", handleScroll);
+    }
+    if (originalCleanup) originalCleanup();
+  };
 
   return container;
 };

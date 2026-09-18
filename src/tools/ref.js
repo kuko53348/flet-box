@@ -21,6 +21,7 @@ export const ref = () => {
             set: (v) => {
               widget[key] = v;
             },
+            configurable: true,
           });
         }
       });

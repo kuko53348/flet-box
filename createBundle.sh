@@ -39,6 +39,7 @@ npx esbuild src/app.js \
     --minify \
     --tree-shaking=true \
     --target=es2020 \
+    --define:FLETBOX_DEV=false \
     --external:*.css \
     --external:*.woff2
     # --sourcemap \

@@ -67,6 +67,7 @@ export const MatrixRain = (props = {}) => {
     canvas.style.top = "0";
     canvas.style.left = "0";
     canvas.style.zIndex = zIndex;
+    canvas.style.pointerEvents = "none";
 
     ctx = canvas.getContext("2d");
 
@@ -122,7 +123,11 @@ export const MatrixRain = (props = {}) => {
   };
 
   // Retornar el canvas directamente (no un contenedor vacío)
-  canvas._cleanup = cleanup;
+  const originalCleanup = canvas._cleanup;
+  canvas._cleanup = () => {
+    cleanup();
+    if (originalCleanup) originalCleanup();
+  };
 
   return canvas;
 };

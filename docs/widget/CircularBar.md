@@ -1,278 +1,147 @@
 # CircularBar
 
 ## Overview
-`CircularBar` is a ready-to-use building block. Think of it like a LEGO piece: give it some props, place it inside another widget, and FletBox creates the browser element for you.
-
-You do not need to write HTML or manually change the DOM to use this widget. You call the widget as a JavaScript function and pass an object between `{` and `}`.
-
-## Learn it in one minute
-
-1. Import the widget from `flet-box`.
-2. Call it with `WidgetName({ ... })`.
-3. Add props to describe its content, size, color, spacing, and behavior.
-4. Put it inside `Container`, `Row`, `Column`, or another widget.
-
-```javascript
-import { Column, Container, Text } from "flet-box";
-
-const welcomeCard = Container({
-    padding: 20,
-    margin: 16,
-    bgColor: "#ffffff",
-    borderRadius: 12,
-    child: Column({
-        gap: 8,
-        children: [
-            Text({ text: "My first FletBox screen", size: 24, weight: "bold" }),
-            Text({ text: "Widgets are small building blocks. Put them inside each other to build a screen." }),
-        ],
-    }),
-});
-```
+`CircularBar` renders a circular progress ring (donut) drawn on a real `<canvas>` inside a `<div>` container — not SVG, not CSS conic gradients. The arc starts at 12 o'clock, sweeps clockwise for `value / max` of the turn, and animates from 0 with `requestAnimationFrame` by default. The center text (value, `label`, `subtitle`) is painted onto the same canvas. Without `size` it is fully responsive: a `ResizeObserver` redraws the ring whenever the container width changes.
 
 ## When to use
-Use `CircularBar` when you need this kind of interface element. Start with the smallest example, then add one prop at a time. You can copy the example, change the text or color, and see the result immediately.
+- Show a score, quota, or completion percentage as a compact ring (dashboards, cards).
+- Animate progress toward a target with `animate` and `onComplete`.
+- Mark thresholds on the ring with `markers`, or add a second inner ring with `innerStrokeWidth`/`innerColor`.
 
-## Common props
-
-- `children` / `child`: content rendered inside the widget.
-- `id`: DOM id for the element.
-- `className`: CSS class names applied to the element.
-- `ref`: callback that receives the underlying DOM node.
-- `onClick` / event handlers: native browser event callbacks.
-- `disabled`: disables interaction when supported.
-
-## Full prop list
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `width` | `Size` | - | Property used by the CircularBar component. |
-| `height` | `Size` | - | Property used by the CircularBar component. |
-| `size` | `number` | - | Component size or preset. |
-| `padding` | `Padding` | - | Internal spacing around the component. |
-| `margin` | `Margin` | - | External spacing around the component. |
-| `bgColor` | `Color` | - | Background color applied to the element. |
-| `color` | `Color` | - | Color value or theme token. |
-| `borderRadius` | `number \| string` | - | Property used by the CircularBar component. |
-| `elevation` | `number` | - | Property used by the CircularBar component. |
-| `shadow` | `string` | - | Property used by the CircularBar component. |
-| `opacity` | `number` | - | Property used by the CircularBar component. |
-| `visible` | `boolean` | false | Property used by the CircularBar component. |
-| `disabled` | `boolean` | false | Disables interaction and shows the non-interactive state. |
-| `onPress` | `(widget: Widget) => void` | - | Callback fired when the widget is pressed. |
-| `onClick` | `(widget: Widget) => void` | - | Property used by the CircularBar component. |
-| `id` | `string` | - | Property used by the CircularBar component. |
-| `className` | `string` | - | Property used by the CircularBar component. |
-| `ref` | `(widget: Widget) => void` | - | Property used by the CircularBar component. |
-| `disableTransform` | `boolean` | - | Property used by the CircularBar component. |
-| `value` | `number` | - | Current value controlled by the widget. |
-| `max` | `number` | - | Property used by the CircularBar component. |
-| `strokeWidth` | `number` | - | Property used by the CircularBar component. |
-| `backgroundColor` | `Color` | - | Property used by the CircularBar component. |
-| `showValue` | `boolean` | false | Property used by the CircularBar component. |
-| `valueColor` | `Color` | - | Property used by the CircularBar component. |
-| `valueSize` | `number` | - | Property used by the CircularBar component. |
-| `label` | `string` | - | Label or caption shown near the control. |
-| `labelColor` | `Color` | - | Property used by the CircularBar component. |
-| `labelSize` | `number` | - | Property used by the CircularBar component. |
-| `lineCap` | `'butt' \| 'round' \| 'square'` | - | Property used by the CircularBar component. |
-| `animate` | `boolean` | false | Property used by the CircularBar component. |
-| `animationDuration` | `number` | - | Property used by the CircularBar component. |
-| `onComplete` | `() => void` | - | Property used by the CircularBar component. |
-| `valueFormat` | `'percent' \| 'value' \| 'custom'` | - | Property used by the CircularBar component. |
-| `valueSuffix` | `string` | - | Property used by the CircularBar component. |
-| `valuePrefix` | `string` | - | Property used by the CircularBar component. |
-| `valueDecimals` | `number` | - | Property used by the CircularBar component. |
-| `customValueFormatter` | `(value: number, max: number) => string` | - | Property used by the CircularBar component. |
-| `gradient` | `string \| string[]` | - | Property used by the CircularBar component. |
-| `gradientAngle` | `number` | - | Property used by the CircularBar component. |
-| `shadowBlur` | `number` | - | Property used by the CircularBar component. |
-| `shadowColor` | `string` | - | Property used by the CircularBar component. |
-| `glow` | `boolean` | false | Property used by the CircularBar component. |
-| `glowColor` | `string` | - | Property used by the CircularBar component. |
-| `markers` | `Array<{ value: number; color?: Color; size?: number; label?: string }>` | - | Property used by the CircularBar component. |
-| `innerStrokeWidth` | `number` | - | Property used by the CircularBar component. |
-| `innerColor` | `Color` | - | Property used by the CircularBar component. |
-| `onHover` | `(hovering: boolean, data: { value: number; max: number }) => void` | - | Property used by the CircularBar component. |
-| `subtitle` | `string` | - | Secondary descriptive text. |
-| `subtitleColor` | `Color` | - | Property used by the CircularBar component. |
-| `subtitleSize` | `number` | - | Property used by the CircularBar component. |
-| `tooltip` | `string` | - | Property used by the CircularBar component. |
-
-## How props work
-
-A prop is simply an instruction inside the object passed to the widget. The name tells FletBox what to change, and the value tells it how to change it.
+## Import
 
 ```javascript
-CircularBar({
-    padding: 16,              // space inside the widget
-    margin: "8px 0",         // space outside the widget
-    bgColor: "#eff6ff",      // background color
-    width: "100%",           // CSS size or a number of pixels
-    children: [],             // widgets placed inside it
-    onPress: () => {         // what to do after a press
-        console.log("Hello");
-    },
-});
+import { CircularBar } from "flet-box";
 ```
-
-You do not need to use every prop. Begin with the required props, then add optional props only when you need them.
-
-## Example usage
-
-```javascript
-import { CircularBar, Text } from "flet-box";
-
-const example = CircularBar({
-  value: 1,
-  child: Text({ text: "Example" })
-});
-```
-
-## Examples from the FletBox snippet library
-
-The examples below come from the FletBox snippet library. The prop table is based on `src/index.d.ts`. When an example and the type declaration use different names, prefer the type declaration and verify the implementation.
 
 ## Basic example
 
 The smallest useful version. Start here if this widget is new to you.
 
 ```javascript
-CircularBar({ value: 75 })
+import { CircularBar } from "flet-box";
+
+CircularBar({ value: 75, size: 120 });
 ```
 
-## Everyday example
+## Props
 
-A practical version with the props most applications usually need.
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | number | `0` | Current progress. |
+| `max` | number | `100` | Value that counts as a full circle. |
+| `size` | number | `null` | Fixed diameter in pixels (`inline-block` container). `null` = responsive: fills the container width (`block`, `width: 100%`), 200px fallback. |
+| `strokeWidth` | number | `12` | Ring thickness in pixels. |
+| `color` | Color | `colors.primary` | Progress arc color (used when `gradient` is not set). |
+| `backgroundColor` | Color | `colors.gray200` | Background ring color. |
+| `showValue` | boolean | `true` | Paints the formatted value in the center. |
+| `valueColor` | Color | `colors.text` | Center value color. |
+| `valueSize` | number | `24` | Center value font size in pixels. |
+| `label` | string | — | Caption painted under the value. |
+| `labelColor` | Color | `colors.textSecondary` | Caption color. |
+| `labelSize` | number | `12` | Caption font size in pixels. |
+| `lineCap` | `'round'`, `'butt'`, `'square'` | `'round'` | Canvas line cap for both rings. |
+| `animate` | boolean | `true` | Animates the arc from 0 to `value`. `false` draws it statically. |
+| `animationDuration` | number (ms) | `1000` | Sweep duration. |
+| `onComplete` | function | — | Fires when the sweep animation finishes (animated mode only). |
+| `ref` | function | — | Receives the `<canvas>` element. |
+| `valueFormat` | `'percent'`, `'value'`, `'custom'` | `'percent'` | Center text mode: rounded percentage, raw value, or `current/max`. |
+| `valuePrefix` / `valueSuffix` | string | `''` | Text around the formatted value (e.g. `valueSuffix: "%"`). |
+| `valueDecimals` | number | `0` | Decimals kept in the formatted value. |
+| `customValueFormatter` | `(value, max) => string` | `null` | Overrides all formatting when set. |
+| `gradient` | array of Colors or string | `null` | Array → diagonal canvas linear gradient across those stops; string → used as the stroke style directly. |
+| `gradientAngle` | number | `135` | Accepted but currently unused — the canvas gradient is always diagonal. |
+| `shadowBlur` | number | `0` | Canvas shadow blur behind the arc. |
+| `shadowColor` | string | `'rgba(0,0,0,0.3)'` | Canvas shadow color. |
+| `glow` | boolean | `false` | Strong glow on the arc (blur 12) using `glowColor` or `color`. |
+| `glowColor` | Color | `null` | Glow color override. |
+| `markers` | array of `{ value, color?, size?, label? }` | `[]` | Dots on the ring perimeter at given values (default radius 4), with optional 10px labels. |
+| `innerStrokeWidth` | number | `0` | Width of a second ring drawn inside the main one (needs `innerColor`). |
+| `innerColor` | Color | `null` | Inner ring color. |
+| `onClick` | `({ value, max, percent }) => void` | `null` | Click handler on the canvas. |
+| `onHover` | `(hovering, { value, max }) => void` | `null` | Fires on canvas mouseenter (`true`) and mouseleave (`false`). |
+| `subtitle` | string | `null` | Extra line painted under the value/label. |
+| `subtitleColor` | Color | `colors.textSecondary` | Subtitle color. |
+| `subtitleSize` | number | `10` | Subtitle font size in pixels. |
+| `tooltip` | string | `null` | Sets the native `title` attribute on the canvas. |
+
+These are the props specific to `CircularBar`. It also accepts every [common prop](COMMON_PROPS.md): layout, spacing, size, color, typography, borders, shadow, events, `child`/`children`, `ref`, and `style` — applied to the outer container (note: `ref` above is consumed by `CircularBar` itself and receives the canvas).
+
+## Instance methods
+
+The returned container element exposes:
+
+- `updateValue(newValue, newMax = null)` — sets a new value (clamped to `max`, optionally a new `max`) and replays the animation.
+- `_cleanup()` — (framework hook) cancels the running animation and disconnects the resize observer.
+
+## Examples
+
+### Everyday example
 
 ```javascript
-CircularBar({ value: 85, size: 120, strokeWidth: 10, color: colors.primary, showValue: true })
+import { CircularBar, colors } from "flet-box";
+
+const disk = CircularBar({
+  value: 82,
+  max: 100,
+  size: 140,
+  strokeWidth: 10,
+  color: colors.warning,
+  label: "Disk used",
+  valueSuffix: "%",
+});
+
+// disk.updateValue(64);
 ```
 
-## Full example
-
-A larger example showing advanced styling, layout, events, and customization.
+### Full example
 
 ```javascript
-CircularBar({
-    value: 68,
-    max: 100,
-    size: 180,
-    strokeWidth: 14,
-    color: colors.primary,
-    backgroundColor: colors.border,
-    showValue: true,
-    valueColor: colors.text,
-    valueSize: 28,
-    label: "Completion",
-    labelColor: colors.textSecondary,
-    labelSize: 12,
-    lineCap: "round",
-    animate: true,
-    animationDuration: 1500,
-    onComplete: () => console.log("done"),
-    valueFormat: "percent",
-    valueSuffix: "%",
-    gradient: ["#6366f1", "#8b5cf6"],
-    shadowBlur: 6,
-    shadowColor: "rgba(0,0,0,0.2)",
-    glow: true,
-    glowColor: colors.primary,
-    markers: [{ value: 25, color: "red", size: 6, label: "Q1" }, { value: 75, color: "green", size: 6, label: "Q3" }],
-    innerStrokeWidth: 4,
-    innerColor: colors.gray300,
-    onClick: ({ percent }) => alert(`${percent}%`),
-    subtitle: "of target",
-    subtitleColor: colors.textSecondary,
-    subtitleSize: 10,
-    tooltip: "68% completed"
-})
-```
+import { CircularBar, colors } from "flet-box";
 
-
-## Common layout and styling examples
-
-The following example shows how common FletBox props work together. Numeric spacing values are interpreted as pixels, while strings can use CSS units and shorthand values.
-
-```javascript
-import { Button, Column, Container, Row, Text } from "flet-box";
-
-const panel = Container({
-    width: "100%",          // number values are pixels; strings accept CSS units
-    padding: 24,            // 24px on every side
-    margin: "16px auto",   // CSS shorthand: vertical and horizontal spacing
-    bgColor: "#f8fafc",    // background color
-    borderRadius: 12,
-    elevation: 2,
-    gap: 12,
-    child: Column({
-        children: [
-            Text({ text: "Account settings", size: 24, weight: "bold" }),
-            Row({
-                gap: 8,
-                justifyContent: "space-between",
-                children: [
-                    Text({ text: "Update your profile" }),
-                    Button({
-                        text: "Save",
-                        bgColor: "#2563eb",
-                        color: "#ffffff",
-                        onPress: () => console.log("saved"),
-                    }),
-                ],
-            }),
-        ],
-    }),
+const ring = CircularBar({
+  value: 68,
+  max: 100,
+  strokeWidth: 14,
+  gradient: ["#6366f1", "#8b5cf6", "#ec4899"],
+  backgroundColor: colors.border,
+  lineCap: "round",
+  showValue: true,
+  valueSize: 28,
+  valueDecimals: 1,
+  valueSuffix: "%",
+  label: "Completion",
+  subtitle: "of Q3 target",
+  glow: true,
+  glowColor: colors.primary,
+  markers: [
+    { value: 25, color: colors.textSecondary, size: 4, label: "Q1" },
+    { value: 75, color: colors.success, size: 5 },
+  ],
+  innerStrokeWidth: 3,
+  innerColor: colors.gray100,
+  animate: true,
+  animationDuration: 1500,
+  onComplete: () => console.log("animation done"),
+  onClick: ({ percent }) => console.log(`clicked at ${percent}%`),
+  tooltip: "68% completed",
 });
 ```
 
-### Common prop quick reference
+## Notes
 
-- `padding: 24` adds `24px` inside the widget on all sides.
-- `padding: "8px 16px"` uses CSS shorthand for vertical and horizontal spacing.
-- `margin: "16px auto"` adds outside spacing and can center a fixed-width element.
-- `bgColor: "#f8fafc"` sets the background color. Color tokens and CSS colors can be used.
-- `color: "#111827"` sets the foreground or text color when supported.
-- `width: 320` means `320px`; `width: "100%"` uses a CSS percentage.
-- `children` is an array of widgets; `child` is useful when a component accepts one child.
-- `gap: 12` controls the space between children in layout widgets.
-- `onPress` and `onClick` receive event callbacks for interactive behavior.
-
-## Beginner tips
-
-- Change one value at a time so you can see what each prop does.
-- Use `Text` to check that your layout is in the place you expect.
-- Use `Container` for a box, `Row` for items side by side, and `Column` for items one below another.
-- Use `padding` when content needs breathing room inside a box.
-- Use `margin` when you need space between this widget and its neighbors.
-- Use `bgColor` to make the boundaries of a box easy to see while learning.
-- If a prop is optional, leaving it out lets FletBox use its default behavior.
-
-## Common mistakes
-
-- Do not put plain text where a widget is expected unless the widget explicitly accepts strings.
-- Use `children: [ ... ]` for several child widgets and `child: widget` for one child when the widget supports both.
-- Check spelling carefully: `onPress`, `onClick`, and `onChange` are different events.
-- If a helper such as `padding()` or `margin()` is not available in your import list, use a number or CSS string first.
-
-## Behavior notes
-- Integrates cleanly with FletBox runtime semantics and DOM rendering.
-- Can be nested inside layout widgets and combined with other components.
-- Uses the same direct prop and event conventions as the rest of the framework.
-- Keeps the API simple and readable for composing interfaces fast.
-
-## Accessibility
-- Prefer clear labels and readable text for interactive controls.
-- Respect the `disabled` state and keyboard behavior when available.
-- Keep state changes understandable for screen readers and assistive technology.
+- Everything visible — arc, value, label, subtitle, markers — is painted on one `<canvas>`; there is no text in the DOM to select or style with CSS.
+- Responsive mode (`size` omitted) measures the container with `getBoundingClientRect()`; before layout it falls back to 200px, then the `ResizeObserver` (or a `window` resize listener where observers are unavailable) redraws at the real width.
+- `animate: true` sweeps from 0 on every `updateValue()` call and on resize; `onComplete` only fires at the end of an animated sweep, never in static mode.
+- `valueFormat: 'percent'` rounds the percentage; during animation the center text counts up with the arc.
+- `updateValue` clamps `value` to `max` but does not clamp below 0.
 
 ## Related widgets
-- [Container](Container.md)
-- [Row](Row.md)
-- [Column](Column.md)
-- [Stack](Stack.md)
+- [ProgressBar](ProgressBar.md)
+- [Skeleton](Skeleton.md)
+- [Chart](Chart.md)
+- [Card](Card.md)
 - [Text](Text.md)
-- [Button](Button.md)
 
 ---
 

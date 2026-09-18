@@ -1,235 +1,139 @@
 # CodeViewer
 
 ## Overview
-`CodeViewer` is a ready-to-use building block. Think of it like a LEGO piece: give it some props, place it inside another widget, and FletBox creates the browser element for you.
-
-You do not need to write HTML or manually change the DOM to use this widget. You call the widget as a JavaScript function and pass an object between `{` and `}`.
-
-## Learn it in one minute
-
-1. Import the widget from `flet-box`.
-2. Call it with `WidgetName({ ... })`.
-3. Add props to describe its content, size, color, spacing, and behavior.
-4. Put it inside `Container`, `Row`, `Column`, or another widget.
-
-```javascript
-import { Column, Container, Text } from "flet-box";
-
-const welcomeCard = Container({
-    padding: 20,
-    margin: 16,
-    bgColor: "#ffffff",
-    borderRadius: 12,
-    child: Column({
-        gap: 8,
-        children: [
-            Text({ text: "My first FletBox screen", size: 24, weight: "bold" }),
-            Text({ text: "Widgets are small building blocks. Put them inside each other to build a screen." }),
-        ],
-    }),
-});
-```
+`CodeViewer` shows a syntax-highlighted, read-only block of code built from plain `<div>`s — no `<pre>`, no canvas, no highlighting library. It splits `code` on newlines, runs each line through FletBox's shared tokenizer (`generateHighlightedHtml`, a One-Dark-style palette that knows JS keywords, strings, numbers, comments, functions, plus FletBox widget names and color literals), escapes the HTML, and injects the result into a scrollable panel. An optional title bar and an optional line-number gutter are added around it.
 
 ## When to use
-Use `CodeViewer` when you need this kind of interface element. Start with the smallest example, then add one prop at a time. You can copy the example, change the text or color, and see the result immediately.
+- Show a snippet of source code in docs, tutorials, or a settings screen.
+- Pretty-print any JavaScript value: a non-string `code` is rendered as `JSON.stringify(code, null, 2)`.
+- Display long output in a capped, scrollable box via `maxHeight`.
 
-## Common props
-
-- `children` / `child`: content rendered inside the widget.
-- `id`: DOM id for the element.
-- `className`: CSS class names applied to the element.
-- `ref`: callback that receives the underlying DOM node.
-- `onClick` / event handlers: native browser event callbacks.
-- `disabled`: disables interaction when supported.
-
-## Full prop list
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `width` | `Size` | - | Property used by the CodeViewer component. |
-| `height` | `Size` | - | Property used by the CodeViewer component. |
-| `size` | `number` | - | Component size or preset. |
-| `padding` | `Padding` | - | Internal spacing around the component. |
-| `margin` | `Margin` | - | External spacing around the component. |
-| `bgColor` | `Color` | - | Background color applied to the element. |
-| `color` | `Color` | - | Color value or theme token. |
-| `borderRadius` | `number \| string` | - | Property used by the CodeViewer component. |
-| `elevation` | `number` | - | Property used by the CodeViewer component. |
-| `shadow` | `string` | - | Property used by the CodeViewer component. |
-| `opacity` | `number` | - | Property used by the CodeViewer component. |
-| `visible` | `boolean` | false | Property used by the CodeViewer component. |
-| `disabled` | `boolean` | false | Disables interaction and shows the non-interactive state. |
-| `onPress` | `(widget: Widget) => void` | - | Callback fired when the widget is pressed. |
-| `onClick` | `(widget: Widget) => void` | - | Property used by the CodeViewer component. |
-| `id` | `string` | - | Property used by the CodeViewer component. |
-| `className` | `string` | - | Property used by the CodeViewer component. |
-| `ref` | `(widget: Widget) => void` | - | Property used by the CodeViewer component. |
-| `disableTransform` | `boolean` | - | Property used by the CodeViewer component. |
-| `code` | `string` | - | Property used by the CodeViewer component. |
-| `title` | `string` | - | Primary title text for the widget. |
-| `maxHeight` | `number` | - | Property used by the CodeViewer component. |
-| `fontSize` | `number` | - | Property used by the CodeViewer component. |
-| `backgroundColor` | `Color` | - | Property used by the CodeViewer component. |
-| `showHeader` | `boolean` | - | Property used by the CodeViewer component. |
-| `showLineNumbers` | `boolean` | false | Property used by the CodeViewer component. |
-| `startingLineNumber` | `number` | - | Property used by the CodeViewer component. |
-| `lineNumberWidth` | `number` | - | Property used by the CodeViewer component. |
-| `lineNumberColor` | `Color` | - | Property used by the CodeViewer component. |
-
-## How props work
-
-A prop is simply an instruction inside the object passed to the widget. The name tells FletBox what to change, and the value tells it how to change it.
+## Import
 
 ```javascript
-CodeViewer({
-    padding: 16,              // space inside the widget
-    margin: "8px 0",         // space outside the widget
-    bgColor: "#eff6ff",      // background color
-    width: "100%",           // CSS size or a number of pixels
-    children: [],             // widgets placed inside it
-    onPress: () => {         // what to do after a press
-        console.log("Hello");
-    },
-});
+import { CodeViewer } from "flet-box";
 ```
-
-You do not need to use every prop. Begin with the required props, then add optional props only when you need them.
-
-## Example usage
-
-```javascript
-import { CodeViewer, Text } from "flet-box";
-
-const example = CodeViewer({
-  child: Text({ text: "Example" })
-});
-```
-
-## Examples from the FletBox snippet library
-
-The examples below come from the FletBox snippet library. The prop table is based on `src/index.d.ts`. When an example and the type declaration use different names, prefer the type declaration and verify the implementation.
 
 ## Basic example
 
 The smallest useful version. Start here if this widget is new to you.
 
 ```javascript
-CodeViewer({ code: "console.log(\'hello\')" })
+import { CodeViewer } from "flet-box";
+
+CodeViewer({ code: 'const greet = () => "hello";' });
 ```
 
-## Everyday example
+## Props
 
-A practical version with the props most applications usually need.
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `code` | string or any | — | Source to display. A non-string is serialized with `JSON.stringify(code, null, 2)`. |
+| `title` | string | — | Header bar text. The header only renders when `title` and `showHeader` are both set. |
+| `maxHeight` | number or string | `400` | Max height of the scroll area in pixels; content beyond it scrolls. |
+| `fontSize` | number or string | `12` | Code (and line-number) font size in pixels. |
+| `backgroundColor` | Color | `colors.gray100` | Panel and gutter background. |
+| `padding` | number | `12` | Inner padding in pixels; the gutter uses half of it on the right. |
+| `borderRadius` | number | `8` | Panel corner radius in pixels. |
+| `showHeader` | boolean | `true` | Shows the title bar (needs `title`). |
+| `showLineNumbers` | boolean | `false` | Renders a fixed-width gutter with one number per line and one div per code line. |
+| `startingLineNumber` | number | `1` | First gutter number; useful for excerpts. |
+| `lineNumberWidth` | number | `40` | Gutter width in pixels. |
+| `lineNumberColor` | Color | `colors.secondary` | Gutter number color. |
+
+These are the props specific to `CodeViewer`. It also accepts every [common prop](COMMON_PROPS.md): layout, spacing, size, color, typography, borders, shadow, events, `child`/`children`, `ref`, and `style`. Common props land on the outer container, which is `width: 100%` and a flex column.
+
+## Instance methods
+
+The returned container exposes:
+
+- `updateCode(newCode)` — replaces the code (non-strings are JSON-stringified) and re-renders the panel or the gutter.
+- `updateTitle(newTitle)` — changes the header text. It only works if a header was rendered at creation time.
+- `scrollTo(x, y)` — scrolls the panel to a pixel offset.
+- `scrollToStart()` — scrolls the panel to the left edge.
+- `scrollToEnd()` — scrolls the panel to the right edge.
+
+## Examples
+
+### Everyday example
 
 ```javascript
-CodeViewer({ code: jsCode, title: "app.js", showLineNumbers: true })
-```
+import { CodeViewer, colors } from "flet-box";
 
-## Full example
-
-A larger example showing advanced styling, layout, events, and customization.
-
-```javascript
 CodeViewer({
-    code: `function hello() { return "world"; }`,
-    title: "example.js",
-    maxHeight: 400,
-    fontSize: 12,
-    backgroundColor: colors.gray100,
-    padding: 16,
-    borderRadius: 12,
-    showHeader: true,
-    showLineNumbers: true,
-    startingLineNumber: 1,
-    lineNumberWidth: 40,
-    lineNumberColor: colors.secondary
-})
-```
-
-
-## Common layout and styling examples
-
-The following example shows how common FletBox props work together. Numeric spacing values are interpreted as pixels, while strings can use CSS units and shorthand values.
-
-```javascript
-import { Button, Column, Container, Row, Text } from "flet-box";
-
-const panel = Container({
-    width: "100%",          // number values are pixels; strings accept CSS units
-    padding: 24,            // 24px on every side
-    margin: "16px auto",   // CSS shorthand: vertical and horizontal spacing
-    bgColor: "#f8fafc",    // background color
-    borderRadius: 12,
-    elevation: 2,
-    gap: 12,
-    child: Column({
-        children: [
-            Text({ text: "Account settings", size: 24, weight: "bold" }),
-            Row({
-                gap: 8,
-                justifyContent: "space-between",
-                children: [
-                    Text({ text: "Update your profile" }),
-                    Button({
-                        text: "Save",
-                        bgColor: "#2563eb",
-                        color: "#ffffff",
-                        onPress: () => console.log("saved"),
-                    }),
-                ],
-            }),
-        ],
-    }),
+  code: [
+    'import { Button } from "flet-box";',
+    "",
+    'Button({ text: "Save", onPress: () => console.log("saved") });',
+  ].join("\n"),
+  title: "app.js",
+  showLineNumbers: true,
+  fontSize: 13,
+  backgroundColor: colors.gray100,
 });
 ```
 
-### Common prop quick reference
+### Full example
 
-- `padding: 24` adds `24px` inside the widget on all sides.
-- `padding: "8px 16px"` uses CSS shorthand for vertical and horizontal spacing.
-- `margin: "16px auto"` adds outside spacing and can center a fixed-width element.
-- `bgColor: "#f8fafc"` sets the background color. Color tokens and CSS colors can be used.
-- `color: "#111827"` sets the foreground or text color when supported.
-- `width: 320` means `320px`; `width: "100%"` uses a CSS percentage.
-- `children` is an array of widgets; `child` is useful when a component accepts one child.
-- `gap: 12` controls the space between children in layout widgets.
-- `onPress` and `onClick` receive event callbacks for interactive behavior.
+```javascript
+import { Button, CodeViewer, Column, Row, colors } from "flet-box";
 
-## Beginner tips
+const snippet = `function total(items) {
+  // sum the prices
+  return items.reduce((sum, item) => sum + item.price, 0);
+}
 
-- Change one value at a time so you can see what each prop does.
-- Use `Text` to check that your layout is in the place you expect.
-- Use `Container` for a box, `Row` for items side by side, and `Column` for items one below another.
-- Use `padding` when content needs breathing room inside a box.
-- Use `margin` when you need space between this widget and its neighbors.
-- Use `bgColor` to make the boundaries of a box easy to see while learning.
-- If a prop is optional, leaving it out lets FletBox use its default behavior.
+const orders = [{ price: 12.5 }, { price: 7 }];
+console.log(total(orders)); // 19.5`;
 
-## Common mistakes
+const viewer = CodeViewer({
+  code: snippet,
+  title: "total.js",
+  maxHeight: 320,
+  fontSize: 12,
+  backgroundColor: "#1e1e1e",
+  padding: 16,
+  borderRadius: 12,
+  showHeader: true,
+  showLineNumbers: true,
+  startingLineNumber: 1,
+  lineNumberWidth: 44,
+  lineNumberColor: colors.secondary,
+});
 
-- Do not put plain text where a widget is expected unless the widget explicitly accepts strings.
-- Use `children: [ ... ]` for several child widgets and `child: widget` for one child when the widget supports both.
-- Check spelling carefully: `onPress`, `onClick`, and `onChange` are different events.
-- If a helper such as `padding()` or `margin()` is not available in your import list, use a number or CSS string first.
+Column({
+  gap: 12,
+  children: [
+    viewer,
+    Row({
+      gap: 8,
+      children: [
+        Button({ text: "Show config", onPress: () => viewer.updateCode({ theme: "dark", tabs: 2 }) }),
+        Button({ text: "Rename", onPress: () => viewer.updateTitle("config.json") }),
+        Button({ text: "To start", onPress: () => viewer.scrollToStart() }),
+        Button({ text: "To end", onPress: () => viewer.scrollToEnd() }),
+      ],
+    }),
+  ],
+});
+```
 
-## Behavior notes
-- Integrates cleanly with FletBox runtime semantics and DOM rendering.
-- Can be nested inside layout widgets and combined with other components.
-- Uses the same direct prop and event conventions as the rest of the framework.
-- Keeps the API simple and readable for composing interfaces fast.
+## Notes
 
-## Accessibility
-- Prefer clear labels and readable text for interactive controls.
-- Respect the `disabled` state and keyboard behavior when available.
-- Keep state changes understandable for screen readers and assistive technology.
+- There is **no `language` prop**: highlighting always uses the JavaScript/FletBox tokenizer, so other languages get partial coloring only.
+- Highlighting is per line. Multi-line template literals and block comments are tokenized line by line, so their colors can differ from a real parser.
+- All code is HTML-escaped before it is inserted, so `<script>` in your snippet is shown as text, not executed.
+- The header renders only when `title` **and** `showHeader` are both truthy, but the panel's corner radius is decided by `title` alone: with `title` set and `showHeader: false` the top corners stay square.
+- `updateTitle` cannot create a header that was not rendered initially.
+- With `showLineNumbers: false` the code goes into a single `white-space: pre` div; with it on, you get one div per line in two columns (gutter + code).
+- Line height is fixed at `1.5` and the font family at `monospace`; both are set inline and are not exposed as props.
 
 ## Related widgets
-- [Container](Container.md)
-- [Row](Row.md)
-- [Column](Column.md)
-- [Stack](Stack.md)
+- [Markdown](Markdown.md)
 - [Text](Text.md)
-- [Button](Button.md)
+- [Container](Container.md)
+- [Card](Card.md)
+- [Inspector](Inspector.md)
 
 ---
 

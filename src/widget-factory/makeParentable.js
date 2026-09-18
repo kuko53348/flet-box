@@ -1,4 +1,6 @@
 // core/makeParentable.js
+import { reregister } from "./lifecycle.js";
+
 export const makeParentable = (widget) => {
   let _parent = null;
   widget._children = [];
@@ -15,6 +17,7 @@ export const makeParentable = (widget) => {
   widget.appendChild = function (child) {
     if (child && child._isWidget === true) {
       child.parent = this;
+      reregister(child);
     }
     if (!this._children.includes(child)) {
       this._children.push(child);

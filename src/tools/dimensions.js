@@ -18,12 +18,19 @@
 let windowWidth = window.innerWidth;
 let windowHeight = window.innerHeight;
 
+// Live named exports (ES-module live bindings: importers of { width, height }
+// always read the current value, kept in sync on resize).
+export let width = windowWidth;
+export let height = windowHeight;
+
 // Escuchar cambios de tamaño
 const listeners = [];
 
 const handleResize = () => {
   windowWidth = window.innerWidth;
   windowHeight = window.innerHeight;
+  width = windowWidth;
+  height = windowHeight;
 
   // Notificar a todos los listeners
   listeners.forEach((listener) => {
@@ -83,8 +90,6 @@ export const dimensions = {
   },
 };
 
-// Export directo
-export const width = dimensions.width;
-export const height = dimensions.height;
+// Export directo: `width` y `height` se declaran arriba como bindings vivos.
 
 export default dimensions;

@@ -265,5 +265,13 @@ export {
   AnimatedBox,
   AnimatedText,
   MatrixRain,
+  ParallaxBox,
   animate,
+  animateAsync,
+  fadeIn,
+  fadeOut,
+  pulse,
+  fadeInAsync,
+  fadeOutAsync,
+  pulseAsync,
 } from "./animations/index.js";

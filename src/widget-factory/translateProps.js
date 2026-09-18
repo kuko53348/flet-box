@@ -352,6 +352,14 @@ export const ALL_PROPS = [
   { prop: "title", domProp: "textContent", type: "text", reactive: true },
   { prop: "caption", domProp: "textContent", type: "text", reactive: true },
   { prop: "description", domProp: "textContent", type: "text", reactive: true },
+  {
+    prop: "textContent",
+    domProp: "textContent",
+    type: "text",
+    // Not reactive on purpose: a reactive accessor would shadow the native
+    // DOM .textContent property (see reactivity.js NEVER_SHADOW).
+    reactive: false,
+  },
   { prop: "message", domProp: "textContent", type: "text", reactive: true },
   { prop: "buttonText", domProp: "textContent", type: "text", reactive: true },
 
@@ -660,6 +668,13 @@ export const ALL_PROPS = [
     reactive: true,
   },
   {
+    prop: "boxSizing",
+    domProp: "boxSizing",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
     prop: "cursor",
     domProp: "cursor",
     type: "style",
@@ -845,6 +860,62 @@ export const ALL_PROPS = [
     type: "special",
     reactive: true,
   },
+
+  // ==================== EXTRA CSS (used by built-in widgets) ====================
+  {
+    prop: "fontFamily",
+    domProp: "fontFamily",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "touchAction",
+    domProp: "touchAction",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "textOverflow",
+    domProp: "textOverflow",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "borderTop",
+    domProp: "borderTop",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "borderBottom",
+    domProp: "borderBottom",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "borderLeft",
+    domProp: "borderLeft",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+  {
+    prop: "borderRight",
+    domProp: "borderRight",
+    type: "style",
+    unit: "none",
+    reactive: true,
+  },
+
+  // ==================== INTERNAL CONTROL FLAGS (no DOM output) ====================
+  // Consumed by effects.js / widgets via _originalProps; kept out of the DOM.
+  { prop: "disableTransform", domProp: "disableTransform", type: "special" },
+  { prop: "data", domProp: "data", type: "special" },
 ];
 
 // ============================================================

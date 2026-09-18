@@ -1,214 +1,96 @@
 # Divider
 
 ## Overview
-`Divider` is a ready-to-use building block. Think of it like a LEGO piece: give it some props, place it inside another widget, and FletBox creates the browser element for you.
-
-You do not need to write HTML or manually change the DOM to use this widget. You call the widget as a JavaScript function and pass an object between `{` and `}`.
-
-## Learn it in one minute
-
-1. Import the widget from `flet-box`.
-2. Call it with `WidgetName({ ... })`.
-3. Add props to describe its content, size, color, spacing, and behavior.
-4. Put it inside `Container`, `Row`, `Column`, or another widget.
-
-```javascript
-import { Column, Container, Text } from "flet-box";
-
-const welcomeCard = Container({
-    padding: 20,
-    margin: 16,
-    bgColor: "#ffffff",
-    borderRadius: 12,
-    child: Column({
-        gap: 8,
-        children: [
-            Text({ text: "My first FletBox screen", size: 24, weight: "bold" }),
-            Text({ text: "Widgets are small building blocks. Put them inside each other to build a screen." }),
-        ],
-    }),
-});
-```
+`Divider` renders a `<div>` used as a thin rule. Horizontal (the default) it spans the full width and is `thickness` tall; vertical it is `thickness` wide and fills the available height. The line color comes from `color`, applied as `background-color`. It is a styled bar, not a native `<hr>`.
 
 ## When to use
-Use `Divider` when you need this kind of interface element. Start with the smallest example, then add one prop at a time. You can copy the example, change the text or color, and see the result immediately.
+- Separate stacked sections of content with a thin horizontal rule.
+- Split items inside a `Row` with a vertical rule (`orientation: "vertical"`).
 
-## Common props
-
-- `children` / `child`: content rendered inside the widget.
-- `id`: DOM id for the element.
-- `className`: CSS class names applied to the element.
-- `ref`: callback that receives the underlying DOM node.
-- `onClick` / event handlers: native browser event callbacks.
-- `disabled`: disables interaction when supported.
-
-## Full prop list
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `width` | `Size` | - | Property used by the Divider component. |
-| `height` | `Size` | - | Property used by the Divider component. |
-| `size` | `number` | - | Component size or preset. |
-| `padding` | `Padding` | - | Internal spacing around the component. |
-| `margin` | `Margin` | - | External spacing around the component. |
-| `bgColor` | `Color` | - | Background color applied to the element. |
-| `color` | `Color` | - | Color value or theme token. |
-| `borderRadius` | `number \| string` | - | Property used by the Divider component. |
-| `elevation` | `number` | - | Property used by the Divider component. |
-| `shadow` | `string` | - | Property used by the Divider component. |
-| `opacity` | `number` | - | Property used by the Divider component. |
-| `visible` | `boolean` | false | Property used by the Divider component. |
-| `disabled` | `boolean` | false | Disables interaction and shows the non-interactive state. |
-| `onPress` | `(widget: Widget) => void` | - | Callback fired when the widget is pressed. |
-| `onClick` | `(widget: Widget) => void` | - | Property used by the Divider component. |
-| `id` | `string` | - | Property used by the Divider component. |
-| `className` | `string` | - | Property used by the Divider component. |
-| `ref` | `(widget: Widget) => void` | - | Property used by the Divider component. |
-| `disableTransform` | `boolean` | - | Property used by the Divider component. |
-| `thickness` | `number` | - | Property used by the Divider component. |
-| `orientation` | `'horizontal' \| 'vertical'` | - | Property used by the Divider component. |
-
-## How props work
-
-A prop is simply an instruction inside the object passed to the widget. The name tells FletBox what to change, and the value tells it how to change it.
+## Import
 
 ```javascript
-Divider({
-    padding: 16,              // space inside the widget
-    margin: "8px 0",         // space outside the widget
-    bgColor: "#eff6ff",      // background color
-    width: "100%",           // CSS size or a number of pixels
-    children: [],             // widgets placed inside it
-    onPress: () => {         // what to do after a press
-        console.log("Hello");
-    },
-});
+import { Divider } from "flet-box";
 ```
-
-You do not need to use every prop. Begin with the required props, then add optional props only when you need them.
-
-## Example usage
-
-```javascript
-import { Divider, Text } from "flet-box";
-
-const example = Divider({
-  child: Text({ text: "Example" })
-});
-```
-
-## Examples from the FletBox snippet library
-
-The examples below come from the FletBox snippet library. The prop table is based on `src/index.d.ts`. When an example and the type declaration use different names, prefer the type declaration and verify the implementation.
 
 ## Basic example
 
 The smallest useful version. Start here if this widget is new to you.
 
 ```javascript
-Divider()
+import { Divider } from "flet-box";
+
+Divider();
 ```
 
-## Everyday example
+## Props
 
-A practical version with the props most applications usually need.
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `color` | Color | `colors.surface` | Line color (applied as `background-color`). |
+| `thickness` | number | `1` | Cross-axis thickness in pixels — the height when horizontal, the width when vertical. |
+| `orientation` | `'horizontal'`, `'vertical'` | `'horizontal'` | Direction of the rule. |
+| `margin` | number, object, or string | `16` | Space around the rule. A number applies to the two cross-axis sides (top/bottom when horizontal, left/right when vertical); an object accepts `{ top, bottom, left, right }`; a string is applied verbatim and overrides the rest. |
+| `width` | Size | `'100%'` | Length of a horizontal rule. |
+| `height` | Size | `'100%'` | Length of a vertical rule. |
+| `flexShrink` | number | `0` | Keeps the rule from shrinking inside flex layouts. |
+| `marginTop / marginBottom / marginLeft / marginRight` | number | — | Per-side margins; these take priority over the `margin` number/object. |
 
-```javascript
-Divider({ margin: 16, thickness: 1, color: colors.border })
-```
+These are the props specific to `Divider`. It also accepts every [common prop](COMMON_PROPS.md): layout, spacing, size, color, typography, borders, shadow, events, `child`/`children`, `ref`, and `style`.
 
-## Full example
+## Examples
 
-A larger example showing advanced styling, layout, events, and customization.
-
-```javascript
-Divider({ orientation: "horizontal", thickness: 2, margin: { top: 8, bottom: 8 }, color: "#e2e8f0", style: { opacity: 0.8 } })
-```
-
-
-## Common layout and styling examples
-
-The following example shows how common FletBox props work together. Numeric spacing values are interpreted as pixels, while strings can use CSS units and shorthand values.
+### Everyday example
 
 ```javascript
-import { Button, Column, Container, Row, Text } from "flet-box";
+import { Column, Divider, Text, colors } from "flet-box";
 
-const panel = Container({
-    width: "100%",          // number values are pixels; strings accept CSS units
-    padding: 24,            // 24px on every side
-    margin: "16px auto",   // CSS shorthand: vertical and horizontal spacing
-    bgColor: "#f8fafc",    // background color
-    borderRadius: 12,
-    elevation: 2,
-    gap: 12,
-    child: Column({
-        children: [
-            Text({ text: "Account settings", size: 24, weight: "bold" }),
-            Row({
-                gap: 8,
-                justifyContent: "space-between",
-                children: [
-                    Text({ text: "Update your profile" }),
-                    Button({
-                        text: "Save",
-                        bgColor: "#2563eb",
-                        color: "#ffffff",
-                        onPress: () => console.log("saved"),
-                    }),
-                ],
-            }),
-        ],
-    }),
+Column({
+  gap: 12,
+  children: [
+    Text({ text: "Section one" }),
+    Divider({ color: colors.border, margin: 4 }),
+    Text({ text: "Section two" }),
+  ],
 });
 ```
 
-### Common prop quick reference
+### Full example
 
-- `padding: 24` adds `24px` inside the widget on all sides.
-- `padding: "8px 16px"` uses CSS shorthand for vertical and horizontal spacing.
-- `margin: "16px auto"` adds outside spacing and can center a fixed-width element.
-- `bgColor: "#f8fafc"` sets the background color. Color tokens and CSS colors can be used.
-- `color: "#111827"` sets the foreground or text color when supported.
-- `width: 320` means `320px`; `width: "100%"` uses a CSS percentage.
-- `children` is an array of widgets; `child` is useful when a component accepts one child.
-- `gap: 12` controls the space between children in layout widgets.
-- `onPress` and `onClick` receive event callbacks for interactive behavior.
+```javascript
+import { Divider, Row, Text, colors } from "flet-box";
 
-## Beginner tips
+Row({
+  gap: 12,
+  alignItems: "center",
+  children: [
+    Text({ text: "Left" }),
+    Divider({
+      orientation: "vertical",
+      height: 24,
+      thickness: 2,
+      color: colors.border,
+      margin: 0,
+    }),
+    Text({ text: "Right" }),
+  ],
+});
+```
 
-- Change one value at a time so you can see what each prop does.
-- Use `Text` to check that your layout is in the place you expect.
-- Use `Container` for a box, `Row` for items side by side, and `Column` for items one below another.
-- Use `padding` when content needs breathing room inside a box.
-- Use `margin` when you need space between this widget and its neighbors.
-- Use `bgColor` to make the boundaries of a box easy to see while learning.
-- If a prop is optional, leaving it out lets FletBox use its default behavior.
+## Notes
 
-## Common mistakes
-
-- Do not put plain text where a widget is expected unless the widget explicitly accepts strings.
-- Use `children: [ ... ]` for several child widgets and `child: widget` for one child when the widget supports both.
-- Check spelling carefully: `onPress`, `onClick`, and `onChange` are different events.
-- If a helper such as `padding()` or `margin()` is not available in your import list, use a number or CSS string first.
-
-## Behavior notes
-- Integrates cleanly with FletBox runtime semantics and DOM rendering.
-- Can be nested inside layout widgets and combined with other components.
-- Uses the same direct prop and event conventions as the rest of the framework.
-- Keeps the API simple and readable for composing interfaces fast.
-
-## Accessibility
-- Prefer clear labels and readable text for interactive controls.
-- Respect the `disabled` state and keyboard behavior when available.
-- Keep state changes understandable for screen readers and assistive technology.
+- Renders a `<div>`, not a native `<hr>`.
+- The default `color` is `colors.surface` (a very light gray), so on a white background the default rule is nearly invisible. Pass `color: colors.border` (or your own) for a visible line.
+- Horizontal rules set `height: thickness` and `width: width`; vertical rules set `width: thickness`, `height: height`, and `minHeight: 1`.
+- Margin priority is: individual `marginTop`/`marginBottom`/`marginLeft`/`marginRight` first, then a `margin` object, then a `margin` number, then defaults. A string `margin` overrides everything.
+- Numeric values are pixels via the rem/16 system: `thickness: 2` computes to `2px`.
 
 ## Related widgets
-- [Container](Container.md)
-- [Row](Row.md)
+- [Card](Card.md)
 - [Column](Column.md)
-- [Stack](Stack.md)
-- [Text](Text.md)
-- [Button](Button.md)
+- [Row](Row.md)
+- [ListTile](ListTile.md)
+- [Container](Container.md)
 
 ---
 

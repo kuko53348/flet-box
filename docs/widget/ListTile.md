@@ -1,244 +1,117 @@
 # ListTile
 
 ## Overview
-`ListTile` is a ready-to-use building block. Think of it like a LEGO piece: give it some props, place it inside another widget, and FletBox creates the browser element for you.
-
-You do not need to write HTML or manually change the DOM to use this widget. You call the widget as a JavaScript function and pass an object between `{` and `}`.
-
-## Learn it in one minute
-
-1. Import the widget from `flet-box`.
-2. Call it with `WidgetName({ ... })`.
-3. Add props to describe its content, size, color, spacing, and behavior.
-4. Put it inside `Container`, `Row`, `Column`, or another widget.
-
-```javascript
-import { Column, Container, Text } from "flet-box";
-
-const welcomeCard = Container({
-    padding: 20,
-    margin: 16,
-    bgColor: "#ffffff",
-    borderRadius: 12,
-    child: Column({
-        gap: 8,
-        children: [
-            Text({ text: "My first FletBox screen", size: 24, weight: "bold" }),
-            Text({ text: "Widgets are small building blocks. Put them inside each other to build a screen." }),
-        ],
-    }),
-});
-```
+`ListTile` renders a `<div>` row made of three parts: an optional `leftItem`, a center column of up to three text lines (`title`, `subtitle`, `description`), and an optional `rightItem`. Internally it composes `Row`, `Column`, and `Text`. Pass `onPress` to make the tile tappable (pointer cursor plus a hover background); `selected` and `disabled` change its appearance.
 
 ## When to use
-Use `ListTile` when you need this kind of interface element. Start with the smallest example, then add one prop at a time. You can copy the example, change the text or color, and see the result immediately.
+- Build a settings or menu row with a leading icon, a title, supporting text, and a trailing control.
+- Render tappable rows inside a `ListView`, `Column`, or `Card`.
 
-## Common props
-
-- `children` / `child`: content rendered inside the widget.
-- `id`: DOM id for the element.
-- `className`: CSS class names applied to the element.
-- `ref`: callback that receives the underlying DOM node.
-- `onClick` / event handlers: native browser event callbacks.
-- `disabled`: disables interaction when supported.
-
-## Full prop list
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `width` | `Size` | - | Property used by the ListTile component. |
-| `height` | `Size` | - | Property used by the ListTile component. |
-| `size` | `number` | - | Component size or preset. |
-| `padding` | `Padding` | - | Internal spacing around the component. |
-| `margin` | `Margin` | - | External spacing around the component. |
-| `bgColor` | `Color` | - | Background color applied to the element. |
-| `color` | `Color` | - | Color value or theme token. |
-| `borderRadius` | `number \| string` | - | Property used by the ListTile component. |
-| `elevation` | `number` | - | Property used by the ListTile component. |
-| `shadow` | `string` | - | Property used by the ListTile component. |
-| `opacity` | `number` | - | Property used by the ListTile component. |
-| `visible` | `boolean` | false | Property used by the ListTile component. |
-| `disabled` | `boolean` | false | Disables interaction and shows the non-interactive state. |
-| `onPress` | `(widget: Widget) => void` | - | Callback fired when the widget is pressed. |
-| `onClick` | `(widget: Widget) => void` | - | Property used by the ListTile component. |
-| `id` | `string` | - | Property used by the ListTile component. |
-| `className` | `string` | - | Property used by the ListTile component. |
-| `ref` | `(widget: Widget) => void` | - | Property used by the ListTile component. |
-| `disableTransform` | `boolean` | - | Property used by the ListTile component. |
-| `leading` | `Widget` | - | Property used by the ListTile component. |
-| `title` | `string \| Widget` | - | Primary title text for the widget. |
-| `subtitle` | `string \| Widget` | - | Secondary descriptive text. |
-| `description` | `string \| Widget` | - | Property used by the ListTile component. |
-| `trailing` | `Widget` | - | Property used by the ListTile component. |
-| `selected` | `boolean` | false | Current selected state. |
-| `divider` | `boolean` | - | Property used by the ListTile component. |
-| `paddingHorizontal` | `number` | - | Property used by the ListTile component. |
-| `paddingVertical` | `number` | - | Property used by the ListTile component. |
-| `selectedBgColor` | `Color` | - | Property used by the ListTile component. |
-| `titleColor` | `Color` | - | Property used by the ListTile component. |
-| `subtitleColor` | `Color` | - | Property used by the ListTile component. |
-| `hoverColor` | `Color` | - | Property used by the ListTile component. |
-
-## How props work
-
-A prop is simply an instruction inside the object passed to the widget. The name tells FletBox what to change, and the value tells it how to change it.
+## Import
 
 ```javascript
-ListTile({
-    padding: 16,              // space inside the widget
-    margin: "8px 0",         // space outside the widget
-    bgColor: "#eff6ff",      // background color
-    width: "100%",           // CSS size or a number of pixels
-    children: [],             // widgets placed inside it
-    onPress: () => {         // what to do after a press
-        console.log("Hello");
-    },
-});
+import { ListTile } from "flet-box";
 ```
-
-You do not need to use every prop. Begin with the required props, then add optional props only when you need them.
-
-## Example usage
-
-```javascript
-import { ListTile, Text } from "flet-box";
-
-const example = ListTile({
-  title: "Example value",
-  child: Text({ text: "Example" })
-});
-```
-
-## Examples from the FletBox snippet library
-
-The examples below come from the FletBox snippet library. The prop table is based on `src/index.d.ts`. When an example and the type declaration use different names, prefer the type declaration and verify the implementation.
 
 ## Basic example
 
 The smallest useful version. Start here if this widget is new to you.
 
 ```javascript
-ListTile({ title: "Home" })
+import { ListTile } from "flet-box";
+
+ListTile({ title: "Home" });
 ```
 
-## Everyday example
+## Props
 
-A practical version with the props most applications usually need.
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `title` | string | — | Primary line. Rendered as a `Text` (size 16, `colors.primary`). |
+| `subtitle` | string | — | Second line. `Text` size 13, `colors.textSecondary`. |
+| `description` | string | — | Third line. `Text` size 12, `colors.textDisabled`. |
+| `leftItem` | Widget | — | Leading slot (e.g. an `Icon` or `Avatar`), placed before the text. |
+| `rightItem` | Widget | — | Trailing slot (e.g. a chevron), placed after the text. |
+| `onPress` | function | — | Click handler. Makes the tile interactive (pointer cursor + hover). Ignored when `disabled`. |
+| `selected` | boolean | `false` | Selected state: uses `selectedBgColor` and renders the title at weight 600. |
+| `disabled` | boolean | `false` | Dims the tile (opacity 0.6) and ignores `onPress`. |
+| `divider` | boolean | `false` | Appends a 1px `colors.border` line under the tile. |
+| `paddingHorizontal` | number | `16` | Left/right inner padding in pixels. |
+| `paddingVertical` | number | `12` | Top/bottom inner padding in pixels. |
+| `gap` | number | `12` | Space between the leading slot, the text column, and the trailing slot. |
+| `elevation` | number | `0` | When greater than 0, adds a `box-shadow` and a hover lift. |
+| `borderRadius` | number | `0` | Corner radius in pixels. |
+| `bgColor` | Color | `colors.surface` | Background when not selected. |
+| `selectedBgColor` | Color | `` `${colors.primary}20` `` | Background when `selected`. |
+| `hoverColor` | Color | `colors.border` | Background on hover (interactive and not selected). |
+| `titleProps / subtitleProps / descriptionProps` | object | `{}` | Extra props forwarded to each line's `Text`. |
+
+These are the props specific to `ListTile`. It also accepts every [common prop](COMMON_PROPS.md): layout, spacing, size, color, typography, borders, shadow, events, `child`/`children`, `ref`, and `style`.
+
+## Examples
+
+### Everyday example
 
 ```javascript
+import { Avatar, Icon, ListTile } from "flet-box";
+
 ListTile({
-    leading: Icon({ name: "person" }),
-    title: "Jane Doe",
-    subtitle: "jane@example.com",
-    trailing: Icon({ name: "chevron_right" }),
-    onPress: () => openProfile(),
-})
-```
-
-## Full example
-
-A larger example showing advanced styling, layout, events, and customization.
-
-```javascript
-ListTile({
-    leading: Avatar({ name: "JD", size: 44 }),
-    title: "Project documentation",
-    subtitle: "Updated five minutes ago",
-    description: "The complete FletBox guide",
-    trailing: Icon({ name: "more_vert" }),
-    selected: false,
-    divider: true,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    hoverColor: colors.gray100,
-    onPress: () => openProject(),
-})
-```
-
-
-## Common layout and styling examples
-
-The following example shows how common FletBox props work together. Numeric spacing values are interpreted as pixels, while strings can use CSS units and shorthand values.
-
-```javascript
-import { Button, Column, Container, Row, Text } from "flet-box";
-
-const panel = Container({
-    width: "100%",          // number values are pixels; strings accept CSS units
-    padding: 24,            // 24px on every side
-    margin: "16px auto",   // CSS shorthand: vertical and horizontal spacing
-    bgColor: "#f8fafc",    // background color
-    borderRadius: 12,
-    elevation: 2,
-    gap: 12,
-    child: Column({
-        children: [
-            Text({ text: "Account settings", size: 24, weight: "bold" }),
-            Row({
-                gap: 8,
-                justifyContent: "space-between",
-                children: [
-                    Text({ text: "Update your profile" }),
-                    Button({
-                        text: "Save",
-                        bgColor: "#2563eb",
-                        color: "#ffffff",
-                        onPress: () => console.log("saved"),
-                    }),
-                ],
-            }),
-        ],
-    }),
+  leftItem: Avatar({ name: "Jane Doe", size: 40 }),
+  title: "Jane Doe",
+  subtitle: "jane@example.com",
+  rightItem: Icon({ name: "chevron_right" }),
+  onPress: () => console.log("open profile"),
 });
 ```
 
-### Common prop quick reference
+### Full example
 
-- `padding: 24` adds `24px` inside the widget on all sides.
-- `padding: "8px 16px"` uses CSS shorthand for vertical and horizontal spacing.
-- `margin: "16px auto"` adds outside spacing and can center a fixed-width element.
-- `bgColor: "#f8fafc"` sets the background color. Color tokens and CSS colors can be used.
-- `color: "#111827"` sets the foreground or text color when supported.
-- `width: 320` means `320px`; `width: "100%"` uses a CSS percentage.
-- `children` is an array of widgets; `child` is useful when a component accepts one child.
-- `gap: 12` controls the space between children in layout widgets.
-- `onPress` and `onClick` receive event callbacks for interactive behavior.
+```javascript
+import { Column, Icon, ListTile, colors } from "flet-box";
 
-## Beginner tips
+Column({
+  children: [
+    ListTile({
+      leftItem: Icon({ name: "notifications" }),
+      title: "Notifications",
+      subtitle: "Push and email",
+      rightItem: Icon({ name: "chevron_right" }),
+      divider: true,
+      onPress: () => console.log("notifications"),
+    }),
+    ListTile({
+      leftItem: Icon({ name: "lock" }),
+      title: "Privacy",
+      description: "Manage your data",
+      selected: true,
+      elevation: 2,
+      borderRadius: 8,
+      hoverColor: colors.gray100,
+      titleProps: { size: 18 },
+      onPress: () => console.log("privacy"),
+    }),
+  ],
+});
+```
 
-- Change one value at a time so you can see what each prop does.
-- Use `Text` to check that your layout is in the place you expect.
-- Use `Container` for a box, `Row` for items side by side, and `Column` for items one below another.
-- Use `padding` when content needs breathing room inside a box.
-- Use `margin` when you need space between this widget and its neighbors.
-- Use `bgColor` to make the boundaries of a box easy to see while learning.
-- If a prop is optional, leaving it out lets FletBox use its default behavior.
+## Notes
 
-## Common mistakes
-
-- Do not put plain text where a widget is expected unless the widget explicitly accepts strings.
-- Use `children: [ ... ]` for several child widgets and `child: widget` for one child when the widget supports both.
-- Check spelling carefully: `onPress`, `onClick`, and `onChange` are different events.
-- If a helper such as `padding()` or `margin()` is not available in your import list, use a number or CSS string first.
-
-## Behavior notes
-- Integrates cleanly with FletBox runtime semantics and DOM rendering.
-- Can be nested inside layout widgets and combined with other components.
-- Uses the same direct prop and event conventions as the rest of the framework.
-- Keeps the API simple and readable for composing interfaces fast.
-
-## Accessibility
-- Prefer clear labels and readable text for interactive controls.
-- Respect the `disabled` state and keyboard behavior when available.
-- Keep state changes understandable for screen readers and assistive technology.
+- The leading and trailing slots are named `leftItem` and `rightItem` — not `leading`/`trailing`.
+- The tile composes a `Row` (`leftItem` · text `Column` · `rightItem`); the text column holds up to three `Text` lines built from `title`, `subtitle`, and `description`.
+- It is interactive only when `onPress` is set and `disabled` is false; that adds the pointer cursor and the `hoverColor` hover background.
+- `disabled` sets opacity 0.6, a default cursor, and ignores `onPress`.
+- `divider: true` changes what is returned: the tile is wrapped in a flex-column container with a 1px `colors.border` line beneath it.
+- `elevation > 0` builds a real `box-shadow` (`0 Npx 2Npx rgba(0,0,0,0.1)`) and a hover lift — unlike `Card`, this shadow does render.
+- When neither `bgColor` nor `selectedBgColor` is passed, the tile subscribes to theme changes and recolors itself; the subscription is torn down on cleanup.
+- Icons require the Material Icons font (see [Icon](Icon.md)).
 
 ## Related widgets
-- [Container](Container.md)
-- [Row](Row.md)
-- [Column](Column.md)
-- [Stack](Stack.md)
+- [ListView](ListView.md)
+- [Avatar](Avatar.md)
+- [Icon](Icon.md)
+- [Divider](Divider.md)
+- [Card](Card.md)
 - [Text](Text.md)
-- [Button](Button.md)
 
 ---
 

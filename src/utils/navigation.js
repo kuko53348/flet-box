@@ -10,7 +10,12 @@
  * - path (ruta completa hasta la raíz)
  */
 
+const navigated = new WeakSet();
+
 export const addNavigation = (widget) => {
+  if (!widget || navigated.has(widget)) return widget;
+  navigated.add(widget);
+
   // ========================================================================
   // 1. PARENT (ya lo tienes en parentable, lo incluimos aquí también)
   // ========================================================================

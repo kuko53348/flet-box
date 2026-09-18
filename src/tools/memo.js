@@ -10,7 +10,7 @@
 export const memo = (fn) => {
   const cache = new Map();
 
-  return (...args) => {
+  const memoized = (...args) => {
     const key = JSON.stringify(args);
     if (cache.has(key)) {
       return cache.get(key);
@@ -19,6 +19,9 @@ export const memo = (fn) => {
     cache.set(key, result);
     return result;
   };
+
+  memoized.cache = cache;
+  return memoized;
 };
 
 /**
@@ -30,7 +33,7 @@ export const memo = (fn) => {
 export const memoWithKey = (fn, keyFn) => {
   const cache = new Map();
 
-  return (...args) => {
+  const memoized = (...args) => {
     const key = keyFn(...args);
     if (cache.has(key)) {
       return cache.get(key);
@@ -39,6 +42,9 @@ export const memoWithKey = (fn, keyFn) => {
     cache.set(key, result);
     return result;
   };
+
+  memoized.cache = cache;
+  return memoized;
 };
 
 /**

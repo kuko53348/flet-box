@@ -2,7 +2,7 @@
 import { WidgetFactory } from "../widget-factory/index.js";
 import { AnimatedBox } from "../animations/AnimatedBox.js";
 
-export const ParallaxBox = (props) => {
+export const ParallaxBox = (props = {}) => {
   let {
     type = "scroll", // 'scroll', 'mouse', 'hover'
     speed = 0.5,
@@ -13,7 +13,7 @@ export const ParallaxBox = (props) => {
     disabled = false,
     onParallaxMove,
     duration = 300,
-    easing = "easeOut",
+    easing = "ease-out",
     ...rest
   } = props;
 

@@ -1,249 +1,127 @@
 # ListView
 
 ## Overview
-`ListView` is a ready-to-use building block. Think of it like a LEGO piece: give it some props, place it inside another widget, and FletBox creates the browser element for you.
-
-You do not need to write HTML or manually change the DOM to use this widget. You call the widget as a JavaScript function and pass an object between `{` and `}`.
-
-## Learn it in one minute
-
-1. Import the widget from `flet-box`.
-2. Call it with `WidgetName({ ... })`.
-3. Add props to describe its content, size, color, spacing, and behavior.
-4. Put it inside `Container`, `Row`, `Column`, or another widget.
-
-```javascript
-import { Column, Container, Text } from "flet-box";
-
-const welcomeCard = Container({
-    padding: 20,
-    margin: 16,
-    bgColor: "#ffffff",
-    borderRadius: 12,
-    child: Column({
-        gap: 8,
-        children: [
-            Text({ text: "My first FletBox screen", size: 24, weight: "bold" }),
-            Text({ text: "Widgets are small building blocks. Put them inside each other to build a screen." }),
-        ],
-    }),
-});
-```
+`ListView` renders a `<div>` (a flex column with `overflow: hidden`) that virtualizes a scrollable list. You give it `data` plus a `renderItem(item, index)` factory, and it renders only the rows near the viewport (plus a `bufferSize`), so long lists stay fast. It supports a header, footer, empty state, infinite scroll (`onEndReached`), and touch pull-to-refresh (`onRefresh`). `GridView` is this same widget in grid mode.
 
 ## When to use
-Use `ListView` when you need this kind of interface element. Start with the smallest example, then add one prop at a time. You can copy the example, change the text or color, and see the result immediately.
+- Render a long, scrollable list of rows efficiently (virtualized).
+- Add infinite scroll, pull-to-refresh, or a header/footer/empty state to a list.
 
-## Common props
-
-- `children` / `child`: content rendered inside the widget.
-- `id`: DOM id for the element.
-- `className`: CSS class names applied to the element.
-- `ref`: callback that receives the underlying DOM node.
-- `onClick` / event handlers: native browser event callbacks.
-- `disabled`: disables interaction when supported.
-
-## Full prop list
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `width` | `Size` | - | Property used by the ListView component. |
-| `height` | `Size` | - | Property used by the ListView component. |
-| `size` | `number` | - | Component size or preset. |
-| `padding` | `Padding` | - | Internal spacing around the component. |
-| `margin` | `Margin` | - | External spacing around the component. |
-| `bgColor` | `Color` | - | Background color applied to the element. |
-| `color` | `Color` | - | Color value or theme token. |
-| `borderRadius` | `number \| string` | - | Property used by the ListView component. |
-| `elevation` | `number` | - | Property used by the ListView component. |
-| `shadow` | `string` | - | Property used by the ListView component. |
-| `opacity` | `number` | - | Property used by the ListView component. |
-| `visible` | `boolean` | false | Property used by the ListView component. |
-| `disabled` | `boolean` | false | Disables interaction and shows the non-interactive state. |
-| `onPress` | `(widget: Widget) => void` | - | Callback fired when the widget is pressed. |
-| `onClick` | `(widget: Widget) => void` | - | Property used by the ListView component. |
-| `id` | `string` | - | Property used by the ListView component. |
-| `className` | `string` | - | Property used by the ListView component. |
-| `ref` | `(widget: Widget) => void` | - | Property used by the ListView component. |
-| `disableTransform` | `boolean` | - | Property used by the ListView component. |
-| `data` | `any[]` | [] | Collection of items used to render content. |
-| `renderItem` | `(item: any, index: number) => Widget` | - | Property used by the ListView component. |
-| `itemSize` | `number` | - | Property used by the ListView component. |
-| `gap` | `number` | - | Space between child items. |
-| `orientation` | `'vertical' \| 'horizontal'` | - | Property used by the ListView component. |
-| `wrapItems` | `boolean` | - | Property used by the ListView component. |
-| `crossAxisCount` | `number` | - | Property used by the ListView component. |
-| `onEndReached` | `() => void` | - | Property used by the ListView component. |
-| `onEndReachedThreshold` | `number` | - | Property used by the ListView component. |
-| `onRefresh` | `(done: () => void) => void` | - | Property used by the ListView component. |
-| `refreshing` | `boolean` | - | Property used by the ListView component. |
-| `ListHeaderComponent` | `(() => Widget) \| Widget` | - | Property used by the ListView component. |
-| `ListFooterComponent` | `(() => Widget) \| Widget` | - | Property used by the ListView component. |
-| `ListEmptyComponent` | `(() => Widget) \| Widget` | - | Property used by the ListView component. |
-| `showsScrollIndicator` | `boolean` | - | Property used by the ListView component. |
-| `bufferSize` | `number` | - | Property used by the ListView component. |
-| `expand` | `boolean` | - | Property used by the ListView component. |
-
-## How props work
-
-A prop is simply an instruction inside the object passed to the widget. The name tells FletBox what to change, and the value tells it how to change it.
+## Import
 
 ```javascript
-ListView({
-    padding: 16,              // space inside the widget
-    margin: "8px 0",         // space outside the widget
-    bgColor: "#eff6ff",      // background color
-    width: "100%",           // CSS size or a number of pixels
-    children: [],             // widgets placed inside it
-    onPress: () => {         // what to do after a press
-        console.log("Hello");
-    },
-});
+import { ListView } from "flet-box";
 ```
-
-You do not need to use every prop. Begin with the required props, then add optional props only when you need them.
-
-## Example usage
-
-```javascript
-import { ListView, Text } from "flet-box";
-
-const list = ListView({
-  data: ["One", "Two", "Three"],
-  gap: 8,
-  itemBuilder: (item, index) => Text({ text: `${index + 1}. ${item}` }),
-});
-```
-
-## Examples from the FletBox snippet library
-
-The examples below come from the FletBox snippet library. The prop table is based on `src/index.d.ts`. When an example and the type declaration use different names, prefer the type declaration and verify the implementation.
 
 ## Basic example
 
 The smallest useful version. Start here if this widget is new to you.
 
 ```javascript
-ListView({ data: ["A", "B"], renderItem: (item) => Text({ text: item }) })
-```
+import { ListView, Text } from "flet-box";
 
-## Everyday example
-
-A practical version with the props most applications usually need.
-
-```javascript
-ListView({ data: users, renderItem: (user) => ListTile({ title: user.name }), itemSize: 70 })
-```
-
-## Full example
-
-A larger example showing advanced styling, layout, events, and customization.
-
-```javascript
 ListView({
-    data: products,
-    renderItem: (item, idx) => Card({ child: Text({ text: item.name }) }),
-    height: 500,
-    width: "100%",
-    itemSize: 120,
-    gap: 8,
-    orientation: "vertical",
-    onEndReached: () => loadMore(),
-    onEndReachedThreshold: 0.3,
-    onRefresh: (done) => refreshData(done),
-    refreshing: isLoading,
-    ListHeaderComponent: () => Text("Top Products"),
-    ListFooterComponent: () => (hasMore ? ProgressBar({ indeterminate: true }) : null),
-    ListEmptyComponent: () => Text("No products"),
-    showsScrollIndicator: true,
-    bufferSize: 10,
-    expand: true
-})
-```
-
-
-## Common layout and styling examples
-
-The following example shows how common FletBox props work together. Numeric spacing values are interpreted as pixels, while strings can use CSS units and shorthand values.
-
-```javascript
-import { Button, Column, Container, Row, Text } from "flet-box";
-
-const panel = Container({
-    width: "100%",          // number values are pixels; strings accept CSS units
-    padding: 24,            // 24px on every side
-    margin: "16px auto",   // CSS shorthand: vertical and horizontal spacing
-    bgColor: "#f8fafc",    // background color
-    borderRadius: 12,
-    elevation: 2,
-    gap: 12,
-    child: Column({
-        children: [
-            Text({ text: "Account settings", size: 24, weight: "bold" }),
-            Row({
-                gap: 8,
-                justifyContent: "space-between",
-                children: [
-                    Text({ text: "Update your profile" }),
-                    Button({
-                        text: "Save",
-                        bgColor: "#2563eb",
-                        color: "#ffffff",
-                        onPress: () => console.log("saved"),
-                    }),
-                ],
-            }),
-        ],
-    }),
+  data: ["A", "B", "C"],
+  renderItem: (item) => Text({ text: item }),
 });
 ```
 
-### Common prop quick reference
+## Props
 
-- `padding: 24` adds `24px` inside the widget on all sides.
-- `padding: "8px 16px"` uses CSS shorthand for vertical and horizontal spacing.
-- `margin: "16px auto"` adds outside spacing and can center a fixed-width element.
-- `bgColor: "#f8fafc"` sets the background color. Color tokens and CSS colors can be used.
-- `color: "#111827"` sets the foreground or text color when supported.
-- `width: 320` means `320px`; `width: "100%"` uses a CSS percentage.
-- `children` is an array of widgets; `child` is useful when a component accepts one child.
-- `gap: 12` controls the space between children in layout widgets.
-- `onPress` and `onClick` receive event callbacks for interactive behavior.
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `data` | array | `[]` | The items to render. |
+| `renderItem` | `(item, index) => Widget` | — | Factory that builds the element for each item. Required to show rows. |
+| `itemSize` | number | `60` | Row height in pixels, used for the virtualization math. |
+| `height` | number | `400` | Height of the list viewport in pixels. |
+| `width` | Size | `'100%'` | Width of the list. |
+| `gap` | number | `0` | Space between rows in pixels. |
+| `bufferSize` | number | `5` | Extra rows rendered above and below the viewport. |
+| `showsScrollIndicator` | boolean | `true` | When `false`, hides the scrollbar. |
+| `expand` | boolean | `true` | Sets `flex: 1` on the list. See Notes — it does not change `height`. |
+| `wrapItems` | boolean | `false` | Grid mode (lays rows out in columns). `GridView` sets this for you. |
+| `crossAxisCount` | number | `2` | Number of columns when `wrapItems` is true. |
+| `onEndReached` | `() => void` | — | Fires when scrolled within `onEndReachedThreshold` of the end. |
+| `onEndReachedThreshold` | number | `0.5` | Fraction of a viewport from the end that triggers `onEndReached`. |
+| `onRefresh` | `(done) => void` | — | Enables touch pull-to-refresh; call `done()` to finish. |
+| `ListHeaderComponent` | Widget or `() => Widget` | — | Rendered above the rows. |
+| `ListFooterComponent` | Widget or `() => Widget` | — | Rendered below the rows. |
+| `ListEmptyComponent` | Widget or `() => Widget` | — | Rendered when `data` is empty. |
 
-## Beginner tips
+These are the props specific to `ListView`. It also accepts every [common prop](COMMON_PROPS.md): layout, spacing, size, color, typography, borders, shadow, events, `child`/`children`, `ref`, and `style`.
 
-- Change one value at a time so you can see what each prop does.
-- Use `Text` to check that your layout is in the place you expect.
-- Use `Container` for a box, `Row` for items side by side, and `Column` for items one below another.
-- Use `padding` when content needs breathing room inside a box.
-- Use `margin` when you need space between this widget and its neighbors.
-- Use `bgColor` to make the boundaries of a box easy to see while learning.
-- If a prop is optional, leaving it out lets FletBox use its default behavior.
+## Instance methods
 
-## Common mistakes
+The returned element exposes:
 
-- Do not put plain text where a widget is expected unless the widget explicitly accepts strings.
-- Use `children: [ ... ]` for several child widgets and `child: widget` for one child when the widget supports both.
-- Check spelling carefully: `onPress`, `onClick`, and `onChange` are different events.
-- If a helper such as `padding()` or `margin()` is not available in your import list, use a number or CSS string first.
+- `updateData(newData)` — intended to replace the dataset, clear the row cache, and re-render. Currently broken — see Notes.
+- `scrollToIndex(index, animated = true)` — scrolls so the row at `index` is visible.
+- `scrollToStart(animated = true)` — scrolls to the top.
+- `scrollToEnd(animated = true)` — scrolls to the bottom.
+- `data` — property. The getter returns the current items (safe). The setter is currently broken — see Notes.
+- `refreshing` — property. Gets/sets the pull-to-refresh spinner state (safe).
 
-## Behavior notes
-- Integrates cleanly with FletBox runtime semantics and DOM rendering.
-- Can be nested inside layout widgets and combined with other components.
-- Uses the same direct prop and event conventions as the rest of the framework.
-- Keeps the API simple and readable for composing interfaces fast.
+## Examples
 
-## Accessibility
-- Prefer clear labels and readable text for interactive controls.
-- Respect the `disabled` state and keyboard behavior when available.
-- Keep state changes understandable for screen readers and assistive technology.
+### Everyday example
+
+```javascript
+import { ListTile, ListView } from "flet-box";
+
+const users = [
+  { name: "Jane", email: "jane@example.com" },
+  { name: "Alex", email: "alex@example.com" },
+];
+
+ListView({
+  data: users,
+  itemSize: 64,
+  renderItem: (user) => ListTile({ title: user.name, subtitle: user.email }),
+});
+```
+
+### Full example
+
+```javascript
+import { Card, ListView, Text } from "flet-box";
+
+const products = [{ name: "Keyboard" }, { name: "Mouse" }, { name: "Monitor" }];
+
+const list = ListView({
+  data: products,
+  height: 400,
+  itemSize: 80,
+  gap: 8,
+  bufferSize: 8,
+  renderItem: (item, index) =>
+    Card({ child: Text({ text: `${index + 1}. ${item.name}` }) }),
+  ListHeaderComponent: () => Text({ text: "Products", type: "h2" }),
+  ListEmptyComponent: () => Text({ text: "No products" }),
+  onEndReached: () => console.log("load more"),
+  onEndReachedThreshold: 0.3,
+});
+
+list.scrollToEnd();
+```
+
+## Notes
+
+- Virtualized: only rows near the viewport (plus `bufferSize`) are in the DOM at once. Each row is absolutely positioned inside a spacer sized to the full list height.
+- `renderItem` is required — without it nothing renders. Rows are built on mount (inside a `requestAnimationFrame`), not synchronously at construction time.
+- `expand` defaults to `true` and sets `flex: 1` on the outer element, but it does **not** change `height`; the viewport height is always the `height` prop (default `400`). The source computes a `finalHeight` of `100%` for `expand` but never applies it.
+- `itemSize` should match your real row height (including `gap`), or the scroll math and absolute positioning will drift.
+- `onRefresh` enables touch pull-to-refresh and injects a spinner plus a global `@keyframes spin` style. It is touch-only (`touchstart`/`touchmove`/`touchend`).
+- `showsScrollIndicator: false` hides the scrollbar via `scrollbar-width: none`.
+- `wrapItems: true` switches to grid mode using `crossAxisCount` columns — this is exactly what `GridView` does.
+- Row elements are cached (up to about 200) and reused; `updateData` clears the cache.
+- Known bug: `updateData()` and the `data` setter recurse infinitely — `updateData` finishes by assigning `element.data`, whose setter calls `updateData` again — so calling either throws a stack-overflow `RangeError`. The `data` getter, the `refreshing` property, and the scroll methods are all safe. To change the dataset today, recreate the `ListView` with a new `data` array.
 
 ## Related widgets
-- [Container](Container.md)
-- [Row](Row.md)
+- [GridView](GridView.md)
+- [ListTile](ListTile.md)
+- [Card](Card.md)
 - [Column](Column.md)
-- [Stack](Stack.md)
 - [Text](Text.md)
-- [Button](Button.md)
 
 ---
 

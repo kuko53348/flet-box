@@ -166,6 +166,7 @@ export const createBundle = async () => {
             --minify \
             --tree-shaking=true \
             --target=es2020 \
+            --define:FLETBOX_DEV=false \
             --external:*.css \
             --external:*.woff2 \
             --resolve-extensions=.js,.json`;

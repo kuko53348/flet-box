@@ -20,13 +20,15 @@ export const Video = (props) => {
     src: src,
     width: width,
     height: height,
-    autoplay: autoplay,
-    controls: controls,
-    loop: loop,
-    muted: muted,
-    poster: poster,
     ...rest,
   });
+
+  // Media attributes are element properties, not CSS — apply them directly.
+  video.controls = Boolean(controls);
+  video.loop = Boolean(loop);
+  video.muted = Boolean(muted);
+  video.autoplay = Boolean(autoplay);
+  if (poster) video.poster = poster;
 
   // Guardar métodos nativos
   const nativePlay = video.play.bind(video);

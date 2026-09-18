@@ -1,252 +1,113 @@
 # DroppBox
 
 ## Overview
-`DroppBox` is a ready-to-use building block. Think of it like a LEGO piece: give it some props, place it inside another widget, and FletBox creates the browser element for you.
-
-You do not need to write HTML or manually change the DOM to use this widget. You call the widget as a JavaScript function and pass an object between `{` and `}`.
-
-## Learn it in one minute
-
-1. Import the widget from `flet-box`.
-2. Call it with `WidgetName({ ... })`.
-3. Add props to describe its content, size, color, spacing, and behavior.
-4. Put it inside `Container`, `Row`, `Column`, or another widget.
-
-```javascript
-import { Column, Container, Text } from "flet-box";
-
-const welcomeCard = Container({
-    padding: 20,
-    margin: 16,
-    bgColor: "#ffffff",
-    borderRadius: 12,
-    child: Column({
-        gap: 8,
-        children: [
-            Text({ text: "My first FletBox screen", size: 24, weight: "bold" }),
-            Text({ text: "Widgets are small building blocks. Put them inside each other to build a screen." }),
-        ],
-    }),
-});
-```
+`DroppBox` renders a styled `<div>` drop target — `position: relative`, a `2px` solid border, `12px` radius, and `16px` padding by default — that receives items dragged from a `DraggBox`. While a drag hovers over it, the box highlights green (valid) or red (invalid) depending on whether the dragged `group` is listed in `acceptGroups`. On a valid `drop` it calls `onDrop(data, group, event)`.
 
 ## When to use
-Use `DroppBox` when you need this kind of interface element. Start with the smallest example, then add one prop at a time. You can copy the example, change the text or color, and see the result immediately.
+- Create a target that accepts draggable items from a `DraggBox`.
+- Build kanban columns, trash zones, or "drop cards here" areas.
+- Show accept/reject feedback driven by `acceptGroups`.
 
-## Common props
-
-- `children` / `child`: content rendered inside the widget.
-- `id`: DOM id for the element.
-- `className`: CSS class names applied to the element.
-- `ref`: callback that receives the underlying DOM node.
-- `onClick` / event handlers: native browser event callbacks.
-- `disabled`: disables interaction when supported.
-
-## Full prop list
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `width` | `Size` | - | Property used by the DroppBox component. |
-| `height` | `Size` | - | Property used by the DroppBox component. |
-| `size` | `number` | - | Component size or preset. |
-| `padding` | `Padding` | - | Internal spacing around the component. |
-| `margin` | `Margin` | - | External spacing around the component. |
-| `bgColor` | `Color` | - | Background color applied to the element. |
-| `color` | `Color` | - | Color value or theme token. |
-| `borderRadius` | `number \| string` | - | Property used by the DroppBox component. |
-| `elevation` | `number` | - | Property used by the DroppBox component. |
-| `shadow` | `string` | - | Property used by the DroppBox component. |
-| `opacity` | `number` | - | Property used by the DroppBox component. |
-| `visible` | `boolean` | false | Property used by the DroppBox component. |
-| `disabled` | `boolean` | false | Disables interaction and shows the non-interactive state. |
-| `onPress` | `(widget: Widget) => void` | - | Callback fired when the widget is pressed. |
-| `onClick` | `(widget: Widget) => void` | - | Property used by the DroppBox component. |
-| `id` | `string` | - | Property used by the DroppBox component. |
-| `className` | `string` | - | Property used by the DroppBox component. |
-| `ref` | `(widget: Widget) => void` | - | Property used by the DroppBox component. |
-| `disableTransform` | `boolean` | - | Property used by the DroppBox component. |
-| `child` | `Widget` | - | Property used by the DroppBox component. |
-| `onDrop` | `(data: any, group: string, event: DragEvent) => void` | - | Property used by the DroppBox component. |
-| `onDragEnter` | `(event: DragEvent) => void` | - | Property used by the DroppBox component. |
-| `onDragLeave` | `(event: DragEvent) => void` | - | Property used by the DroppBox component. |
-| `onDragOver` | `(event: DragEvent) => void` | - | Property used by the DroppBox component. |
-| `acceptGroups` | `string[]` | [] | Property used by the DroppBox component. |
-| `borderWidth` | `number` | - | Property used by the DroppBox component. |
-| `borderStyle` | `string` | - | Property used by the DroppBox component. |
-| `borderColor` | `Color` | - | Property used by the DroppBox component. |
-| `activeBgColor` | `Color` | - | Property used by the DroppBox component. |
-| `activeBorderColor` | `Color` | - | Property used by the DroppBox component. |
-| `activeBorderWidth` | `number` | - | Property used by the DroppBox component. |
-| `activeBorderStyle` | `string` | - | Property used by the DroppBox component. |
-| `activeShadow` | `string` | - | Property used by the DroppBox component. |
-| `validBgColor` | `Color` | - | Property used by the DroppBox component. |
-| `validBorderColor` | `Color` | - | Property used by the DroppBox component. |
-| `invalidBgColor` | `Color` | - | Property used by the DroppBox component. |
-| `invalidBorderColor` | `Color` | - | Property used by the DroppBox component. |
-| `transitionDuration` | `string` | - | Property used by the DroppBox component. |
-| `transitionTiming` | `string` | - | Property used by the DroppBox component. |
-| `showFeedback` | `boolean` | false | Property used by the DroppBox component. |
-
-## How props work
-
-A prop is simply an instruction inside the object passed to the widget. The name tells FletBox what to change, and the value tells it how to change it.
+## Import
 
 ```javascript
-DroppBox({
-    padding: 16,              // space inside the widget
-    margin: "8px 0",         // space outside the widget
-    bgColor: "#eff6ff",      // background color
-    width: "100%",           // CSS size or a number of pixels
-    children: [],             // widgets placed inside it
-    onPress: () => {         // what to do after a press
-        console.log("Hello");
-    },
-});
+import { DroppBox } from "flet-box";
 ```
-
-You do not need to use every prop. Begin with the required props, then add optional props only when you need them.
-
-## Example usage
-
-```javascript
-import { DroppBox, Text } from "flet-box";
-
-const example = DroppBox({
-  child: Text({ text: "Example" })
-});
-```
-
-## Examples from the FletBox snippet library
-
-The examples below come from the FletBox snippet library. The prop table is based on `src/index.d.ts`. When an example and the type declaration use different names, prefer the type declaration and verify the implementation.
 
 ## Basic example
 
 The smallest useful version. Start here if this widget is new to you.
 
 ```javascript
-DroppBox({ child: Text({ text: "Drop here" }) })
+import { DroppBox, Text } from "flet-box";
+
+DroppBox({ child: Text({ text: "Drop here" }) });
 ```
 
-## Everyday example
+## Props
 
-A practical version with the props most applications usually need.
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `child` | Widget | — | Content inside the target. May be an element, a string, or an array of either. |
+| `acceptGroups` | string[] | `["default"]` | Drag `group`s this target accepts. A drop from any other group is ignored. |
+| `disabled` | boolean | `false` | Ignore all drag events. |
+| `onDrop` | `(data, group, event) => void` | — | Fires on a valid drop with the dragged payload. |
+| `onDragEnter` | `(event) => void` | — | Fires when a valid drag first enters. |
+| `onDragLeave` | `(event) => void` | — | Fires when the active drag leaves. |
+| `onDragOver` | `(event) => void` | — | Fires continuously while a drag is over the target. |
+| `bgColor` | Color | `colors.surface` | Resting background color. |
+| `borderRadius` | number or string | `12` | Corner radius (a number becomes pixels). |
+| `borderWidth` | number | `2` | Resting border width in pixels. |
+| `borderStyle` | string | `"solid"` | Resting border style. |
+| `borderColor` | Color | `colors.border` | Resting border color. |
+| `shadow` | string | `"none"` | Resting box-shadow. |
+| `padding` | number or string | `16` | Inner padding (a number becomes pixels). |
+| `validBgColor` | Color | `${colors.success}20` | Background while a **valid** drag hovers. |
+| `validBorderColor` | Color | `colors.success` | Border color while a valid drag hovers. |
+| `invalidBgColor` | Color | `${colors.danger}20` | Background while an **invalid** drag hovers. |
+| `invalidBorderColor` | Color | `colors.danger` | Border color while an invalid drag hovers. |
+| `activeBorderStyle` | string | `"dashed"` | Border style while any drag hovers. |
+| `activeBorderWidth` | number | `2` | Border width (pixels) while a drag hovers. |
+| `activeShadow` | string | `0 4px 12px ${colors.primary}40` | Box-shadow while a drag hovers. |
+| `transitionDuration` | string | `"0.2s"` | CSS transition duration for style changes. |
+| `transitionTiming` | string | `"ease"` | CSS transition timing function. |
+| `showFeedback` | boolean | `true` | Whether to apply the hover highlight at all. |
+
+These are the props specific to `DroppBox`. It also accepts every [common prop](COMMON_PROPS.md): layout, spacing, size, color, typography, borders, shadow, events, `child`/`children`, `ref`, and `style`.
+
+## Examples
+
+### Everyday example
 
 ```javascript
+import { DroppBox, Text } from "flet-box";
+
 DroppBox({
-    child: Text({ text: "Drop a card here" }),
-    acceptGroups: ["cards"],
-    onDrop: (data) => console.log("dropped", data),
-})
-```
-
-## Full example
-
-A larger example showing advanced styling, layout, events, and customization.
-
-```javascript
-DroppBox({
-    child: Container({
-        padding: 32,
-        borderRadius: 12,
-        child: Text({ text: "Drop files or tasks here" }),
-    }),
-    acceptGroups: ["kanban"],
-    showFeedback: true,
-    activeBgColor: "#eff6ff",
-    activeBorderColor: colors.primary,
-    validBgColor: "#f0fdf4",
-    validBorderColor: colors.success,
-    invalidBgColor: "#fef2f2",
-    invalidBorderColor: colors.danger,
-    onDrop: (data, group, event) => console.log(data, group),
-})
-```
-
-
-## Common layout and styling examples
-
-The following example shows how common FletBox props work together. Numeric spacing values are interpreted as pixels, while strings can use CSS units and shorthand values.
-
-```javascript
-import { Button, Column, Container, Row, Text } from "flet-box";
-
-const panel = Container({
-    width: "100%",          // number values are pixels; strings accept CSS units
-    padding: 24,            // 24px on every side
-    margin: "16px auto",   // CSS shorthand: vertical and horizontal spacing
-    bgColor: "#f8fafc",    // background color
-    borderRadius: 12,
-    elevation: 2,
-    gap: 12,
-    child: Column({
-        children: [
-            Text({ text: "Account settings", size: 24, weight: "bold" }),
-            Row({
-                gap: 8,
-                justifyContent: "space-between",
-                children: [
-                    Text({ text: "Update your profile" }),
-                    Button({
-                        text: "Save",
-                        bgColor: "#2563eb",
-                        color: "#ffffff",
-                        onPress: () => console.log("saved"),
-                    }),
-                ],
-            }),
-        ],
-    }),
+  acceptGroups: ["cards"],
+  onDrop: (data, group) => console.log("dropped", data, "in", group),
+  child: Text({ text: "Drop a card here" }),
 });
 ```
 
-### Common prop quick reference
+### Full example
 
-- `padding: 24` adds `24px` inside the widget on all sides.
-- `padding: "8px 16px"` uses CSS shorthand for vertical and horizontal spacing.
-- `margin: "16px auto"` adds outside spacing and can center a fixed-width element.
-- `bgColor: "#f8fafc"` sets the background color. Color tokens and CSS colors can be used.
-- `color: "#111827"` sets the foreground or text color when supported.
-- `width: 320` means `320px`; `width: "100%"` uses a CSS percentage.
-- `children` is an array of widgets; `child` is useful when a component accepts one child.
-- `gap: 12` controls the space between children in layout widgets.
-- `onPress` and `onClick` receive event callbacks for interactive behavior.
+```javascript
+import { Column, Container, DroppBox, Text, colors } from "flet-box";
 
-## Beginner tips
+Column({
+  gap: 12,
+  children: [
+    Text({ text: "Tasks", type: "h3" }),
+    DroppBox({
+      acceptGroups: ["tasks"],
+      showFeedback: true,
+      padding: 24,
+      borderRadius: 16,
+      validBgColor: `${colors.success}20`,
+      invalidBgColor: `${colors.danger}20`,
+      onDragEnter: () => console.log("drag over the column"),
+      onDrop: (data, group) => console.log("added to", group, data),
+      child: Container({ padding: 16, child: Text({ text: "Drop tasks here" }) }),
+    }),
+  ],
+});
+```
 
-- Change one value at a time so you can see what each prop does.
-- Use `Text` to check that your layout is in the place you expect.
-- Use `Container` for a box, `Row` for items side by side, and `Column` for items one below another.
-- Use `padding` when content needs breathing room inside a box.
-- Use `margin` when you need space between this widget and its neighbors.
-- Use `bgColor` to make the boundaries of a box easy to see while learning.
-- If a prop is optional, leaving it out lets FletBox use its default behavior.
+## Notes
 
-## Common mistakes
-
-- Do not put plain text where a widget is expected unless the widget explicitly accepts strings.
-- Use `children: [ ... ]` for several child widgets and `child: widget` for one child when the widget supports both.
-- Check spelling carefully: `onPress`, `onClick`, and `onChange` are different events.
-- If a helper such as `padding()` or `margin()` is not available in your import list, use a number or CSS string first.
-
-## Behavior notes
-- Integrates cleanly with FletBox runtime semantics and DOM rendering.
-- Can be nested inside layout widgets and combined with other components.
-- Uses the same direct prop and event conventions as the rest of the framework.
-- Keeps the API simple and readable for composing interfaces fast.
-
-## Accessibility
-- Prefer clear labels and readable text for interactive controls.
-- Respect the `disabled` state and keyboard behavior when available.
-- Keep state changes understandable for screen readers and assistive technology.
+- Renders a `<div>`; the widget returns that wrapper element.
+- Pairing: a `DraggBox` writes `{ data, group }` to `window.__dragData` on dragstart. `DroppBox` accepts the drop only when that `group` is in `acceptGroups` (default `["default"]`, which matches a default `DraggBox`).
+- `onDrop(data, group, event)` receives the dragged `data` and its `group`; the shared payload is cleared after a successful drop.
+- Hover feedback (when `showFeedback` is true): a valid drag uses `validBgColor`/`validBorderColor`, an invalid drag uses `invalidBgColor`/`invalidBorderColor`; both switch the border to `activeBorderStyle`/`activeBorderWidth` and apply `activeShadow`.
+- `dragover` always calls `preventDefault()` and sets `dropEffect = "copy"` so the browser permits the drop.
+- `disabled` short-circuits every drag handler.
+- `activeBgColor` and `activeBorderColor` are accepted but currently have no effect — the hover background and border come from the valid/invalid colors.
 
 ## Related widgets
+- [DraggBox](DraggBox.md)
+- [Card](Card.md)
 - [Container](Container.md)
-- [Row](Row.md)
 - [Column](Column.md)
-- [Stack](Stack.md)
-- [Text](Text.md)
-- [Button](Button.md)
 
 ---
 
