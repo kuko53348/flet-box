@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>flet-box — prop scan</title>
+    <script>
+      // Capture every "UNKNOWN PROP" the framework's own widgets emit.
+      window.__UNKNOWN = new Map(); // prop -> Set(widgets)
+      const grab = (args) => {
+        try {
+          const joined = args.map((a) => (typeof a === "string" ? a : "")).join(" ");
+          if (joined.indexOf("📦 Prop") !== -1) {
+            const m = joined.match(/"([A-Za-z0-9_]+)"/);
+            if (m) {
+              const prop = m[1];
+              if (!window.__UNKNOWN.has(prop)) window.__UNKNOWN.set(prop, new Set());
+              window.__PENDING = prop;
+            }
+          } else if (joined.indexOf("🧩 Widget") !== -1 && window.__PENDING) {
+            const m = joined.match(/Widget:\s*(?:%c\s*)*"?([A-Za-z0-9_]+)"?/);
+            if (m) window.__UNKNOWN.get(window.__PENDING).add(m[1]);
+            window.__PENDING = null;
+          }
+        } catch (e) {}
+      };
+      const _log = console.log;
+      console.log = function (...a) { grab(a); return _log.apply(console, a); };
+    </script>
+  </head>
+  <body>
+    <div id="summary">scanning…</div>
+    <ul id="out"></ul>
+    <script type="module" src="./widget-smoke.test.js"></script>
+    <script type="module">
+      // After smoke finishes, report the unknown-prop set.
+      setTimeout(() => {
+        const obj = {};
+        for (const [k, v] of window.__UNKNOWN) obj[k] = [...v];
+        window.__UNKNOWN_REPORT = obj;
+        const keys = Object.keys(obj).sort();
+        document.getElementById("summary").textContent =
+          "UNKNOWN props emitted by framework widgets: " + keys.length;
+        const out = document.getElementById("out");
+        for (const k of keys) {
+          const li = document.createElement("li");
+          li.textContent = k + "  ←  " + obj[k].join(", ");
+          out.appendChild(li);
+        }
+      }, 1500);
+    </script>
+  </body>
+</html>

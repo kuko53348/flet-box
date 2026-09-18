@@ -8,10 +8,12 @@ If you have never used FletBox, begin with [Start here](START_HERE.md). Then fol
 
 - Chapters go from **basic to advanced**. Read them top to bottom the first time.
 - At the end of every widget page there is a **Continue reading** block with the previous page, the next page, and a link back to this index.
-- Each page has the same shape: a one-minute intro, common props, a full prop table, and `basic` / `normal` / `full` examples.
+- Each page has the same shape: an overview, when to use it, a prop table, and copy-paste examples.
 - Related widgets at the bottom of each page are clickable, so you can branch off whenever you are curious.
 
 Related guides: [Build your first FletBox app](../guides/app-templates.md) · [FletBox CLI](../cli/README.md).
+
+Shared reference: every widget also accepts the [common props](COMMON_PROPS.md) — layout, spacing, color, typography, borders, events, aliases, and the number-to-pixel rule. Read it once and you will recognize those props everywhere.
 
 ## The reading path
 

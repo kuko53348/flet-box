@@ -1,242 +1,92 @@
 # Text
 
 ## Overview
-`Text` is a ready-to-use building block. Think of it like a LEGO piece: give it some props, place it inside another widget, and FletBox creates the browser element for you.
-
-You do not need to write HTML or manually change the DOM to use this widget. You call the widget as a JavaScript function and pass an object between `{` and `}`.
-
-## Learn it in one minute
-
-1. Import the widget from `flet-box`.
-2. Call it with `WidgetName({ ... })`.
-3. Add props to describe its content, size, color, spacing, and behavior.
-4. Put it inside `Container`, `Row`, `Column`, or another widget.
-
-```javascript
-import { Column, Container, Text } from "flet-box";
-
-const welcomeCard = Container({
-    padding: 20,
-    margin: 16,
-    bgColor: "#ffffff",
-    borderRadius: 12,
-    child: Column({
-        gap: 8,
-        children: [
-            Text({ text: "My first FletBox screen", size: 24, weight: "bold" }),
-            Text({ text: "Widgets are small building blocks. Put them inside each other to build a screen." }),
-        ],
-    }),
-});
-```
+`Text` renders a run of text — a label, a paragraph, or a heading. It is the most-used widget in FletBox: give it `text`, then style it with `size`, `weight`, `color`, and `align`. By default it renders a `<span>`; setting `type` renders the matching semantic tag (`h1`–`h6` or `p`).
 
 ## When to use
-Use `Text` when you need this kind of interface element. Start with the smallest example, then add one prop at a time. You can copy the example, change the text or color, and see the result immediately.
+- Display a label, title, paragraph, or any read-only text.
+- Render semantic headings with `type: "h1"` … `"h6"` for document structure and accessibility.
+- Add inline emphasis with `styles` (bold, italic, underline, strikethrough, mark, small, code).
 
-## Common props
-
-- `children` / `child`: content rendered inside the widget.
-- `id`: DOM id for the element.
-- `className`: CSS class names applied to the element.
-- `ref`: callback that receives the underlying DOM node.
-- `onClick` / event handlers: native browser event callbacks.
-- `disabled`: disables interaction when supported.
-
-## Full prop list
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `width` | `Size` | - | Property used by the Text component. |
-| `height` | `Size` | - | Property used by the Text component. |
-| `size` | `number` | - | Component size or preset. |
-| `padding` | `Padding` | - | Internal spacing around the component. |
-| `margin` | `Margin` | - | External spacing around the component. |
-| `bgColor` | `Color` | - | Background color applied to the element. |
-| `color` | `Color` | - | Color value or theme token. |
-| `borderRadius` | `number \| string` | - | Property used by the Text component. |
-| `elevation` | `number` | - | Property used by the Text component. |
-| `shadow` | `string` | - | Property used by the Text component. |
-| `opacity` | `number` | - | Property used by the Text component. |
-| `visible` | `boolean` | false | Property used by the Text component. |
-| `disabled` | `boolean` | false | Disables interaction and shows the non-interactive state. |
-| `onPress` | `(widget: Widget) => void` | - | Callback fired when the widget is pressed. |
-| `onClick` | `(widget: Widget) => void` | - | Property used by the Text component. |
-| `id` | `string` | - | Property used by the Text component. |
-| `className` | `string` | - | Property used by the Text component. |
-| `ref` | `(widget: Widget) => void` | - | Property used by the Text component. |
-| `disableTransform` | `boolean` | - | Property used by the Text component. |
-| `text` | `string` | - | Visible text content rendered by the widget. |
-| `value` | `string` | - | Current value controlled by the widget. |
-| `children` | `string` | - | Property used by the Text component. |
-| `weight` | `'normal' \| 'bold' \| number` | - | Property used by the Text component. |
-| `align` | `'left' \| 'center' \| 'right' \| 'justify'` | - | Property used by the Text component. |
-| `italic` | `boolean` | - | Property used by the Text component. |
-| `decoration` | `'underline' \| 'line-through' \| 'overline'` | - | Property used by the Text component. |
-| `lineHeight` | `number \| string` | - | Property used by the Text component. |
-| `letterSpacing` | `number \| string` | - | Property used by the Text component. |
-| `type` | `'h1' \| 'h2' \| 'h3' \| 'h4' \| 'h5' \| 'h6' \| 'p'` | - | Property used by the Text component. |
-| `styles` | `Array<'bold' \| 'italic' \| 'underline' \| 'strikethrough' \| 'mark' \| 'small' \| 'code'>` | - | Property used by the Text component. |
-
-## How props work
-
-A prop is simply an instruction inside the object passed to the widget. The name tells FletBox what to change, and the value tells it how to change it.
-
-```javascript
-Text({
-    padding: 16,              // space inside the widget
-    margin: "8px 0",         // space outside the widget
-    bgColor: "#eff6ff",      // background color
-    width: "100%",           // CSS size or a number of pixels
-    children: [],             // widgets placed inside it
-    onPress: () => {         // what to do after a press
-        console.log("Hello");
-    },
-});
-```
-
-You do not need to use every prop. Begin with the required props, then add optional props only when you need them.
-
-## Example usage
+## Import
 
 ```javascript
 import { Text } from "flet-box";
-
-const title = Text({
-  text: "Welcome back",
-  type: "h2",
-  size: 28,
-  color: "#111827",
-  weight: "bold",
-});
 ```
-
-## Examples from the FletBox snippet library
-
-The examples below come from the FletBox snippet library. The prop table is based on `src/index.d.ts`. When an example and the type declaration use different names, prefer the type declaration and verify the implementation.
 
 ## Basic example
 
 The smallest useful version. Start here if this widget is new to you.
 
 ```javascript
-Text({ text: "Hello" })
+import { Text } from "flet-box";
+
+Text({ text: "Hello FletBox" });
 ```
 
-## Everyday example
+## Props
 
-A practical version with the props most applications usually need.
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `text` | string | `""` | The text to render. Aliases: `value`, `children`. |
+| `type` | `'h1'`–`'h6'`, `'p'` | `<span>` | Semantic tag to render. `h1`/`h2` and `p` add a default bottom margin. |
+| `size` | number | `16` | Font size in pixels. |
+| `weight` | `'normal'`, `'bold'`, or number | `'normal'` | Font weight. |
+| `color` | Color | `colors.textSecondary` | Text (foreground) color. |
+| `backgroundColor` | Color | `'transparent'` | Background behind the text. Alias: `bgColor`. |
+| `align` | `'left'`, `'center'`, `'right'`, `'justify'` | — | Text alignment (CSS `text-align`). |
+| `styles` | array of `'bold'`, `'italic'`, `'underline'`, `'strikethrough'`, `'mark'`, `'small'`, `'code'` | `[]` | Inline emphasis. Wraps text in `<strong>`, `<em>`, `<mark>`, `<small>`, `<code>`; underline/strikethrough use `text-decoration`. |
+
+These are the props specific to `Text`. It also accepts every [common prop](COMMON_PROPS.md): layout, spacing, size, color, typography, borders, shadow, events, `child`/`children`, `ref`, and `style`.
+
+## Examples
+
+### Everyday example
 
 ```javascript
-Text({ text: "FletBox", size: 20, weight: "bold", color: colors.primary })
-```
+import { Text, colors } from "flet-box";
 
-## Full example
-
-A larger example showing advanced styling, layout, events, and customization.
-
-```javascript
 Text({
-    text: "Advanced Typography",
-    size: 28,
-    weight: "600",
-    color: colors.text,
-    align: "center",
-    italic: true,
-    decoration: "underline",
-    lineHeight: 1.4,
-    letterSpacing: 0.5,
-    styles: ["bold", "italic"],
-    type: "h1",
-    onPress: () => console.log("text clicked"),
-    id: "title",
-    className: "headline"
-})
-```
-
-
-## Common layout and styling examples
-
-The following example shows how common FletBox props work together. Numeric spacing values are interpreted as pixels, while strings can use CSS units and shorthand values.
-
-```javascript
-import { Button, Column, Container, Row, Text } from "flet-box";
-
-const panel = Container({
-    width: "100%",          // number values are pixels; strings accept CSS units
-    padding: 24,            // 24px on every side
-    margin: "16px auto",   // CSS shorthand: vertical and horizontal spacing
-    bgColor: "#f8fafc",    // background color
-    borderRadius: 12,
-    elevation: 2,
-    gap: 12,
-    child: Column({
-        children: [
-            Text({ text: "Account settings", size: 24, weight: "bold" }),
-            Row({
-                gap: 8,
-                justifyContent: "space-between",
-                children: [
-                    Text({ text: "Update your profile" }),
-                    Button({
-                        text: "Save",
-                        bgColor: "#2563eb",
-                        color: "#ffffff",
-                        onPress: () => console.log("saved"),
-                    }),
-                ],
-            }),
-        ],
-    }),
+  text: "Welcome back",
+  type: "h2",
+  size: 28,
+  weight: "bold",
+  color: colors.text,
 });
 ```
 
-### Common prop quick reference
+### Full example
 
-- `padding: 24` adds `24px` inside the widget on all sides.
-- `padding: "8px 16px"` uses CSS shorthand for vertical and horizontal spacing.
-- `margin: "16px auto"` adds outside spacing and can center a fixed-width element.
-- `bgColor: "#f8fafc"` sets the background color. Color tokens and CSS colors can be used.
-- `color: "#111827"` sets the foreground or text color when supported.
-- `width: 320` means `320px`; `width: "100%"` uses a CSS percentage.
-- `children` is an array of widgets; `child` is useful when a component accepts one child.
-- `gap: 12` controls the space between children in layout widgets.
-- `onPress` and `onClick` receive event callbacks for interactive behavior.
+```javascript
+import { Text } from "flet-box";
 
-## Beginner tips
+Text({
+  text: "Advanced typography",
+  type: "h1",
+  size: 32,
+  weight: 600,
+  color: "#111827",
+  align: "center",
+  styles: ["italic", "underline"],
+  lineHeight: 1.4,
+  letterSpacing: 0.5,
+});
+```
 
-- Change one value at a time so you can see what each prop does.
-- Use `Text` to check that your layout is in the place you expect.
-- Use `Container` for a box, `Row` for items side by side, and `Column` for items one below another.
-- Use `padding` when content needs breathing room inside a box.
-- Use `margin` when you need space between this widget and its neighbors.
-- Use `bgColor` to make the boundaries of a box easy to see while learning.
-- If a prop is optional, leaving it out lets FletBox use its default behavior.
+## Notes
 
-## Common mistakes
-
-- Do not put plain text where a widget is expected unless the widget explicitly accepts strings.
-- Use `children: [ ... ]` for several child widgets and `child: widget` for one child when the widget supports both.
-- Check spelling carefully: `onPress`, `onClick`, and `onChange` are different events.
-- If a helper such as `padding()` or `margin()` is not available in your import list, use a number or CSS string first.
-
-## Behavior notes
-- Integrates cleanly with FletBox runtime semantics and DOM rendering.
-- Can be nested inside layout widgets and combined with other components.
-- Uses the same direct prop and event conventions as the rest of the framework.
-- Keeps the API simple and readable for composing interfaces fast.
-
-## Accessibility
-- Prefer clear labels and readable text for interactive controls.
-- Respect the `disabled` state and keyboard behavior when available.
-- Keep state changes understandable for screen readers and assistive technology.
+- Renders a `<span>` unless `type` is set to a heading or `p`.
+- Here `align` means **text alignment**; in `Row`/`Column` the same prop name means `alignItems`.
+- `lineHeight` and `letterSpacing` are available as [common props](COMMON_PROPS.md).
+- `styles: ["underline", "strikethrough"]` combine into `text-decoration: underline line-through`.
 
 ## Related widgets
 - [Container](Container.md)
 - [Row](Row.md)
 - [Column](Column.md)
-- [Stack](Stack.md)
-- `Text`
+- [Icon](Icon.md)
 - [Button](Button.md)
+- [Markdown](Markdown.md)
 
 ---
 

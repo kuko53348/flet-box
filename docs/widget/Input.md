@@ -1,270 +1,123 @@
 # Input
 
 ## Overview
-`Input` is a ready-to-use building block. Think of it like a LEGO piece: give it some props, place it inside another widget, and FletBox creates the browser element for you.
-
-You do not need to write HTML or manually change the DOM to use this widget. You call the widget as a JavaScript function and pass an object between `{` and `}`.
-
-## Learn it in one minute
-
-1. Import the widget from `flet-box`.
-2. Call it with `WidgetName({ ... })`.
-3. Add props to describe its content, size, color, spacing, and behavior.
-4. Put it inside `Container`, `Row`, `Column`, or another widget.
-
-```javascript
-import { Column, Container, Text } from "flet-box";
-
-const welcomeCard = Container({
-    padding: 20,
-    margin: 16,
-    bgColor: "#ffffff",
-    borderRadius: 12,
-    child: Column({
-        gap: 8,
-        children: [
-            Text({ text: "My first FletBox screen", size: 24, weight: "bold" }),
-            Text({ text: "Widgets are small building blocks. Put them inside each other to build a screen." }),
-        ],
-    }),
-});
-```
+`Input` renders a styled text field built on a native `<input>`, with an optional label, leading/trailing icons, three visual variants, and a built-in validation engine. It exposes an imperative API (`getValue`, `setValue`, `validate`, `focus`, …) on the returned element.
 
 ## When to use
-Use `Input` when you need this kind of interface element. Start with the smallest example, then add one prop at a time. You can copy the example, change the text or color, and see the result immediately.
+- Collect text, email, numbers, or passwords from the user.
+- Show inline validation: required, email, letters, numbers, alphanumeric, safe, or a custom pattern.
+- Add a label, helper icons, or a clear error/success state.
 
-## Common props
-
-- `children` / `child`: content rendered inside the widget.
-- `id`: DOM id for the element.
-- `className`: CSS class names applied to the element.
-- `ref`: callback that receives the underlying DOM node.
-- `onClick` / event handlers: native browser event callbacks.
-- `disabled`: disables interaction when supported.
-
-## Full prop list
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `width` | `Size` | - | Property used by the Input component. |
-| `height` | `Size` | - | Property used by the Input component. |
-| `size` | `number` | - | Component size or preset. |
-| `padding` | `Padding` | - | Internal spacing around the component. |
-| `margin` | `Margin` | - | External spacing around the component. |
-| `bgColor` | `Color` | - | Background color applied to the element. |
-| `color` | `Color` | - | Color value or theme token. |
-| `borderRadius` | `number \| string` | - | Property used by the Input component. |
-| `elevation` | `number` | - | Property used by the Input component. |
-| `shadow` | `string` | - | Property used by the Input component. |
-| `opacity` | `number` | - | Property used by the Input component. |
-| `visible` | `boolean` | false | Property used by the Input component. |
-| `disabled` | `boolean` | false | Disables interaction and shows the non-interactive state. |
-| `onPress` | `(widget: Widget) => void` | - | Callback fired when the widget is pressed. |
-| `onClick` | `(widget: Widget) => void` | - | Property used by the Input component. |
-| `id` | `string` | - | Property used by the Input component. |
-| `className` | `string` | - | Property used by the Input component. |
-| `ref` | `(widget: Widget) => void` | - | Property used by the Input component. |
-| `disableTransform` | `boolean` | - | Property used by the Input component. |
-| `value` | `string` | - | Current value controlled by the widget. |
-| `placeholder` | `string` | - | Hint shown when the field is empty. |
-| `type` | `'text' \| 'email' \| 'password' \| 'number' \| 'tel' \| 'search' \| 'url'` | - | Property used by the Input component. |
-| `label` | `string` | - | Label or caption shown near the control. |
-| `error` | `boolean \| string` | - | Property used by the Input component. |
-| `readonly` | `boolean` | false | Property used by the Input component. |
-| `required` | `boolean` | false | Property used by the Input component. |
-| `variant` | `'outlined' \| 'filled' \| 'underlined'` | - | Visual variation or style preset. |
-| `fullWidth` | `boolean` | false | Property used by the Input component. |
-| `validation` | `'none' \| 'letters' \| 'numbers' \| 'email' \| 'alphanumeric' \| 'safe' \| 'custom'` | - | Property used by the Input component. |
-| `maxLength` | `number` | - | Property used by the Input component. |
-| `iconLeft` | `string` | - | Property used by the Input component. |
-| `iconRight` | `string` | - | Property used by the Input component. |
-| `iconColor` | `Color` | - | Property used by the Input component. |
-| `iconSize` | `number` | - | Property used by the Input component. |
-| `onIconPress` | `() => void` | - | Property used by the Input component. |
-| `clearable` | `boolean` | false | Property used by the Input component. |
-| `passwordToggle` | `boolean` | - | Property used by the Input component. |
-| `showValidationMessage` | `boolean` | - | Property used by the Input component. |
-| `showValidationIcon` | `boolean` | - | Property used by the Input component. |
-| `customPattern` | `string` | - | Property used by the Input component. |
-| `onValidated` | `(isValid: boolean, message: string) => void` | - | Property used by the Input component. |
-| `onChange` | `(value: string, event?: Event) => void` | - | Callback fired when the value changes. |
-| `onInput` | `(value: string, event?: Event) => void` | - | Callback fired while the user types. |
-| `onFocus` | `(event: Event) => void` | - | Property used by the Input component. |
-| `onBlur` | `(event: Event) => void` | - | Property used by the Input component. |
-| `onEnter` | `(value: string, event: Event) => void` | - | Property used by the Input component. |
-
-## How props work
-
-A prop is simply an instruction inside the object passed to the widget. The name tells FletBox what to change, and the value tells it how to change it.
-
-```javascript
-Input({
-    padding: 16,              // space inside the widget
-    margin: "8px 0",         // space outside the widget
-    bgColor: "#eff6ff",      // background color
-    width: "100%",           // CSS size or a number of pixels
-    children: [],             // widgets placed inside it
-    onPress: () => {         // what to do after a press
-        console.log("Hello");
-    },
-});
-```
-
-You do not need to use every prop. Begin with the required props, then add optional props only when you need them.
-
-## Example usage
+## Import
 
 ```javascript
 import { Input } from "flet-box";
-
-const field = Input({
-  label: "Email",
-  placeholder: "name@example.com",
-  type: "email",
-  value: "",
-  onChange: (value) => console.log(value),
-  validation: "email",
-  required: true,
-});
 ```
-
-## Examples from the FletBox snippet library
-
-The examples below come from the FletBox snippet library. The prop table is based on `src/index.d.ts`. When an example and the type declaration use different names, prefer the type declaration and verify the implementation.
 
 ## Basic example
 
 The smallest useful version. Start here if this widget is new to you.
 
 ```javascript
-Input({ placeholder: "Enter text" })
+import { Input } from "flet-box";
+
+Input({ placeholder: "Type something…" });
 ```
 
-## Everyday example
+## Props
 
-A practical version with the props most applications usually need.
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | string | `""` | Initial value. |
+| `placeholder` | string | `""` | Placeholder text. |
+| `type` | string | `'text'` | Native input type (`text`, `password`, `email`, `number`, …). |
+| `label` | string | — | Label above the field; appends `*` when `required`. |
+| `variant` | `'outlined'`, `'filled'`, `'underlined'` | `'outlined'` | Visual style. |
+| `size` | `'small'`, `'medium'`, `'large'` | `'medium'` | Preset padding, font size, and icon size. |
+| `fullWidth` | boolean | `false` | Stretch to 100% width. |
+| `borderRadius` | number | `24` | Corner radius (outlined/filled). |
+| `disabled` | boolean | `false` | Disables editing. |
+| `readonly` | boolean | `false` | Read-only field. |
+| `error` | boolean or string | `false` | Force the error state; a string is shown as the message. |
+| `iconLeft / iconRight` | string | — | Material Icon names inside the field. |
+| `iconColor` | Color | `colors.textSecondary` | Icon color. |
+| `iconSize` | number | `20` | Icon size in pixels. |
+| `onIconPress` | function | — | Click handler for either icon. |
+| `validation` | `'none'`, `'letters'`, `'numbers'`, `'email'`, `'alphanumeric'`, `'safe'`, `'custom'` | `'none'` | Validation and input-filter mode. |
+| `customPattern` | string | — | Regex source used when `validation: "custom"`. |
+| `maxLength` | number | — | Maximum characters; input is truncated. |
+| `required` | boolean | `false` | Marks the field required and shows `*` on the label. |
+| `showValidationMessage` | boolean | `true` | Show the error message text. |
+| `showValidationIcon` | boolean | `true` | Show the ✓/✗ icon. |
+| `onInput` | `(value, event) => void` | — | Fires on each keystroke (after filtering). |
+| `onChange` | `(value, event) => void` | — | Fires on change (after filtering). |
+| `onValidated` | `(isValid, message) => void` | — | Fires with the validation result. |
+| `onFocus / onBlur` | `(event) => void` | — | Focus handlers. |
+
+These are the props specific to `Input`. It also accepts every [common prop](COMMON_PROPS.md): layout, spacing, size, color, typography, borders, shadow, events, `child`/`children`, `ref`, and `style`.
+
+## Instance methods
+
+The returned element exposes:
+
+- `getValue()` — returns the current value (string).
+- `setValue(v)` — sets the value and re-validates.
+- `isValid()` — returns whether the current value is valid.
+- `validate()` — validates, updates the UI, and returns `{ valid, message }`.
+- `reset()` — clears the field.
+- `focus() / blur()` — moves focus in or out of the field.
+
+## Examples
+
+### Everyday example
 
 ```javascript
-Input({ label: "Email", value: email, onChange: setEmail, validation: "email" })
-```
+import { Input } from "flet-box";
 
-## Full example
-
-A larger example showing advanced styling, layout, events, and customization.
-
-```javascript
-Input({
-    type: "text",
-    value: username,
-    placeholder: "Username",
-    label: "User name",
-    error: usernameError,
-    disabled: false,
-    readonly: false,
-    required: true,
-    size: "large",
-    variant: "outlined",
-    fullWidth: true,
-    borderRadius: 24,
-    validation: "alphanumeric",
-    maxLength: 20,
-    iconLeft: "person",
-    iconRight: "check_circle",
-    clearable: true,
-    passwordToggle: true,
-    showValidationMessage: true,
-    showValidationIcon: true,
-    onChange: (val) => setUsername(val),
-    onValidated: (isValid, msg) => console.log(isValid, msg),
-    onEnter: () => submitForm(),
-    id: "username-input"
-})
-```
-
-
-## Common layout and styling examples
-
-The following example shows how common FletBox props work together. Numeric spacing values are interpreted as pixels, while strings can use CSS units and shorthand values.
-
-```javascript
-import { Button, Column, Container, Row, Text } from "flet-box";
-
-const panel = Container({
-    width: "100%",          // number values are pixels; strings accept CSS units
-    padding: 24,            // 24px on every side
-    margin: "16px auto",   // CSS shorthand: vertical and horizontal spacing
-    bgColor: "#f8fafc",    // background color
-    borderRadius: 12,
-    elevation: 2,
-    gap: 12,
-    child: Column({
-        children: [
-            Text({ text: "Account settings", size: 24, weight: "bold" }),
-            Row({
-                gap: 8,
-                justifyContent: "space-between",
-                children: [
-                    Text({ text: "Update your profile" }),
-                    Button({
-                        text: "Save",
-                        bgColor: "#2563eb",
-                        color: "#ffffff",
-                        onPress: () => console.log("saved"),
-                    }),
-                ],
-            }),
-        ],
-    }),
+const email = Input({
+  label: "Email",
+  type: "email",
+  validation: "email",
+  required: true,
+  fullWidth: true,
+  onChange: (value) => console.log(value),
 });
 ```
 
-### Common prop quick reference
+### Full example
 
-- `padding: 24` adds `24px` inside the widget on all sides.
-- `padding: "8px 16px"` uses CSS shorthand for vertical and horizontal spacing.
-- `margin: "16px auto"` adds outside spacing and can center a fixed-width element.
-- `bgColor: "#f8fafc"` sets the background color. Color tokens and CSS colors can be used.
-- `color: "#111827"` sets the foreground or text color when supported.
-- `width: 320` means `320px`; `width: "100%"` uses a CSS percentage.
-- `children` is an array of widgets; `child` is useful when a component accepts one child.
-- `gap: 12` controls the space between children in layout widgets.
-- `onPress` and `onClick` receive event callbacks for interactive behavior.
+```javascript
+import { Input } from "flet-box";
 
-## Beginner tips
+const field = Input({
+  label: "Username",
+  placeholder: "e.g. ada_lovelace",
+  iconLeft: "person",
+  validation: "alphanumeric",
+  maxLength: 20,
+  required: true,
+  size: "large",
+  variant: "outlined",
+  fullWidth: true,
+  onValidated: (isValid, message) => console.log(isValid, message),
+});
 
-- Change one value at a time so you can see what each prop does.
-- Use `Text` to check that your layout is in the place you expect.
-- Use `Container` for a box, `Row` for items side by side, and `Column` for items one below another.
-- Use `padding` when content needs breathing room inside a box.
-- Use `margin` when you need space between this widget and its neighbors.
-- Use `bgColor` to make the boundaries of a box easy to see while learning.
-- If a prop is optional, leaving it out lets FletBox use its default behavior.
+// Imperative API:
+// field.getValue(); field.setValue("ada"); field.validate(); field.focus();
+```
 
-## Common mistakes
+## Notes
 
-- Do not put plain text where a widget is expected unless the widget explicitly accepts strings.
-- Use `children: [ ... ]` for several child widgets and `child: widget` for one child when the widget supports both.
-- Check spelling carefully: `onPress`, `onClick`, and `onChange` are different events.
-- If a helper such as `padding()` or `margin()` is not available in your import list, use a number or CSS string first.
-
-## Behavior notes
-- Integrates cleanly with FletBox runtime semantics and DOM rendering.
-- Can be nested inside layout widgets and combined with other components.
-- Uses the same direct prop and event conventions as the rest of the framework.
-- Keeps the API simple and readable for composing interfaces fast.
-
-## Accessibility
-- Prefer clear labels and readable text for interactive controls.
-- Respect the `disabled` state and keyboard behavior when available.
-- Keep state changes understandable for screen readers and assistive technology.
+- Built on a native `<input>`, so keyboard, mobile, and autofill behavior work normally.
+- With a `validation` mode set, input is filtered as you type and the border turns green (valid) or red (invalid).
+- Icons require the Material Icons font (see [Icon](Icon.md)).
 
 ## Related widgets
-- [Container](Container.md)
-- [Row](Row.md)
-- [Column](Column.md)
-- [Stack](Stack.md)
-- [Text](Text.md)
 - [Button](Button.md)
+- [Checkbox](Checkbox.md)
+- [Radio](Radio.md)
+- [Switch](Switch.md)
+- [Dropdown](Dropdown.md)
 
 ---
 

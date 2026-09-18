@@ -1,244 +1,102 @@
 # Rating
 
 ## Overview
-`Rating` is a ready-to-use building block. Think of it like a LEGO piece: give it some props, place it inside another widget, and FletBox creates the browser element for you.
-
-You do not need to write HTML or manually change the DOM to use this widget. You call the widget as a JavaScript function and pass an object between `{` and `}`.
-
-## Learn it in one minute
-
-1. Import the widget from `flet-box`.
-2. Call it with `WidgetName({ ... })`.
-3. Add props to describe its content, size, color, spacing, and behavior.
-4. Put it inside `Container`, `Row`, `Column`, or another widget.
-
-```javascript
-import { Column, Container, Text } from "flet-box";
-
-const welcomeCard = Container({
-    padding: 20,
-    margin: 16,
-    bgColor: "#ffffff",
-    borderRadius: 12,
-    child: Column({
-        gap: 8,
-        children: [
-            Text({ text: "My first FletBox screen", size: 24, weight: "bold" }),
-            Text({ text: "Widgets are small building blocks. Put them inside each other to build a screen." }),
-        ],
-    }),
-});
-```
+`Rating` renders a row of star (or custom) icons for scoring. It supports mouse and touch, half values, a live value readout, and read-only display. Colors follow the theme by default. The returned element exposes `setValue`/`getValue` and a `value` property.
 
 ## When to use
-Use `Rating` when you need this kind of interface element. Start with the smallest example, then add one prop at a time. You can copy the example, change the text or color, and see the result immediately.
+- Collect or display a 1–`max` score (5 by default).
+- Show a read-only rating with `readOnly`.
 
-## Common props
-
-- `children` / `child`: content rendered inside the widget.
-- `id`: DOM id for the element.
-- `className`: CSS class names applied to the element.
-- `ref`: callback that receives the underlying DOM node.
-- `onClick` / event handlers: native browser event callbacks.
-- `disabled`: disables interaction when supported.
-
-## Full prop list
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `width` | `Size` | - | Property used by the Rating component. |
-| `height` | `Size` | - | Property used by the Rating component. |
-| `size` | `number` | - | Component size or preset. |
-| `padding` | `Padding` | - | Internal spacing around the component. |
-| `margin` | `Margin` | - | External spacing around the component. |
-| `bgColor` | `Color` | - | Background color applied to the element. |
-| `color` | `Color` | - | Color value or theme token. |
-| `borderRadius` | `number \| string` | - | Property used by the Rating component. |
-| `elevation` | `number` | - | Property used by the Rating component. |
-| `shadow` | `string` | - | Property used by the Rating component. |
-| `opacity` | `number` | - | Property used by the Rating component. |
-| `visible` | `boolean` | false | Property used by the Rating component. |
-| `disabled` | `boolean` | false | Disables interaction and shows the non-interactive state. |
-| `onPress` | `(widget: Widget) => void` | - | Callback fired when the widget is pressed. |
-| `onClick` | `(widget: Widget) => void` | - | Property used by the Rating component. |
-| `id` | `string` | - | Property used by the Rating component. |
-| `className` | `string` | - | Property used by the Rating component. |
-| `ref` | `(widget: Widget) => void` | - | Property used by the Rating component. |
-| `disableTransform` | `boolean` | - | Property used by the Rating component. |
-| `value` | `number` | - | Current value controlled by the widget. |
-| `max` | `number` | - | Property used by the Rating component. |
-| `allowHalf` | `boolean` | false | Property used by the Rating component. |
-| `activeColor` | `Color` | - | Property used by the Rating component. |
-| `inactiveColor` | `Color` | - | Property used by the Rating component. |
-| `showValue` | `boolean` | false | Property used by the Rating component. |
-| `valueColor` | `Color` | - | Property used by the Rating component. |
-| `valueSize` | `number` | - | Property used by the Rating component. |
-| `readOnly` | `boolean` | false | Property used by the Rating component. |
-| `gap` | `number` | - | Space between child items. |
-| `iconActive` | `string` | - | Property used by the Rating component. |
-| `iconInactive` | `string` | - | Property used by the Rating component. |
-| `iconHalf` | `string` | - | Property used by the Rating component. |
-| `onChange` | `(value: number) => void` | - | Callback fired when the value changes. |
-
-## How props work
-
-A prop is simply an instruction inside the object passed to the widget. The name tells FletBox what to change, and the value tells it how to change it.
+## Import
 
 ```javascript
-Rating({
-    padding: 16,              // space inside the widget
-    margin: "8px 0",         // space outside the widget
-    bgColor: "#eff6ff",      // background color
-    width: "100%",           // CSS size or a number of pixels
-    children: [],             // widgets placed inside it
-    onPress: () => {         // what to do after a press
-        console.log("Hello");
-    },
-});
+import { Rating } from "flet-box";
 ```
-
-You do not need to use every prop. Begin with the required props, then add optional props only when you need them.
-
-## Example usage
-
-```javascript
-import { Rating, Text } from "flet-box";
-
-const example = Rating({
-  value: 1,
-  child: Text({ text: "Example" })
-});
-```
-
-## Examples from the FletBox snippet library
-
-The examples below come from the FletBox snippet library. The prop table is based on `src/index.d.ts`. When an example and the type declaration use different names, prefer the type declaration and verify the implementation.
 
 ## Basic example
 
 The smallest useful version. Start here if this widget is new to you.
 
 ```javascript
-Rating({ value: 3 })
+import { Rating } from "flet-box";
+
+Rating({ onChange: (value) => console.log("rated:", value) });
 ```
 
-## Everyday example
+## Props
 
-A practical version with the props most applications usually need.
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | number | `0` | Current rating (clamped `0`–`max`). |
+| `max` | number | `5` | Number of stars. |
+| `onChange` | `(value: number) => void` | — | Fires when the rating changes. |
+| `readOnly` | boolean | `false` | Display only; disables interaction. |
+| `size` | number | `20` | Star size in pixels. |
+| `activeColor` | Color | `colors.warning` | Filled star color. |
+| `inactiveColor` | Color | `colors.border` | Empty star color. |
+| `iconActive` | string | `'star'` | Material icon for a full star. |
+| `iconInactive` | string | `'star_border'` | Material icon for an empty star. |
+| `iconHalf` | string | `'star_half'` | Material icon for a half star. |
+| `allowHalf` | boolean | `false` | Allow `.5` values. |
+| `gap` | number | `2` | Space between stars. |
+| `showValue` | boolean | `false` | Show the numeric value next to the stars. |
+| `valueColor` | Color | `colors.textSecondary` | Color of the value label. |
+| `valueSize` | number | `size * 0.7` | Font size of the value label. |
+
+These are the props specific to `Rating`. It also accepts every [common prop](COMMON_PROPS.md): layout, spacing, size, color, typography, borders, shadow, events, `child`/`children`, `ref`, and `style`.
+
+## Instance methods
+
+The returned element exposes:
+
+- `value` — get or set as a property.
+- `setValue(v) / getValue()` — sets or returns the current rating.
+- `updateStars()` — repaints the stars from the current value.
+
+## Examples
+
+### Everyday example
 
 ```javascript
-Rating({ value: rating, max: 5, onChange: setRating, showValue: true })
+import { Rating } from "flet-box";
+
+Rating({ value: 4, max: 5, showValue: true, allowHalf: true, onChange: (v) => console.log(v) });
 ```
 
-## Full example
-
-A larger example showing advanced styling, layout, events, and customization.
+### Full example
 
 ```javascript
-Rating({
-    value: 4.5,
-    max: 5,
-    size: 32,
-    allowHalf: true,
-    activeColor: colors.warning,
-    inactiveColor: colors.border,
-    showValue: true,
-    valueColor: colors.text,
-    valueSize: 16,
-    readOnly: false,
-    gap: 4,
-    iconActive: "star",
-    iconInactive: "star_border",
-    iconHalf: "star_half",
-    onChange: (val) => updateRating(val),
-    id: "product-rating"
-})
-```
+import { Column, Rating, Text } from "flet-box";
 
-
-## Common layout and styling examples
-
-The following example shows how common FletBox props work together. Numeric spacing values are interpreted as pixels, while strings can use CSS units and shorthand values.
-
-```javascript
-import { Button, Column, Container, Row, Text } from "flet-box";
-
-const panel = Container({
-    width: "100%",          // number values are pixels; strings accept CSS units
-    padding: 24,            // 24px on every side
-    margin: "16px auto",   // CSS shorthand: vertical and horizontal spacing
-    bgColor: "#f8fafc",    // background color
-    borderRadius: 12,
-    elevation: 2,
-    gap: 12,
-    child: Column({
-        children: [
-            Text({ text: "Account settings", size: 24, weight: "bold" }),
-            Row({
-                gap: 8,
-                justifyContent: "space-between",
-                children: [
-                    Text({ text: "Update your profile" }),
-                    Button({
-                        text: "Save",
-                        bgColor: "#2563eb",
-                        color: "#ffffff",
-                        onPress: () => console.log("saved"),
-                    }),
-                ],
-            }),
-        ],
-    }),
+const rating = Rating({
+  max: 5,
+  value: 3.5,
+  allowHalf: true,
+  showValue: true,
+  size: 28,
+  activeColor: "#f59e0b",
+  onChange: (v) => console.log("score:", v),
 });
+
+Column({
+  gap: 8,
+  children: [Text({ text: "Rate your experience", weight: "bold" }), rating],
+});
+
+// rating.value = 5;  rating.getValue();
 ```
 
-### Common prop quick reference
+## Notes
 
-- `padding: 24` adds `24px` inside the widget on all sides.
-- `padding: "8px 16px"` uses CSS shorthand for vertical and horizontal spacing.
-- `margin: "16px auto"` adds outside spacing and can center a fixed-width element.
-- `bgColor: "#f8fafc"` sets the background color. Color tokens and CSS colors can be used.
-- `color: "#111827"` sets the foreground or text color when supported.
-- `width: 320` means `320px`; `width: "100%"` uses a CSS percentage.
-- `children` is an array of widgets; `child` is useful when a component accepts one child.
-- `gap: 12` controls the space between children in layout widgets.
-- `onPress` and `onClick` receive event callbacks for interactive behavior.
-
-## Beginner tips
-
-- Change one value at a time so you can see what each prop does.
-- Use `Text` to check that your layout is in the place you expect.
-- Use `Container` for a box, `Row` for items side by side, and `Column` for items one below another.
-- Use `padding` when content needs breathing room inside a box.
-- Use `margin` when you need space between this widget and its neighbors.
-- Use `bgColor` to make the boundaries of a box easy to see while learning.
-- If a prop is optional, leaving it out lets FletBox use its default behavior.
-
-## Common mistakes
-
-- Do not put plain text where a widget is expected unless the widget explicitly accepts strings.
-- Use `children: [ ... ]` for several child widgets and `child: widget` for one child when the widget supports both.
-- Check spelling carefully: `onPress`, `onClick`, and `onChange` are different events.
-- If a helper such as `padding()` or `margin()` is not available in your import list, use a number or CSS string first.
-
-## Behavior notes
-- Integrates cleanly with FletBox runtime semantics and DOM rendering.
-- Can be nested inside layout widgets and combined with other components.
-- Uses the same direct prop and event conventions as the rest of the framework.
-- Keeps the API simple and readable for composing interfaces fast.
-
-## Accessibility
-- Prefer clear labels and readable text for interactive controls.
-- Respect the `disabled` state and keyboard behavior when available.
-- Keep state changes understandable for screen readers and assistive technology.
+- Uses Material Icons glyphs, so the font must be loaded (see [Icon](Icon.md)).
+- Default colors are theme-aware and update on light/dark changes.
+- Supports mouse hover preview and touch/swipe selection.
 
 ## Related widgets
-- [Container](Container.md)
-- [Row](Row.md)
-- [Column](Column.md)
-- [Stack](Stack.md)
+- [Slider](Slider.md)
+- [Icon](Icon.md)
 - [Text](Text.md)
-- [Button](Button.md)
+- [Chip](Chip.md)
 
 ---
 

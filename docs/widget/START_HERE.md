@@ -129,7 +129,7 @@ page 1 and follow the **Continue reading** links at the bottom of each page:
 4. Follow **Next** to [Container](Container.md), then combine it with `Row` or `Column`.
 5. Use the [widget index](README.md) to jump anywhere in the book.
 
-Every widget page uses the same structure, so learning one page helps you understand the others.
+Every widget page uses the same structure, so learning one page helps you understand the others. Beyond their own props, all widgets share a common set of layout, spacing, color, and event props — see [Common props](COMMON_PROPS.md).
 
 FletBox intentionally supports friendly aliases for developers coming from Flet, Flutter, React, or vanilla JavaScript. Read the [syntax philosophy](../guides/syntax-philosophy.md) to see why equivalent styles such as `bgColor` / `backgroundColor`, `onPress` / `onClick`, and `child` / `children` can coexist.
 

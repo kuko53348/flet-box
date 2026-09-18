@@ -1,225 +1,93 @@
 # Checkbox
 
 ## Overview
-`Checkbox` is a ready-to-use building block. Think of it like a LEGO piece: give it some props, place it inside another widget, and FletBox creates the browser element for you.
-
-You do not need to write HTML or manually change the DOM to use this widget. You call the widget as a JavaScript function and pass an object between `{` and `}`.
-
-## Learn it in one minute
-
-1. Import the widget from `flet-box`.
-2. Call it with `WidgetName({ ... })`.
-3. Add props to describe its content, size, color, spacing, and behavior.
-4. Put it inside `Container`, `Row`, `Column`, or another widget.
-
-```javascript
-import { Column, Container, Text } from "flet-box";
-
-const welcomeCard = Container({
-    padding: 20,
-    margin: 16,
-    bgColor: "#ffffff",
-    borderRadius: 12,
-    child: Column({
-        gap: 8,
-        children: [
-            Text({ text: "My first FletBox screen", size: 24, weight: "bold" }),
-            Text({ text: "Widgets are small building blocks. Put them inside each other to build a screen." }),
-        ],
-    }),
-});
-```
+`Checkbox` renders a custom (non-native) check box drawn with FletBox widgets. It toggles its own visual state on click and reports changes through `onCheck`. The returned element exposes `setChecked` and `getChecked`.
 
 ## When to use
-Use `Checkbox` when you need this kind of interface element. Start with the smallest example, then add one prop at a time. You can copy the example, change the text or color, and see the result immediately.
+- Let the user toggle a single boolean option on or off.
+- Build multi-select lists where several options can be true at once.
 
-## Common props
-
-- `children` / `child`: content rendered inside the widget.
-- `id`: DOM id for the element.
-- `className`: CSS class names applied to the element.
-- `ref`: callback that receives the underlying DOM node.
-- `onClick` / event handlers: native browser event callbacks.
-- `disabled`: disables interaction when supported.
-
-## Full prop list
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `width` | `Size` | - | Property used by the Checkbox component. |
-| `height` | `Size` | - | Property used by the Checkbox component. |
-| `size` | `number` | - | Component size or preset. |
-| `padding` | `Padding` | - | Internal spacing around the component. |
-| `margin` | `Margin` | - | External spacing around the component. |
-| `bgColor` | `Color` | - | Background color applied to the element. |
-| `color` | `Color` | - | Color value or theme token. |
-| `borderRadius` | `number \| string` | - | Property used by the Checkbox component. |
-| `elevation` | `number` | - | Property used by the Checkbox component. |
-| `shadow` | `string` | - | Property used by the Checkbox component. |
-| `opacity` | `number` | - | Property used by the Checkbox component. |
-| `visible` | `boolean` | false | Property used by the Checkbox component. |
-| `disabled` | `boolean` | false | Disables interaction and shows the non-interactive state. |
-| `onPress` | `(widget: Widget) => void` | - | Callback fired when the widget is pressed. |
-| `onClick` | `(widget: Widget) => void` | - | Property used by the Checkbox component. |
-| `id` | `string` | - | Property used by the Checkbox component. |
-| `className` | `string` | - | Property used by the Checkbox component. |
-| `ref` | `(widget: Widget) => void` | - | Property used by the Checkbox component. |
-| `disableTransform` | `boolean` | - | Property used by the Checkbox component. |
-| `checked` | `boolean` | false | Current checked state. |
-| `onCheck` | `(checked: boolean) => void` | - | Property used by the Checkbox component. |
-| `activeColor` | `Color` | - | Property used by the Checkbox component. |
-| `label` | `string` | - | Label or caption shown near the control. |
-
-## How props work
-
-A prop is simply an instruction inside the object passed to the widget. The name tells FletBox what to change, and the value tells it how to change it.
+## Import
 
 ```javascript
-Checkbox({
-    padding: 16,              // space inside the widget
-    margin: "8px 0",         // space outside the widget
-    bgColor: "#eff6ff",      // background color
-    width: "100%",           // CSS size or a number of pixels
-    children: [],             // widgets placed inside it
-    onPress: () => {         // what to do after a press
-        console.log("Hello");
-    },
-});
+import { Checkbox } from "flet-box";
 ```
-
-You do not need to use every prop. Begin with the required props, then add optional props only when you need them.
-
-## Example usage
-
-```javascript
-import { Checkbox, Text } from "flet-box";
-
-const example = Checkbox({
-  checked: true,
-  child: Text({ text: "Example" })
-});
-```
-
-## Examples from the FletBox snippet library
-
-The examples below come from the FletBox snippet library. The prop table is based on `src/index.d.ts`. When an example and the type declaration use different names, prefer the type declaration and verify the implementation.
 
 ## Basic example
 
 The smallest useful version. Start here if this widget is new to you.
 
 ```javascript
-Checkbox({})
+import { Checkbox } from "flet-box";
+
+Checkbox({ onCheck: (checked) => console.log("checked:", checked) });
 ```
 
-## Everyday example
+## Props
 
-A practical version with the props most applications usually need.
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `checked` | boolean | `false` | Initial checked state. |
+| `onCheck` | `(checked: boolean) => void` | — | Fires with the new state after a toggle. |
+| `disabled` | boolean | `false` | Disables interaction (opacity 0.5, `not-allowed` cursor). |
+| `size` | number | `20` | Box size in pixels. |
 
-```javascript
-Checkbox({ checked: agreed, onCheck: setAgreed, label: "I agree" })
-```
+These are the props specific to `Checkbox`. It also accepts every [common prop](COMMON_PROPS.md): layout, spacing, size, color, typography, borders, shadow, events, `child`/`children`, `ref`, and `style`.
 
-## Full example
+## Instance methods
 
-A larger example showing advanced styling, layout, events, and customization.
+The returned element exposes:
 
-```javascript
-Checkbox({
-    checked: isActive,
-    onCheck: (val) => setIsActive(val),
-    disabled: false,
-    size: 24,
-    activeColor: colors.success,
-    label: "Activate feature",
-    id: "feature-checkbox"
-})
-```
+- `setChecked(value, triggerCallback = true)` — sets the state; fires `onCheck` unless `triggerCallback` is `false`.
+- `getChecked()` — returns the current state.
 
+## Examples
 
-## Common layout and styling examples
-
-The following example shows how common FletBox props work together. Numeric spacing values are interpreted as pixels, while strings can use CSS units and shorthand values.
+### Everyday example
 
 ```javascript
-import { Button, Column, Container, Row, Text } from "flet-box";
+import { Checkbox, Row, Text } from "flet-box";
 
-const panel = Container({
-    width: "100%",          // number values are pixels; strings accept CSS units
-    padding: 24,            // 24px on every side
-    margin: "16px auto",   // CSS shorthand: vertical and horizontal spacing
-    bgColor: "#f8fafc",    // background color
-    borderRadius: 12,
-    elevation: 2,
-    gap: 12,
-    child: Column({
-        children: [
-            Text({ text: "Account settings", size: 24, weight: "bold" }),
-            Row({
-                gap: 8,
-                justifyContent: "space-between",
-                children: [
-                    Text({ text: "Update your profile" }),
-                    Button({
-                        text: "Save",
-                        bgColor: "#2563eb",
-                        color: "#ffffff",
-                        onPress: () => console.log("saved"),
-                    }),
-                ],
-            }),
-        ],
-    }),
+Row({
+  gap: 8,
+  alignItems: "center",
+  children: [
+    Checkbox({ checked: true, onCheck: (v) => console.log("agree:", v) }),
+    Text({ text: "I accept the terms" }),
+  ],
 });
 ```
 
-### Common prop quick reference
+### Full example
 
-- `padding: 24` adds `24px` inside the widget on all sides.
-- `padding: "8px 16px"` uses CSS shorthand for vertical and horizontal spacing.
-- `margin: "16px auto"` adds outside spacing and can center a fixed-width element.
-- `bgColor: "#f8fafc"` sets the background color. Color tokens and CSS colors can be used.
-- `color: "#111827"` sets the foreground or text color when supported.
-- `width: 320` means `320px`; `width: "100%"` uses a CSS percentage.
-- `children` is an array of widgets; `child` is useful when a component accepts one child.
-- `gap: 12` controls the space between children in layout widgets.
-- `onPress` and `onClick` receive event callbacks for interactive behavior.
+```javascript
+import { Checkbox, Column, Text } from "flet-box";
 
-## Beginner tips
+const box = Checkbox({ size: 24, onCheck: (v) => console.log(v) });
 
-- Change one value at a time so you can see what each prop does.
-- Use `Text` to check that your layout is in the place you expect.
-- Use `Container` for a box, `Row` for items side by side, and `Column` for items one below another.
-- Use `padding` when content needs breathing room inside a box.
-- Use `margin` when you need space between this widget and its neighbors.
-- Use `bgColor` to make the boundaries of a box easy to see while learning.
-- If a prop is optional, leaving it out lets FletBox use its default behavior.
+Column({
+  gap: 8,
+  children: [
+    box,
+    Text({ text: "Toggle me, then read the state in code." }),
+  ],
+});
 
-## Common mistakes
+// box.setChecked(true);  // set without user interaction
+// box.getChecked();      // -> true
+```
 
-- Do not put plain text where a widget is expected unless the widget explicitly accepts strings.
-- Use `children: [ ... ]` for several child widgets and `child: widget` for one child when the widget supports both.
-- Check spelling carefully: `onPress`, `onClick`, and `onChange` are different events.
-- If a helper such as `padding()` or `margin()` is not available in your import list, use a number or CSS string first.
+## Notes
 
-## Behavior notes
-- Integrates cleanly with FletBox runtime semantics and DOM rendering.
-- Can be nested inside layout widgets and combined with other components.
-- Uses the same direct prop and event conventions as the rest of the framework.
-- Keeps the API simple and readable for composing interfaces fast.
-
-## Accessibility
-- Prefer clear labels and readable text for interactive controls.
-- Respect the `disabled` state and keyboard behavior when available.
-- Keep state changes understandable for screen readers and assistive technology.
+- Custom-drawn (a styled box with a `✓`), not a native `<input type="checkbox">`.
+- The checked state uses the theme `primary` color.
+- The event prop is `onCheck` (not `onChange`).
 
 ## Related widgets
-- [Container](Container.md)
-- [Row](Row.md)
-- [Column](Column.md)
-- [Stack](Stack.md)
+- [Radio](Radio.md)
+- [Switch](Switch.md)
+- [Input](Input.md)
 - [Text](Text.md)
-- [Button](Button.md)
 
 ---
 

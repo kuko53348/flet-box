@@ -1,248 +1,97 @@
 # Button
 
 ## Overview
-`Button` is a ready-to-use building block. Think of it like a LEGO piece: give it some props, place it inside another widget, and FletBox creates the browser element for you.
-
-You do not need to write HTML or manually change the DOM to use this widget. You call the widget as a JavaScript function and pass an object between `{` and `}`.
-
-## Learn it in one minute
-
-1. Import the widget from `flet-box`.
-2. Call it with `WidgetName({ ... })`.
-3. Add props to describe its content, size, color, spacing, and behavior.
-4. Put it inside `Container`, `Row`, `Column`, or another widget.
-
-```javascript
-import { Column, Container, Text } from "flet-box";
-
-const welcomeCard = Container({
-    padding: 20,
-    margin: 16,
-    bgColor: "#ffffff",
-    borderRadius: 12,
-    child: Column({
-        gap: 8,
-        children: [
-            Text({ text: "My first FletBox screen", size: 24, weight: "bold" }),
-            Text({ text: "Widgets are small building blocks. Put them inside each other to build a screen." }),
-        ],
-    }),
-});
-```
+`Button` renders a clickable `<button>` with built-in variants, sizes, icons, and elevation. It composes a `Text` label and optional Material `Icon`s, and supports filled, outlined, and text styles. Use `onPress` (or `onClick`) for the click handler.
 
 ## When to use
-Use `Button` when you need this kind of interface element. Start with the smallest example, then add one prop at a time. You can copy the example, change the text or color, and see the result immediately.
+- Trigger an action: submit, save, cancel, or navigate.
+- Present a primary or secondary choice with `variant` and `size`.
+- Add an icon with `icon` + `iconPosition`, or `iconLeft`/`iconRight`/`iconTop`/`iconBottom`.
 
-## Common props
-
-- `children` / `child`: content rendered inside the widget.
-- `id`: DOM id for the element.
-- `className`: CSS class names applied to the element.
-- `ref`: callback that receives the underlying DOM node.
-- `onClick` / event handlers: native browser event callbacks.
-- `disabled`: disables interaction when supported.
-
-## Full prop list
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `width` | `Size` | - | Property used by the Button component. |
-| `height` | `Size` | - | Property used by the Button component. |
-| `size` | `number` | - | Component size or preset. |
-| `padding` | `Padding` | - | Internal spacing around the component. |
-| `margin` | `Margin` | - | External spacing around the component. |
-| `bgColor` | `Color` | - | Background color applied to the element. |
-| `color` | `Color` | - | Color value or theme token. |
-| `borderRadius` | `number \| string` | - | Property used by the Button component. |
-| `elevation` | `number` | - | Property used by the Button component. |
-| `shadow` | `string` | - | Property used by the Button component. |
-| `opacity` | `number` | - | Property used by the Button component. |
-| `visible` | `boolean` | false | Property used by the Button component. |
-| `disabled` | `boolean` | false | Disables interaction and shows the non-interactive state. |
-| `onPress` | `(widget: Widget) => void` | - | Callback fired when the widget is pressed. |
-| `onClick` | `(widget: Widget) => void` | - | Property used by the Button component. |
-| `id` | `string` | - | Property used by the Button component. |
-| `className` | `string` | - | Property used by the Button component. |
-| `ref` | `(widget: Widget) => void` | - | Property used by the Button component. |
-| `disableTransform` | `boolean` | - | Property used by the Button component. |
-| `text` | `string` | - | Visible text content rendered by the widget. |
-| `variant` | `'filled' \| 'outlined' \| 'text'` | - | Visual variation or style preset. |
-| `gradient` | `string` | - | Property used by the Button component. |
-| `textColor` | `Color` | - | Property used by the Button component. |
-| `fullWidth` | `boolean` | false | Property used by the Button component. |
-| `icon` | `string` | - | Property used by the Button component. |
-| `iconLeft` | `string` | - | Property used by the Button component. |
-| `iconRight` | `string` | - | Property used by the Button component. |
-| `iconTop` | `string` | - | Property used by the Button component. |
-| `iconBottom` | `string` | - | Property used by the Button component. |
-| `iconPosition` | `'left' \| 'right' \| 'top' \| 'bottom'` | - | Property used by the Button component. |
-
-## How props work
-
-A prop is simply an instruction inside the object passed to the widget. The name tells FletBox what to change, and the value tells it how to change it.
-
-```javascript
-Button({
-    padding: 16,              // space inside the widget
-    margin: "8px 0",         // space outside the widget
-    bgColor: "#eff6ff",      // background color
-    width: "100%",           // CSS size or a number of pixels
-    children: [],             // widgets placed inside it
-    onPress: () => {         // what to do after a press
-        console.log("Hello");
-    },
-});
-```
-
-You do not need to use every prop. Begin with the required props, then add optional props only when you need them.
-
-## Example usage
+## Import
 
 ```javascript
 import { Button } from "flet-box";
-
-const example = Button({
-  text: "Save",
-  variant: "filled",
-  size: "medium",
-  bgColor: "#2563eb",
-  color: "#ffffff",
-  onPress: () => console.log("saved"),
-  fullWidth: false,
-  disabled: false,
-});
 ```
-
-## Examples from the FletBox snippet library
-
-The examples below come from the FletBox snippet library. The prop table is based on `src/index.d.ts`. When an example and the type declaration use different names, prefer the type declaration and verify the implementation.
 
 ## Basic example
 
 The smallest useful version. Start here if this widget is new to you.
 
 ```javascript
-Button({ text: "Click" })
+import { Button } from "flet-box";
+
+Button({ text: "Click me", onPress: () => console.log("pressed") });
 ```
 
-## Everyday example
+## Props
 
-A practical version with the props most applications usually need.
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `text` | string | — | Button label. |
+| `onPress` | function | — | Click handler. Aliases: `onClick`, `onclick`. Ignored when `disabled`. |
+| `variant` | `'filled'`, `'outlined'`, `'text'` | `'filled'` | Visual style. |
+| `size` | `'small'`, `'medium'`, `'large'` | `'medium'` | Preset for padding, font size, gap, and icon size. |
+| `bgColor` | Color | `colors.surface` | Background. Filled uses `gradient`, else `bgColor`, else `colors.primary`. |
+| `color` | Color | `colors.text` | Text and icon color. |
+| `borderRadius` | number | `24` | Corner radius in pixels. |
+| `elevation` | number `0`–`5` | `2` | Preset shadow level (not a CSS value). |
+| `disabled` | boolean | `false` | Disables clicks and shows the non-interactive state. |
+| `fullWidth` | boolean | `false` | Stretch to 100% width. |
+| `gradient` | string | — | CSS gradient background; overrides `bgColor` when set. |
+| `icon` | string | — | Material Icon name; placed by `iconPosition`. |
+| `iconPosition` | `'left'`, `'right'`, `'top'`, `'bottom'` | `'left'` | Where `icon` is placed. |
+| `iconLeft / iconRight / iconTop / iconBottom` | string | — | Explicit icon name per side. |
+| `padding` | number or `[v, h]` | size preset | Overrides the preset padding. A number `n` becomes `[n, n*2]`. |
+| `margin` | number or `[v, h]` | — | Outer spacing. |
+
+These are the props specific to `Button`. It also accepts every [common prop](COMMON_PROPS.md): layout, spacing, size, color, typography, borders, shadow, events, `child`/`children`, `ref`, and `style`.
+
+## Examples
+
+### Everyday example
 
 ```javascript
-Button({ text: "Submit", variant: "filled", onPress: () => submit() })
-```
+import { Button } from "flet-box";
 
-## Full example
-
-A larger example showing advanced styling, layout, events, and customization.
-
-```javascript
 Button({
-    text: "Download",
-    variant: "outlined",
-    size: "large",
-    fullWidth: true,
-    borderRadius: 32,
-    elevation: 3,
-    bgColor: colors.primary,
-    textColor: "#ffffff",
-    iconLeft: "download",
-    iconRight: "arrow_forward",
-    padding: padding({ horizontal: 24, vertical: 12 }),
-    margin: margin(8),
-    disabled: false,
-    onPress: () => downloadFile(),
-    onLongPress: () => showMenu(),
-    onHover: (hover) => console.log(hover),
-    id: "download-btn"
-})
-```
-
-
-## Common layout and styling examples
-
-The following example shows how common FletBox props work together. Numeric spacing values are interpreted as pixels, while strings can use CSS units and shorthand values.
-
-```javascript
-import { Button, Column, Container, Row, Text } from "flet-box";
-
-const panel = Container({
-    width: "100%",          // number values are pixels; strings accept CSS units
-    padding: 24,            // 24px on every side
-    margin: "16px auto",   // CSS shorthand: vertical and horizontal spacing
-    bgColor: "#f8fafc",    // background color
-    borderRadius: 12,
-    elevation: 2,
-    gap: 12,
-    child: Column({
-        children: [
-            Text({ text: "Account settings", size: 24, weight: "bold" }),
-            Row({
-                gap: 8,
-                justifyContent: "space-between",
-                children: [
-                    Text({ text: "Update your profile" }),
-                    Button({
-                        text: "Save",
-                        bgColor: "#2563eb",
-                        color: "#ffffff",
-                        onPress: () => console.log("saved"),
-                    }),
-                ],
-            }),
-        ],
-    }),
+  text: "Save changes",
+  variant: "filled",
+  size: "medium",
+  bgColor: "#2563eb",
+  color: "#ffffff",
+  onPress: () => console.log("saved"),
 });
 ```
 
-### Common prop quick reference
+### Full example
 
-- `padding: 24` adds `24px` inside the widget on all sides.
-- `padding: "8px 16px"` uses CSS shorthand for vertical and horizontal spacing.
-- `margin: "16px auto"` adds outside spacing and can center a fixed-width element.
-- `bgColor: "#f8fafc"` sets the background color. Color tokens and CSS colors can be used.
-- `color: "#111827"` sets the foreground or text color when supported.
-- `width: 320` means `320px`; `width: "100%"` uses a CSS percentage.
-- `children` is an array of widgets; `child` is useful when a component accepts one child.
-- `gap: 12` controls the space between children in layout widgets.
-- `onPress` and `onClick` receive event callbacks for interactive behavior.
+```javascript
+import { Button, Row } from "flet-box";
 
-## Beginner tips
+Row({
+  gap: 12,
+  children: [
+    Button({ text: "Download", icon: "download", iconPosition: "left", elevation: 3, onPress: () => console.log("download") }),
+    Button({ text: "Outlined", variant: "outlined", bgColor: "#2563eb", onPress: () => console.log("outlined") }),
+    Button({ text: "Disabled", disabled: true }),
+  ],
+});
+```
 
-- Change one value at a time so you can see what each prop does.
-- Use `Text` to check that your layout is in the place you expect.
-- Use `Container` for a box, `Row` for items side by side, and `Column` for items one below another.
-- Use `padding` when content needs breathing room inside a box.
-- Use `margin` when you need space between this widget and its neighbors.
-- Use `bgColor` to make the boundaries of a box easy to see while learning.
-- If a prop is optional, leaving it out lets FletBox use its default behavior.
+## Notes
 
-## Common mistakes
-
-- Do not put plain text where a widget is expected unless the widget explicitly accepts strings.
-- Use `children: [ ... ]` for several child widgets and `child: widget` for one child when the widget supports both.
-- Check spelling carefully: `onPress`, `onClick`, and `onChange` are different events.
-- If a helper such as `padding()` or `margin()` is not available in your import list, use a number or CSS string first.
-
-## Behavior notes
-- Integrates cleanly with FletBox runtime semantics and DOM rendering.
-- Can be nested inside layout widgets and combined with other components.
-- Uses the same direct prop and event conventions as the rest of the framework.
-- Keeps the API simple and readable for composing interfaces fast.
-
-## Accessibility
-- Prefer clear labels and readable text for interactive controls.
-- Respect the `disabled` state and keyboard behavior when available.
-- Keep state changes understandable for screen readers and assistive technology.
+- `filled` uses `bgColor` (default theme `surface`); `outlined` draws a 2px border in `color`/`bgColor`; `text` has no background or border.
+- `elevation` maps `0`–`5` to preset shadows, not a pixel value.
+- Icons require the Material Icons font (see [Icon](Icon.md)).
+- `disabled` sets a `not-allowed` cursor, opacity 0.6, and ignores `onPress`.
 
 ## Related widgets
-- [Container](Container.md)
-- [Row](Row.md)
-- [Column](Column.md)
-- [Stack](Stack.md)
+- [Input](Input.md)
+- [Icon](Icon.md)
 - [Text](Text.md)
-- `Button`
+- [FloatingActionButton](FloatingActionButton.md)
+- [Row](Row.md)
 
 ---
 
