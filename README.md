@@ -1,57 +1,57 @@
 # FletBox
 
-FletBox es un framework ligero para construir interfaces web con JavaScript vanilla usando una sintaxis declarativa inspirada en Flet, pero sin dependencias externas ni Virtual DOM.
+FletBox is a lightweight framework for building web interfaces with vanilla JavaScript using a declarative syntax inspired by Flet, but without external dependencies or a Virtual DOM.
 
-## Descripción general
+## Overview
 
-FletBox busca combinar lo mejor de una UI declarativa con el rendimiento del DOM nativo. Su objetivo es permitir crear aplicaciones web y apps móviles híbridas con componentes reutilizables, estado global, routing y utilidades integradas.
+FletBox aims to combine the best of a declarative UI with the performance of the native DOM. Its goal is to let you create web applications and hybrid mobile apps with reusable components, global state, routing, and built-in utilities.
 
-El proyecto está orientado a:
+The project is geared toward:
 
-- construir interfaces rápidas y ligeras
-- evitar dependencias pesadas
-- usar DOM real en lugar de un árbol virtual
-- facilitar prototipos, dashboards y apps pequeñas/medianas
-- exportar una API simple y directa para desarrolladores frontend
+- building fast, lightweight interfaces
+- avoiding heavy dependencies
+- using real DOM instead of a virtual tree
+- making prototypes, dashboards, and small/medium apps easy
+- exporting a simple, direct API for frontend developers
 
-## Características principales
+## Main features
 
-- UI declarativa basada en widgets
-- Runtime ligero para web
-- Sistema de estado con `useState`
-- Router para SPA
-- Servicios para almacenamiento local y HTTP
-- Soporte para theme, PWA y build de producción
-- Compatibilidad con compilación para APK / móvil
-- API con utilidades para layouts, texto, color, animaciones y más
+- Declarative, widget-based UI
+- Lightweight web runtime
+- State system with `useState`
+- Router for SPAs
+- Services for local storage and HTTP
+- Support for theme, PWA, and production builds
+- Compatibility with APK / mobile compilation
+- API with utilities for layouts, text, color, animations, and more
 
-## Instalación
+## Installation
 
 ```bash
 npm install flet-box
 ```
 
-## Documentación para empezar
+## Getting-started documentation
 
-La documentación está pensada para aprender FletBox desde cero:
+The documentation is designed to teach FletBox from scratch:
 
-- [Start here](docs/widget/START_HERE.md): conceptos básicos y primeros widgets.
-- [Build your first FletBox app](docs/guides/app-templates.md): páginas, layouts, navegación y componentes.
-- [Add FletBox to an existing page](docs/guides/embedding.md): integrar widgets sin reescribir tu aplicación.
-- [Syntax philosophy](docs/guides/syntax-philosophy.md): aliases y sintaxis flexible para distintos perfiles de desarrollador.
-- [State](docs/guides/state.md): estado compartido, `useState` y actualizaciones reactivas.
-- [Routing](docs/guides/router.md): rutas, parámetros, query params e historial.
-- [Utilities](docs/guides/utilities.md): layout, colores, listas, fechas, dispositivo y más.
-- [Frontend services](docs/guides/frontend-services.md): estado en RAM, sesión, almacenamiento persistente y HTTP.
-- [Compatibility](docs/guides/compatibility.md): navegadores, PWA, Android, iOS y desktop.
-- [Mobile and platforms](docs/guides/mobile-and-platforms.md): Android, iOS, APK, AAB, PWA y desktop.
-- [Minification and protection](docs/guides/minification-and-protection.md): reducir el bundle y proteger correctamente la aplicación.
-- [FletBox CLI](docs/cli/README.md): crear proyectos, pantallas, componentes, ejecutar y compilar.
-- [FletBox Server](docs/server/README.md): API, autenticación, seguridad, datos, servicios y despliegue.
-- [Widgets](docs/widget/README.md): propiedades completas y ejemplos `basic`, `normal` y `full`.
-- [Contributing](docs/CONTRIBUTING.md): estructura del proyecto, widgets, tipos, docs y validación.
+- [Start here](docs/widget/START_HERE.md): basic concepts and first widgets.
+- [Build your first FletBox app](docs/guides/app-templates.md): pages, layouts, navigation, and components.
+- [Add FletBox to an existing page](docs/guides/embedding.md): integrate widgets without rewriting your application.
+- [Syntax philosophy](docs/guides/syntax-philosophy.md): aliases and flexible syntax for different developer profiles.
+- [State](docs/guides/state.md): shared state, `useState`, and reactive updates.
+- [Routing](docs/guides/router.md): routes, parameters, query params, and history.
+- [Utilities](docs/guides/utilities.md): layout, colors, lists, dates, device, and more.
+- [Frontend services](docs/guides/frontend-services.md): in-RAM state, session, persistent storage, and HTTP.
+- [Compatibility](docs/guides/compatibility.md): browsers, PWA, Android, iOS, and desktop.
+- [Mobile and platforms](docs/guides/mobile-and-platforms.md): Android, iOS, APK, AAB, PWA, and desktop.
+- [Minification and protection](docs/guides/minification-and-protection.md): shrink the bundle and protect the application properly.
+- [FletBox CLI](docs/cli/README.md): create projects, screens, and components; run and compile.
+- [FletBox Server](docs/server/README.md): API, authentication, security, data, services, and deployment.
+- [Widgets](docs/widget/README.md): the widget book — an ordered tutorial from basic to advanced, where every page links to the next, with full properties and `basic`, `normal`, and `full` examples.
+- [Contributing](docs/CONTRIBUTING.md): project structure, widgets, types, docs, and validation.
 
-## Inicio rápido
+## Quick start
 
 ```javascript
 import { runApp, Container, Text, Button, useState } from "flet-box";
@@ -67,12 +67,12 @@ const App = () => {
     alignItems: "center",
     child: [
       Text({
-        text: `Contador: ${count}`,
+        text: `Counter: ${count}`,
         fontSize: 24,
         fontWeight: 700,
       }),
       Button({
-        text: "Incrementar",
+        text: "Increment",
         onClick: () => setCount((v) => v + 1),
       }),
     ],
@@ -82,51 +82,51 @@ const App = () => {
 runApp(App);
 ```
 
-## Arquitectura
+## Architecture
 
-El proyecto está organizado en varias capas:
+The project is organized into several layers:
 
-### 1. Capa pública
+### 1. Public layer
 
-Archivo principal:
+Main file:
 
 - [src/index.js](src/index.js)
 
-Exporta toda la API pública: widgets, utilities, servicios, router y runtime.
+Exports the entire public API: widgets, utilities, services, router, and runtime.
 
-### 2. Runtime del framework
+### 2. Framework runtime
 
-Archivos clave:
+Key files:
 
 - [src/core/runApp.js](src/core/runApp.js)
 - [src/core/App.js](src/core/App.js)
 - [src/core/pwa.js](src/core/pwa.js)
 
-Aquí se gestiona:
+This layer handles:
 
-- montaje de la app en el `root`
-- render inicial y actualización
-- theme del sistema
+- mounting the app on the `root`
+- initial render and updates
+- system theme
 - PWA
 - router integration
 
 ### 3. Widget factory
 
-Archivo principal:
+Main file:
 
 - [src/widget-factory/widgetFactory.js](src/widget-factory/widgetFactory.js)
 
-Es el corazón del framework. Define cómo un widget se convierte en un `HTMLElement` real con:
+It is the heart of the framework. It defines how a widget becomes a real `HTMLElement` with:
 
 - props
 - style
-- eventos
+- events
 - children
 - lifecycle
-- reactividad
+- reactivity
 - update
 
-Submodules relevantes:
+Relevant submodules:
 
 - [src/widget-factory/createWidget.js](src/widget-factory/createWidget.js)
 - [src/widget-factory/processProps.js](src/widget-factory/processProps.js)
@@ -135,38 +135,38 @@ Submodules relevantes:
 - [src/widget-factory/addChildren.js](src/widget-factory/addChildren.js)
 - [src/widget-factory/effects.js](src/widget-factory/effects.js)
 
-### 4. Estado
+### 4. State
 
-Archivo clave:
+Key file:
 
 - [src/tools/useState.js](src/tools/useState.js)
 
-El framework usa un sistema basado en claves, almacenamiento RAM y suscriptores para actualizar widgets conectados a un valor concreto.
+The framework uses a key-based system with RAM storage and subscribers to update widgets connected to a specific value.
 
 ### 5. Router
 
-Archivo clave:
+Key file:
 
 - [src/navigations/Router.js](src/navigations/Router.js)
 
-Permite rutas, rutas con parámetros, query strings y navegación por historial del navegador.
+Supports routes, parameterized routes, query strings, and navigation through the browser history.
 
-### 6. Servicios y utilidades
+### 6. Services and utilities
 
-Carpetas clave:
+Key folders:
 
 - [src/services](src/services)
 - [src/tools](src/tools)
 - [src/utils](src/utils)
 
-Incluyen:
+They include:
 
-- storage local
-- sesión
+- local storage
+- session
 - HTTP client
-- utilidades de texto, fecha, dimensiones, color, grid, margin, padding, animación, etc.
+- utilities for text, date, dimensions, color, grid, margin, padding, animation, etc.
 
-## Estructura del proyecto
+## Project structure
 
 ```text
 flet-box/
@@ -196,7 +196,7 @@ flet-box/
 └── README.md
 ```
 
-## Comandos principales
+## Main commands
 
 ```bash
 npm install
@@ -204,23 +204,23 @@ npm run dev
 npm run build
 ```
 
-### Scripts disponibles
+### Available scripts
 
-- `npm run dev`: arranca el entorno de desarrollo con el CLI
-- `npm run build`: genera el bundle de producción
-- `npm test`: actualmente no tiene pruebas reales configuradas
+- `npm run dev`: starts the development environment with the CLI
+- `npm run build`: generates the production bundle
+- `npm test`: currently has no real tests configured
 
-## Build y despliegue
+## Build and deployment
 
-El proyecto incluye scripts de bundle para:
+The project includes bundle scripts for:
 
-- web estático
-- bundle de producción para navegador
-- exportación para PSP
-- soporte PWA
-- compilación para APK mediante capacidades móviles o wrappers nativos
+- static web
+- production browser bundle
+- PSP export
+- PWA support
+- APK compilation via mobile capabilities or native wrappers
 
-Archivos relevantes:
+Relevant files:
 
 - [createBundle.sh](createBundle.sh)
 - [createBundlePSP.sh](createBundlePSP.sh)
@@ -228,11 +228,11 @@ Archivos relevantes:
 - [manifest.json](manifest.json)
 - [service-worker.js](service-worker.js)
 
-## API principal
+## Main API
 
 ### `runApp`
 
-Ejecuta la app en el contenedor raíz.
+Runs the app in the root container.
 
 ```javascript
 runApp(App, "root");
@@ -240,26 +240,26 @@ runApp(App, "root");
 
 ### `App`
 
-Crea la app raíz y reemplaza el contenido del contenedor principal.
+Creates the root app and replaces the content of the main container.
 
 ### `Container`
 
-Contenedor base con layout flexible.
+Base container with flexible layout.
 
 ```javascript
 Container({
   display: "flex",
   flexDirection: "column",
   child: [
-    Text({ text: "Hola" }),
-    Button({ text: "Aceptar" }),
+    Text({ text: "Hello" }),
+    Button({ text: "OK" }),
   ],
 });
 ```
 
 ### `useState`
 
-Gestión de estado local/global simple.
+Simple local/global state management.
 
 ```javascript
 const [count, setCount] = useState("count", 0);
@@ -267,7 +267,7 @@ const [count, setCount] = useState("count", 0);
 
 ### `Router`
 
-Navegación por rutas:
+Route-based navigation:
 
 ```javascript
 initRouter({
@@ -277,43 +277,43 @@ initRouter({
 });
 ```
 
-## Ventajas
+## Advantages
 
-- Ligero
-- Sin dependencias principales en runtime
-- Fácil de compilar
-- Buen rendimiento en móvil y web
-- API accesible y expresiva
-- útil para MVPs y apps pequeñas
+- Lightweight
+- No major runtime dependencies
+- Easy to compile
+- Good performance on mobile and web
+- Accessible, expressive API
+- Useful for MVPs and small apps
 
-## Limitaciones actuales
+## Current limitations
 
-- no tiene sistema de pruebas robusto
-- reactividad global puede ser difícil de escalar
-- render completo del contenedor principal puede limitar rendimiento en apps grandes
-- hay ciertas partes con arquitectura todavía en evolución
-- la API necesita consolidación para una etapa más madura
+- no robust testing system
+- global reactivity can be hard to scale
+- full re-render of the main container can limit performance in large apps
+- some parts of the architecture are still evolving
+- the API needs consolidation for a more mature stage
 
-## Estado del proyecto
+## Project status
 
-FletBox está bien posicionado como un framework de UI ligero con base sólida, pero todavía necesita un proceso de maduración para convertirse en una solución más profesional, con:
+FletBox is well positioned as a lightweight UI framework with a solid foundation, but it still needs a maturation process to become a more professional solution, with:
 
-- mejores tests
-- arquitectura más uniforme
-- API más estable
-- documentación extensa y ejemplos reales
-- refactor de render/estado
+- better tests
+- a more uniform architecture
+- a more stable API
+- extensive documentation and real examples
+- a render/state refactor
 
-## Roadmap sugerido
+## Suggested roadmap
 
-1. consolidar WidgetFactory y reactividad
-2. reducir render global
-3. añadir pruebas unitarias
-4. estabilizar API pública
-5. documentar componentes y ejemplos
-6. preparar release más formal
+1. consolidate WidgetFactory and reactivity
+2. reduce global render
+3. add unit tests
+4. stabilize the public API
+5. document components and examples
+6. prepare a more formal release
 
-## Enlaces útiles
+## Useful links
 
 - [src/index.js](src/index.js)
 - [src/core/runApp.js](src/core/runApp.js)
@@ -322,6 +322,6 @@ FletBox está bien posicionado como un framework de UI ligero con base sólida, 
 - [src/tools/useState.js](src/tools/useState.js)
 - [docs/arquitectura.md](docs/arquitectura.md)
 
-## Conclusión
+## Conclusion
 
-FletBox tiene una base técnica sólida, una idea clara y un rendimiento prometedor. El principal trabajo pendiente no es “hacerlo funcionar”, sino consolidar la arquitectura y la disciplina de desarrollo para convertirlo en un proyecto más maduro, mantenible y profesional.
+FletBox has a solid technical foundation, a clear idea, and promising performance. The main remaining work is not "making it work," but consolidating the architecture and the development discipline to turn it into a more mature, maintainable, and professional project.

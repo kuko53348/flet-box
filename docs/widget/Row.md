@@ -229,9 +229,19 @@ const panel = Container({
 - Keep state changes understandable for screen readers and assistive technology.
 
 ## Related widgets
-- `Container`
+- [Container](Container.md)
 - `Row`
-- `Column`
-- `Stack`
-- `Text`
-- `Button`
+- [Column](Column.md)
+- [Stack](Stack.md)
+- [Text](Text.md)
+- [Button](Button.md)
+
+---
+
+## Continue reading
+
+- **Previous:** [Container](Container.md)
+- **Next:** [Column](Column.md)
+- **Index:** [Widget index](README.md) · [Start here](START_HERE.md)
+
+You are reading **Chapter 1 · First steps: the core mental model** (3 of 7).

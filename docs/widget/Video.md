@@ -222,9 +222,19 @@ const panel = Container({
 - Keep state changes understandable for screen readers and assistive technology.
 
 ## Related widgets
-- `Container`
-- `Row`
-- `Column`
-- `Stack`
-- `Text`
-- `Button`
+- [Container](Container.md)
+- [Row](Row.md)
+- [Column](Column.md)
+- [Stack](Stack.md)
+- [Text](Text.md)
+- [Button](Button.md)
+
+---
+
+## Continue reading
+
+- **Previous:** [Audio](Audio.md)
+- **Next:** [DraggBox](DraggBox.md)
+- **Index:** [Widget index](README.md) · [Start here](START_HERE.md)
+
+You are reading **Chapter 7 · Media and drag & drop** (2 of 4).

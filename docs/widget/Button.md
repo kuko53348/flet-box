@@ -237,9 +237,19 @@ const panel = Container({
 - Keep state changes understandable for screen readers and assistive technology.
 
 ## Related widgets
-- `Container`
-- `Row`
-- `Column`
-- `Stack`
-- `Text`
+- [Container](Container.md)
+- [Row](Row.md)
+- [Column](Column.md)
+- [Stack](Stack.md)
+- [Text](Text.md)
 - `Button`
+
+---
+
+## Continue reading
+
+- **Previous:** [Image](Image.md)
+- **Next:** [Input](Input.md)
+- **Index:** [Widget index](README.md) · [Start here](START_HERE.md)
+
+You are reading **Chapter 2 · Interaction basics** (1 of 8).

@@ -1,19 +1,19 @@
-📄 DEMO.md COMPLETO - FLET-BOX-SERVER
+📄 COMPLETE DEMO.md - FLET-BOX-SERVER
 
-Aquí tienes el archivo demo.md completo con TODAS las funcionalidades que soporta Flet-Box-Server.
+Here is the complete demo.md file with ALL the features supported by Flet-Box-Server.
 
 ---
 
 ```markdown
 # 🚀 Flet-Box-Server Demo
 
-## Índice
-1. [Instalación](#instalación)
-2. [Configuración Básica](#configuración-básica)
-3. [Base de Datos](#base-de-datos)
-4. [Rutas API](#rutas-api)
-5. [Autenticación (JWT)](#autenticación-jwt)
-6. [Roles y Permisos](#roles-y-permisos)
+## Index
+1. [Installation](#installation)
+2. [Basic Configuration](#basic-configuration)
+3. [Database](#database)
+4. [API Routes](#api-routes)
+5. [Authentication (JWT)](#authentication-jwt)
+6. [Roles and Permissions](#roles-and-permissions)
 7. [Refresh Token](#refresh-token)
 8. [Email](#email)
 9. [SMS](#sms)
@@ -23,17 +23,17 @@ Aquí tienes el archivo demo.md completo con TODAS las funcionalidades que sopor
 13. [Queues (Jobs)](#queues-jobs)
 14. [Rate Limiting](#rate-limiting)
 15. [Cache (Redis)](#cache-redis)
-16. [Subida de Archivos](#subida-de-archivos)
+16. [File Uploads](#file-uploads)
 17. [Text-to-Speech](#text-to-speech)
 18. [Speech-to-Text](#speech-to-text)
-19. [Traducción](#traducción)
-20. [Validación](#validación)
+19. [Translation](#translation)
+20. [Validation](#validation)
 21. [Logging](#logging)
-22. [Escalabilidad](#escalabilidad)
+22. [Scalability](#scalability)
 
 ---
 
-## Instalación
+## Installation
 
 ```bash
 npm install flet-box-server
@@ -41,13 +41,13 @@ npm install flet-box-server
 
 ---
 
-Configuración Básica
+Basic Configuration
 
 ```javascript
 // server.js
 import { runServer, Api, Database } from 'flet-box-server';
 
-// 1. Base de datos
+// 1. Database
 const db = Database({
     type: 'sqlite',
     path: 'database.db',
@@ -60,7 +60,7 @@ const db = Database({
     }
 });
 
-// 2. Rutas
+// 2. Routes
 const routes = Api({
     '/users': {
         method: 'GET',
@@ -74,7 +74,7 @@ const routes = Api({
     }
 });
 
-// 3. Servidor
+// 3. Server
 runServer(routes, {
     port: 3000,
     cors: true
@@ -83,9 +83,9 @@ runServer(routes, {
 
 ---
 
-Base de Datos
+Database
 
-SQLite (CRUD completo)
+SQLite (full CRUD)
 
 ```javascript
 import { Database } from 'flet-box-server';
@@ -115,7 +115,7 @@ const db = Database({
 });
 
 // ========== CREATE ==========
-// Insertar usuario
+// Insert user
 const user = await db.users.insert({ 
     name: 'Juan', 
     email: 'juan@email.com', 
@@ -123,61 +123,61 @@ const user = await db.users.insert({
 });
 
 // ========== READ ==========
-// Leer todos
+// Read all
 const users = await db.users.readAll();
 
-// Leer uno por condición
+// Read one by condition
 const user = await db.users.readWhere(['email', 'juan@email.com'], true);
 
-// Leer últimos 10
+// Read last 10
 const recent = await db.users.readLast('id', 10);
 
 // ========== UPDATE ==========
-// Actualizar
+// Update
 await db.users.update(
     { name: 'Juan Carlos', age: 31 }, 
     ['id', 1]
 );
 
-// Actualizar con condición múltiple
+// Update with multiple conditions
 await db.users.updateMultiple(
     { status: 'active' },
     [['age', '>', 18], ['role', 'user']]
 );
 
 // ========== DELETE ==========
-// Eliminar
+// Delete
 await db.users.delete(['id', 1]);
 
-// Eliminar con condición
+// Delete with condition
 await db.users.deleteWhere(
     ['status', 'inactive'],
     ['created_at', '<', '2024-01-01']
 );
 
-// ========== UTILIDADES ==========
-// Verificar tabla
+// ========== UTILITIES ==========
+// Check table
 const exists = await db.checkTable('users');
 
-// Listar tablas
+// List tables
 const tables = await db.listTables();
 
-// Agregar columna
+// Add column
 await db.addColumn('users', 'phone', 'TEXT');
 
-// Obtener estructura
+// Get structure
 const structure = await db.getTableStructure('users');
 
-// Limpiar tabla
+// Clear table
 await db.clearTable('users');
 
-// Eliminar tabla
+// Drop table
 await db.dropTable('users');
 ```
 
 ---
 
-Rutas API
+API Routes
 
 ```javascript
 import { Api, GET, POST, PUT, DELETE } from 'flet-box-server';
@@ -234,7 +234,7 @@ const routes = Api({
 
 ---
 
-Autenticación (JWT)
+Authentication (JWT)
 
 ```javascript
 import { 
@@ -246,20 +246,20 @@ import {
 } from 'flet-box-server';
 
 const routes = Api({
-    // ========== REGISTRO ==========
+    // ========== REGISTRATION ==========
     '/auth/register': {
         method: 'POST',
         handler: async ({ name, email, password }) => {
-            // Verificar si ya existe
+            // Check whether it already exists
             const existing = await db.users.readWhere(['email', email], true);
             if (existing) {
-                throw new Error('El email ya está registrado');
+                throw new Error('Email is already registered');
             }
 
-            // Hash de la contraseña
+            // Hash the password
             const hashedPassword = await hashPassword(password);
 
-            // Guardar usuario
+            // Save user
             const user = await db.users.insert({
                 name,
                 email,
@@ -268,7 +268,7 @@ const routes = Api({
                 created_at: new Date().toISOString()
             });
 
-            // Generar token
+            // Generate token
             const token = signToken({ 
                 userId: user.id, 
                 email: user.email, 
@@ -285,12 +285,12 @@ const routes = Api({
         handler: async ({ email, password }) => {
             const user = await db.users.readWhere(['email', email], true);
             if (!user) {
-                throw new Error('Usuario no encontrado');
+                throw new Error('User not found');
             }
 
             const isValid = await comparePassword(password, user.password);
             if (!isValid) {
-                throw new Error('Contraseña incorrecta');
+                throw new Error('Incorrect password');
             }
 
             const token = signToken({ 
@@ -306,7 +306,7 @@ const routes = Api({
         }
     },
 
-    // ========== PERFIL (requiere autenticación) ==========
+    // ========== PROFILE (requires authentication) ==========
     '/auth/profile': {
         method: 'GET',
         middleware: [authenticate],
@@ -315,7 +315,7 @@ const routes = Api({
         }
     },
 
-    // ========== ACTUALIZAR PERFIL ==========
+    // ========== UPDATE PROFILE ==========
     '/auth/profile': {
         method: 'PUT',
         middleware: [authenticate],
@@ -324,7 +324,7 @@ const routes = Api({
         }
     },
 
-    // ========== CAMBIAR CONTRASEÑA ==========
+    // ========== CHANGE PASSWORD ==========
     '/auth/change-password': {
         method: 'POST',
         middleware: [authenticate],
@@ -332,12 +332,12 @@ const routes = Api({
             const user = await db.users.readWhere(['id', userId], true);
             const isValid = await comparePassword(oldPassword, user.password);
             if (!isValid) {
-                throw new Error('Contraseña actual incorrecta');
+                throw new Error('Current password is incorrect');
             }
 
             const hashed = await hashPassword(newPassword);
             await db.users.update({ password: hashed }, ['id', userId]);
-            return { message: 'Contraseña actualizada' };
+            return { message: 'Password updated' };
         }
     }
 });
@@ -345,19 +345,19 @@ const routes = Api({
 
 ---
 
-Roles y Permisos
+Roles and Permissions
 
 ```javascript
 import { verifyToken } from 'flet-box-server';
 
-// ========== MIDDLEWARE DE ROLES ==========
+// ========== ROLES MIDDLEWARE ==========
 const isAdmin = async (req, res, next) => {
     const token = req.headers.authorization?.split(' ')[1];
-    if (!token) throw new Error('Token requerido');
+    if (!token) throw new Error('Token required');
     
     const payload = verifyToken(token);
     if (payload.role !== 'admin') {
-        throw new Error('Acceso denegado: se requiere rol admin');
+        throw new Error('Access denied: admin role required');
     }
     req.userId = payload.userId;
     next();
@@ -365,18 +365,18 @@ const isAdmin = async (req, res, next) => {
 
 const isUser = async (req, res, next) => {
     const token = req.headers.authorization?.split(' ')[1];
-    if (!token) throw new Error('Token requerido');
+    if (!token) throw new Error('Token required');
     
     const payload = verifyToken(token);
     if (payload.role !== 'user' && payload.role !== 'admin') {
-        throw new Error('Acceso denegado: se requiere rol user');
+        throw new Error('Access denied: user role required');
     }
     req.userId = payload.userId;
     next();
 };
 
 const routes = Api({
-    // ========== SOLO ADMIN ==========
+    // ========== ADMIN ONLY ==========
     '/admin/users': {
         method: 'GET',
         middleware: [authenticate, isAdmin],
@@ -397,7 +397,7 @@ const routes = Api({
         }
     },
 
-    // ========== USUARIO O ADMIN ==========
+    // ========== USER OR ADMIN ==========
     '/profile': {
         method: 'GET',
         middleware: [authenticate, isUser],
@@ -417,8 +417,8 @@ import {
     verifyRefreshToken 
 } from 'flet-box-server';
 
-// ========== GUARDAR REFRESH TOKENS ==========
-// (Agregar tabla refresh_tokens a la base de datos)
+// ========== STORE REFRESH TOKENS ==========
+// (Add the refresh_tokens table to the database)
 db.addColumn('refresh_tokens', {
     userId: 'INTEGER',
     token: 'TEXT',
@@ -426,15 +426,15 @@ db.addColumn('refresh_tokens', {
 });
 
 const routes = Api({
-    // ========== LOGIN CON REFRESH ==========
+    // ========== LOGIN WITH REFRESH ==========
     '/auth/login': {
         method: 'POST',
         handler: async ({ email, password }) => {
             const user = await db.users.readWhere(['email', email], true);
-            if (!user) throw new Error('Usuario no encontrado');
+            if (!user) throw new Error('User not found');
 
             const isValid = await comparePassword(password, user.password);
-            if (!isValid) throw new Error('Contraseña incorrecta');
+            if (!isValid) throw new Error('Incorrect password');
 
             const accessToken = signToken({ 
                 userId: user.id, 
@@ -442,7 +442,7 @@ const routes = Api({
             });
             const refreshToken = signRefreshToken({ userId: user.id });
 
-            // Guardar refresh token en BD
+            // Save refresh token in DB
             await db.refresh_tokens.insert({
                 userId: user.id,
                 token: refreshToken,
@@ -457,16 +457,16 @@ const routes = Api({
     '/auth/refresh': {
         method: 'POST',
         handler: async ({ refreshToken }) => {
-            // Verificar refresh token
+            // Verify refresh token
             const payload = verifyRefreshToken(refreshToken);
             
-            // Verificar que existe en BD
+            // Verify that it exists in the DB
             const stored = await db.refresh_tokens.readWhere(['token', refreshToken], true);
             if (!stored) {
-                throw new Error('Refresh token inválido');
+                throw new Error('Invalid refresh token');
             }
 
-            // Generar nuevo access token
+            // Generate new access token
             const newAccessToken = signToken({ 
                 userId: payload.userId, 
                 email: payload.email 
@@ -481,9 +481,9 @@ const routes = Api({
         method: 'POST',
         middleware: [authenticate],
         handler: async ({ userId, refreshToken }) => {
-            // Eliminar refresh token de BD
+            // Remove refresh token from DB
             await db.refresh_tokens.delete(['token', refreshToken]);
-            return { message: 'Logout exitoso' };
+            return { message: 'Logout successful' };
         }
     }
 });
@@ -496,21 +496,21 @@ Email
 ```javascript
 import { sendEmail, EmailService } from 'flet-box-server';
 
-// ========== FUNCIÓN SIMPLE ==========
+// ========== SIMPLE FUNCTION ==========
 const routes = Api({
     '/send-email': {
         method: 'POST',
         handler: ({ email, message }) => {
             return sendEmail({
                 sendTo: email,
-                title: 'Nuevo mensaje',
+                title: 'New message',
                 personalCode: Math.floor(Math.random() * 1000000),
                 userName: message
             });
         }
     },
 
-    // ========== EMAIL CON HTML PERSONALIZADO ==========
+    // ========== EMAIL WITH CUSTOM HTML ==========
     '/send-email-custom': {
         method: 'POST',
         handler: ({ email, subject, html }) => {
@@ -522,33 +522,33 @@ const routes = Api({
         }
     },
 
-    // ========== EMAIL CON PLANTILLA ==========
+    // ========== EMAIL WITH TEMPLATE ==========
     '/send-welcome': {
         method: 'POST',
         handler: async ({ email, name }) => {
             const html = `
-                <h1>¡Bienvenido, ${name}!</h1>
-                <p>Gracias por registrarte en nuestra plataforma.</p>
-                <a href="https://miapp.com/verify">Verificar email</a>
+                <h1>Welcome, ${name}!</h1>
+                <p>Thank you for signing up on our platform.</p>
+                <a href="https://miapp.com/verify">Verify email</a>
             `;
             return sendEmail({
                 sendTo: email,
-                title: 'Bienvenido a Mi App',
+                title: 'Welcome to My App',
                 html
             });
         }
     }
 });
 
-// ========== CLASE EMAIL (más control) ==========
+// ========== EMAIL CLASS (more control) ==========
 const emailService = new EmailService({
-    user: 'tu-email@gmail.com',
-    password: 'tu-contraseña-de-aplicacion'
+    user: 'your-email@gmail.com',
+    password: 'your-app-password'
 });
 
 await emailService.send({
-    sendTo: 'usuario@email.com',
-    title: 'Asunto',
+    sendTo: 'user@email.com',
+    title: 'Subject',
     personalCode: 123456,
     userName: 'Juan'
 });
@@ -562,7 +562,7 @@ SMS
 import { sendSMS, sendVerificationCode, verifyPhone, sendBulkSMS } from 'flet-box-server';
 
 const routes = Api({
-    // ========== ENVIAR SMS ==========
+    // ========== SEND SMS ==========
     '/sms/send': {
         method: 'POST',
         handler: ({ phone, message }) => {
@@ -570,16 +570,16 @@ const routes = Api({
         }
     },
 
-    // ========== ENVIAR CÓDIGO DE VERIFICACIÓN ==========
+    // ========== SEND VERIFICATION CODE ==========
     '/sms/verify-send': {
         method: 'POST',
         handler: async ({ phone }) => {
             const code = await sendVerificationCode(phone);
-            return { message: 'Código enviado', code };
+            return { message: 'Code sent', code };
         }
     },
 
-    // ========== VERIFICAR CÓDIGO ==========
+    // ========== VERIFY CODE ==========
     '/sms/verify-check': {
         method: 'POST',
         handler: async ({ phone, code }) => {
@@ -588,7 +588,7 @@ const routes = Api({
         }
     },
 
-    // ========== SMS MASIVO ==========
+    // ========== BULK SMS ==========
     '/sms/bulk': {
         method: 'POST',
         handler: async ({ numbers, message }) => {
@@ -607,7 +607,7 @@ PDF
 import { generatePDF, generateInvoice, generateReceipt, savePDF } from 'flet-box-server';
 
 const routes = Api({
-    // ========== PDF DESDE HTML ==========
+    // ========== PDF FROM HTML ==========
     '/pdf/generate': {
         method: 'POST',
         handler: async ({ html }) => {
@@ -616,7 +616,7 @@ const routes = Api({
         }
     },
 
-    // ========== FACTURA ==========
+    // ========== INVOICE ==========
     '/pdf/invoice': {
         method: 'POST',
         handler: async ({ orderId }) => {
@@ -635,15 +635,15 @@ const routes = Api({
                 })),
                 total: order.total,
                 currency: 'USD',
-                company: 'Mi Empresa S.A.',
-                notes: 'Gracias por su compra'
+                company: 'My Company S.A.',
+                notes: 'Thank you for your purchase'
             });
 
             return { pdf: pdf.toString('base64') };
         }
     },
 
-    // ========== RECIBO ==========
+    // ========== RECEIPT ==========
     '/pdf/receipt': {
         method: 'POST',
         handler: async ({ paymentId }) => {
@@ -675,7 +675,7 @@ CSV / Excel
 import { readCSV, writeCSV, readExcel, writeExcel } from 'flet-box-server';
 
 const routes = Api({
-    // ========== IMPORTAR CSV ==========
+    // ========== IMPORT CSV ==========
     '/csv/import': {
         method: 'POST',
         handler: async ({ filePath }) => {
@@ -684,7 +684,7 @@ const routes = Api({
         }
     },
 
-    // ========== EXPORTAR CSV ==========
+    // ========== EXPORT CSV ==========
     '/csv/export': {
         method: 'GET',
         handler: async () => {
@@ -694,7 +694,7 @@ const routes = Api({
         }
     },
 
-    // ========== IMPORTAR EXCEL ==========
+    // ========== IMPORT EXCEL ==========
     '/excel/import': {
         method: 'POST',
         handler: async ({ filePath }) => {
@@ -703,7 +703,7 @@ const routes = Api({
         }
     },
 
-    // ========== EXPORTAR EXCEL ==========
+    // ========== EXPORT EXCEL ==========
     '/excel/export': {
         method: 'GET',
         handler: async () => {
@@ -722,20 +722,20 @@ WebSocket
 ```javascript
 import { createWebSocketServer } from 'flet-box-server';
 
-// ========== SERVIDOR WEBSOCKET ==========
+// ========== WEBSOCKET SERVER ==========
 const wss = createWebSocketServer(3001);
 
-// ========== CONEXIÓN ==========
+// ========== CONNECTION ==========
 wss.onConnection((ws, req) => {
-    console.log('🟢 Cliente conectado');
-    ws.send(JSON.stringify({ type: 'connected', message: 'Bienvenido!' }));
+    console.log('🟢 Client connected');
+    ws.send(JSON.stringify({ type: 'connected', message: 'Welcome!' }));
 });
 
-// ========== MENSAJES ==========
+// ========== MESSAGES ==========
 wss.onMessage((ws, message) => {
-    console.log('📩 Mensaje:', message);
+    console.log('📩 Message:', message);
 
-    // Chat general
+    // General chat
     if (message.type === 'chat') {
         wss.broadcast({
             type: 'chat',
@@ -745,16 +745,16 @@ wss.onMessage((ws, message) => {
         });
     }
 
-    // Unirse a sala
+    // Join room
     if (message.type === 'join-room') {
         wss.joinRoom(ws, message.room);
         wss.to(message.room, {
             type: 'notification',
-            message: `${message.user} se unió a la sala`
+            message: `${message.user} joined the room`
         });
     }
 
-    // Mensaje en sala
+    // Room message
     if (message.type === 'room-message') {
         wss.to(message.room, {
             type: 'room-message',
@@ -764,7 +764,7 @@ wss.onMessage((ws, message) => {
         });
     }
 
-    // Mensaje privado
+    // Private message
     if (message.type === 'private') {
         wss.sendTo(message.to, {
             type: 'private',
@@ -774,17 +774,17 @@ wss.onMessage((ws, message) => {
     }
 });
 
-// ========== DESCONEXIÓN ==========
+// ========== DISCONNECTION ==========
 wss.onClose((ws) => {
-    console.log('🔴 Cliente desconectado');
+    console.log('🔴 Client disconnected');
 });
 
-// ========== ERRORES ==========
+// ========== ERRORS ==========
 wss.onError((ws, error) => {
     console.error('⚠️ WebSocket error:', error.message);
 });
 
-// ========== RUTAS CON WEBSOCKET ==========
+// ========== ROUTES WITH WEBSOCKET ==========
 const routes = Api({
     '/ws/status': {
         method: 'GET',
@@ -803,7 +803,7 @@ Queues (Jobs)
 ```javascript
 import { createQueue, addJob, processQueue, getQueueStatus } from 'flet-box-server';
 
-// ========== CREAR QUEUES ==========
+// ========== CREATE QUEUES ==========
 const emailQueue = createQueue('email', {
     attempts: 3,
     backoff: 5000
@@ -814,23 +814,23 @@ const reportQueue = createQueue('report', {
     backoff: 10000
 });
 
-// ========== PROCESAR QUEUE ==========
+// ========== PROCESS QUEUE ==========
 processQueue('email', async (job) => {
     const { to, subject, html } = job.data;
     await sendEmail({ sendTo: to, title: subject, html });
-    console.log(`✅ Email enviado a ${to}`);
+    console.log(`✅ Email sent to ${to}`);
 });
 
 processQueue('report', async (job) => {
     const { type, params } = job.data;
     const report = await generateReport(type, params);
     await savePDF(report, `reports/${job.id}.pdf`);
-    console.log(`✅ Reporte generado: ${job.id}`);
+    console.log(`✅ Report generated: ${job.id}`);
 });
 
-// ========== RUTAS ==========
+// ========== ROUTES ==========
 const routes = Api({
-    // ========== ENVIAR EMAIL CON QUEUE ==========
+    // ========== SEND EMAIL WITH QUEUE ==========
     '/send-email-queue': {
         method: 'POST',
         handler: async ({ email, subject, message }) => {
@@ -839,20 +839,20 @@ const routes = Api({
                 subject: subject,
                 html: `<h1>${message}</h1>`
             });
-            return { message: 'Email en cola' };
+            return { message: 'Email queued' };
         }
     },
 
-    // ========== GENERAR REPORTE ==========
+    // ========== GENERATE REPORT ==========
     '/generate-report': {
         method: 'POST',
         handler: async ({ type, params }) => {
             await addJob('report', { type, params });
-            return { message: 'Reporte en cola' };
+            return { message: 'Report queued' };
         }
     },
 
-    // ========== ESTADO DE LA COLA ==========
+    // ========== QUEUE STATUS ==========
     '/queue/status': {
         method: 'GET',
         handler: async () => {
@@ -862,12 +862,12 @@ const routes = Api({
         }
     },
 
-    // ========== LIMPIAR COLA ==========
+    // ========== CLEAN QUEUE ==========
     '/queue/clean': {
         method: 'POST',
         handler: async () => {
             await cleanQueue('email', 60000);
-            return { message: 'Cola limpiada' };
+            return { message: 'Queue cleaned' };
         }
     }
 });
@@ -881,36 +881,36 @@ Rate Limiting
 import { rateLimit, rateLimitPerMinute, rateLimitPerHour } from 'flet-box-server';
 
 const routes = Api({
-    // ========== LIMITE POR MINUTO ==========
+    // ========== LIMIT PER MINUTE ==========
     '/auth/login': {
         method: 'POST',
-        middleware: [rateLimit({ window: 60, max: 5 })], // 5 intentos/minuto
+        middleware: [rateLimit({ window: 60, max: 5 })], // 5 attempts/minute
         handler: async ({ email, password }) => {
-            // Lógica de login...
+            // Login logic...
         }
     },
 
-    // ========== LIMITE POR HORA ==========
+    // ========== LIMIT PER HOUR ==========
     '/api/public': {
         method: 'GET',
         middleware: [rateLimitPerHour(1000)],
-        handler: () => ({ data: 'Datos públicos' })
+        handler: () => ({ data: 'Public data' })
     },
 
-    // ========== LÍMITE PERSONALIZADO ==========
+    // ========== CUSTOM LIMIT ==========
     '/api/premium': {
         method: 'GET',
         middleware: [
             rateLimit({ 
                 window: 60, 
                 max: 100,
-                message: 'Demasiadas peticiones, espera un momento'
+                message: 'Too many requests, please wait a moment'
             })
         ],
-        handler: () => ({ data: 'Datos premium' })
+        handler: () => ({ data: 'Premium data' })
     },
 
-    // ========== KEY PERSONALIZADA (por usuario) ==========
+    // ========== CUSTOM KEY (per user) ==========
     '/api/user-data': {
         method: 'GET',
         middleware: [
@@ -942,29 +942,29 @@ import {
     cached 
 } from 'flet-box-server';
 
-// ========== CONECTAR REDIS ==========
+// ========== CONNECT REDIS ==========
 connectRedis('redis://localhost:6379');
 
 const routes = Api({
-    // ========== CON CACHÉ ==========
+    // ========== WITH CACHE ==========
     '/products': {
         method: 'GET',
         handler: async () => {
-            // Intentar caché
+            // Try cache
             let products = await cacheGet('products');
             if (products) {
                 return { fromCache: true, data: products };
             }
 
-            // Base de datos
+            // Database
             products = await db.products.readAll();
-            await cacheSet('products', products, 3600); // 1 hora
+            await cacheSet('products', products, 3600); // 1 hour
 
             return { fromCache: false, data: products };
         }
     },
 
-    // ========== PRODUCTO POR ID (con caché) ==========
+    // ========== PRODUCT BY ID (with cache) ==========
     '/products/:id': {
         method: 'GET',
         handler: async ({ id }) => {
@@ -981,27 +981,27 @@ const routes = Api({
         }
     },
 
-    // ========== INVALIDAR CACHÉ ==========
+    // ========== INVALIDATE CACHE ==========
     '/products': {
         method: 'POST',
         handler: async ({ name, price }) => {
             const product = await db.products.insert({ name, price });
-            await cacheDel('products'); // Invalidar lista
+            await cacheDel('products'); // Invalidate list
             return product;
         }
     },
 
-    // ========== LIMPIAR CACHÉ ==========
+    // ========== CLEAR CACHE ==========
     '/cache/clear': {
         method: 'POST',
         handler: async () => {
             await cacheDelPattern('product:*');
             await cacheDel('products');
-            return { message: 'Caché limpiado' };
+            return { message: 'Cache cleared' };
         }
     },
 
-    // ========== ESTADÍSTICAS DE CACHÉ ==========
+    // ========== CACHE STATISTICS ==========
     '/cache/stats': {
         method: 'GET',
         handler: async () => {
@@ -1011,7 +1011,7 @@ const routes = Api({
     }
 });
 
-// ========== DECORATOR PARA CACHÉ ==========
+// ========== CACHE DECORATOR ==========
 class ProductService {
     @cached(3600)
     async getProducts() {
@@ -1027,13 +1027,13 @@ class ProductService {
 
 ---
 
-Subida de Archivos
+File Uploads
 
 ```javascript
 import { uploadFile, downloadFile, listFiles, deleteFile, getFileInfo } from 'flet-box-server';
 
 const routes = Api({
-    // ========== SUBIR ARCHIVO ==========
+    // ========== UPLOAD FILE ==========
     '/upload': {
         method: 'POST',
         middleware: [authenticate],
@@ -1043,7 +1043,7 @@ const routes = Api({
         }
     },
 
-    // ========== SUBIR CON NOMBRE ORIGINAL ==========
+    // ========== UPLOAD KEEPING ORIGINAL NAME ==========
     '/upload/keep-name': {
         method: 'POST',
         middleware: [authenticate],
@@ -1053,7 +1053,7 @@ const routes = Api({
         }
     },
 
-    // ========== LISTAR ARCHIVOS ==========
+    // ========== LIST FILES ==========
     '/files': {
         method: 'GET',
         middleware: [authenticate],
@@ -1062,7 +1062,7 @@ const routes = Api({
         }
     },
 
-    // ========== LISTAR RECURSIVO ==========
+    // ========== LIST RECURSIVELY ==========
     '/files/all': {
         method: 'GET',
         middleware: [authenticate],
@@ -1071,7 +1071,7 @@ const routes = Api({
         }
     },
 
-    // ========== DESCARGAR ARCHIVO ==========
+    // ========== DOWNLOAD FILE ==========
     '/files/:path': {
         method: 'GET',
         handler: async ({ path }) => {
@@ -1079,7 +1079,7 @@ const routes = Api({
         }
     },
 
-    // ========== INFORMACIÓN DEL ARCHIVO ==========
+    // ========== FILE INFORMATION ==========
     '/files/:path/info': {
         method: 'GET',
         handler: async ({ path }) => {
@@ -1087,7 +1087,7 @@ const routes = Api({
         }
     },
 
-    // ========== ELIMINAR ARCHIVO ==========
+    // ========== DELETE FILE ==========
     '/files/:path': {
         method: 'DELETE',
         middleware: [authenticate],
@@ -1107,7 +1107,7 @@ Text-to-Speech
 import { textToSpeech, saveAudio, speak } from 'flet-box-server';
 
 const routes = Api({
-    // ========== TEXTO A VOZ ==========
+    // ========== TEXT TO SPEECH ==========
     '/tts': {
         method: 'POST',
         handler: async ({ text, language = 'es-ES', voice = 'es-ES-Neural2-D' }) => {
@@ -1121,7 +1121,7 @@ const routes = Api({
         }
     },
 
-    // ========== TTS CON PARÁMETROS ==========
+    // ========== TTS WITH PARAMETERS ==========
     '/tts/advanced': {
         method: 'POST',
         handler: async ({ 
@@ -1141,7 +1141,7 @@ const routes = Api({
         }
     },
 
-    // ========== TTS RÁPIDO ==========
+    // ========== QUICK TTS ==========
     '/tts/quick': {
         method: 'POST',
         handler: async ({ text, lang = 'es' }) => {
@@ -1160,7 +1160,7 @@ Speech-to-Text
 import { speechToText, transcribeFile, listen } from 'flet-box-server';
 
 const routes = Api({
-    // ========== AUDIO A TEXTO ==========
+    // ========== AUDIO TO TEXT ==========
     '/stt': {
         method: 'POST',
         handler: async ({ audio, language = 'es-ES' }) => {
@@ -1174,7 +1174,7 @@ const routes = Api({
         }
     },
 
-    // ========== TRANSCRIBIR ARCHIVO ==========
+    // ========== TRANSCRIBE FILE ==========
     '/stt/file': {
         method: 'POST',
         handler: async ({ filePath, language = 'es-ES' }) => {
@@ -1183,7 +1183,7 @@ const routes = Api({
         }
     },
 
-    // ========== STT RÁPIDO ==========
+    // ========== QUICK STT ==========
     '/stt/quick': {
         method: 'POST',
         handler: async ({ audio, lang = 'es' }) => {
@@ -1192,7 +1192,7 @@ const routes = Api({
         }
     },
 
-    // ========== STT CON PHRASES ==========
+    // ========== STT WITH PHRASES ==========
     '/stt/custom': {
         method: 'POST',
         handler: async ({ audio, language = 'es-ES', phrases = [] }) => {
@@ -1210,13 +1210,13 @@ const routes = Api({
 
 ---
 
-Traducción
+Translation
 
 ```javascript
 import { translate, translateWithCode } from 'flet-box-server';
 
 const routes = Api({
-    // ========== TRADUCIR TEXTO ==========
+    // ========== TRANSLATE TEXT ==========
     '/translate': {
         method: 'POST',
         handler: async ({ text, target, source = 'auto' }) => {
@@ -1225,7 +1225,7 @@ const routes = Api({
         }
     },
 
-    // ========== TRADUCIR CON CÓDIGO ==========
+    // ========== TRANSLATE WITH CODE ==========
     '/translate/code': {
         method: 'POST',
         handler: async ({ text, target, source = 'auto' }) => {
@@ -1234,7 +1234,7 @@ const routes = Api({
         }
     },
 
-    // ========== TRADUCCIÓN MÚLTIPLE ==========
+    // ========== BULK TRANSLATION ==========
     '/translate/bulk': {
         method: 'POST',
         handler: async ({ texts, target, source = 'auto' }) => {
@@ -1249,13 +1249,13 @@ const routes = Api({
 
 ---
 
-Validación
+Validation
 
 ```javascript
 import { validate, isEmail, isPhone, sanitizeString } from 'flet-box-server';
 
 const routes = Api({
-    // ========== VALIDAR DATOS ==========
+    // ========== VALIDATE DATA ==========
     '/validate': {
         method: 'POST',
         handler: ({ data }) => {
@@ -1271,7 +1271,7 @@ const routes = Api({
         }
     },
 
-    // ========== VALIDAR EMAIL ==========
+    // ========== VALIDATE EMAIL ==========
     '/validate/email': {
         method: 'POST',
         handler: ({ email }) => {
@@ -1279,7 +1279,7 @@ const routes = Api({
         }
     },
 
-    // ========== VALIDAR TELÉFONO ==========
+    // ========== VALIDATE PHONE ==========
     '/validate/phone': {
         method: 'POST',
         handler: ({ phone }) => {
@@ -1287,7 +1287,7 @@ const routes = Api({
         }
     },
 
-    // ========== SANITIZAR ==========
+    // ========== SANITIZE ==========
     '/sanitize': {
         method: 'POST',
         handler: ({ text, options = {} }) => {
@@ -1309,15 +1309,15 @@ Logging
 ```javascript
 import { logger } from 'flet-box-server';
 
-// ========== CONFIGURAR LOGGER ==========
+// ========== CONFIGURE LOGGER ==========
 logger.save('logs/app.log');
 
 const routes = Api({
-    // ========== LOGS AUTOMÁTICOS ==========
+    // ========== AUTOMATIC LOGS ==========
     '/users': {
         method: 'GET',
         handler: () => {
-            logger.info('Usuarios consultados');
+            logger.info('Users queried');
             return db.users.readAll();
         }
     },
@@ -1325,26 +1325,26 @@ const routes = Api({
     '/users': {
         method: 'POST',
         handler: ({ name, email }) => {
-            logger.info(`Usuario creado: ${email}`);
+            logger.info(`User created: ${email}`);
             return db.users.insert({ name, email });
         }
     },
 
-    // ========== LOGS DE ERROR ==========
+    // ========== ERROR LOGS ==========
     '/error-test': {
         method: 'GET',
         handler: () => {
             try {
-                throw new Error('Error de prueba');
+                throw new Error('Test error');
             } catch (error) {
-                logger.error('Error en /error-test', { error: error.message });
+                logger.error('Error in /error-test', { error: error.message });
                 throw error;
             }
         }
     },
 
-    // ========== LOGS DE REQUEST ==========
-    // (Se puede usar un middleware global)
+    // ========== REQUEST LOGS ==========
+    // (A global middleware can be used)
     '/api/*': {
         method: 'GET',
         middleware: [
@@ -1356,7 +1356,7 @@ const routes = Api({
         handler: () => ({ message: 'OK' })
     },
 
-    // ========== OBTENER LOGS ==========
+    // ========== GET LOGS ==========
     '/logs': {
         method: 'GET',
         handler: async () => {
@@ -1369,7 +1369,7 @@ const routes = Api({
 
 ---
 
-Escalabilidad
+Scalability
 
 Cluster (Multi-core)
 
@@ -1379,18 +1379,18 @@ import os from 'os';
 
 if (cluster.isPrimary) {
     const numCPUs = os.cpus().length;
-    console.log(`🔄 Iniciando ${numCPUs} workers...`);
+    console.log(`🔄 Starting ${numCPUs} workers...`);
 
     for (let i = 0; i < numCPUs; i++) {
         cluster.fork();
     }
 
     cluster.on('exit', (worker) => {
-        console.log(`❌ Worker ${worker.id} murió, reiniciando...`);
+        console.log(`❌ Worker ${worker.id} died, restarting...`);
         cluster.fork();
     });
 } else {
-    // Código de la aplicación
+    // Application code
     import('./server.js');
 }
 ```
@@ -1409,10 +1409,10 @@ CMD ["node", "server.js"]
 ```
 
 ```bash
-# Construir
+# Build
 docker build -t flet-box-server .
 
-# Ejecutar
+# Run
 docker run -p 3000:3000 flet-box-server
 
 # Docker Compose
@@ -1446,71 +1446,71 @@ services:
 
 ---
 
-📋 Resumen
+📋 Summary
 
-Funcionalidades Completas
+Complete Features
 
-Módulo Estado Archivos
-Base de Datos ✅ SQLite, PostgreSQL, MySQL
-Autenticación ✅ JWT, Refresh Tokens, Roles
+Module Status Files
+Database ✅ SQLite, PostgreSQL, MySQL
+Authentication ✅ JWT, Refresh Tokens, Roles
 Email ✅ Nodemailer, Gmail SMTP
 SMS ✅ Twilio
 PDF ✅ Puppeteer, Invoices, Receipts
 CSV/Excel ✅ csv-parse, xlsx
 WebSocket ✅ ws, Rooms, Broadcast
 Queues ✅ Bull, Redis
-Rate Limit ✅ Memoria, Redis
+Rate Limit ✅ Memory, Redis
 Cache ✅ Redis
-Storage ✅ Archivos locales
+Storage ✅ Local files
 TTS ✅ Google Cloud TTS
 STT ✅ Google Cloud STT
-Traducción ✅ Google Translate
-Validación ✅ Schema-based
-Logging ✅ Archivos, Colores
-Escalabilidad ✅ Cluster, Docker
+Translation ✅ Google Translate
+Validation ✅ Schema-based
+Logging ✅ Files, Colors
+Scalability ✅ Cluster, Docker
 
 ---
 
-🚀 Ejecutar
+🚀 Run
 
 ```bash
-# Instalar
+# Install
 npm install flet-box-server
 
-# Crear server.js (copiar de este demo)
-# Ejecutar
+# Create server.js (copy from this demo)
+# Run
 node server.js
 
-# Con nodemon (desarrollo)
+# With nodemon (development)
 npm install -g nodemon
 nodemon server.js
 ```
 
 ---
 
-📖 Más Información
+📖 More Information
 
 · 📦 NPM Package
 · 🐙 GitHub
-· 📚 Documentación
+· 📚 Documentation
 
 ---
 
-FLET-BOX-SERVER: Simple, Profesional, Escalable. 🚀
+FLET-BOX-SERVER: Simple, Professional, Scalable. 🚀
 
 ```
 
 ---
 
-## 🎯 **RESUMEN**
+## 🎯 **SUMMARY**
 
-Este `demo.md` contiene:
+This `demo.md` contains:
 
-1. ✅ **22 secciones** completas
-2. ✅ **Todos los módulos** documentados
-3. ✅ **Ejemplos funcionales** listos para copiar
-4. ✅ **Desde lo básico hasta lo avanzado**
-5. ✅ **Escalabilidad** (Cluster, Docker)
-6. ✅ **Todo en un solo archivo**
+1. ✅ **22 complete sections**
+2. ✅ **All modules** documented
+3. ✅ **Functional examples** ready to copy
+4. ✅ **From the basics to advanced topics**
+5. ✅ **Scalability** (Cluster, Docker)
+6. ✅ **Everything in a single file**
 
-**Con esto, cualquier persona puede construir una API completa con Flet-Box-Server.** 🚀
+**With this, anyone can build a complete API with Flet-Box-Server.** 🚀

@@ -260,8 +260,18 @@ const panel = Container({
 
 ## Related widgets
 - `Container`
-- `Row`
-- `Column`
-- `Stack`
-- `Text`
-- `Button`
+- [Row](Row.md)
+- [Column](Column.md)
+- [Stack](Stack.md)
+- [Text](Text.md)
+- [Button](Button.md)
+
+---
+
+## Continue reading
+
+- **Previous:** [Text](Text.md)
+- **Next:** [Row](Row.md)
+- **Index:** [Widget index](README.md) · [Start here](START_HERE.md)
+
+You are reading **Chapter 1 · First steps: the core mental model** (2 of 7).
