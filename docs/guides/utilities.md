@@ -185,7 +185,7 @@ import { TextInputValidator } from "flet-box";
 
 TextInputValidator.isEmail("user@example.com");
 TextInputValidator.onlyNumbers("abc123");
-TextInputValidator.safeText(userInput);
+TextInputValidator.sanitize(userInput);
 TextInputValidator.limitLength(userInput, 50);
 ```
 
@@ -231,3 +231,11 @@ formatMediaProgress(30, 120);
 - Need URL changes? Read [Routing](router.md).
 - Need colors that follow the app theme? Use `colors` and `getColor`.
 - Need browser information? Use `device`, `os`, and `dimensions`.
+
+---
+
+## Continue reading
+
+- **Previous:** [Animation helpers](../tools/animation.md) — end of the tools chapter.
+- **Next:** [The FletBox CLI](../cli/README.md) — Chapter 11
+- **Index:** [Guides index](README.md) · [The FletBox Book](../README.md)

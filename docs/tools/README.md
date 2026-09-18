@@ -1,6 +1,6 @@
-# Tools: the FletBox utility book
+# Tools: FletBox helper functions
 
-This directory is a book, just like the [widget book](../widget/README.md). It documents every helper function that ships with FletBox — the pre-built code that lets you solve common problems **inside the framework**, without reaching for a third-party library or a search engine.
+This directory is the reference index for the helper functions that ship with FletBox — the pre-built code that lets you solve common problems **inside the framework**, without reaching for a third-party library or a search engine.
 
 Tools are plain JavaScript functions. You import them from `flet-box` exactly like widgets:
 
@@ -8,102 +8,129 @@ Tools are plain JavaScript functions. You import them from `flet-box` exactly li
 import { rgba, uuid, sort, formatDate } from "flet-box";
 ```
 
-Read this book in order to go from visual styling helpers to state, async, and device utilities, or jump straight to a tool from the index below.
+> **Tools vs. Services.** *Tools* are pure helpers — they take input and give you back a value (a color string, a sorted array, a formatted date, a new id). *Services* talk to the outside world — browser storage and the network. Find services in the [services index](../services/README.md).
 
-## How to read this book
+For a task-oriented walkthrough of the most common helpers, read the [Utilities guide](../guides/utilities.md). This index lists everything the framework actually exports today, grouped by category, and **each category has its own reference page** with full signatures, returns, and examples. Every name below is present in `src/index.js`; the implementation lives in `src/tools/` and `src/utils/` (plus `src/animations/` for the animation helpers).
 
-- Chapters go from **most used to most specialized**. Read them top to bottom the first time.
-- At the end of every page there is a **Continue reading** block with the previous page, the next page, and a link back to this index.
-- Each page has the same shape: a one-minute overview, when to use it, the full function API with parameters and return values, and copy-paste examples.
-- Every example is self-contained and runs as-is.
+## The tourist's map
 
-Related books and guides: [Widgets](../widget/README.md) · [Services](../services/README.md) · [Frontend services guide](../guides/frontend-services.md) · [Architecture](../arquitectura.md).
+Each category is the next chapter of the reading path:
 
-> **Tools vs. Services.** *Tools* are pure helpers — they take input and give you back a value (a color string, a sorted array, a formatted date, a new id). *Services* talk to the outside world — browser storage and the network. Find services in the [services book](../services/README.md).
+| Page | What you find there |
+| --- | --- |
+| [Styling helpers](styling.md) | CSS-in-JS strings: `border`, `margin`, `gradient`, `color`, `transform`, … |
+| [Lists, arrays & data](lists.md) | `mapList`, `repeat`, `sort`, `unique`, `createList`, `dict`, `random` |
+| [Text & time](text-and-time.md) | `capitalize`, `truncate`, `formatDate`, media-time helpers |
+| [State, memo & refs](state.md) | `useState`, `memo`, `ref` |
+| [Async, ids & logging](async-ids-log.md) | `delay`, `retry`, `uuid`, `shortId`, `print` |
+| [Device & environment](device.md) | `device`, `os`, `dimensions`, `clipboard` |
+| [Themes](theme.md) | `colors`, `setTheme`, `ThemeProvider`, `useTheme` |
+| [Markdown, code & HTML](markdown.md) | markdown → HTML/widgets, syntax highlighting, `escapeHtml` |
+| [Visual effects](visual-effects.md) | `applyShimmer`, `applyGlow`, `applyPulse`, `injectKeyframes` |
+| [Widget introspection](introspection.md) | `getWidgetProps`, `getWidgetProp`, `stringifyWidgetProps` |
+| [Input validation](validation.md) | `TextInputValidator` rules |
+| [Animation helpers](animation.md) | `animate`, `fadeIn`, `pulse` + `AnimatedBox` and friends |
 
-## The reading path
-
-### Chapter 1 · Styling helpers (CSS in JS)
+## Styling helpers (CSS in JS)
 
 Small functions that return CSS values, so you can style widgets without writing raw CSS strings.
 
-1. [color](color.md) — parse, convert, and manipulate colors
-2. [rgba](rgba.md) — build an `rgba()` string from parts
-3. [gradient](gradient.md) — build linear, radial, and conic gradients
-4. [border](border.md) — build a `border` shorthand string
-5. [shadow](shadow.md) — build a `box-shadow` string
-6. [padding](padding.md) — turn numbers or shorthand into padding CSS
-7. [margin](margin.md) — turn numbers or shorthand into margin CSS
-8. [flex](flex.md) — build a `flex` shorthand string
-9. [grid](grid.md) — build grid template and area strings
-10. [filter](filter.md) — build a CSS `filter` string
-11. [transform](transform.md) — build a CSS `transform` string
-12. [transition](transition.md) — build a CSS `transition` string
-13. [animation](animation.md) — build a CSS `animation` shorthand string
+- `animation(value)` — build a CSS `animation` shorthand string.
+- `border(width, style, color)` — build a `border` shorthand string.
+- `gradient(type, colors, angle)` — build linear, radial, and conic gradients.
+- `margin(...)` / `padding(...)` — turn numbers or CSS shorthand into a spacing value.
+- `rgba(r, g, b, a)` — build an `rgba()` string from parts.
+- `shadow(value)` — build a `box-shadow` string.
+- `transform(value)` / `transition(value)` — build CSS `transform`/`transition` strings.
+- `filter(value)` — build a CSS `filter` string.
+- `flex(...)` — build a `flex` shorthand string.
+- `grid(...)` — build grid template and area strings.
+- `color(value)` — create a chainable Color object: `hex()`, `rgb()`, `rgba()`, `lighten(n)`, `darken(n)`, `alpha(a)`, `complement()`, plus `isDark()`/`isLight()` and `contrast()`.
+- `stackPosition(...)` — apply absolute stacking position + centering.
+- `toREM(value)`, `toPX(value)`, `setBaseFontSize(px)`, `getBaseFontSize()` — unit conversion helpers.
 
-### Chapter 2 · Lists, arrays & data
+## Lists, arrays & data
 
 Helpers for shaping collections and generating data.
 
-14. [array](array.md) — shuffle, reverse, sort, unique, chunk
-15. [mapList](mapList.md) — map a list to widgets, repeat, and range
-16. [dict](dict.md) — a Python-like dictionary with chainable methods
-17. [createList](createList.md) — generate mock data from a schema
-18. [random](random.md) — random numbers, ids, colors, and fake data
+- `mapList(list, fn)` — map a list; `repeat(n, fn)` and `range(a, b)` generate lists.
+- `shuffle(list)`, `reverse(list)`, `sort(list)`, `unique(list)`, `chunk(list, size)` — collection transforms.
+- `dict(...)` / `emptyDict()` — a Python-like dictionary with chainable methods.
+- `fromJSON(text)` / `fromEntries(entries)` — object building helpers.
+- `createList(schema, count)` — generate mock/structured data.
+- `random(...)` — random numbers, ids, colors, and fake data.
 
-### Chapter 3 · Text & time
+## Text & time
 
-19. [string](string.md) — capitalize, case conversion, truncate
-20. [time](time.md) — format dates, relative time, sleep, and now
+- `capitalize(text)`, `capitalizeWords(text)`, `lowerCase(text)`, `upperCase(text)`, `reverseString(text)`, `truncate(text, len)` — text transforms.
+- `formatDate(date)`, `relativeTime(date)`, `now()` — date helpers; `sleep(ms)` — async delay.
+- Media-time helpers: `formatMediaTime(sec)`, `formatMediaTimeLong(sec)`, `getProgressPercent(current, total)`, `percentToSeconds(pct, total)`, `formatMediaProgress(current, total)`.
 
-### Chapter 4 · State, memo & refs
+## State, memo & refs
 
-21. [useState](useState.md) — reactive state that re-renders widgets
-22. [memo](memo.md) — cache expensive function results
-23. [ref](ref.md) — hold a live reference to a widget and update it
+- `useState(key, initial, widget?, propName?)` — reactive state that re-renders widgets.
+- `useWatchState(key, callback)` — subscribe to state changes; returns an unsubscribe function.
+- `memo(fn)`, `memoWithKey(fn, keyFn)`, `clearMemo(memoizedFn)` — cache expensive results.
+- `ref(...)` — hold a live reference to a widget and update it.
 
-### Chapter 5 · Async, ids & logging
+## Async, ids & logging
 
-24. [delay](delay.md) — delay, minimum-delay, and retry helpers
-25. [uuid](uuid.md) — generate unique and numeric ids
-26. [print](print.md) — a small, elegant logging helper
+- `delay(ms)` — async sleep; `withMinDelay(promise, ms)` — enforce a minimum delay; `retry(call, retries, delayMs)` — retry an async call.
+- `uuid()`, `shortId()`, `numericId()`, `timestampId()` — id generators.
+- `print(...)` — a small logging helper.
 
-### Chapter 6 · Device & environment
+## Device & environment
 
-27. [device](device.md) — detect device type, touch, and orientation
-28. [os](os.md) — detect the operating system and browser
-29. [dimensions](dimensions.md) — live viewport width and height
-30. [clipboard](clipboard.md) — copy and read text from the clipboard
+- `device` — detect device type, touch, and orientation.
+- `os` — detect the operating system and browser.
+- `dimensions` — live viewport dimensions; `width` and `height` — viewport helpers.
+- `clipboard` — copy and read text from the clipboard.
+- `addNavigation(...)` — navigation helper.
 
-## Alphabetical index
+## Themes
 
-- [animation](animation.md)
-- [array](array.md)
-- [border](border.md)
-- [clipboard](clipboard.md)
-- [color](color.md)
-- [createList](createList.md)
-- [delay](delay.md)
-- [device](device.md)
-- [dict](dict.md)
-- [dimensions](dimensions.md)
-- [filter](filter.md)
-- [flex](flex.md)
-- [gradient](gradient.md)
-- [grid](grid.md)
-- [mapList](mapList.md)
-- [margin](margin.md)
-- [memo](memo.md)
-- [os](os.md)
-- [padding](padding.md)
-- [print](print.md)
-- [random](random.md)
-- [ref](ref.md)
-- [rgba](rgba.md)
-- [shadow](shadow.md)
-- [string](string.md)
-- [time](time.md)
-- [transform](transform.md)
-- [transition](transition.md)
-- [useState](useState.md)
-- [uuid](uuid.md)
+- `colors` and `palettes` — theme color tokens.
+- `setTheme(theme)`, `getTheme()`, `toggleTheme()`, `subscribeTheme(callback)`, `applySystemTheme()`, `watchSystemTheme()`, `getColor(name)` — theme control.
+
+## Markdown, code & HTML helpers
+
+- `parseMarkdown(md)`, `parseInlineMarkdown(md)` — reserved placeholders that pass text through unchanged (real rendering is `markdownToWidgets`/`parseInlineToWidgets`).
+- `markdownToWidgets(md)` / `parseMarkdownToWidgets(md)` — markdown string → widgets (alias names for the same function).
+- `tokenize(code)`, `generateHighlightedHtml(code)`, `highlightColors` — syntax highlighting.
+- `escapeHtml(text)` — escape untrusted text before inserting it as HTML.
+
+## Visual effects
+
+- `applyStripes(el)`, `removeStripes(el)`, `applyShimmer(el)`, `applyGlow(el)` — static visual effects.
+- `applyIndeterminate(el)`, `applyPulse(el)`, `injectKeyframes(name, keyframes)` — animation-driven effects.
+
+## Widget introspection
+
+- `getWidgetProps(widget)`, `getWidgetProp(widget, name)`, `stringifyWidgetProps(widget)` — inspect a widget's props.
+
+## Input validation
+
+- `TextInputValidator` — rules (`isEmail`, `onlyNumbers`, `onlyLetters`, `limitLength`, `sanitize`, `filter`, …) used by the `Input` widget's `validation` prop.
+
+## Animation helpers
+
+- `animate(el, ...)`, `animateAsync(el, ...)`, `fadeIn(el, ...)`, `fadeOut(el, ...)`, `pulse(el, ...)` and their `*Async` variants.
+- Widgets: `AnimatedBox`, `AnimatedText`, `MatrixRain`, `ParallaxBox`.
+
+## Where to go next
+
+- [Utilities guide](../guides/utilities.md) — the practical walkthrough for the most-used helpers.
+- [Frontend services guide](../guides/frontend-services.md) — storage and network services.
+- [Guides index](../guides/README.md) — every FletBox guide in reading order.
+- [Services index](../services/README.md) — the storage and HTTP service reference.
+- [Widgets](../widget/README.md) — the widget book.
+
+---
+
+## Continue reading
+
+- **Previous:** [HTTP client](../services/http.md)
+- **Next:** [Styling helpers](styling.md)
+- **Index:** [Services index](../services/README.md) · [The FletBox Book](../README.md)
+
+You are reading **Chapter 10 · Tools & Utilities** (chapter opener).

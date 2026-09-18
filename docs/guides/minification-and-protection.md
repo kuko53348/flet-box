@@ -1,5 +1,7 @@
 # Minify and protect a FletBox build
 
+> **Level: Advanced.** This page is for shipping — skip it on a first read. It follows [the FletBox CLI](../cli/README.md) in the book's reading path.
+
 FletBox can produce a smaller production build by bundling only the code used by the application, removing development whitespace, and applying tree shaking.
 
 This guide explains two different goals:
@@ -248,3 +250,11 @@ Minification reduces the web payload inside the native application. It does not 
 - Use HTTPS for API calls.
 - Protect backend routes with authentication and authorization.
 - Keep signing keys and deployment credentials outside Git.
+
+---
+
+## Continue reading
+
+- **Previous:** [The FletBox CLI](../cli/README.md)
+- **Next:** [Build FletBox for mobile and other platforms](mobile-and-platforms.md) — Appendix B
+- **Index:** [Guides index](README.md) · [The FletBox Book](../README.md)

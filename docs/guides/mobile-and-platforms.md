@@ -1,5 +1,7 @@
 # Build FletBox for mobile and other platforms
 
+> **Level: Advanced.** This page is for shipping — skip it on a first read. It follows [minification and protection](minification-and-protection.md) in the book's reading path.
+
 FletBox applications can be built for the web and then packaged for mobile with Capacitor. The same frontend code can become a website, PWA, Android app, or iOS app.
 
 ## The general flow
@@ -388,3 +390,11 @@ Check absolute URLs, CORS, secure connections, permissions, and native plugin co
 - Confirm API endpoints use HTTPS.
 - Generate an APK for direct testing or an AAB for Google Play.
 - Keep signing keys and certificates out of Git.
+
+---
+
+## Continue reading
+
+- **Previous:** [Minify and protect a FletBox build](minification-and-protection.md)
+- **Next:** [Compatibility and support](compatibility.md) — Appendix C
+- **Index:** [Guides index](README.md) · [The FletBox Book](../README.md)

@@ -90,7 +90,7 @@ const bell = Badge({
 - `max` only affects numbers: a numeric `value` greater than `max` renders as `"<max>+"` (for example `120` → `"99+"`). Strings are shown as-is.
 - The pill is a factory `div` with a `Text` inside; `borderWidth`/`borderColor` draw the ring that separates it from the child.
 - If `child` is not an `HTMLElement`, `Badge` logs a warning and returns just the pill.
-- When neither `bgColor` nor `color` is passed, the pill subscribes to theme changes; the subscription is torn down on cleanup.
+- The pill does not subscribe to theme changes. `bgColor` defaults to `colors.secondary` and `color` to `colors.text`, so the pill always renders with those (or whatever you pass) and keeps them on theme switches.
 - The pill overlays the child with absolute positioning plus a `transform`, so it can extend beyond the child's box; `offset` nudges it further out.
 
 ## Related widgets

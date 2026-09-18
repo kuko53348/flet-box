@@ -175,13 +175,11 @@ declare module 'flet-box' {
     width?: number | string;
     itemSize?: number;
     gap?: number;
-    orientation?: 'vertical' | 'horizontal';
     wrapItems?: boolean;
     crossAxisCount?: number;
     onEndReached?: () => void;
     onEndReachedThreshold?: number;
     onRefresh?: (done: () => void) => void;
-    refreshing?: boolean;
     ListHeaderComponent?: (() => Widget) | Widget;
     ListFooterComponent?: (() => Widget) | Widget;
     ListEmptyComponent?: (() => Widget) | Widget;
@@ -278,10 +276,6 @@ declare module 'flet-box' {
     bgColor?: Color;
     textColor?: Color;
     shape?: 'circle' | 'rounded' | 'square';
-    online?: boolean;
-    offline?: boolean;
-    badge?: string | number;
-    badgeColor?: Color;
     onPress?: (widget: Widget) => void;
   }
   export function Avatar(props: AvatarProps): Widget & {
@@ -294,16 +288,20 @@ declare module 'flet-box' {
     elevation?: number;
     padding?: Padding;
     borderRadius?: number | string;
+    showBorder?: boolean;
+    borderWidth?: number;
+    borderStyle?: 'solid' | 'dashed' | 'dotted';
+    borderColor?: Color;
     onPress?: (widget: Widget) => void;
   }
   export function Card(props: CardProps): Widget;
 
   interface ListTileProps extends CommonProps {
-    leading?: Widget;
+    leftItem?: Widget;
     title?: string | Widget;
     subtitle?: string | Widget;
     description?: string | Widget;
-    trailing?: Widget;
+    rightItem?: Widget;
     onPress?: (widget: Widget) => void;
     selected?: boolean;
     disabled?: boolean;
@@ -312,8 +310,6 @@ declare module 'flet-box' {
     paddingVertical?: number;
     bgColor?: Color;
     selectedBgColor?: Color;
-    titleColor?: Color;
-    subtitleColor?: Color;
     hoverColor?: Color;
     elevation?: number;
     borderRadius?: number;
@@ -338,6 +334,8 @@ declare module 'flet-box' {
   export function ProgressBar(props: ProgressBarProps): Widget & {
     value: number;
     updateProgress(value: number): void;
+    getValue(): number;
+    setValue(value: number): void;
   };
 
   interface RatingProps extends CommonProps {
@@ -418,7 +416,7 @@ declare module 'flet-box' {
     animatedStripes?: boolean;
     stripeColor?: string;
     glow?: boolean;
-    onChange?: (value: number) => void;
+    onChanged?: (value: number) => void;
     onChangeEnd?: (value: number) => void;
   }
   export function Slider(props: SliderProps): Widget & {
@@ -591,7 +589,8 @@ declare module 'flet-box' {
   // =========================================================================
   interface SnackBarOptions {
     message: string;
-    action?: { label: string; onPress: () => void };
+    action?: string;
+    onAction?: () => void;
     duration?: number;
     type?: 'normal' | 'success' | 'error' | 'warning' | 'info';
     position?: 'bottom' | 'top';
@@ -609,7 +608,6 @@ declare module 'flet-box' {
     onClose?: () => void;
   }
   export function SnackBar(options: SnackBarOptions): { close(): void; show(): void; getElement(): Widget };
-  export function showSnackBar(message: string, options?: Partial<SnackBarOptions>): void;
 
   interface ModalProps {
     title?: string;
@@ -724,7 +722,9 @@ declare module 'flet-box' {
     fab?: Widget | boolean;
     drawer?: Widget;
     leftNavBar?: Widget;
+    leftNavBarWidth?: number;
     rightNavBar?: Widget;
+    rightNavBarWidth?: number;
     navSideBar?: Widget;
     navSideBarWidth?: number;
     navSideBarPosition?: 'left' | 'right';
@@ -741,10 +741,35 @@ declare module 'flet-box' {
     closeDrawer?(): void;
   };
 
+  interface AdaptiveScaffoldProps extends CommonProps {
+    appBar?: Widget;
+    body?: Widget | Record<string, any>;
+    bottomBar?: Widget;
+    fab?: Widget;
+    drawer?: Widget;
+    leftNavBar?: Widget | (() => Widget);
+    leftNavBarWidth?: number;
+    rightNavBar?: Widget | (() => Widget);
+    rightNavBarWidth?: number;
+    routes?: Record<string, any>;
+    backgroundColor?: Color;
+    forceMobile?: boolean;
+    forceDesktop?: boolean;
+  }
+  export function AdaptiveScaffold(props: AdaptiveScaffoldProps): Widget & {
+    updateLeftNavBar(cfg: any): void;
+    updateRightNavBar(cfg: any): void;
+    setLeftNavBarWidth(width: number): void;
+    setRightNavBarWidth(width: number): void;
+    openDrawer?(): void;
+    closeDrawer?(): void;
+  };
+
   interface AppBarProps extends CommonProps {
     title?: string | Widget;
     leading?: Widget;
     actions?: Widget[];
+    actionsGap?: number;
     backgroundColor?: Color;
     gradient?: string;
     titleColor?: Color;
@@ -851,7 +876,6 @@ declare module 'flet-box' {
     mini?: boolean;
     extended?: boolean;
     disabled?: boolean;
-    position?: 'bottomRight' | 'bottomLeft' | 'topRight' | 'topLeft';
     margin?: number;
   }
   export function FloatingActionButton(props: FloatingActionButtonProps): Widget;
@@ -885,18 +909,16 @@ declare module 'flet-box' {
   interface CollapsibleSideBarProps extends CommonProps {
     children: Widget;
     expanded?: boolean;
+    id?: string;
     widthExpanded?: number;
     widthCollapsed?: number;
     iconSize?: number;
     onToggle?: (expanded: boolean) => void;
     bgColor?: Color;
     borderRight?: string;
-    showTooltip?: boolean;
-    tooltipDelay?: number;
   }
   export function CollapsibleSideBar(props: CollapsibleSideBarProps): Widget & {
-    getCurrentWidth(): number;
-    isExpanded(): boolean;
+    updateWidth(width: number): void;
   };
 
   // =========================================================================
@@ -1700,8 +1722,20 @@ declare module 'flet-box' {
   export function border(width?: number | string, style?: string, color?: string): string;
   export function margin(value: number | string | { all?: number; horizontal?: number; vertical?: number; top?: number; right?: number; bottom?: number; left?: number }): string;
   export function padding(value: number | string | { all?: number; horizontal?: number; vertical?: number; top?: number; right?: number; bottom?: number; left?: number }): string;
-  export function Gradient(type: 'linear' | 'circle' | 'conic', colors: string[], angle?: number): string;
-  export function Shadow(x: number, y: number, blur: number, spread: number, color: string): string;
+  export function gradient(type: 'linear' | 'circle' | 'conic', colors: string[], angle?: number): string;
+  export function shadow(x: number, y: number, blur: number, spread: number, color: string): string;
+  export const color: (value: string) => {
+    hex(): string;
+    rgb(): string;
+    rgba(): string;
+    lighten(percent: number): this;
+    darken(percent: number): this;
+    alpha(value: number): this;
+    complement(): this;
+    isDark(): boolean;
+    isLight(): boolean;
+    contrast(): string;
+  };
   export function rgba(r: number, g: number, b: number, a?: number): string;
   export function stackPosition(widget: Widget, props: { top?: any; right?: any; bottom?: any; left?: any }): Widget;
   export function flex(grow: number | { grow?: number; shrink?: number; basis?: string }, shrink?: number, basis?: string): string;
@@ -1741,29 +1775,6 @@ declare module 'flet-box' {
   }): string;
   export function animation(name: string | { name: string; duration?: number; timing?: string; delay?: number; iteration?: number | string; direction?: string; fillMode?: string }, duration?: number, timing?: string, iteration?: string): string;
 
-  export const Dict: {
-    new (obj?: any): {
-      get(key: string, defaultValue?: any): any;
-      set(key: string, value: any): this;
-      has(key: string): boolean;
-      keys(): string[];
-      values(): any[];
-      items(): [string, any][];
-      delete(key: string): this;
-      readonly size: number;
-      clear(): this;
-      copy(): any;
-      update(other: any): this;
-      toObject(): any;
-      toJSON(): string;
-      toString(): string;
-      getNested(path: string, defaultValue?: any): any;
-      setNested(path: string, value: any): this;
-      forEach(callback: (value: any, key: string) => void): void;
-      map<R>(callback: (value: any, key: string) => R): R[];
-      filter(callback: (value: any, key: string) => boolean): any;
-    };
-  };
   export function dict(obj?: any): any;
   export function emptyDict(): any;
   export function fromJSON(jsonStr: string): any;

@@ -33,22 +33,36 @@ npm install flet-box
 
 ## Getting-started documentation
 
-The documentation is designed to teach FletBox from scratch:
+The documentation is **one continuous book**. Read it in order and follow the "Continue reading" links at the bottom of every page; every page links to the next. The front cover maps the whole path: [The FletBox Book](docs/README.md).
 
+**Beginner** — read in this order:
+
+- [Your first FletBox app, step by step](docs/guides/first-app.md): build a working todo app in 20 minutes (Chapter 0).
 - [Start here](docs/widget/START_HERE.md): basic concepts and first widgets.
-- [Build your first FletBox app](docs/guides/app-templates.md): pages, layouts, navigation, and components.
-- [Add FletBox to an existing page](docs/guides/embedding.md): integrate widgets without rewriting your application.
-- [Syntax philosophy](docs/guides/syntax-philosophy.md): aliases and flexible syntax for different developer profiles.
+- [The widget book](docs/widget/README.md): all 57 widget pages in 8 chapters, each with full property tables and examples.
+
+**Intermediate** — the rest of the framework:
+
 - [State](docs/guides/state.md): shared state, `useState`, and reactive updates.
 - [Routing](docs/guides/router.md): routes, parameters, query params, and history.
-- [Utilities](docs/guides/utilities.md): layout, colors, lists, dates, device, and more.
 - [Frontend services](docs/guides/frontend-services.md): in-RAM state, session, persistent storage, and HTTP.
-- [Compatibility](docs/guides/compatibility.md): browsers, PWA, Android, iOS, and desktop.
-- [Mobile and platforms](docs/guides/mobile-and-platforms.md): Android, iOS, APK, AAB, PWA, and desktop.
-- [Minification and protection](docs/guides/minification-and-protection.md): shrink the bundle and protect the application properly.
+- [Services reference](docs/services/README.md): every storage and HTTP function with signatures.
+- [Tools reference](docs/tools/README.md): every helper function with signatures.
+- [Utilities](docs/guides/utilities.md): layout, colors, lists, dates, device, and more.
 - [FletBox CLI](docs/cli/README.md): create projects, screens, and components; run and compile.
+
+**Advanced** — when you ship:
+
+- [Minification and protection](docs/guides/minification-and-protection.md): shrink the bundle and protect the application properly.
+- [Mobile and platforms](docs/guides/mobile-and-platforms.md): Android, iOS, APK, AAB, PWA, and desktop.
+- [Compatibility](docs/guides/compatibility.md): browsers, PWA, Android, iOS, and desktop.
+- [Add FletBox to an existing page](docs/guides/embedding.md): integrate widgets without rewriting your application.
+
+**Reference** — not part of the tutorial flow:
+
+- [Syntax philosophy](docs/guides/syntax-philosophy.md): aliases and flexible syntax for different developer profiles.
+- [Guides index](docs/guides/README.md): every guide in one place.
 - [FletBox Server](docs/server/README.md): API, authentication, security, data, services, and deployment.
-- [Widgets](docs/widget/README.md): the widget book — an ordered tutorial from basic to advanced, where every page links to the next, with full properties and `basic`, `normal`, and `full` examples.
 - [Contributing](docs/CONTRIBUTING.md): project structure, widgets, types, docs, and validation.
 
 ## Quick start
@@ -208,7 +222,7 @@ npm run build
 
 - `npm run dev`: starts the development environment with the CLI
 - `npm run build`: generates the production bundle
-- `npm test`: currently has no real tests configured
+- `npm test`: placeholder (`echo "No tests yet"`). Real tests are dependency-free browser harnesses in `tests/` — start the dev server and open `/tests/index.html`, `/tests/smoke.html`, `/tests/doccheck.html`, `/tests/doccheck-all.html`, or `/tests/propscan.html`.
 
 ## Build and deployment
 

@@ -160,4 +160,12 @@ Use encoded values through the `params` option instead of manually concatenating
 
 ## Service API status
 
-The service runtime is available through `src/index.js`. Keep the public TypeScript declarations synchronized when adding or changing service functions. The runtime currently exposes more service functions than the existing `index.d.ts` describes.
+Every storage and HTTP function is declared in `src/index.d.ts`, exported from `src/index.js`, and detailed on the [services reference pages](../services/README.md). The runtime also exports namespace objects (`RamStore`, `Session`, `Storage`) that group each layer.
+
+---
+
+## Continue reading
+
+- **Previous:** [Routing with FletBox](router.md)
+- **Next:** [Services index](../services/README.md) — the full reference
+- **Index:** [Guides index](README.md) · [The FletBox Book](../README.md)

@@ -1,5 +1,7 @@
 # Add FletBox to an existing page
 
+> **Level: Advanced.** This page is for integration work. It is the last page of the book.
+
 FletBox does not have to control your whole application. You can add one widget to an existing HTML page and keep using your current backend, CSS, JavaScript, or frontend framework.
 
 This is useful when you want to add an interactive feature without rewriting the rest of the page.
@@ -270,3 +272,13 @@ app.start();
 - Clean up app instances when a page is removed.
 - Use `runApp()` only when FletBox should own the root lifecycle.
 - Use `insertBy()` and related helpers when FletBox is only one part of the page.
+
+---
+
+## Continue reading
+
+- **Previous:** [Compatibility and support](compatibility.md)
+- **Next:** none — you reached the end of the book.
+- **Index:** [Guides index](README.md) · [The FletBox Book](../README.md)
+
+> The [FletBox Server](../server/README.md) toolkit is a separate backend product and is not part of the reading path.

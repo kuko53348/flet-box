@@ -62,6 +62,7 @@ const fixtures = {
   Audio: () => ({ src: "" }),
   CircularBar: () => ({ value: 40 }),
   CircularChart: () => ({ data: [{ value: 1 }] }),
+  Markdown: () => ({ text: "# hi" }),
 };
 
 const host = document.createElement("div");

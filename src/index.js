@@ -102,6 +102,9 @@ export {
   highlightColors,
   parseMarkdown,
   parseInlineMarkdown,
+  markdownToWidgets,
+  parseMarkdownToWidgets,
+  parseInlineToWidgets,
   escapeHtml,
   applyStripes,
   removeStripes,
@@ -116,6 +119,9 @@ export {
   toPX,
   getBaseFontSize,
   addNavigation,
+  stopWebRefresh,
+  ThemeProvider,
+  useTheme,
   TextInputValidator,
   // Media time utilities
   formatMediaTime,
@@ -161,6 +167,8 @@ export {
   Skeleton,
   CodeViewer,
   Inspector,
+  printWidgetCode,
+  inspectWidget,
   Pagination,
   TreeView,
   Chart,
@@ -175,8 +183,9 @@ export {
   Audio,
   CircularBar,
   CircularChart,
+  Markdown,
 } from "./widgets/index.js";
-// Markdown
+
 // ========== NAVIGATIONS ==========
 export {
   Scaffold,

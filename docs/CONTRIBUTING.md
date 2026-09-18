@@ -112,8 +112,17 @@ Before opening a pull request:
 node --check path/to/changed-file.js
 python3 -m py_compile scripts/generate_widget_docs.py
 python3 scripts/generate_widget_docs.py
-npm test
 ```
+
+`npm test` is only a placeholder (`echo "No tests yet"`). The real tests are dependency-free browser harnesses in `tests/`. Serve the repo with the dev server (`npm run dev` or `node bin/cli.js run-spa`), then open:
+
+- `/tests/index.html` — widget-factory regression contract
+- `/tests/smoke.html` — instantiates every widget
+- `/tests/doccheck.html` — chapters 1-2 documented behavior
+- `/tests/doccheck-all.html` — chapters 3-7 documented behavior
+- `/tests/propscan.html` — custom-prop scanner
+
+Each harness writes a global (`window.__TESTS`, `window.__SMOKE`, `window.__DOCCHECK`) and must pass with 0 failures.
 
 Also verify the feature in a real browser when it changes DOM behavior. For build changes, run:
 

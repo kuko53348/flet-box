@@ -89,8 +89,8 @@ const devPanel = Column({
   ],
 });
 
-// Console helpers from the same module (not re-exported from the package entry):
-// import { printWidgetCode, inspectWidget } from "flet-box/src/widgets/Inspector.js";
+// Console helpers from the same module, re-exported from the package entry:
+// import { printWidgetCode, inspectWidget } from "flet-box";
 // printWidgetCode(card);   // logs the code string in green
 // inspectWidget(card);     // grouped log: props, code, children count
 ```
@@ -104,7 +104,7 @@ const devPanel = Column({
 - **Prop values are not recovered.** `getWidgetProps()` reads `widget._props`, which the widget factory does not currently populate, so the printout shows widget names and the `children` tree rather than your original props. For the props a widget was built with, call its own `getProps()` (the factory attaches it to every element it creates).
 - Children are collected from the live DOM (`element.children`) plus any `widget._children` the factory recorded, so the output reflects what is mounted right now.
 - The recursive output puts a blank line after each opening `Name({`, as shown in the example — that is the current formatter, not a copy/paste error.
-- `printWidgetCode` and `inspectWidget` live in `src/widgets/Inspector.js` but only `Inspector` is re-exported from `src/index.js`; import the other two from the module path.
+- `printWidgetCode` and `inspectWidget` are re-exported from the package entry (`flet-box`) together with `Inspector`.
 
 ## Related widgets
 - [CodeViewer](CodeViewer.md)

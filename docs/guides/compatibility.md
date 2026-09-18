@@ -1,5 +1,7 @@
 # Compatibility and support
 
+> **Level: Advanced.** This page is for shipping — skip it on a first read. It follows [mobile and platforms](mobile-and-platforms.md) in the book's reading path.
+
 FletBox targets browser-based applications and can also be packaged for mobile platforms.
 
 ## Platform matrix
@@ -83,3 +85,11 @@ When the runtime and `index.d.ts` disagree, the implementation must be verified 
 - HMR is a development feature and should not be required in production.
 - Direct browser DOM access is required for widget mounting.
 - Source maps can expose original source and should be handled intentionally.
+
+---
+
+## Continue reading
+
+- **Previous:** [Build FletBox for mobile and other platforms](mobile-and-platforms.md)
+- **Next:** [Add FletBox to an existing page](embedding.md) — Appendix D
+- **Index:** [Guides index](README.md) · [The FletBox Book](../README.md)

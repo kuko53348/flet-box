@@ -11,7 +11,9 @@ If you have never used FletBox, begin with [Start here](START_HERE.md). Then fol
 - Each page has the same shape: an overview, when to use it, a prop table, and copy-paste examples.
 - Related widgets at the bottom of each page are clickable, so you can branch off whenever you are curious.
 
-Related guides: [Build your first FletBox app](../guides/app-templates.md) · [FletBox CLI](../cli/README.md).
+Related guides: [Build your first FletBox app](../guides/app-templates.md) · [Routing with FletBox](../guides/router.md) · [FletBox CLI](../cli/README.md).
+
+The book covers **layout and input widgets first, then the app shell**: Chapter 8 shows how to compose `Scaffold`, `AppBar`, `Drawer`, `BottomNavigation`, `Tabs`, and side bars into a full screen, and how they talk to the [router](../guides/router.md).
 
 Shared reference: every widget also accepts the [common props](COMMON_PROPS.md) — layout, spacing, color, typography, borders, events, aliases, and the number-to-pixel rule. Read it once and you will recognize those props everywhere.
 
@@ -87,13 +89,29 @@ Shared reference: every widget also accepts the [common props](COMMON_PROPS.md) 
 48. [DraggBox](DraggBox.md) — a draggable box
 49. [DroppBox](DroppBox.md) — a drop target
 
+### Chapter 8 · App navigation
+
+Build the shell of a real application and wire it to the router.
+
+50. [Scaffold](Scaffold.md) — the app shell: app bar, body, drawer, side bars
+51. [AdaptiveScaffold](AdaptiveScaffold.md) — the same shell, adapted to phone and desktop
+52. [AppBar](AppBar.md) — a top bar for titles, actions, and back navigation
+53. [Drawer](Drawer.md) — a panel that slides in from the side
+54. [DrawerItem](DrawerItem.md) — a router-aware row for a drawer or side bar
+55. [BottomNavigation](BottomNavigation.md) — a bottom tab bar synced with the router
+56. [Tabs](Tabs.md) — switch panes inside a screen
+57. [CollapsibleSideBar](CollapsibleSideBar.md) — a side panel that collapses to icons
+
 ## Alphabetical index
 
 - [Accordion](Accordion.md)
+- [AdaptiveScaffold](AdaptiveScaffold.md)
 - [AlertDialog](AlertDialog.md)
+- [AppBar](AppBar.md)
 - [Audio](Audio.md)
 - [Avatar](Avatar.md)
 - [Badge](Badge.md)
+- [BottomNavigation](BottomNavigation.md)
 - [BottomSheet](BottomSheet.md)
 - [Button](Button.md)
 - [Card](Card.md)
@@ -109,6 +127,8 @@ Shared reference: every widget also accepts the [common props](COMMON_PROPS.md) 
 - [DataTable](DataTable.md)
 - [Divider](Divider.md)
 - [DraggBox](DraggBox.md)
+- [Drawer](Drawer.md)
+- [DrawerItem](DrawerItem.md)
 - [Dropdown](Dropdown.md)
 - [DroppBox](DroppBox.md)
 - [FloatingActionButton](FloatingActionButton.md)
@@ -128,12 +148,14 @@ Shared reference: every widget also accepts the [common props](COMMON_PROPS.md) 
 - [Radio](Radio.md)
 - [Rating](Rating.md)
 - [Row](Row.md)
+- [Scaffold](Scaffold.md)
 - [Skeleton](Skeleton.md)
 - [Slider](Slider.md)
 - [SnackBar](SnackBar.md)
 - [Stack](Stack.md)
 - [Stepper](Stepper.md)
 - [Switch](Switch.md)
+- [Tabs](Tabs.md)
 - [Text](Text.md)
 - [Tooltip](Tooltip.md)
 - [TreeView](TreeView.md)

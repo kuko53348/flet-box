@@ -9,6 +9,8 @@ export {
   watchSystemTheme,
   getColor,
   palettes,
+  ThemeProvider,
+  useTheme,
 } from "./themes.js";
 export {
   getWidgetProps,
@@ -40,6 +42,7 @@ export {
 export { default as stackPosition } from "./stackPosition.js";
 export { toREM, setBaseFontSize, toPX, getBaseFontSize } from "./units.js";
 export { addNavigation } from "./navigation.js";
+export { stopWebRefresh } from "./stopWebRefresh.js";
 export { TextInputValidator } from "./TextInputValidator.js";
 export {
   formatMediaTime,

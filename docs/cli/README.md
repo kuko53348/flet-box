@@ -396,3 +396,13 @@ npm install --save-dev esbuild
 - Learn the basics in [Start here](../widget/START_HERE.md).
 - Learn complete app structures in [Build your first FletBox app](../guides/app-templates.md).
 - Explore every widget in the [widget documentation](../widget/README.md).
+
+---
+
+## Continue reading
+
+- **Previous:** [FletBox utilities](../guides/utilities.md)
+- **Next:** [Minify and protect a FletBox build](../guides/minification-and-protection.md) — Appendix A
+- **Index:** [Guides index](../guides/README.md) · [The FletBox Book](../README.md)
+
+You are reading **Chapter 11 · The CLI**.

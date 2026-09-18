@@ -129,8 +129,18 @@ page 1 and follow the **Continue reading** links at the bottom of each page:
 4. Follow **Next** to [Container](Container.md), then combine it with `Row` or `Column`.
 5. Use the [widget index](README.md) to jump anywhere in the book.
 
+When your screen needs an app bar, a drawer, bottom tabs, or a side bar, **Chapter 8 · App navigation** shows how those widgets compose the shell and talk to the [router](../guides/router.md).
+
 Every widget page uses the same structure, so learning one page helps you understand the others. Beyond their own props, all widgets share a common set of layout, spacing, color, and event props — see [Common props](COMMON_PROPS.md).
 
 FletBox intentionally supports friendly aliases for developers coming from Flet, Flutter, React, or vanilla JavaScript. Read the [syntax philosophy](../guides/syntax-philosophy.md) to see why equivalent styles such as `bgColor` / `backgroundColor`, `onPress` / `onClick`, and `child` / `children` can coexist.
 
 When you are ready to build a real application, continue with [State](../guides/state.md), [Routing](../guides/router.md), and [Utilities](../guides/utilities.md).
+
+---
+
+## Continue reading
+
+- **Previous:** [Your first FletBox app, step by step](../guides/first-app.md) — Chapter 0
+- **Next:** [Text](Text.md) — Chapter 1, page 1 of the widget book
+- **Index:** [The FletBox Book](../README.md)

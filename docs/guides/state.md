@@ -154,10 +154,10 @@ This advanced form is useful when an existing widget must receive updates withou
 FletBox stores state through its RAM store. The value is available by key while the application is running:
 
 ```javascript
-import { saveState, getState } from "flet-box";
+import { saveRam, getRam } from "flet-box";
 
-saveState("language", "en");
-const language = getState("language");
+saveRam("language", "en");
+const language = getRam("language");
 ```
 
 Use the storage services when you need browser persistence or a different lifetime.
@@ -174,3 +174,11 @@ Use the storage services when you need browser persistence or a different lifeti
 ## TypeScript note
 
 The runtime currently returns `[value, setValue, subscribe]`. Keep the declaration file and this behavior aligned when changing the public API.
+
+---
+
+## Continue reading
+
+- **Previous:** [CollapsibleSideBar](../widget/CollapsibleSideBar.md) — end of the widget book.
+- **Next:** [Routing with FletBox](router.md) — Chapter 9 · State, Router & Services
+- **Index:** [Guides index](README.md) · [The FletBox Book](../README.md)

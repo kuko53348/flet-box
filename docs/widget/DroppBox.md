@@ -46,6 +46,8 @@ DroppBox({ child: Text({ text: "Drop here" }) });
 | `validBorderColor` | Color | `colors.success` | Border color while a valid drag hovers. |
 | `invalidBgColor` | Color | `${colors.danger}20` | Background while an **invalid** drag hovers. |
 | `invalidBorderColor` | Color | `colors.danger` | Border color while an invalid drag hovers. |
+| `activeBgColor` | Color | `${colors.primary}20` | Accepted but currently has no effect — see Notes. |
+| `activeBorderColor` | Color | `colors.primary` | Accepted but currently has no effect — see Notes. |
 | `activeBorderStyle` | string | `"dashed"` | Border style while any drag hovers. |
 | `activeBorderWidth` | number | `2` | Border width (pixels) while a drag hovers. |
 | `activeShadow` | string | `0 4px 12px ${colors.primary}40` | Box-shadow while a drag hovers. |
@@ -114,7 +116,7 @@ Column({
 ## Continue reading
 
 - **Previous:** [DraggBox](DraggBox.md)
-- **Next:** [Widget index](README.md) — you reached the end of the book
+- **Next:** [Scaffold](Scaffold.md) — Chapter 8 · App navigation
 - **Index:** [Widget index](README.md) · [Start here](START_HERE.md)
 
 You are reading **Chapter 7 · Media and drag & drop** (4 of 4).

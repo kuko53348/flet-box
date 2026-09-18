@@ -188,3 +188,11 @@ If the initial URL is not found, the router redirects to the first configured ro
 - Calling `goTo()` before the router has been initialized.
 - Forgetting to unsubscribe from route listeners in a long-lived integration.
 - Expecting `goBack()` to work like a server redirect; it uses browser history.
+
+---
+
+## Continue reading
+
+- **Previous:** [State with `useState`](state.md)
+- **Next:** [Frontend services guide](frontend-services.md) — Chapter 9 · State, Router & Services
+- **Index:** [Guides index](README.md) · [The FletBox Book](../README.md)

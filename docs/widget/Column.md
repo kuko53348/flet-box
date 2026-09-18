@@ -40,6 +40,7 @@ Column({
 | `height` | Size | `'auto'` | Column height. |
 | `display` | string | `'flex'` | CSS `display`. |
 | `flexDirection` | string | `'column'` | Main-axis direction. |
+| `boxSizing` | string | `'border-box'` | CSS `box-sizing` model. |
 
 These are the props specific to `Column`. It also accepts every [common prop](COMMON_PROPS.md): layout, spacing, size, color, typography, borders, shadow, events, `child`/`children`, `ref`, and `style`.
 

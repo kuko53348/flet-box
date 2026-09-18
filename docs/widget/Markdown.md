@@ -167,7 +167,7 @@ Column({
 
 ## Notes
 
-- **Not currently re-exported from the package entry.** `src/widgets/index.js` has the `Markdown` export commented out, so `import { Markdown } from "flet-box"` resolves to `undefined` today; import it from `flet-box/src/widgets/Markdown.js` (or re-enable that line) until the entry point is fixed. `src/index.d.ts` does declare it.
+- `Markdown` is exported from the package entry (`flet-box`) and re-exported through `src/widgets/index.js`.
 - Supported syntax: `#`/`##`/`###` headings, `**bold**`/`__bold__`, `*italic*`/`_italic_`, `` `inline code` ``, `[text](url)` links (opened with `target="_blank" rel="noopener"`), `- ` bullet items, `1. ` numbered items, `> ` blockquotes, `---` rules, and paragraphs.
 - Fenced code blocks (three backticks) do **not** produce `<pre><code>`: the inline-code rule runs first and eats the backticks. Use [CodeViewer](CodeViewer.md) for code samples.
 - `![alt](src)` images do **not** produce `<img>`: the link rule matches first, so you get a literal `!` followed by a link. The `img` styles in the injected sheet only apply to raw HTML you pass in.
