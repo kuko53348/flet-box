@@ -1,194 +1,11 @@
-// // core/assignProps.js
-// import { setStyles } from "./tools.js";
-//
-// export const assignProps = (widget, props) => {
-//   if (!props) return widget;
-//
-//   // 1. Styles
-//   if (props.style) {
-//     setStyles(widget, props.style);
-//   }
-//
-//   // 2. Text
-//   if (props.textContent !== undefined) {
-//     if (widget.tagName === "INPUT" || widget.tagName === "TEXTAREA") {
-//       widget.value = props.textContent;
-//     } else {
-//       widget.textContent = props.textContent;
-//     }
-//   }
-//
-//   // 3. Events (clean old listeners)
-//   if (widget._events) {
-//     widget._events.forEach(({ event, handler }) => {
-//       widget.removeEventListener(event, handler);
-//     });
-//   }
-//   widget._events = [];
-//
-//   if (props.events) {
-//     Object.entries(props.events).forEach(([event, handler]) => {
-//       if (event === "click") {
-//         widget.onclick = handler;
-//       } else {
-//         widget.addEventListener(event, handler);
-//         widget._events.push({ event, handler });
-//       }
-//     });
-//   }
-//
-//   // 4. Attributes
-//   if (props.attributes) {
-//     Object.entries(props.attributes).forEach(([key, value]) => {
-//       if (key === "className" || key === "class") {
-//         widget.className = value;
-//       } else {
-//         widget.setAttribute(key, value);
-//       }
-//     });
-//   }
-//
-//   return widget;
-// };
 // core/assignProps.js
-// core/assignProps.js - VERSIÓN COMPLETA CON TODAS LAS SPECIALS
-
-// import { setStyles } from "./tools.js";
-//
-// export const assignProps = (widget, props) => {
-//   if (!props) return widget;
-//
-//   if (widget._updating) return widget;
-//   widget._updating = true;
-//
-//   try {
-//     // 1. Styles
-//     if (props.style) {
-//       setStyles(widget, props.style);
-//     }
-//
-//     // 2. Text
-//     if (props.textContent !== undefined) {
-//       if (widget.tagName === "INPUT" || widget.tagName === "TEXTAREA") {
-//         if (widget.value !== props.textContent) {
-//           widget.value = props.textContent;
-//         }
-//       } else {
-//         if (widget.textContent !== props.textContent) {
-//           widget.textContent = props.textContent;
-//         }
-//       }
-//     }
-//
-//     // 3. Events
-//     if (widget._events) {
-//       widget._events.forEach(({ event, handler }) => {
-//         widget.removeEventListener(event, handler);
-//       });
-//     }
-//     widget._events = [];
-//
-//     if (props.events) {
-//       Object.entries(props.events).forEach(([event, handler]) => {
-//         if (event === "click") {
-//           widget.onclick = handler;
-//         } else {
-//           widget.addEventListener(event, handler);
-//           widget._events.push({ event, handler });
-//         }
-//       });
-//     }
-//
-//     // 4. Attributes
-//     if (props.attributes) {
-//       Object.entries(props.attributes).forEach(([key, value]) => {
-//         if (key === "className" || key === "class") {
-//           widget.className = value;
-//         } else {
-//           widget.setAttribute(key, value);
-//         }
-//       });
-//     }
-//
-//     // ============================================================
-//     // ✅ 5. MANEJAR PROPS ESPECIALES (special)
-//     // ============================================================
-//     if (props.special) {
-//       // --- Value (para inputs) ---
-//       if (props.special.value !== undefined) {
-//         if (widget.tagName === "INPUT" || widget.tagName === "TEXTAREA") {
-//           if (widget.value !== props.special.value) {
-//             widget.value = props.special.value;
-//           }
-//         }
-//       }
-//
-//       // --- Variant ---
-//       if (props.special.variant !== undefined) {
-//         widget.dataset.variant = props.special.variant;
-//       }
-//
-//       // --- Margin Vertical ---
-//       if (props.special.marginVertical !== undefined) {
-//         const value = props.special.marginVertical;
-//         if (typeof value === "number") {
-//           widget.style.marginTop = value + "px";
-//           widget.style.marginBottom = value + "px";
-//         } else {
-//           widget.style.marginTop = value;
-//           widget.style.marginBottom = value;
-//         }
-//       }
-//
-//       // --- Margin Horizontal ---
-//       if (props.special.marginHorizontal !== undefined) {
-//         const value = props.special.marginHorizontal;
-//         if (typeof value === "number") {
-//           widget.style.marginLeft = value + "px";
-//           widget.style.marginRight = value + "px";
-//         } else {
-//           widget.style.marginLeft = value;
-//           widget.style.marginRight = value;
-//         }
-//       }
-//
-//       // --- Padding Vertical ---
-//       if (props.special.paddingVertical !== undefined) {
-//         const value = props.special.paddingVertical;
-//         if (typeof value === "number") {
-//           widget.style.paddingTop = value + "px";
-//           widget.style.paddingBottom = value + "px";
-//         } else {
-//           widget.style.paddingTop = value;
-//           widget.style.paddingBottom = value;
-//         }
-//       }
-//
-//       // --- Padding Horizontal ---
-//       if (props.special.paddingHorizontal !== undefined) {
-//         const value = props.special.paddingHorizontal;
-//         if (typeof value === "number") {
-//           widget.style.paddingLeft = value + "px";
-//           widget.style.paddingRight = value + "px";
-//         } else {
-//           widget.style.paddingLeft = value;
-//           widget.style.paddingRight = value;
-//         }
-//       }
-//     }
-//   } finally {
-//     widget._updating = false;
-//   }
-//
-//   return widget;
-// };
-// core/assignProps.js
-// core/assignProps.js - Versión definitiva
-// Combina: simplicidad + special + reactividad + manejo de errores + _updating sin bloqueo
 import { setStyles } from "./tools.js";
 
-// ✅ Extrae el valor real si es una prop reactiva (objeto con _isReactive)
+// ✅ Extrae el valor real si es una prop reactiva (incluso si es función)
 const getValue = (val) => {
+  if (typeof val === "function" && val._isReactive) {
+    return val();
+  }
   if (val && typeof val === "object" && val._isReactive === true) {
     return val._value !== undefined ? val._value : val.valueOf();
   }
@@ -225,26 +42,25 @@ const applySpecial = (widget, key, value) => {
       widget.style.paddingLeft = px;
       widget.style.paddingRight = px;
       break;
-    // Puedes añadir más specials aquí
   }
 };
 
 export const assignProps = (widget, props) => {
   if (!props) return widget;
 
-  // 🔒 Marcar como actualizando (sin bloquear)
+  const wasUpdating = widget._updating;
   widget._updating = true;
 
   try {
     // ============================================================
-    // 1. ESTILOS (desde props.style)
+    // 1. ESTILOS
     // ============================================================
-    if (props.style) {
+    if (props.style && Object.keys(props.style).length > 0) {
       setStyles(widget, props.style);
     }
 
     // ============================================================
-    // 2. TEXTO (desde props.textContent)
+    // 2. TEXTO
     // ============================================================
     if (props.textContent !== undefined) {
       const textValue = getValue(props.textContent);
@@ -256,17 +72,20 @@ export const assignProps = (widget, props) => {
     }
 
     // ============================================================
-    // 3. EVENTOS (desde props.events)
+    // 3. EVENTOS
     // ============================================================
-    if (widget._events) {
+    if (widget._events && widget._events.length > 0) {
       widget._events.forEach(({ event, handler }) => {
         widget.removeEventListener(event, handler);
       });
       widget._events = [];
     }
+    
+    widget.onclick = null;
 
-    if (props.events) {
+    if (props.events && Object.keys(props.events).length > 0) {
       Object.entries(props.events).forEach(([event, handler]) => {
+        if (typeof handler !== "function") return;
         if (event === "click") {
           widget.onclick = handler;
         } else {
@@ -277,31 +96,40 @@ export const assignProps = (widget, props) => {
     }
 
     // ============================================================
-    // 4. ATRIBUTOS (desde props.attributes)
+    // 4. ATRIBUTOS
     // ============================================================
-    if (props.attributes) {
+    if (props.attributes && Object.keys(props.attributes).length > 0) {
       Object.entries(props.attributes).forEach(([key, value]) => {
         const finalValue = getValue(value);
-        if (key === "className" || key === "class") {
-          widget.className = finalValue;
-        } else {
-          widget.setAttribute(key, finalValue);
+        try {
+          if (key === "className" || key === "class") {
+            widget.className = finalValue;
+          } else if (
+            key === "disabled" ||
+            key === "checked" ||
+            key === "selected"
+          ) {
+            widget[key] = Boolean(finalValue);
+          } else {
+            widget.setAttribute(key, finalValue);
+          }
+        } catch (e) {
+          // Atributo inválido
         }
       });
     }
 
     // ============================================================
-    // 5. PROPS ESPECIALES (desde props.special)
+    // 5. SPECIALS
     // ============================================================
     if (props.special) {
       for (const [key, value] of Object.entries(props.special)) {
-        applySpecial(widget, key, getValue(value));
+        applySpecial(widget, key, value);
       }
     }
 
     // ============================================================
-    // 6. FALLBACK: Props planas no clasificadas
-    //    (por si processProps no las capturó)
+    // 6. FALLBACK PARA PROPS PLANAS
     // ============================================================
     const knownKeys = new Set([
       "style",
@@ -318,14 +146,14 @@ export const assignProps = (widget, props) => {
     if (extraKeys.length > 0) {
       for (const key of extraKeys) {
         const value = props[key];
-        // Si es evento plano (onClick, onPress)
+        if (value === undefined || value === null) continue;
+
         if (key.startsWith("on") && typeof value === "function") {
           const eventName = key.slice(2).toLowerCase();
           if (eventName === "click") {
             widget.onclick = value;
           } else {
             widget.addEventListener(eventName, value);
-            if (!widget._events) widget._events = [];
             widget._events.push({ event: eventName, handler: value });
           }
         } else if (
@@ -339,44 +167,37 @@ export const assignProps = (widget, props) => {
             "alt",
             "title",
             "role",
-            "aria-label",
           ].includes(key)
         ) {
-          // Atributos planos
           const finalValue = getValue(value);
           if (key === "className" || key === "class") {
             widget.className = finalValue;
           } else {
-            widget.setAttribute(key, finalValue);
+            try {
+              widget.setAttribute(key, finalValue);
+            } catch (e) {}
           }
         } else if (key === "text" || key === "label" || key === "caption") {
-          // Texto plano (si no vino en textContent)
           const textValue = getValue(value);
           if (widget.tagName === "INPUT" || widget.tagName === "TEXTAREA") {
             if (widget.value !== textValue) widget.value = textValue;
           } else {
-            if (widget.textContent !== textValue)
-              widget.textContent = textValue;
+            if (widget.textContent !== textValue) widget.textContent = textValue;
           }
         } else {
-          // Cualquier otra prop → la tratamos como estilo
           const finalValue = getValue(value);
           const cssValue =
             typeof finalValue === "number" ? finalValue + "px" : finalValue;
           try {
             widget.style[key] = cssValue;
-          } catch (_) {
-            // Silencioso
-          }
+          } catch (e) {}
         }
       }
     }
   } catch (error) {
     console.error("❌ [assignProps] Error:", error);
-    throw error;
   } finally {
-    // 🔓 Siempre liberar la bandera, incluso si hay error
-    widget._updating = false;
+    widget._updating = wasUpdating;
   }
 
   return widget;

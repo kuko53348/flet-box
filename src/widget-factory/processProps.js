@@ -1,5 +1,6 @@
 // core/processProps.js
 import { getPropDefinition, ATTRIBUTE_DOM_SET } from "./translateProps.js";
+import { toREM } from "./remTool.js"; // ✅ Importar herramienta centralizada
 
 /**
  * Processes raw props and classifies them into:
@@ -89,6 +90,9 @@ function applyUnit(def, value) {
   if (typeof value !== "number") return value;
   const unit = def.unit || "px";
   if (unit === "none") return value;
-  if (unit === "rem") return `${value / 16}rem`;
+  
+  // ✅ Utiliza el conversor dinámico en lugar de la división rígida
+  if (unit === "rem") return toREM(value); 
+  
   return `${value}px`;
 }

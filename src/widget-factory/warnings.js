@@ -1,6 +1,9 @@
 // core/warnings.js
 // FletBox Warning System – Elegant, minimal, helpful.
 
+// 🚀 Gate de entorno: desactiva warnings en producción
+const IS_DEV = typeof FLETBOX_DEV !== 'undefined' ? FLETBOX_DEV : true;
+
 const suggestionCache = new Map();
 let propNames = [];
 
@@ -212,6 +215,8 @@ function printDocs(prop) {
 }
 
 export function warnUnknownProp(propName, context = {}) {
+  if (!IS_DEV) return;
+
   const suggestions = getSuggestions(propName);
   const location = getCallLocation();
 
@@ -225,6 +230,8 @@ export function warnUnknownProp(propName, context = {}) {
 }
 
 export function warnDeprecatedProp(propName, replacement = null, context = {}) {
+  if (!IS_DEV) return;
+
   const location = getCallLocation();
 
   printHeader("DEPRECATED PROP");
@@ -243,6 +250,8 @@ export function warnDeprecatedProp(propName, replacement = null, context = {}) {
 }
 
 export function warnInvalidPropType(propName, expected, actual, context = {}) {
+  if (!IS_DEV) return;
+
   const location = getCallLocation();
 
   printHeader("INVALID PROP TYPE");

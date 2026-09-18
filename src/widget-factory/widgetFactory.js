@@ -10,7 +10,9 @@ import { stackPosition } from "./stackPosition.js";
 import { addChildren, removePropChildren } from "./addChildren.js";
 
 export function WidgetFactory(tag, customProps = {}) {
-  // ✅ Normalización de tag
+  // ============================================================
+  // 1. NORMALIZAR TAG Y PROPS
+  // ============================================================
   let finalTag = tag;
   let finalProps = customProps;
 
@@ -20,46 +22,50 @@ export function WidgetFactory(tag, customProps = {}) {
       finalProps = { ...tag, ...customProps };
       delete finalProps.tag;
     } else {
-      console.warn(
-        "⚠️ WidgetFactory: tag is object without .tag, using 'div'",
-        tag,
-      );
       finalTag = "div";
       finalProps = { ...tag, ...customProps };
     }
   }
 
   if (typeof finalTag !== "string") {
-    console.warn(
-      "⚠️ WidgetFactory: tag is not a string, using 'div'",
-      finalTag,
-    );
     finalTag = "div";
   }
 
-  // ✅ Crear widget base
+  // ============================================================
+  // 2. NORMALIZAR child/children EN PROPS INICIALES
+  // ============================================================
+  // ✅ Si vienen ambos, preferir children (comportamiento esperado)
+  if (
+    finalProps.child !== undefined &&
+    finalProps.children !== undefined
+  ) {
+    delete finalProps.child;
+  }
+
+  // ============================================================
+  // 3. CREAR WIDGET BASE
+  // ============================================================
   const widget = createWidget(finalTag, {});
   widget._widgetName = finalTag.charAt(0).toUpperCase() + finalTag.slice(1);
-
-  // ✅ Inicializar flag de actualización
   widget._updating = false;
+  widget._events = [];
 
   makeParentable(widget);
   addLifecycle(widget);
 
   widget._originalProps = { ...finalProps };
-  widget._events = [];
 
-  // ✅ Procesar props iniciales
+  // ============================================================
+  // 4. APLICAR PROPS INICIALES
+  // ============================================================
   const initialProps = processProps(finalProps, finalTag);
   assignProps(widget, initialProps);
   stackPosition(widget, finalProps);
 
-  if (finalProps.child) {
+  if (finalProps.child !== undefined) {
     addChildren(widget, finalProps.child);
   }
-
-  if (finalProps.children) {
+  if (finalProps.children !== undefined) {
     addChildren(widget, finalProps.children);
   }
 
@@ -69,29 +75,43 @@ export function WidgetFactory(tag, customProps = {}) {
     finalProps.ref(widget);
   }
 
-  // ✅ Método update con flag
-  widget.update = (newProps = {}) => {
-    if (widget._updating) return widget;
-    widget._updating = true;
+  // ============================================================
+  // 5. MÉTODO update CON NORMALIZACIÓN
+  // ============================================================
+  let updateDepth = 0;
+  const MAX_UPDATE_DEPTH = 10;
 
+  widget.update = (newProps = {}) => {
+    if (updateDepth >= MAX_UPDATE_DEPTH) {
+      console.warn("⚠️ [WidgetFactory] Max update depth reached, skipping");
+      return widget;
+    }
+
+    updateDepth++;
     try {
-      const merged = { ...widget._originalProps, ...newProps };
+      // ✅ Normalizar: nunca child Y children simultáneamente
+      const normalized = { ...newProps };
+      const hasChild = "child" in normalized;
+      const hasChildren = "children" in normalized;
+
+      if (hasChild || hasChildren) {
+        delete widget._originalProps.child;
+        delete widget._originalProps.children;
+        if (hasChildren) delete normalized.child;
+        else if (hasChild) delete normalized.children;
+      }
+
+      const merged = { ...widget._originalProps, ...normalized };
       widget._originalProps = merged;
 
       const processed = processProps(merged, finalTag);
       assignProps(widget, processed);
       stackPosition(widget, merged);
 
-      if (newProps.child !== undefined || newProps.children !== undefined) {
+      if (hasChild || hasChildren) {
         removePropChildren(widget);
-
-        if (newProps.child !== undefined) {
-          addChildren(widget, newProps.child);
-        }
-
-        if (newProps.children !== undefined) {
-          addChildren(widget, newProps.children);
-        }
+        if (hasChild) addChildren(widget, newProps.child);
+        if (hasChildren) addChildren(widget, newProps.children);
       }
 
       applyEffects(widget);
@@ -100,7 +120,7 @@ export function WidgetFactory(tag, customProps = {}) {
         newProps.ref(widget);
       }
     } finally {
-      widget._updating = false;
+      updateDepth--;
     }
 
     return widget;
@@ -108,12 +128,14 @@ export function WidgetFactory(tag, customProps = {}) {
 
   widget.getProps = () => ({ ...widget._originalProps });
 
-  // ✅ Reactividad con verificación del flag
+  // ============================================================
+  // 6. REACTIVIDAD
+  // ============================================================
   makeReactive(widget, (changedProps) => {
-    if (!widget._updating) {
-      widget.update(changedProps);
-    }
+    widget.update(changedProps);
   });
 
   return widget;
 }
+
+export default WidgetFactory;

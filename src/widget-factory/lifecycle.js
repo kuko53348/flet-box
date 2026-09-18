@@ -1,37 +1,45 @@
 // core/lifecycle.js
+const registeredWidgets = new Set();
+let globalObserver = null;
+
+const checkAllStates = () => {
+  registeredWidgets.forEach((widget) => {
+    const isConnected = document.body.contains(widget);
+    if (isConnected && !widget._mounted) {
+      widget._mounted = true;
+      widget._mountFns.forEach((fn) => fn(widget));
+    } else if (!isConnected && widget._mounted) {
+      widget._mounted = false;
+      widget._unmountFns.forEach((fn) => fn(widget));
+    }
+  });
+};
+
+const ensureObserver = () => {
+  if (!globalObserver && typeof MutationObserver !== "undefined" && document.body) {
+    globalObserver = new MutationObserver(checkAllStates);
+    globalObserver.observe(document.body, { childList: true, subtree: true });
+  }
+};
+
 export const addLifecycle = (widget) => {
   widget._mountFns = [];
   widget._unmountFns = [];
+  widget._mounted = false;
 
-  widget.onMount = (fn) => {
-    if (typeof fn === "function") widget._mountFns.push(fn);
-  };
-  widget.onUnmount = (fn) => {
-    if (typeof fn === "function") widget._unmountFns.push(fn);
-  };
+  widget.onMount = (fn) => typeof fn === "function" && widget._mountFns.push(fn);
+  widget.onUnmount = (fn) => typeof fn === "function" && widget._unmountFns.push(fn);
 
-  // Observer
-  let observer = null;
-  const startObserver = () => {
-    if (observer) observer.disconnect();
-    observer = new MutationObserver(() => {
-      if (document.body.contains(widget)) {
-        widget._mountFns.forEach((fn) => fn(widget));
-        if (observer) observer.disconnect();
-        observer = null;
-      }
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
-  };
-  startObserver();
+  ensureObserver();
+  registeredWidgets.add(widget);
+  queueMicrotask(checkAllStates);
 
-  // Cleanup
   widget._cleanup = () => {
-    if (observer) {
-      observer.disconnect();
-      observer = null;
+    registeredWidgets.delete(widget);
+    if (registeredWidgets.size === 0 && globalObserver) {
+      globalObserver.disconnect();
+      globalObserver = null;
     }
-    widget._unmountFns.forEach((fn) => fn(widget));
     widget._mountFns = [];
     widget._unmountFns = [];
   };

@@ -1,4 +1,4 @@
-// src/navigations/DrawerItem.js - Selección dinámica con router
+// src/navigations/DrawerItem.js
 import { Container } from "../widgets/Container.js";
 import { Row } from "../widgets/Row.js";
 import { Text } from "../widgets/Text.js";
@@ -7,11 +7,9 @@ import { colors } from "../utils/themes.js";
 import { goTo, subscribe, getCurrentPath } from "./Router.js";
 import { closeDrawer } from "./Drawer.js";
 
-// Evento global para exclusión mutua (fallback)
 const selectionEvent = new EventTarget();
 let globalCurrentPath = getCurrentPath();
 
-// Notificar cambios de ruta a todos los DrawerItems
 subscribe(() => {
   globalCurrentPath = getCurrentPath();
   selectionEvent.dispatchEvent(
@@ -51,10 +49,13 @@ export const DrawerItem = (props) => {
     const finalTextColor = isSelected ? selectedColor : unselectedColor;
     const finalIconColor = iconColor || finalTextColor;
     const finalTrailingIconColor = trailingIconColor || finalTextColor;
+    
     if (containerRef) {
       containerRef.style.backgroundColor = isSelected
         ? `${selectedColor}15`
         : "transparent";
+      // --- NUEVO: Reflejar estado para lectores de pantalla ---
+      containerRef.setAttribute("aria-selected", isSelected.toString());
     }
     if (textRef) {
       textRef.style.color = finalTextColor;
@@ -102,14 +103,25 @@ export const DrawerItem = (props) => {
       handleGlobalSelection,
     );
 
-  checkActive(); // estado inicial
+  checkActive(); 
 
   const container = Container({
     padding: "12px 16px",
     cursor: "pointer",
     borderRadius: borderRadius,
     margin: "4px 8px",
-    disableTransform: disableTransform, // ← desactiva scale y translateY
+    disableTransform: disableTransform,
+    // --- NUEVO: Accesibilidad por teclado ---
+    role: "button",
+    tabIndex: 0,
+    "aria-selected": isSelected.toString(),
+    onkeydown: (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault(); 
+        handleClick();
+      }
+    },
+    // ----------------------------------------
     onclick: handleClick,
     onmouseenter: (e) => {
       if (!isSelected) e.currentTarget.style.backgroundColor = hintColor;
@@ -126,6 +138,7 @@ export const DrawerItem = (props) => {
     rowChildren.push(iconWidget);
     iconRef = iconWidget;
   }
+  
   const textWidget = Text({
     text: label,
     size: 15,
@@ -133,9 +146,9 @@ export const DrawerItem = (props) => {
     fontWeight: "400",
     flex: 1,
   });
-
   rowChildren.push(textWidget);
   textRef = textWidget;
+  
   if (trailingIcon) {
     const trailWidget = Icon({
       name: trailingIcon,
@@ -145,12 +158,14 @@ export const DrawerItem = (props) => {
     rowChildren.push(trailWidget);
     trailingIconRef = trailWidget;
   }
+  
   const row = Row({
     alignItems: "center",
     justifyContent: "space-between",
     gap: gap,
     children: rowChildren,
   });
+  
   container.appendChild(row);
   containerRef = container;
   updateUI();

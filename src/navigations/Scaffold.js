@@ -1,4 +1,4 @@
-// navigations/Scaffold.js - Fixed (no cierra el drawer automáticamente)
+// navigations/Scaffold.js
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 import { initRouter, getCurrentRoute, subscribe } from "./Router.js";
@@ -19,16 +19,15 @@ export const Scaffold = (props) => {
     navSideBarPosition = "left",
     routes,
     backgroundColor = colors.background,
-    closeDrawerOnNavigate = false, // NUEVA: false por defecto (no cerrar al navegar)
+    closeDrawerOnNavigate = false,
     ...rest
   } = props;
 
   let routesConfig = null;
   let isRouterMode = false;
   let unsubscribe = null;
-  let drawerInstance = null; // guardamos la instancia del drawer
+  let drawerInstance = null;
 
-  // Router detection
   if (routes && typeof routes === "object" && Object.keys(routes).length > 0) {
     routesConfig = routes;
     isRouterMode = true;
@@ -48,7 +47,6 @@ export const Scaffold = (props) => {
     initRouter(routesConfig, currentUrl);
   }
 
-  // Normalize legacy navSideBar
   let finalLeftNavBar = leftNavBar;
   let finalRightNavBar = rightNavBar;
   if (navSideBar && !leftNavBar && !rightNavBar) {
@@ -87,8 +85,6 @@ export const Scaffold = (props) => {
   let mainContentContainer = null;
 
   let currentAppBar = null;
-  let currentBottomBar = null;
-  let currentFab = null;
 
   const clearContainer = (target) => {
     if (!target) return;
@@ -101,7 +97,7 @@ export const Scaffold = (props) => {
 
   const makeFullSize = (widget) => {
     if (widget && widget.style) {
-      widget.style.flex = "1"; // ← Esto debería funcionar
+      widget.style.flex = "1";
       widget.style.width = "100%";
       widget.style.display = "flex";
       widget.style.flexDirection = "column";
@@ -110,7 +106,6 @@ export const Scaffold = (props) => {
     return widget;
   };
 
-  // Update functions
   const updateAppBar = (cfg) => {
     if (!appBarContainer) return;
     clearContainer(appBarContainer);
@@ -131,7 +126,7 @@ export const Scaffold = (props) => {
         if (menuIcon && menuIcon.textContent === "menu") {
           const oldClick = menuIcon.onclick;
           menuIcon.onclick = (e) => {
-            e.stopPropagation(); // evita propagación que pueda cerrar el drawer
+            e.stopPropagation();
             if (oldClick) oldClick(e);
             if (
               drawerInstance.open &&
@@ -252,7 +247,6 @@ export const Scaffold = (props) => {
       updateLeftBar(leftBarCfg);
       updateRightBar(rightBarCfg);
 
-      // Cerrar el drawer al navegar solo si la opción está activada
       if (closeDrawerOnNavigate && drawerInstance && drawerInstance.close) {
         drawerInstance.close();
       }
@@ -340,7 +334,32 @@ export const Scaffold = (props) => {
 
   buildStructure();
 
+  // --- NUEVO: Recolector de basura automático (MutationObserver) ---
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      mutation.removedNodes.forEach((node) => {
+        // Ejecutar cleanup del nodo removido
+        if (typeof node._cleanup === "function") {
+          node._cleanup();
+        }
+        // Buscar hijos recursivamente que tengan _cleanup
+        if (node.querySelectorAll) {
+          const children = node.querySelectorAll("*");
+          children.forEach((child) => {
+            if (typeof child._cleanup === "function") {
+              child._cleanup();
+            }
+          });
+        }
+      });
+    });
+  });
+
+  // Observar todo el contenido de la estructura
+  observer.observe(container, { childList: true, subtree: true });
+
   container._cleanup = () => {
+    observer.disconnect(); // Detener el observador al destruir el Scaffold
     if (unsubscribe) unsubscribe();
     clearContainer(appBarContainer);
     clearContainer(mainContentContainer);

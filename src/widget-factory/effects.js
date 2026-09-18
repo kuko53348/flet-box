@@ -1,6 +1,5 @@
-// core/effects.js - EFECTOS VISUALES CON LIMPIEZA
+// core/effects.js
 export const applyEffects = (widget) => {
-  // Limpiar listeners anteriores si existen
   if (widget._effectListeners) {
     widget._effectListeners.forEach(({ event, handler }) => {
       widget.removeEventListener(event, handler);
@@ -10,63 +9,71 @@ export const applyEffects = (widget) => {
 
   widget.style.webkitTapHighlightColor = "transparent";
   widget.style.outline = "none";
-  widget.style.transition = "box-shadow 0.2s ease, transform 0.15s ease";
 
   const hasClick = widget.onclick && typeof widget.onclick === "function";
   if (!hasClick) return widget;
 
-  const originalShadow = widget.style.boxShadow;
-  // Usar _originalProps en lugar de _props (definido en widgetFactory)
+  // Guardar shadow actual en el widget
+  widget._originalShadow = widget.style.boxShadow || "";
+
   const disableTransform = widget._originalProps?.disableTransform === true;
   const listeners = [];
 
   if (!disableTransform) {
+    let isPressed = false;
+
     const onStart = () => {
-      widget.style.transform = "scale(0.98)";
+      if (isPressed) return;
+      isPressed = true;
+      // ✅ Uso de scale independiente para no chocar con stackPosition
+      widget.style.scale = "0.98";
       widget.style.boxShadow = "none";
     };
+
     const onEnd = () => {
-      widget.style.transform = "";
-      widget.style.boxShadow = originalShadow || "";
+      if (!isPressed) return;
+      isPressed = false;
+      // ✅ Restaurar scale sin tocar transform
+      widget.style.scale = "";
+      widget.style.boxShadow = widget._originalShadow || "";  
     };
 
-    // Eventos de presión (mouse y touch)
-    const pressEvents = [
-      "mousedown",
-      "touchstart",
-      "mouseup",
-      "touchend",
-      "mouseleave",
-      "touchcancel",
-    ];
-    pressEvents.forEach((ev) => {
-      const handler =
-        ev === "mousedown" || ev === "touchstart" ? onStart : onEnd;
-      widget.addEventListener(ev, handler);
-      listeners.push({ event: ev, handler });
+    const pressStart = ["mousedown", "touchstart"];
+    const pressEnd = ["mouseup", "touchend", "mouseleave", "touchcancel"];
+
+    pressStart.forEach((ev) => {
+      widget.addEventListener(ev, onStart, { passive: true });
+      listeners.push({ event: ev, handler: onStart });
+    });
+    pressEnd.forEach((ev) => {
+      widget.addEventListener(ev, onEnd, { passive: true });
+      listeners.push({ event: ev, handler: onEnd });
     });
 
-    // Eventos de hover
     const onHoverEnter = () => {
-      widget.style.transform = "translateY(-0.5px) scale(1.00)";
-      if (originalShadow && originalShadow !== "none") {
-        // Asignamos una sombra más grande sin usar replace
+      if (isPressed) return;
+      // ✅ Uso de translate independiente
+      widget.style.translate = "0 -0.5px";
+      if (widget._originalShadow && widget._originalShadow !== "none") {
         widget.style.boxShadow = "0 8px 16px rgba(0,0,0,0.2)";
       }
     };
+
     const onHoverLeave = () => {
-      widget.style.transform = "";
-      widget.style.boxShadow = originalShadow || "";
+      if (isPressed) return;
+      // ✅ Restaurar translate sin tocar transform
+      widget.style.translate = "";
+      widget.style.boxShadow = widget._originalShadow || "";
     };
-    widget.addEventListener("mouseenter", onHoverEnter);
-    widget.addEventListener("mouseleave", onHoverLeave);
+
+    widget.addEventListener("mouseenter", onHoverEnter, { passive: true });
+    widget.addEventListener("mouseleave", onHoverLeave, { passive: true });
     listeners.push({ event: "mouseenter", handler: onHoverEnter });
     listeners.push({ event: "mouseleave", handler: onHoverLeave });
 
     widget.style.cursor = "pointer";
   }
 
-  // Guardar referencias para limpieza futura
   widget._effectListeners = listeners;
   return widget;
 };

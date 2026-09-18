@@ -5,32 +5,26 @@
 /**
  * Converts a number to REM
  * @param {number} value - Number to convert
+ * @param {number} baseFontSize - Base root font size (default: 16)
  * @returns {string} - Value in REM
- *
- * @example
- * toREM(16) → '1rem'
- * toREM(24) → '1.5rem'
  */
-export const toREM = (value) => {
+export const toREM = (value, baseFontSize = 16) => {
   if (typeof value !== "number") return value;
-  return `${value / 16}rem`;
+  return `${value / baseFontSize}rem`;
 };
 
 /**
  * Applies REM to a styles object
  * @param {Object} styles - Styles with numbers
+ * @param {number} baseFontSize - Base root font size (default: 16)
  * @returns {Object} - Styles with REM
- *
- * @example
- * applyREM({ padding: 16, fontSize: 24, color: 'red' })
- * // → { padding: '1rem', fontSize: '1.5rem', color: 'red' }
  */
-export const applyREM = (styles) => {
+export const applyREM = (styles, baseFontSize = 16) => {
   const result = {};
 
   for (const [key, value] of Object.entries(styles)) {
     if (typeof value === "number") {
-      result[key] = toREM(value);
+      result[key] = toREM(value, baseFontSize);
     } else {
       result[key] = value;
     }

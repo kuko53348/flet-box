@@ -1,4 +1,4 @@
-// navigations/Tabs.js - Corregido (slider bien posicionado)
+// navigations/Tabs.js 
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 import { Container } from "../widgets/Container.js";
@@ -72,7 +72,6 @@ export const Tabs = (props) => {
     flexShrink: 0,
   });
 
-  // Wrapper con flex-start para que los botones estén al inicio y el cálculo sea preciso
   const tabsWrapper = Row({
     alignItems: "center",
     justifyContent: fullWidth ? "space-between" : "flex-start",
@@ -141,6 +140,21 @@ export const Tabs = (props) => {
       whiteSpace: "nowrap",
       minHeight: sz.h - (variant === "slider" ? 8 : 0),
       style: { zIndex: 2 },
+      // --- NUEVO: Accesibilidad ---
+      role: "tab",
+      tabIndex: 0,
+      "aria-selected": isActive.toString(),
+      onkeydown: (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          if (currentIndex !== idx) {
+            currentIndex = idx;
+            updateActiveTab(idx);
+            onChange?.(idx);
+          }
+        }
+      },
+      // ----------------------------
       child: Row({
         alignItems: "center",
         justifyContent: "center",
@@ -162,7 +176,6 @@ export const Tabs = (props) => {
   });
   tabButtonsRef = tabButtons;
 
-  // Slider indicator
   if (variant === "slider") {
     sliderIndicator = WidgetFactory({
       tag: "div",
@@ -181,7 +194,6 @@ export const Tabs = (props) => {
   tabBar.appendChild(tabsWrapper);
   container.appendChild(tabBar);
 
-  // Content container
   const contentContainer = Container({
     display: "flex",
     padding: `${sz.cp}px 0`,
@@ -200,7 +212,6 @@ export const Tabs = (props) => {
   const updateSliderPosition = () => {
     if (!sliderIndicator || !tabButtonsRef[currentIndex]) return;
     const btn = tabButtonsRef[currentIndex];
-    // Usar offsetLeft relativo al tabsWrapper (más fiable que getBoundingClientRect)
     const wrapperRect = tabsWrapperRef.getBoundingClientRect();
     const btnRect = btn.getBoundingClientRect();
     const left = btnRect.left - wrapperRect.left;
@@ -209,10 +220,12 @@ export const Tabs = (props) => {
   };
 
   const updateActiveTab = (idx) => {
-    // Actualizar estilos de botones
     tabButtonsRef.forEach((btn, i) => {
       const isActive = i === idx;
-      // Cambiar color del texto y del icono
+      
+      // --- NUEVO: Reflejar estado A11y ---
+      btn.setAttribute("aria-selected", isActive.toString());
+
       const textSpan = btn.querySelector("span:not(.material-icons)");
       if (textSpan) {
         textSpan.style.color = isActive ? activeTextColor : textColor;
@@ -234,7 +247,6 @@ export const Tabs = (props) => {
     updateSliderPosition();
   }, 16);
 
-  // Recalcular en resize (usando requestAnimationFrame para evitar múltiples llamadas)
   let resizeTimeout = null;
   let resizeObserver = null;
   const handleResize = () => {
@@ -247,13 +259,11 @@ export const Tabs = (props) => {
   };
   window.addEventListener("resize", handleResize);
 
-  // También si el contenido cambia dinámicamente (por ej. fonts cargadas)
   if (typeof ResizeObserver !== "undefined") {
     resizeObserver = new ResizeObserver(() => updateSliderPosition());
     if (tabsWrapperRef) resizeObserver.observe(tabsWrapperRef);
   }
 
-  // Limpiar listeners, observers y timers
   const originalCleanup = container._cleanup;
   container._cleanup = () => {
     if (initialPositionTimer) clearTimeout(initialPositionTimer);
@@ -263,7 +273,6 @@ export const Tabs = (props) => {
     if (originalCleanup) originalCleanup();
   };
 
-  // Propiedades públicas
   Object.defineProperty(container, "activeIndex", {
     get: () => currentIndex,
     set: (idx) => {
