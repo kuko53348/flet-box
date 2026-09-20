@@ -60,3 +60,7 @@ coverage/
 # Temporary files
 *.tmp
 *.temp
+
+# Pentest artifacts
+attack.sh
+flet-box-server/attack.sh
