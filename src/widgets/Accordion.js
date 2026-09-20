@@ -1,4 +1,11 @@
-// widgets/Accordion.js - Fixed version (expands correctly)
+/**
+ * @file Accordion.js
+ * @description A collapsible panel widget that reveals or hides its content
+ * when the title bar is clicked. Supports smooth height animations, multiple
+ * visual variants, elevation shadows, and a ResizeObserver that keeps the
+ * expanded height correct when the content changes dynamically.
+ */
+
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 import { Container } from "./Container.js";
@@ -6,6 +13,38 @@ import { Row } from "./Row.js";
 import { Text } from "./Text.js";
 import { Icon } from "./Icon.js";
 
+/**
+ * Creates an Accordion widget — a collapsible section with an animated title bar.
+ *
+ * @param {Object} props - Configuration options for the accordion.
+ * @param {string} props.title - The text displayed in the title bar.
+ * @param {HTMLElement|HTMLElement[]} props.children - Content rendered inside the expanded panel.
+ * @param {boolean} [props.expanded=false] - Whether the accordion starts in the expanded state.
+ * @param {Function} [props.onToggle] - Callback fired when the expanded state changes. Receives `(isExpanded: boolean)`.
+ * @param {'contained'|'outlined'|'ghost'} [props.variant='contained'] - Visual style variant.
+ * @param {number} [props.borderRadius=8] - Corner radius in pixels.
+ * @param {string} [props.bgColor=colors.surface] - Background color of the container (used in 'contained' variant).
+ * @param {string} [props.titleColor=colors.text] - Text color of the title when collapsed.
+ * @param {string} [props.expandedColor=colors.primary] - Accent color applied to the title and background when expanded.
+ * @param {string|null} [props.border=null] - Explicit CSS border shorthand. Overrides variant-based border logic.
+ * @param {string} [props.borderColor=colors.border] - Border color used in 'outlined' variant.
+ * @param {number} [props.borderWidth=1] - Border width in pixels (outlined variant).
+ * @param {number} [props.titleSize=14] - Font size of the title text in pixels.
+ * @param {string} [props.titleWeight='500'] - Font weight of the title text.
+ * @param {string} [props.titlePadding='12px 16px'] - CSS padding for the title bar.
+ * @param {string} [props.contentPadding='16px'] - CSS padding applied to the inner content area.
+ * @param {string} [props.iconCollapsed='chevron_right'] - Material icon name shown when collapsed.
+ * @param {string} [props.iconExpanded='expand_more'] - Material icon name shown when expanded.
+ * @param {string} [props.iconColor=colors.textSecondary] - Color of the expand/collapse icon.
+ * @param {number} [props.iconSize=20] - Size of the icon in pixels.
+ * @param {boolean} [props.divider=true] - Whether to show a dividing line between the title and the content.
+ * @param {string} [props.dividerColor=colors.border] - Color of the dividing line.
+ * @param {boolean} [props.disabled=false] - When true, interactions are blocked and the component is visually dimmed.
+ * @param {boolean} [props.animate=true] - Whether to animate the expand/collapse transition.
+ * @param {number} [props.animationDuration=300] - Duration of the animation in milliseconds.
+ * @param {number} [props.elevation=0] - Box-shadow depth level (0–4).
+ * @returns {HTMLElement} The accordion container element, augmented with public methods.
+ */
 export const Accordion = (props) => {
   const {
     title,
@@ -44,7 +83,7 @@ export const Accordion = (props) => {
     ...rest
   } = props;
 
-  // Internal state
+  // Internal mutable state — mirrors the props so updates don't mutate the originals
   let isExpanded = expanded;
   let currentTitle = title;
   let currentChildren = children;
@@ -70,6 +109,7 @@ export const Accordion = (props) => {
   let currentElevation = elevation;
   let currentAnimationDuration = animationDuration;
 
+  // DOM references populated during widget construction
   let contentWrapper = null;
   let contentInner = null;
   let titleBar = null;
@@ -79,22 +119,27 @@ export const Accordion = (props) => {
   let isAnimating = false;
 
   // ========== UI UPDATE FUNCTIONS ==========
+
+  /**
+   * Synchronises all visual properties (colors, borders, icon, etc.) to the
+   * current state without rebuilding the DOM. Called after any prop change.
+   */
   const updateUI = () => {
     if (!titleElement || !iconElement || !titleBar || !contentInner) return;
 
-    // Title text
+    // Update title text only when it actually changed, to avoid unnecessary repaints
     if (titleElement.textContent !== currentTitle) {
       titleElement.textContent = currentTitle;
     }
 
-    // Title styles
+    // Title color shifts to the accent color when expanded
     titleElement.style.color = isExpanded
       ? currentExpandedColor
       : currentTitleColor;
     titleElement.style.fontSize = `${currentTitleSize}px`;
     titleElement.style.fontWeight = currentTitleWeight;
 
-    // Icon
+    // Swap icon based on current expanded state
     iconElement.setAttribute(
       "name",
       isExpanded ? currentIconExpanded : currentIconCollapsed,
@@ -102,11 +147,12 @@ export const Accordion = (props) => {
     iconElement.style.color = currentIconColor;
     iconElement.style.fontSize = `${currentIconSize}px`;
 
-    // Title bar
+    // Title bar cursor and opacity reflect the disabled state
     titleBar.style.cursor = currentDisabled ? "not-allowed" : "pointer";
     titleBar.style.opacity = currentDisabled ? "0.5" : "1";
     titleBar.style.padding = currentTitlePadding;
 
+    // Tint the title bar background slightly when expanded (contained only)
     if (currentVariant === "contained") {
       titleBar.style.backgroundColor = isExpanded
         ? `${currentExpandedColor}10`
@@ -115,14 +161,14 @@ export const Accordion = (props) => {
       titleBar.style.backgroundColor = "transparent";
     }
 
-    // Divider
+    // Show/hide the horizontal divider between title and content
     if (currentDivider && isExpanded) {
       contentInner.style.borderTop = `1px solid ${currentDividerColor}`;
     } else {
       contentInner.style.borderTop = "none";
     }
 
-    // Main container border
+    // Apply border according to priority: explicit > outlined variant > none
     if (currentBorder) {
       container.style.border = currentBorder;
     } else if (currentVariant === "outlined") {
@@ -131,18 +177,17 @@ export const Accordion = (props) => {
       container.style.border = "none";
     }
 
-    // Container background
+    // Background is only painted in 'contained' mode
     if (currentVariant === "contained") {
       container.style.backgroundColor = currentBgColor;
     } else {
       container.style.backgroundColor = "transparent";
     }
 
-    // Border radius
     container.style.borderRadius = `${currentBorderRadius}px`;
     container.style.overflow = "hidden";
 
-    // Shadow
+    // Predefined shadow presets keyed by elevation level
     if (currentElevation > 0) {
       const shadows = {
         1: "0 1px 3px rgba(0,0,0,0.12)",
@@ -155,14 +200,21 @@ export const Accordion = (props) => {
       container.style.boxShadow = "none";
     }
 
-    // Content padding
     contentInner.style.padding = currentContentPadding;
   };
 
-  // ========== FIXED HEIGHT ANIMATION ==========
+  // ========== HEIGHT ANIMATION ==========
+
+  /**
+   * Accurately measures the natural height of the content by cloning it into
+   * the DOM off-screen. This avoids the 0-height problem when the element is
+   * hidden (display: none) at measurement time.
+   *
+   * @returns {number} The pixel height the content would occupy when visible.
+   */
   const getContentHeight = () => {
     if (!contentInner) return 0;
-    // Force correct calculation including padding and margins
+    // Clone off-screen to measure true height regardless of current visibility
     const clone = contentInner.cloneNode(true);
     clone.style.position = "absolute";
     clone.style.visibility = "hidden";
@@ -175,6 +227,12 @@ export const Accordion = (props) => {
     return height;
   };
 
+  /**
+   * Sets the wrapper height, optionally skipping the CSS transition.
+   *
+   * @param {string} height - CSS height value (e.g. "250px" or "auto").
+   * @param {boolean} [instant=false] - When true, skips the transition entirely.
+   */
   const setHeight = (height, instant = false) => {
     if (!contentWrapper) return;
     if (animate && !instant) {
@@ -186,6 +244,12 @@ export const Accordion = (props) => {
     }
   };
 
+  /**
+   * Expands the accordion with an animated height transition.
+   * No-ops if already expanded or currently animating.
+   *
+   * @param {boolean} [triggerCallback=true] - Whether to fire the `onToggle` callback.
+   */
   const expand = (triggerCallback = true) => {
     if (currentDisabled || isAnimating) return;
     if (isExpanded) return;
@@ -193,16 +257,16 @@ export const Accordion = (props) => {
     isAnimating = true;
     isExpanded = true;
 
-    // Show content to measure
+    // Make the content visible before measuring it
     contentWrapper.style.display = "block";
     contentInner.style.display = "block";
 
-    // Force reflow
+    // Force a reflow so the browser registers the block display before we animate
     void contentWrapper.offsetHeight;
 
-    // Measure actual height
     const targetHeight = getContentHeight() + "px";
 
+    // Animate from 0 → measured height → "auto" (to stay responsive to content changes)
     setHeight("0px");
     setTimeout(() => {
       setHeight(targetHeight);
@@ -216,13 +280,19 @@ export const Accordion = (props) => {
     }, 10);
   };
 
+  /**
+   * Collapses the accordion with an animated height transition.
+   * No-ops if already collapsed or currently animating.
+   *
+   * @param {boolean} [triggerCallback=true] - Whether to fire the `onToggle` callback.
+   */
   const collapse = (triggerCallback = true) => {
     if (currentDisabled || isAnimating) return;
     if (!isExpanded) return;
 
     isAnimating = true;
 
-    // Get current height
+    // Pin the height to a pixel value first — "auto" cannot be animated
     const currentHeight = contentInner.scrollHeight + "px";
     contentWrapper.style.overflow = "hidden";
     setHeight(currentHeight);
@@ -241,19 +311,30 @@ export const Accordion = (props) => {
     }, 10);
   };
 
+  /**
+   * Toggles between expanded and collapsed states.
+   * No-ops when disabled or mid-animation.
+   */
   const toggle = () => {
     if (currentDisabled || isAnimating) return;
     if (isExpanded) collapse();
     else expand();
   };
 
-  // ========== WATCH SIZE CHANGES ==========
+  // ========== RESIZE OBSERVER ==========
+
+  /**
+   * Attaches a ResizeObserver to the inner content element so that if its
+   * height changes (e.g. dynamic children added), the wrapper height is updated
+   * to match without requiring a manual re-render.
+   */
   const setupResizeObserver = () => {
     if (!contentInner || !animate) return;
     if (typeof ResizeObserver !== "undefined") {
       resizeObserver = new ResizeObserver(() => {
         if (isExpanded && contentWrapper && !isAnimating) {
           const newHeight = getContentHeight() + "px";
+          // Only adjust when the height is a fixed pixel value (not "auto")
           if (
             contentWrapper.style.height !== "auto" &&
             contentWrapper.style.height !== newHeight
@@ -268,6 +349,7 @@ export const Accordion = (props) => {
   };
 
   // ========== WIDGET CONSTRUCTION ==========
+
   const container = Container({
     style: {
       width: "100%",
@@ -276,7 +358,7 @@ export const Accordion = (props) => {
     ...rest,
   });
 
-  // Title bar
+  // Title text element
   titleElement = Text({
     text: currentTitle,
     size: currentTitleSize,
@@ -285,6 +367,7 @@ export const Accordion = (props) => {
     style: { flex: 1 },
   });
 
+  // Chevron/expand icon
   iconElement = Icon({
     name: isExpanded ? currentIconExpanded : currentIconCollapsed,
     size: currentIconSize,
@@ -296,6 +379,7 @@ export const Accordion = (props) => {
     },
   });
 
+  // Clickable title bar that contains the text and icon
   titleBar = Row({
     alignItems: "center",
     justifyContent: "space-between",
@@ -312,7 +396,7 @@ export const Accordion = (props) => {
     children: [titleElement, iconElement],
   });
 
-  // Wrapper with height animation
+  // Outer wrapper whose height is animated — starts hidden when collapsed
   contentWrapper = WidgetFactory({
     tag: "div",
     overflow: "hidden",
@@ -323,7 +407,7 @@ export const Accordion = (props) => {
     display: isExpanded ? "block" : "none",
   });
 
-  // Inner content (no animation, only shown/hidden)
+  // Inner container holds the actual slot content; not animated directly
   contentInner = Container({
     style: {
       padding: currentContentPadding,
@@ -339,22 +423,35 @@ export const Accordion = (props) => {
   container.appendChild(titleBar);
   container.appendChild(contentWrapper);
 
-  // Apply initial styles
+  // Sync all styles with current state
   updateUI();
 
-  // Click event
+  // Wire up the click handler on the title bar
   titleBar.onclick = () => toggle();
 
-  // Size observer
+  // Start watching for content size changes
   setupResizeObserver();
 
-  // ========== PUBLIC METHODS AND REACTIVITY ==========
+  // ========== PUBLIC API ==========
+
+  /**
+   * Programmatically sets the expanded state.
+   *
+   * @param {boolean} exp - `true` to expand, `false` to collapse.
+   * @param {boolean} [triggerCallback=true] - Whether to fire the `onToggle` callback.
+   */
   const setExpanded = (exp, triggerCallback = true) => {
     if (exp === isExpanded) return;
     if (exp) expand(triggerCallback);
     else collapse(triggerCallback);
   };
 
+  /**
+   * Updates one or more props without rebuilding the component.
+   * Only the fields present in `newProps` are applied; others are unchanged.
+   *
+   * @param {Partial<Object>} newProps - The subset of props to update.
+   */
   const update = (newProps) => {
     let needsUIUpdate = false;
 
@@ -364,7 +461,7 @@ export const Accordion = (props) => {
     }
     if (newProps.children !== undefined) {
       currentChildren = newProps.children;
-      // Replace content
+      // Replace the slot content in place
       while (contentInner.firstChild)
         contentInner.removeChild(contentInner.firstChild);
       const childrenArray = Array.isArray(currentChildren)
@@ -375,7 +472,7 @@ export const Accordion = (props) => {
         else if (typeof child === "string")
           contentInner.appendChild(document.createTextNode(child));
       });
-      // If expanded, readjust height
+      // If currently expanded, recalculate the wrapper height to fit new content
       if (isExpanded && animate && !isAnimating) {
         const newHeight = getContentHeight() + "px";
         if (contentWrapper.style.height !== "auto") {
@@ -423,7 +520,7 @@ export const Accordion = (props) => {
     if (needsUIUpdate) updateUI();
   };
 
-  // Reactive properties
+  // Reactive property accessors so callers can use `accordion.expanded = true`
   Object.defineProperty(container, "expanded", {
     get: () => isExpanded,
     set: (val) => setExpanded(val, true),
@@ -437,6 +534,11 @@ export const Accordion = (props) => {
   container.update = update;
 
   // ========== CLEANUP ==========
+
+  /**
+   * Disconnects the ResizeObserver and propagates cleanup to child widgets.
+   * Attached automatically to the container's `_cleanup` hook.
+   */
   const cleanup = () => {
     if (resizeObserver) resizeObserver.disconnect();
     if (contentWrapper && contentWrapper._cleanup) contentWrapper._cleanup();

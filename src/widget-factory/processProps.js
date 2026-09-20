@@ -1,6 +1,6 @@
 // core/processProps.js
 import { getPropDefinition, ATTRIBUTE_DOM_SET } from "./translateProps.js";
-import { toREM } from "./remTool.js"; // ✅ Importar herramienta centralizada
+import { toREM } from "./remTool.js"; // Centralized REM conversion utility
 
 /**
  * Processes raw props and classifies them into:
@@ -12,7 +12,7 @@ import { toREM } from "./remTool.js"; // ✅ Importar herramienta centralizada
  *
  * @param {Object} props - Raw props object
  * @param {string} tag - HTML tag of the widget (e.g., 'div', 'span', 'input')
- * @returns {{ style, events, attributes, textContent, special }}
+ * @returns {{ style: Object, events: Object, attributes: Object, textContent: *, special: Object }}
  */
 export const processProps = (props, tag = "div") => {
   const style = {};
@@ -42,7 +42,8 @@ export const processProps = (props, tag = "div") => {
           events[def.domProp] = value;
           break;
         case "text":
-          // Special: 'value' in input-like elements must be handled as special
+          // 'value' on input-like elements must be handled as a special prop,
+          // not as text content, to avoid conflicting with the DOM's own value.
           if (
             key === "value" &&
             ["input", "textarea", "select"].includes(tag)
@@ -53,7 +54,7 @@ export const processProps = (props, tag = "div") => {
           }
           break;
         case "special":
-          // Guardar props especiales para que assignProps las maneje
+          // Store special props so assignProps can handle them with custom logic.
           special[def.domProp] = value;
           break;
         default:
@@ -78,11 +79,17 @@ export const processProps = (props, tag = "div") => {
 };
 
 /**
- * Applies the correct CSS unit to a numeric value.
+ * Applies the correct CSS unit to a numeric value based on the prop definition.
  *
- * @param {Object} def - Prop definition from the database
- * @param {*} value - The value to convert
- * @returns {string|number} Value with correct CSS unit
+ * - `true` / `false` are coerced to `1` / `0` (unitless).
+ * - Non-numeric values pass through unchanged.
+ * - `unit: "none"` returns the raw number without a suffix.
+ * - `unit: "rem"` delegates to the centralized `toREM` converter.
+ * - All other units default to `"px"`.
+ *
+ * @param {Object} def - Prop definition from the prop database (see `translateProps.js`).
+ * @param {*} value - The value to convert.
+ * @returns {string|number} Value with the correct CSS unit applied.
  */
 function applyUnit(def, value) {
   if (value === true) return 1;
@@ -91,7 +98,7 @@ function applyUnit(def, value) {
   const unit = def.unit || "px";
   if (unit === "none") return value;
   
-  // ✅ Utiliza el conversor dinámico en lugar de la división rígida
+  // Use the dynamic REM converter instead of a hard-coded division.
   if (unit === "rem") return toREM(value); 
   
   return `${value}px`;

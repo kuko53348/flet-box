@@ -1,12 +1,56 @@
-// widgets/ParallaxBox.js
+/**
+ * ParallaxBox - A container that applies a parallax offset to its child content.
+ *
+ * Supports three interaction modes:
+ * - `"scroll"`: offset follows the window scroll position.
+ * - `"mouse"`:  offset tracks the pointer relative to the widget center.
+ * - `"hover"`:  offset snaps to a position based on where the pointer enters,
+ *               then resets on mouse leave.
+ *
+ * The returned element exposes public methods (`updateSpeed`, `updateDirection`,
+ * `setPosition`, `reset`) and a `_cleanup()` function that removes all event
+ * listeners when the element is destroyed.
+ *
+ * @module animations/ParallaxBox
+ */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { AnimatedBox } from "../animations/AnimatedBox.js";
 
+/**
+ * Creates a parallax-effect container.
+ *
+ * @param {object}          [props={}]
+ * @param {"scroll"|"mouse"|"hover"} [props.type="scroll"]
+ *   Interaction mode that drives the parallax offset.
+ * @param {number}          [props.speed=0.5]
+ *   Multiplier applied to scroll distance or pointer deviation. Higher values
+ *   produce more pronounced movement.
+ * @param {"vertical"|"horizontal"|"both"} [props.direction="vertical"]
+ *   Which axes the parallax offset is applied to.
+ * @param {number}          [props.maxOffset=100]
+ *   Maximum pixel offset allowed in each direction.
+ * @param {boolean}         [props.reverse=false]
+ *   When `true`, the movement direction is inverted.
+ * @param {HTMLElement|null} [props.child]
+ *   The content element to wrap. Returns `null` if not provided.
+ * @param {boolean}         [props.disabled=false]
+ *   When `true`, all parallax transforms are suppressed.
+ * @param {Function}        [props.onParallaxMove]
+ *   Callback invoked on every transform update with `{ x, y }` offsets.
+ * @param {number}          [props.duration=300]
+ *   CSS transition duration (ms) for smooth motion.
+ * @param {string}          [props.easing="ease-out"]
+ *   CSS transition timing function.
+ * @param {...*}            [props.rest]
+ *   Additional props forwarded to the outer container's WidgetFactory call.
+ * @returns {HTMLElement|null} The container element with the parallax wrapper
+ *   inside, or `null` if `child` was not provided.
+ */
 export const ParallaxBox = (props = {}) => {
   let {
-    type = "scroll", // 'scroll', 'mouse', 'hover'
+    type = "scroll",
     speed = 0.5,
-    direction = "vertical", // 'vertical', 'horizontal', 'both'
+    direction = "vertical",
     maxOffset = 100,
     reverse = false,
     child,
@@ -29,6 +73,12 @@ export const ParallaxBox = (props = {}) => {
   let initialTimer = null;
   const transitionTimers = new Set();
 
+  /**
+   * Schedules removal of the CSS transition after it has finished playing,
+   * so subsequent programmatic transforms are instant rather than animated.
+   *
+   * @returns {void}
+   */
   const clearTransitionLater = () => {
     const timer = setTimeout(() => {
       transitionTimers.delete(timer);
@@ -37,6 +87,16 @@ export const ParallaxBox = (props = {}) => {
     transitionTimers.add(timer);
   };
 
+  /**
+   * Applies a CSS `transform` to the inner animated wrapper, clamped to
+   * `maxOffset`, respecting the active `direction` and `reverse` settings.
+   *
+   * @param {number}  x         - Desired horizontal offset in pixels.
+   * @param {number}  y         - Desired vertical offset in pixels.
+   * @param {boolean} [animate=true] - When `true`, a CSS transition is set;
+   *   when `false`, the transition is removed for an instant snap.
+   * @returns {void}
+   */
   const applyTransform = (x, y, animate = true) => {
     if (disabled) return;
 
@@ -77,6 +137,12 @@ export const ParallaxBox = (props = {}) => {
     }
   };
 
+  /**
+   * Resets the inner wrapper's transform back to the origin (0, 0).
+   *
+   * @param {boolean} [animate=true] - Whether to animate the reset.
+   * @returns {void}
+   */
   const resetTransform = (animate = true) => {
     targetX = 0;
     targetY = 0;
@@ -92,6 +158,13 @@ export const ParallaxBox = (props = {}) => {
     if (onParallaxMove) onParallaxMove({ x: 0, y: 0 });
   };
 
+  /**
+   * Window scroll event handler for `type="scroll"` mode.
+   * Converts the current scroll position into a parallax offset and calls
+   * `applyTransform` inside a `requestAnimationFrame` callback.
+   *
+   * @returns {void}
+   */
   const handleScroll = () => {
     if (disabled || type !== "scroll") return;
     if (animationFrame) cancelAnimationFrame(animationFrame);
@@ -106,6 +179,14 @@ export const ParallaxBox = (props = {}) => {
     });
   };
 
+  /**
+   * Pointer move handler for `type="mouse"` and `type="hover"` modes.
+   * Calculates the pointer's normalized offset from the container center and
+   * converts it to a pixel offset scaled by `maxOffset`.
+   *
+   * @param {MouseEvent} e
+   * @returns {void}
+   */
   const handleMouseMove = (e) => {
     if (disabled || (type !== "mouse" && type !== "hover")) return;
     if (animationFrame) cancelAnimationFrame(animationFrame);
@@ -125,6 +206,13 @@ export const ParallaxBox = (props = {}) => {
     });
   };
 
+  /**
+   * `mouseenter` handler for `type="hover"` mode.
+   * Snaps the offset to match the pointer's entry position within the element.
+   *
+   * @param {MouseEvent} e
+   * @returns {void}
+   */
   const handleMouseEnter = (e) => {
     if (disabled || type !== "hover") return;
     const rect = containerRef.getBoundingClientRect();
@@ -137,12 +225,17 @@ export const ParallaxBox = (props = {}) => {
     applyTransform(moveX, moveY, true);
   };
 
+  /**
+   * `mouseleave` handler — resets the parallax offset back to zero.
+   *
+   * @returns {void}
+   */
   const handleMouseLeave = () => {
     if (disabled || (type !== "mouse" && type !== "hover")) return;
     resetTransform(true);
   };
 
-  // ✅ CORREGIDO: WidgetFactory sin función anidada
+  // Outer container — position: relative + overflow: hidden to clip the child
   const container = WidgetFactory({
     tag: "div",
     position: "relative",
@@ -153,7 +246,7 @@ export const ParallaxBox = (props = {}) => {
 
   containerRef = container;
 
-  // Crear contenido animado
+  // Inner wrapper that receives CSS transforms; will-change enables GPU compositing
   const animatedWrapper = WidgetFactory({
     tag: "div",
     style: {
@@ -163,6 +256,7 @@ export const ParallaxBox = (props = {}) => {
     },
   });
 
+  // Append child content to the animated wrapper
   if (child) {
     if (child instanceof HTMLElement) {
       animatedWrapper.appendChild(child);
@@ -182,9 +276,10 @@ export const ParallaxBox = (props = {}) => {
   animatedContent = animatedWrapper;
   container.appendChild(animatedWrapper);
 
-  // Attach event listeners
+  // Attach the appropriate event listeners for the selected interaction mode
   if (type === "scroll") {
     window.addEventListener("scroll", handleScroll);
+    // Run once after a short delay to sync with the current scroll position
     initialTimer = setTimeout(() => {
       initialTimer = null;
       handleScroll();
@@ -198,27 +293,62 @@ export const ParallaxBox = (props = {}) => {
   }
 
   // ========== PUBLIC METHODS ==========
+
+  /**
+   * Updates the parallax speed multiplier at runtime and re-applies the
+   * current transform (scroll mode only).
+   *
+   * @param {number} newSpeed - New speed multiplier.
+   * @returns {void}
+   */
   container.updateSpeed = (newSpeed) => {
     speed = newSpeed;
     if (type === "scroll") handleScroll();
   };
 
+  /**
+   * Updates the active parallax direction and re-applies or resets the transform.
+   *
+   * @param {"vertical"|"horizontal"|"both"} newDirection
+   * @returns {void}
+   */
   container.updateDirection = (newDirection) => {
     direction = newDirection;
     if (type === "scroll") handleScroll();
     else resetTransform(true);
   };
 
+  /**
+   * Programmatically sets the parallax offset to a specific position.
+   *
+   * @param {number}  x              - Horizontal offset in pixels.
+   * @param {number}  y              - Vertical offset in pixels.
+   * @param {boolean} [animate=true] - Whether to animate the change.
+   * @returns {void}
+   */
   container.setPosition = (x, y, animate = true) => {
     applyTransform(x, y, animate);
   };
 
+  /**
+   * Resets the parallax offset back to the origin (0, 0).
+   *
+   * @param {boolean} [animate=true] - Whether to animate the reset.
+   * @returns {void}
+   */
   container.reset = (animate = true) => {
     resetTransform(animate);
   };
 
-  // Cleanup
+  // ========== CLEANUP ==========
+
   const originalCleanup = container._cleanup;
+  /**
+   * Removes all event listeners, cancels pending animation frames, clears
+   * timers, and calls any previously assigned `_cleanup` function.
+   *
+   * @returns {void}
+   */
   container._cleanup = () => {
     if (type === "scroll") {
       window.removeEventListener("scroll", handleScroll);

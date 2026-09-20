@@ -1,28 +1,46 @@
 // src/components/flet-box/tools/clipboard.js
 
+/**
+ * Clipboard utility — provides a synchronous-feeling API for reading from and
+ * writing to the system clipboard.
+ *
+ * `copy` and `copyWithFeedback` are intentionally synchronous from the caller's
+ * perspective: the underlying async Clipboard API is handled internally so
+ * callers do not need to `await` them. `read` is genuinely async and must be
+ * awaited.
+ */
 export const clipboard = {
   /**
-   * Copia texto al portapapeles (síncrono para el usuario)
-   * Internamente maneja async pero tú no necesitas await
-   * @param {string} text - Texto a copiar
-   * @returns {void} - No retorna nada, solo ejecuta
+   * Copies text to the clipboard.
+   *
+   * Uses the modern async `navigator.clipboard.writeText` API when available,
+   * falling back to a hidden `<textarea>` + `execCommand("copy")` for older
+   * browsers. Errors from the async path are caught and silently rerouted to
+   * the fallback.
+   *
+   * @param {string} text - Text to copy.
+   * @returns {void}
    */
   copy: (text) => {
-    // Método moderno (async pero manejado internamente)
+    // Modern path — async internally but fire-and-forget for the caller
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).catch((err) => {
         console.error("Clipboard failed:", err);
         clipboard._fallbackCopy(text);
       });
     } else {
-      // Fallback para navegadores antiguos
+      // Fallback for browsers that do not support the Clipboard API
       clipboard._fallbackCopy(text);
     }
   },
 
   /**
-   * Fallback usando textarea (síncrono)
+   * Legacy synchronous fallback that copies text using a hidden `<textarea>`
+   * and the deprecated `execCommand("copy")`.
+   *
    * @private
+   * @param {string} text - Text to copy.
+   * @returns {void}
    */
   _fallbackCopy: (text) => {
     const textarea = document.createElement("textarea");
@@ -37,9 +55,13 @@ export const clipboard = {
   },
 
   /**
-   * Copia con feedback visual (síncrono para el usuario)
-   * @param {string} text - Texto a copiar
-   * @param {HTMLElement} element - Elemento donde mostrar feedback
+   * Copies text to the clipboard and briefly updates a DOM element to show
+   * visual confirmation (a checkmark for 1 second).
+   *
+   * @param {string} text - Text to copy.
+   * @param {HTMLElement} element - Element whose content is temporarily replaced
+   *   with a `"✓"` and whose background turns green as feedback.
+   * @returns {void}
    */
   copyWithFeedback: (text, element) => {
     clipboard.copy(text);
@@ -59,8 +81,15 @@ export const clipboard = {
   },
 
   /**
-   * Lee texto del portapapeles (asíncrono, este sí necesita await)
-   * @returns {Promise<string>}
+   * Reads the current text content of the clipboard.
+   *
+   * Unlike `copy`, this method IS async and must be awaited. It returns an
+   * empty string on failure (e.g. when permission is denied).
+   *
+   * @returns {Promise<string>} The clipboard text, or `""` on error.
+   *
+   * @example
+   * const text = await clipboard.read();
    */
   read: async () => {
     try {

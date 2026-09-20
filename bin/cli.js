@@ -1,6 +1,14 @@
 #!/usr/bin/env node
 
-// bin/cli.js - FletBox CLI with Hot Reload Support
+/**
+ * @file bin/cli.js
+ * @description FletBox CLI entry point with hot reload support.
+ *
+ * Parses process.argv, sets up the global Ctrl+C handler, and dispatches
+ * to the appropriate command handler.  All commands are lazy-imported so
+ * startup stays fast even on slow disks.
+ */
+
 import { createRequire } from "module";
 import fs from "fs";
 import path from "path";
@@ -17,17 +25,25 @@ import { c, gradient, section, banner, divider, width, setupCtrlC } from "./util
 const require = createRequire(import.meta.url);
 const { version } = require("../package.json");
 
-// Activate global Ctrl+C handler
+// Register the global Ctrl+C handler early so every command benefits from it.
 setupCtrlC();
 
 const args = process.argv.slice(2);
 const command = args[0];
 const projectName = args[1];
 
+// Clear the terminal only when attached to an interactive session to avoid
+// polluting piped output (e.g. CI logs).
 if (process.stdout.isTTY) {
   console.clear();
 }
 
+/**
+ * Prints the full help message, including all available commands and options.
+ * Rendered with gradient colors when the terminal supports truecolor.
+ *
+ * @returns {void}
+ */
 const showHelp = () => {
   const cmd = (name, desc, alias = "") =>
     `  ${c("bold", gradient(name, "#22d3ee", "#6366f1"))}${" ".repeat(Math.max(1, 22 - width(name)))}${c("gray", desc)}${alias ? c("dim", "  (" + alias + ")") : ""}`;
@@ -73,7 +89,19 @@ ${c("dim", "  FletBox — ultra-light vanilla-JS UI framework")}
 `);
 };
 
-// Parse command line flags
+/**
+ * Parses the CLI flags from `process.argv`.
+ *
+ * Recognised flags:
+ * - `--port <n>` / `-p <n>` — override the default port (8000).
+ * - `--quiet`               — suppress per-request HTTP logging.
+ * - `--hot` / `--hot-reload`— enable hot-module-replacement.
+ * - `--dry-run` / `--list` / `--check` — list-only mode for `kill-server`.
+ *
+ * Invalid port values produce a warning and fall back to the default.
+ *
+ * @returns {{ port: number, portExplicit: boolean, logRequests: boolean, hot: boolean, dryRun: boolean }}
+ */
 const parseFlags = () => {
   const flags = {
     port: 8000,
@@ -109,7 +137,13 @@ const parseFlags = () => {
   return flags;
 };
 
-// Validate the command runs inside a FletBox project
+/**
+ * Guards commands that must run inside a FletBox project directory.
+ * Exits with a descriptive error when `src/app.js` is not found in the
+ * current working directory — this prevents confusing failures later.
+ *
+ * @returns {void}
+ */
 const ensureProject = () => {
   const inProject = fs.existsSync(path.join(process.cwd(), "src", "app.js"));
   if (!inProject) {
@@ -124,6 +158,15 @@ const ensureProject = () => {
   }
 };
 
+/**
+ * Main async entry point.  Parses flags, then delegates to the matching
+ * command handler via a `switch` on the first positional argument.
+ *
+ * Unrecognised commands print the help message and exit with code 1.
+ *
+ * @async
+ * @returns {Promise<void>}
+ */
 async function main() {
   try {
     const flags = parseFlags();
@@ -150,7 +193,7 @@ async function main() {
           );
           process.exit(1);
         }
-        // Pass the rest of the arguments (including flags like --adaptive)
+        // Forward all remaining args (template flags like --adaptive) to createProject.
         await createProject(projectName, args.slice(2));
         break;
 
@@ -223,6 +266,8 @@ async function main() {
       case "runBundle":
       case "preview": {
         ensureProject();
+        // Accept an explicit target directory as the second argument, but reject
+        // anything that looks like a flag (starts with "-") to avoid misparses.
         const targetDir =
           args[1] &&
           /^[a-zA-Z0-9_][a-zA-Z0-9_-]*$/.test(args[1]) &&
@@ -274,6 +319,7 @@ async function main() {
     }
   } catch (error) {
     console.error(c("red", "❌ CLI Error:"), error.message);
+    // Show the full stack trace only when DEBUG is set, to keep normal output clean.
     if (process.env.DEBUG) console.error(error);
     process.exit(1);
   }

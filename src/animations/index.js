@@ -1,4 +1,14 @@
-// src/animations/index.js
+/**
+ * animations/index.js - Public entry point for the animations module.
+ *
+ * Re-exports all animation widgets and imperative animation utilities so
+ * consumers can import from a single path:
+ *
+ * @example
+ * import { AnimatedBox, animate, fadeInAsync } from "./animations/index.js";
+ *
+ * @module animations
+ */
 export { ParallaxBox } from "./ParallaxBox.js";
 export { AnimatedBox } from "./AnimatedBox.js";
 export { AnimatedText } from "./AnimatedText.js";

@@ -1,7 +1,47 @@
-// widgets/Chart.js - With smooth curves and fill gradient
+/**
+ * @file Chart.js
+ * @description A canvas-based chart widget supporting bar, line, area, and
+ * candlestick chart types. Features smooth Bézier curves, gradient fills,
+ * configurable grid/axis rendering, and automatic resizing via ResizeObserver.
+ * Candlestick charts support horizontal scrolling when the data set is wider
+ * than the container.
+ */
+
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 
+/**
+ * Creates a Chart widget rendered on an HTML5 `<canvas>` element.
+ *
+ * @param {Object} props - Configuration for the chart.
+ * @param {'candle'|'bar'|'line'|'area'} [props.type='candle'] - Chart type to render.
+ * @param {Array} [props.data=[]] - Dataset.
+ *   - For 'bar', 'line', 'area': an array of numbers.
+ *   - For 'candle': an array of `{open, high, low, close}` objects, or 4-element arrays `[open, high, low, close]`.
+ * @param {string[]} [props.labels=[]] - X-axis labels, one per data point.
+ * @param {number|string} [props.width='100%'] - Container width (CSS value or pixel number).
+ * @param {number} [props.height=400] - Container height in pixels.
+ * @param {string} [props.bgColor=colors.surface] - Background color of the chart container.
+ * @param {Object} [props.padding={top:20,right:50,bottom:50,left:50}] - Canvas padding in pixels. Can also be a single number.
+ * @param {number} [props.candleWidth=8] - Width of each candlestick body in pixels.
+ * @param {number} [props.candleSpacing=2] - Gap between consecutive candlesticks in pixels.
+ * @param {string} [props.barColor=colors.primary] - Fill color for bar chart bars.
+ * @param {string} [props.lineColor=colors.primary] - Stroke color for line/area charts.
+ * @param {string} [props.areaColor] - Fill color for the area under line charts (default: primary at 25% opacity).
+ * @param {boolean} [props.smooth=false] - When true, line/area charts use quadratic Bézier curves instead of straight segments.
+ * @param {boolean} [props.areaGradient=false] - When true, the area fill uses a vertical gradient instead of a flat color.
+ * @param {string[]|null} [props.areaGradientColors=null] - Two-element color array `[bottomColor, topColor]` for the gradient. Defaults to `[lineColor, transparent]`.
+ * @param {string} [props.candleUpColor=colors.success] - Candlestick body color for bullish (close ≥ open) candles.
+ * @param {string} [props.candleDownColor=colors.danger] - Candlestick body color for bearish (close < open) candles.
+ * @param {string} [props.axisColor=colors.border] - Color of the axis lines and grid lines.
+ * @param {string} [props.textColor=colors.textSecondary] - Color of axis labels.
+ * @param {string} [props.yAxisColor=colors.primary] - Color of the Y-axis value labels.
+ * @param {boolean} [props.showGrid=true] - Whether to render horizontal grid lines.
+ * @param {boolean} [props.showLabels=true] - Whether to render X-axis labels below each data point.
+ * @param {boolean} [props.showValues=false] - Whether to render the raw value above each data point.
+ * @param {number} [props.borderRadius=8] - Corner radius of the chart container in pixels.
+ * @returns {HTMLElement} The chart container element, augmented with `updateData` and `redraw` methods.
+ */
 export const Chart = (props) => {
   const {
     type = "candle",
@@ -16,10 +56,10 @@ export const Chart = (props) => {
     barColor = colors.primary,
     lineColor = colors.primary,
     areaColor = `${colors.primary}40`,
-    // New props for curves and gradient
-    smooth = false, // if true, draws smooth curved lines
-    areaGradient = false, // if true, fills area with gradient (area only)
-    areaGradientColors = null, // array of two colors for gradient, e.g. ['#ff0000', '#00ff00']
+    // Smooth curves and gradient fill options
+    smooth = false,
+    areaGradient = false,
+    areaGradientColors = null,
     candleUpColor = colors.success,
     candleDownColor = colors.danger,
     axisColor = colors.border,
@@ -42,6 +82,12 @@ export const Chart = (props) => {
   let dynamicCandleSpacing = candleSpacing;
   let useFixedWidth = true;
 
+  /**
+   * Normalises the `padding` prop into a consistent `{top, right, bottom, left}` object.
+   * Accepts either a single number (applied to all sides) or a partial object.
+   *
+   * @returns {{top: number, right: number, bottom: number, left: number}}
+   */
   const normalizePadding = () => {
     if (typeof padding === "number") {
       return { top: padding, right: padding, bottom: padding, left: padding };
@@ -51,6 +97,12 @@ export const Chart = (props) => {
 
   const pad = normalizePadding();
 
+  /**
+   * Normalises the candle data so that every entry is a `{open, high, low, close}` object,
+   * regardless of whether the caller passed 4-element arrays or plain objects.
+   *
+   * @returns {{open: number, high: number, low: number, close: number}[]}
+   */
   const normalizeCandleData = () => {
     return data.map((item) => {
       if (Array.isArray(item)) {
@@ -60,6 +112,12 @@ export const Chart = (props) => {
     });
   };
 
+  /**
+   * Computes the minimum and maximum values across the dataset, adding 10%
+   * padding on each side so data points are never flush against the edges.
+   *
+   * @returns {{maxValue: number, minValue: number}}
+   */
   const getMinMaxValues = () => {
     let minVal, maxVal;
     if (type === "candle") {
@@ -80,6 +138,15 @@ export const Chart = (props) => {
     };
   };
 
+  /**
+   * Converts a data value to a Y pixel coordinate on the canvas.
+   *
+   * @param {number} value - The data value to convert.
+   * @param {number} minValue - Minimum value in the visible range.
+   * @param {number} maxValue - Maximum value in the visible range.
+   * @param {number} chartHeight - Total canvas height in pixels.
+   * @returns {number} The Y coordinate in canvas space.
+   */
   const getYPosition = (value, minValue, maxValue, chartHeight) => {
     const range = maxValue - minValue;
     if (range === 0) return chartHeight - pad.bottom;
@@ -89,6 +156,15 @@ export const Chart = (props) => {
     );
   };
 
+  /**
+   * Draws a bar chart onto the canvas context.
+   *
+   * @param {CanvasRenderingContext2D} ctx
+   * @param {number} canvasWidth
+   * @param {number} chartHeight
+   * @param {number} maxValue
+   * @param {number} minValue
+   */
   const drawBar = (ctx, canvasWidth, chartHeight, maxValue, minValue) => {
     const availableWidth = canvasWidth - pad.left - pad.right;
     const barWidth = (availableWidth / data.length) * 0.7;
@@ -118,6 +194,17 @@ export const Chart = (props) => {
     });
   };
 
+  /**
+   * Draws a line or area chart onto the canvas context.
+   * Uses quadratic Bézier midpoints to produce smooth curves when `smooth` is true.
+   *
+   * @param {CanvasRenderingContext2D} ctx
+   * @param {number} canvasWidth
+   * @param {number} chartHeight
+   * @param {number} maxValue
+   * @param {number} minValue
+   * @param {boolean} [isArea=false] - When true, fills the area below the line.
+   */
   const drawLine = (
     ctx,
     canvasWidth,
@@ -138,13 +225,14 @@ export const Chart = (props) => {
 
     if (points.length < 2) return;
 
-    // Draw the area (fill)
+    // Fill the area under the line when rendering an area chart
     if (isArea) {
-      // Create vertical gradient if requested
+      // Build a gradient or flat fill depending on configuration
       let fillStyle = areaColor;
       if (areaGradient) {
         let grad;
         if (areaGradientColors && areaGradientColors.length >= 2) {
+          // Caller-supplied two-color gradient (bottom → top)
           grad = ctx.createLinearGradient(
             0,
             chartHeight - pad.bottom,
@@ -154,6 +242,7 @@ export const Chart = (props) => {
           grad.addColorStop(0, areaGradientColors[0]);
           grad.addColorStop(1, areaGradientColors[1]);
         } else {
+          // Default gradient: solid lineColor at bottom, transparent at top
           grad = ctx.createLinearGradient(
             0,
             chartHeight - pad.bottom,
@@ -167,7 +256,7 @@ export const Chart = (props) => {
       }
       ctx.beginPath();
       if (smooth) {
-        // Area with smooth curves
+        // Smooth area: trace through midpoints, then close back to the baseline
         ctx.moveTo(points[0].x, points[0].y);
         for (let i = 0; i < points.length - 1; i++) {
           const xc = (points[i].x + points[i + 1].x) / 2;
@@ -185,7 +274,7 @@ export const Chart = (props) => {
         ctx.fillStyle = fillStyle;
         ctx.fill();
       } else {
-        // Area with straight lines
+        // Straight-line area
         ctx.moveTo(points[0].x, points[0].y);
         for (let i = 1; i < points.length; i++) {
           ctx.lineTo(points[i].x, points[i].y);
@@ -197,7 +286,7 @@ export const Chart = (props) => {
       }
     }
 
-    // Draw the line (border)
+    // Draw the line stroke on top of (or without) the fill
     ctx.beginPath();
     ctx.moveTo(points[0].x, points[0].y);
     if (smooth) {
@@ -221,7 +310,7 @@ export const Chart = (props) => {
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Draw points
+    // Draw small circles at each data point and optional labels
     points.forEach((point) => {
       ctx.fillStyle = lineColor;
       ctx.beginPath();
@@ -245,6 +334,17 @@ export const Chart = (props) => {
     });
   };
 
+  /**
+   * Draws a candlestick chart onto the canvas context.
+   *
+   * @param {CanvasRenderingContext2D} ctx
+   * @param {number} canvasWidth
+   * @param {number} chartHeight
+   * @param {number} maxValue
+   * @param {number} minValue
+   * @param {number} candleW - Width of each candle body in pixels.
+   * @param {number} candleSp - Spacing between candles in pixels.
+   */
   const drawCandle = (
     ctx,
     canvasWidth,
@@ -267,6 +367,7 @@ export const Chart = (props) => {
       const openY = getYPosition(item.open, minValue, maxValue, chartHeight);
       const closeY = getYPosition(item.close, minValue, maxValue, chartHeight);
 
+      // Wick (high–low line through the center of the candle)
       ctx.beginPath();
       ctx.moveTo(x + candleW / 2, highY);
       ctx.lineTo(x + candleW / 2, lowY);
@@ -274,6 +375,7 @@ export const Chart = (props) => {
       ctx.lineWidth = 1;
       ctx.stroke();
 
+      // Candle body (open–close rectangle); minimum 1 px tall for doji candles
       const bodyTop = Math.min(openY, closeY);
       const bodyHeight = Math.max(1, Math.abs(closeY - openY));
       ctx.fillStyle = color;
@@ -291,6 +393,15 @@ export const Chart = (props) => {
     });
   };
 
+  /**
+   * Draws horizontal grid lines and Y-axis value labels.
+   *
+   * @param {CanvasRenderingContext2D} ctx
+   * @param {number} canvasWidth
+   * @param {number} chartHeight
+   * @param {number} maxValue
+   * @param {number} minValue
+   */
   const drawGrid = (ctx, canvasWidth, chartHeight, maxValue, minValue) => {
     if (!showGrid) return;
 
@@ -308,6 +419,7 @@ export const Chart = (props) => {
       ctx.lineTo(canvasWidth - pad.right, y);
       ctx.stroke();
 
+      // Round very small floating-point values to 0 to avoid displaying "-0.00"
       const displayValue = Math.abs(value) < 0.01 ? 0 : Math.round(value);
       ctx.fillStyle = yAxisColor;
       ctx.font = "9px sans-serif";
@@ -316,6 +428,13 @@ export const Chart = (props) => {
     }
   };
 
+  /**
+   * Draws the X and Y axis lines.
+   *
+   * @param {CanvasRenderingContext2D} ctx
+   * @param {number} canvasWidth
+   * @param {number} chartHeight
+   */
   const drawAxis = (ctx, canvasWidth, chartHeight) => {
     ctx.beginPath();
     ctx.moveTo(pad.left, pad.top);
@@ -326,6 +445,10 @@ export const Chart = (props) => {
     ctx.stroke();
   };
 
+  /**
+   * Full redraw cycle: clears the canvas, recomputes sizes, and paints all layers.
+   * Triggered by ResizeObserver, window resize, and data updates.
+   */
   const draw = () => {
     if (!canvasRef || !context || !scrollContainerRef) return;
 
@@ -335,6 +458,8 @@ export const Chart = (props) => {
     const containerWidth = containerRect.width;
 
     if (isCandle) {
+      // For candlestick charts: if the data fits inside the container, distribute
+      // candles evenly; otherwise use fixed sizes and enable horizontal scrolling
       const fixedTotalWidth =
         pad.left + data.length * (candleWidth + candleSpacing) + pad.right;
 
@@ -393,7 +518,8 @@ export const Chart = (props) => {
     }
   };
 
-  // Main container using WidgetFactory
+  // ========== DOM CONSTRUCTION ==========
+
   const container = WidgetFactory({
     width: typeof width === "number" ? `${width}px` : width,
     height: typeof height === "number" ? `${height}px` : height,
@@ -406,6 +532,7 @@ export const Chart = (props) => {
     ...rest,
   });
 
+  // Inner scrollable layer — only relevant for candlestick overflow
   const scrollContainer = WidgetFactory({
     tag: "div",
     style: {
@@ -425,6 +552,7 @@ export const Chart = (props) => {
   scrollContainer.appendChild(canvas);
   container.appendChild(scrollContainer);
 
+  // Throttle scroll redraws to ~60 fps
   let drawTimeout;
   const handleScroll = () => {
     if (drawTimeout) clearTimeout(drawTimeout);
@@ -435,9 +563,14 @@ export const Chart = (props) => {
     scrollContainer.addEventListener("scroll", handleScroll);
   }
 
+  // Automatically redraw when the container is resized
   const resizeObserver = new ResizeObserver(() => draw());
   resizeObserver.observe(scrollContainer);
 
+  /**
+   * Updates the scroll container's overflow mode after a draw, since
+   * `useFixedWidth` may have changed during the draw call.
+   */
   const updateOverflow = () => {
     if (isCandle && scrollContainerRef) {
       const shouldScroll = useFixedWidth;
@@ -450,6 +583,7 @@ export const Chart = (props) => {
     updateOverflow();
   };
 
+  // Throttle window resize redraws to avoid excessive repaints
   let windowResizeTimeout;
   const handleWindowResize = () => {
     if (windowResizeTimeout) clearTimeout(windowResizeTimeout);
@@ -457,8 +591,17 @@ export const Chart = (props) => {
   };
   window.addEventListener("resize", handleWindowResize);
 
+  // Defer the initial draw so the container has been laid out by the browser
   const initialDrawTimeout = setTimeout(drawWithOverflow, 100);
 
+  // ========== PUBLIC API ==========
+
+  /**
+   * Replaces the chart's dataset and redraws.
+   *
+   * @param {Array} newData - New data array (same format as the original `data` prop).
+   * @param {string[]} [newLabels] - New labels array. When provided, replaces the existing labels.
+   */
   container.updateData = (newData, newLabels) => {
     data.length = 0;
     data.push(...newData);
@@ -469,8 +612,10 @@ export const Chart = (props) => {
     drawWithOverflow();
   };
 
+  /** Triggers a full redraw without changing the data. */
   container.redraw = drawWithOverflow;
 
+  // Cleanup: remove all listeners, observers, and timers
   const originalCleanup = container._cleanup;
   container._cleanup = () => {
     if (drawTimeout) clearTimeout(drawTimeout);

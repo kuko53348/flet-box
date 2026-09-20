@@ -9,9 +9,24 @@ import { assignProps } from "./assignProps.js";
 import { stackPosition } from "./stackPosition.js";
 import { addChildren, removePropChildren } from "./addChildren.js";
 
+/**
+ * Main widget factory. Creates a fully functional DOM widget with reactivity,
+ * lifecycle hooks, prop processing, and child management.
+ *
+ * Accepts either a tag string or a config object (with an optional `tag` key).
+ * When both `child` and `children` are provided, `children` takes precedence.
+ *
+ * @param {string|Object} tag - HTML tag name (e.g. `'div'`) or a config object
+ *   whose `tag` property specifies the element type. Defaults to `'div'` when
+ *   the value is not a string.
+ * @param {Object} [customProps={}] - Additional props merged on top of any
+ *   props already present in a config object passed as `tag`.
+ * @returns {HTMLElement} The constructed widget element, extended with reactive
+ *   accessors, lifecycle hooks, and `update` / `getProps` methods.
+ */
 export function WidgetFactory(tag, customProps = {}) {
   // ============================================================
-  // 1. NORMALIZAR TAG Y PROPS
+  // 1. NORMALIZE TAG AND PROPS
   // ============================================================
   let finalTag = tag;
   let finalProps = customProps;
@@ -32,9 +47,9 @@ export function WidgetFactory(tag, customProps = {}) {
   }
 
   // ============================================================
-  // 2. NORMALIZAR child/children EN PROPS INICIALES
+  // 2. NORMALIZE child/children IN INITIAL PROPS
   // ============================================================
-  // ✅ Si vienen ambos, preferir children (comportamiento esperado)
+  // When both are present, prefer `children` (expected behavior).
   if (
     finalProps.child !== undefined &&
     finalProps.children !== undefined
@@ -43,7 +58,7 @@ export function WidgetFactory(tag, customProps = {}) {
   }
 
   // ============================================================
-  // 3. CREAR WIDGET BASE
+  // 3. CREATE BASE WIDGET
   // ============================================================
   const widget = createWidget(finalTag, {});
   widget._widgetName = finalTag.charAt(0).toUpperCase() + finalTag.slice(1);
@@ -56,7 +71,7 @@ export function WidgetFactory(tag, customProps = {}) {
   widget._originalProps = { ...finalProps };
 
   // ============================================================
-  // 4. APLICAR PROPS INICIALES
+  // 4. APPLY INITIAL PROPS
   // ============================================================
   const initialProps = processProps(finalProps, finalTag);
   assignProps(widget, initialProps);
@@ -76,11 +91,22 @@ export function WidgetFactory(tag, customProps = {}) {
   }
 
   // ============================================================
-  // 5. MÉTODO update CON NORMALIZACIÓN
+  // 5. update METHOD WITH NORMALIZATION
   // ============================================================
   let updateDepth = 0;
   const MAX_UPDATE_DEPTH = 10;
 
+  /**
+   * Updates the widget with new props. Merges the new props into the stored
+   * original props and re-applies styles, attributes, children, and effects.
+   *
+   * Prevents infinite loops via a recursion depth guard (`MAX_UPDATE_DEPTH`).
+   * When both `child` and `children` are passed, `children` wins (same rule as
+   * the constructor).
+   *
+   * @param {Object} [newProps={}] - Partial or full prop set to apply.
+   * @returns {HTMLElement} The widget itself (for chaining).
+   */
   widget.update = (newProps = {}) => {
     if (updateDepth >= MAX_UPDATE_DEPTH) {
       console.warn("⚠️ [WidgetFactory] Max update depth reached, skipping");
@@ -89,7 +115,7 @@ export function WidgetFactory(tag, customProps = {}) {
 
     updateDepth++;
     try {
-      // ✅ Normalizar: nunca child Y children simultáneamente
+      // Normalize: never allow child AND children simultaneously
       const normalized = { ...newProps };
       const hasChild = "child" in normalized;
       const hasChildren = "children" in normalized;
@@ -126,10 +152,15 @@ export function WidgetFactory(tag, customProps = {}) {
     return widget;
   };
 
+  /**
+   * Returns a shallow copy of the widget's current stored props.
+   *
+   * @returns {Object} Copy of `_originalProps`.
+   */
   widget.getProps = () => ({ ...widget._originalProps });
 
   // ============================================================
-  // 6. REACTIVIDAD
+  // 6. REACTIVITY
   // ============================================================
   makeReactive(widget, (changedProps) => {
     widget.update(changedProps);

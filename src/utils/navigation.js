@@ -12,6 +12,36 @@
 
 const navigated = new WeakSet();
 
+/**
+ * Augments a widget object with a full tree-navigation API.
+ *
+ * The following properties and methods are added (all non-destructive —
+ * already-present members are left untouched):
+ *
+ * **Traversal properties** (all enumerable, computed on access):
+ * - `parent`       — direct parent widget (readable/writable)
+ * - `children`     — array of direct children (readable/writable)
+ * - `firstChild`   — first element of `children`, or `null`
+ * - `lastChild`    — last element of `children`, or `null`
+ * - `siblings`     — all siblings excluding this widget
+ * - `nextSibling`  — next sibling in parent's children list, or `null`
+ * - `prevSibling`  — previous sibling in parent's children list, or `null`
+ * - `index`        — zero-based position among siblings (`-1` if no parent)
+ * - `root`         — topmost ancestor with no parent
+ * - `path`         — array of `{name, id, index}` objects from root to this widget
+ * - `depth`        — distance from this widget to the root (0 = root)
+ * - `tree`         — ASCII tree string of the entire sub-tree (useful for debugging)
+ *
+ * **Search methods**:
+ * - `findById(id)`          — depth-first search for a descendant by `id`
+ * - `findAll(widgetName)`   — collects all descendants whose `_widgetName` matches
+ *
+ * Already-navigated widgets (tracked by a `WeakSet`) are returned unchanged,
+ * making the function safe to call multiple times on the same object.
+ *
+ * @param {Object} widget - The widget instance to augment.
+ * @returns {Object} The same `widget` reference, now enriched with navigation.
+ */
 export const addNavigation = (widget) => {
   if (!widget || navigated.has(widget)) return widget;
   navigated.add(widget);

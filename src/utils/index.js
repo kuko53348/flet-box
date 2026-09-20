@@ -1,4 +1,27 @@
 // src/utils/index.js
+/**
+ * @module utils
+ * @description
+ * Central barrel file — re-exports every public utility from the `utils/`
+ * directory so consumers can import from a single entry point:
+ *
+ * ```js
+ * import { colors, toREM, addNavigation, TextInputValidator } from './utils';
+ * ```
+ *
+ * Included utilities:
+ * - **themes**         — color palette, theme switching, CSS variable sync
+ * - **getWidgetProps** — read widget `_props` safely
+ * - **syntaxHighlight** — JavaScript/FletBox tokenizer and HTML highlighter
+ * - **markdownParser** — markdown → FletBox widget tree converter
+ * - **visualEffects**  — CSS animations (stripes, shimmer, glow, pulse)
+ * - **stackPosition**  — dataset-based absolute positioning for Stack children
+ * - **units**          — px ↔ rem conversion helpers
+ * - **navigation**     — tree-navigation mixin for widget objects
+ * - **stopWebRefresh** — disables browser refresh gestures
+ * - **TextInputValidator** — input filtering and XSS sanitization
+ * - **mediaTime**      — time formatting for media players
+ */
 export {
   colors,
   setTheme,

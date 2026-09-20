@@ -2,7 +2,13 @@
 import { getWidgetProps } from "../utils/getWidgetProps.js";
 
 /**
- * Converts a value to its code representation
+ * Converts a JavaScript value to its source-code string representation.
+ * Handles primitives, arrays, plain objects, and nested widget elements
+ * by recursively calling `Inspector` for any DOM node that carries `_widgetName`.
+ *
+ * @param {*} value - The value to stringify.
+ * @param {number} [indent=0] - Current indentation depth (used for pretty-printing nested structures).
+ * @returns {string} A human-readable code representation of the value.
  */
 const stringifyValue = (value, indent = 0) => {
   const spaces = "  ".repeat(indent);
@@ -31,6 +37,7 @@ const stringifyValue = (value, indent = 0) => {
   }
 
   if (typeof value === "object" && value !== null) {
+    // If the object is a widget DOM node, delegate to Inspector for full reconstruction
     if (value.nodeType === 1 && value._widgetName) {
       return Inspector(value, indent);
     }
@@ -60,13 +67,20 @@ const stringifyValue = (value, indent = 0) => {
 };
 
 /**
- * Gets the real widget name
+ * Resolves the display name of a widget element.
+ *
+ * Priority order:
+ * 1. `_widgetName` — explicitly set by the widget factory (most reliable)
+ * 2. Class / tag-based heuristics as a fallback for elements created without the factory
+ *
+ * @param {HTMLElement} widget - The DOM node whose name to resolve.
+ * @returns {string} The widget name (e.g. "Button", "Row", "Container").
  */
 const getWidgetName = (widget) => {
-  // ✅ Now _widgetName is defined
+  // _widgetName is stamped onto every element created through WidgetFactory
   if (widget._widgetName) return widget._widgetName;
 
-  // Fallback based on tagName
+  // Fallback heuristics for raw DOM elements
   if (widget.classList?.contains("material-icons")) return "Icon";
   if (widget.tagName === "BUTTON") return "Button";
   if (widget.tagName === "INPUT") return "Input";
@@ -84,7 +98,12 @@ const getWidgetName = (widget) => {
 };
 
 /**
- * Recursively collects all children of a widget
+ * Collects all direct child elements of a widget, merging both the real DOM
+ * children and any virtual children stored in `_children` (set by WidgetFactory).
+ * Deduplication prevents the same node from appearing twice.
+ *
+ * @param {HTMLElement} widget - The widget whose children to collect.
+ * @returns {HTMLElement[]} Deduplicated array of child element nodes.
  */
 const collectChildren = (widget) => {
   const children = [];
@@ -95,6 +114,7 @@ const collectChildren = (widget) => {
     }
   }
 
+  // _children may hold widget references that aren't yet in the DOM
   if (widget._children && Array.isArray(widget._children)) {
     for (const child of widget._children) {
       if (child && child.nodeType === 1 && !children.includes(child)) {
@@ -107,7 +127,15 @@ const collectChildren = (widget) => {
 };
 
 /**
- * Converts a widget to its original source code (fully recursive)
+ * Converts a widget element back into its equivalent source-code representation,
+ * recursively reconstructing its full prop tree and children.
+ *
+ * This is the core utility for the widget inspector — it lets you paste the output
+ * directly into your code to reproduce the exact widget configuration.
+ *
+ * @param {HTMLElement} widget - The root widget to inspect.
+ * @param {number} [indent=0] - Starting indentation depth for pretty-printing.
+ * @returns {string} Source code string such as `Row({ gap: 8, children: [...] })`.
  */
 export const Inspector = (widget, indent = 0) => {
   if (!widget || widget.nodeType !== 1) {
@@ -119,6 +147,7 @@ export const Inspector = (widget, indent = 0) => {
   const spaces = "  ".repeat(indent);
   const nextSpaces = "  ".repeat(indent + 1);
 
+  // Separate structural props from the rest so we can render them last
   const { child, children, ...otherProps } = props;
 
   const propsList = Object.entries(otherProps)
@@ -128,11 +157,13 @@ export const Inspector = (widget, indent = 0) => {
     })
     .join(",\n" + nextSpaces);
 
+  // Reconstruct a single `child` prop
   let childStr = "";
   if (child && child.nodeType === 1) {
     childStr = `\n${nextSpaces}child: ${Inspector(child, indent + 1)}`;
   }
 
+  // Reconstruct a `children` array prop
   let childrenStr = "";
   if (children && Array.isArray(children) && children.length > 0) {
     const childrenItems = children
@@ -145,6 +176,7 @@ export const Inspector = (widget, indent = 0) => {
     }
   }
 
+  // Fall back to actual DOM children when no explicit child/children props exist
   const domChildren = collectChildren(widget);
   let domChildrenStr = "";
   if (
@@ -177,7 +209,10 @@ export const Inspector = (widget, indent = 0) => {
 };
 
 /**
- * Console version with colors
+ * Logs the widget's source-code representation to the console with green
+ * monospace styling — handy for quick visual inspection during development.
+ *
+ * @param {HTMLElement} widget - The widget to print.
  */
 export const printWidgetCode = (widget) => {
   console.log(
@@ -187,7 +222,13 @@ export const printWidgetCode = (widget) => {
 };
 
 /**
- * Detailed widget inspection
+ * Performs a full diagnostic inspection of a widget, logging its name,
+ * resolved props, reconstructed source code, and child count as a grouped
+ * console entry. Returns the widget unchanged so it can be used inline
+ * (e.g. `inspectWidget(myWidget).style.color = "red"`).
+ *
+ * @param {HTMLElement} widget - The widget to inspect.
+ * @returns {HTMLElement} The same widget, unmodified.
  */
 export const inspectWidget = (widget) => {
   console.group(`🔍 ${getWidgetName(widget)}`);

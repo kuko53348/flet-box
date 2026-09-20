@@ -75,6 +75,13 @@ const parseTable = (lines, startIndex) => {
 };
 
 // ========== INLINE TEXT ==========
+/**
+ * Parses an inline markdown string and converts it to an array of widgets.
+ * Currently handles `**bold**` syntax; all other text is rendered as plain
+ * `Text` widgets. Multiple parts are wrapped in a `Row` with word-wrapping.
+ * @param {string} text - Inline markdown text to parse.
+ * @returns {Array} Array of widget instances (Text or Row).
+ */
 export const parseInlineToWidgets = (text) => {
   if (!text) return [Text({ text: "" })];
 
@@ -100,6 +107,27 @@ export const parseInlineToWidgets = (text) => {
 };
 
 // ========== MAIN PARSER ==========
+/**
+ * Converts a markdown string to an array of FletBox widgets.
+ *
+ * Supported syntax:
+ * - Headings: `#`, `##`, `###`
+ * - Bold: `**text**`
+ * - Horizontal rules: `---` / `***`
+ * - Blockquotes: `> text`
+ * - Unordered lists: `- item`, `* item`, `+ item`
+ * - Ordered lists: `1. item`
+ * - Fenced code blocks: `` ```lang ``
+ * - Tables (GFM pipe tables)
+ * - Empty lines (spacers)
+ * - Plain paragraphs
+ *
+ * @param {string} text - Markdown source string.
+ * @param {Object} [options={}] - Rendering options.
+ * @param {number} [options.codeMaxHeight=300] - Maximum height in pixels for code blocks.
+ * @param {number} [options.codeFontSize=12] - Font size in pixels for code blocks.
+ * @returns {Array} Flat array of widget instances ready to be rendered.
+ */
 export const markdownToWidgets = (text, options = {}) => {
   if (!text) return [];
 
@@ -297,9 +325,30 @@ export const markdownToWidgets = (text, options = {}) => {
 };
 
 // ========== MAIN EXPORTS ==========
+/** Alias for {@link markdownToWidgets}. */
 export const parseMarkdownToWidgets = markdownToWidgets;
+
+/**
+ * Identity function — returns the raw markdown string unchanged.
+ * Provided for API symmetry where a parse step is expected but plain text is acceptable.
+ * @param {string} text - Markdown source.
+ * @returns {string} The same string, unmodified.
+ */
 export const parseMarkdown = (text) => text;
+
+/**
+ * Identity function — returns the raw inline markdown string unchanged.
+ * @param {string} text - Inline markdown source.
+ * @returns {string} The same string, unmodified.
+ */
 export const parseInlineMarkdown = (text) => text;
+
+/**
+ * Escapes HTML special characters to prevent injection when inserting into innerHTML.
+ * Converts `& < > " '` to their corresponding HTML entities.
+ * @param {string} text - Raw text to escape.
+ * @returns {string} HTML-safe string.
+ */
 export const escapeHtml = (text) =>
   String(text)
     .replace(/&/g, "&amp;")

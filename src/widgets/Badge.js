@@ -1,9 +1,40 @@
-// widgets/Badge.js
+/**
+ * @file Badge.js
+ * @description An overlay badge that renders a small indicator on top of a
+ * child element. Commonly used for notification counts, status dots, or
+ * "new item" markers on icons and avatars.
+ *
+ * Returns the child element directly when the badge should not be displayed
+ * (value is zero and `showZero` is false, or value is absent). Otherwise
+ * wraps the child in a Stack container with the badge positioned absolutely.
+ */
+
 import { WidgetFactory } from "../widget-factory/index.js";
 import { Stack } from "./Stack.js";
 import { Text } from "./Text.js";
 import { colors, subscribeTheme } from "../utils/themes.js";
 
+/**
+ * Creates a Badge widget that overlays a small count or status indicator on
+ * top of any child element.
+ *
+ * When `value` is falsy (and `showZero` is false), the child is returned
+ * unwrapped — no DOM overhead is added for hidden badges.
+ *
+ * @param {Object} props - Configuration for the badge.
+ * @param {number|string} props.value - The value to display. Numbers are formatted; strings are shown verbatim.
+ * @param {HTMLElement} props.child - The element the badge is anchored to.
+ * @param {string} [props.bgColor=colors.secondary] - Badge background color.
+ * @param {string} [props.color=colors.text] - Badge text/icon color.
+ * @param {number} [props.size=20] - Badge diameter in pixels; also controls font size proportionally.
+ * @param {'top-right'|'top-left'|'bottom-right'|'bottom-left'} [props.position='top-right'] - Where to anchor the badge relative to the child.
+ * @param {number} [props.borderWidth=2] - Width of the contrasting border around the badge in pixels.
+ * @param {string} [props.borderColor=colors.surface] - Color of the border around the badge (typically matches the parent background).
+ * @param {boolean} [props.showZero=false] - When true, the badge is visible even when `value` is 0.
+ * @param {number} [props.max=99] - When `value` exceeds this, the badge shows `"{max}+"` instead of the raw number.
+ * @param {number} [props.offset=0] - Additional pixel offset applied to the badge position for fine-tuning.
+ * @returns {HTMLElement} The wrapped Stack element, or the child element directly if the badge is hidden.
+ */
 export const Badge = (props) => {
   const {
     value,
@@ -20,28 +51,29 @@ export const Badge = (props) => {
     ...rest
   } = props;
 
-  // Background color
+  // Use the supplied bgColor; fall back to danger red if neither bgColor nor color is set
   const finalBgColor = bgColor || color || colors.danger;
 
   let unsubscribeTheme = null;
 
-  // Check if the badge should be shown
+  // Decide whether to show the badge at all
   const hasValue = value !== undefined && value !== null && value !== "";
   const showBadge =
     hasValue &&
     (showZero || (typeof value === "number" ? value > 0 : value !== ""));
 
+  // Return the child unwrapped to avoid unnecessary DOM nesting
   if (!showBadge) {
     return child || null;
   }
 
-  // Format value
+  // Truncate numbers that exceed the `max` cap
   let displayValue = value;
   if (typeof value === "number" && max && value > max) {
     displayValue = `${max}+`;
   }
 
-  // Positions
+  // Pixel offsets for each anchor position — the transform handles the corner alignment
   const positions = {
     "top-right": {
       top: -offset,
@@ -67,7 +99,7 @@ export const Badge = (props) => {
 
   const pos = positions[position] || positions["top-right"];
 
-  // Badge element using WidgetFactory with correct centering
+  // The badge pill element itself
   const badgeElement = WidgetFactory({
     position: "absolute",
     top: pos.top,
@@ -79,6 +111,7 @@ export const Badge = (props) => {
     borderRadius: size,
     minWidth: size,
     height: size,
+    // Extra horizontal padding for two-digit numbers so they don't clip
     padding: size > 20 ? `0 ${size / 3}px` : 0,
     display: "flex",
     alignItems: "center",
@@ -98,14 +131,14 @@ export const Badge = (props) => {
     }),
   });
 
-  // Dynamic theme
+  // Subscribe to theme changes to keep the badge color in sync when no explicit
+  // bgColor/color was provided by the caller
   if (!bgColor && !color) {
     unsubscribeTheme = subscribeTheme(() => {
       badgeElement.style.backgroundColor = colors.danger;
     });
   }
 
-  // Validate child
   const validChild = child instanceof HTMLElement ? child : null;
 
   if (!validChild) {
@@ -114,7 +147,7 @@ export const Badge = (props) => {
     return badgeElement;
   }
 
-  // Stack wrapper
+  // Wrap the child and the badge in a Stack so the badge is positioned relative to the child
   const badgeStack = Stack({
     position: "relative",
     display: "inline-block",
@@ -123,14 +156,19 @@ export const Badge = (props) => {
     ...rest,
   });
 
-  // Cleanup
+  // Unsubscribe from theme updates when the component is removed from the DOM
   const originalCleanup = badgeStack._cleanup;
   badgeStack._cleanup = () => {
     if (unsubscribeTheme) unsubscribeTheme();
     if (originalCleanup) originalCleanup();
   };
 
-  // Method to update value
+  /**
+   * Updates the displayed badge value without re-rendering the component.
+   * Hides the badge automatically when the new value is zero (unless `showZero` is true).
+   *
+   * @param {number|string} newValue - The new badge value.
+   */
   badgeStack.updateValue = (newValue) => {
     let newDisplayValue = newValue;
     if (typeof newValue === "number" && max && newValue > max) {

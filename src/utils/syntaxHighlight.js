@@ -135,6 +135,13 @@ export const highlightColors = {
 };
 
 // ========== DETECT FLETBOX COLORS ==========
+/**
+ * Returns `true` when the given word represents a FletBox color token.
+ * Matches palette keys, `colors.<name>` expressions, hex literals, and `rgb`/`rgba` values.
+ * @param {string} word - Token text to test.
+ * @returns {boolean}
+ * @private
+ */
 const isFletboxColor = (word) => {
   return (
     fletboxColors.hasOwnProperty(word) ||
@@ -145,11 +152,35 @@ const isFletboxColor = (word) => {
 };
 
 // ========== DETECT FLETBOX WIDGETS ==========
+/**
+ * Returns `true` when the given word is a known FletBox widget or utility identifier.
+ * @param {string} word - Token text to test.
+ * @returns {boolean}
+ * @private
+ */
 const isFletboxWidget = (word) => {
   return fletboxKeywords.includes(word);
 };
 
 // ========== MAIN TOKENIZER ==========
+/**
+ * Tokenizes a JavaScript/FletBox source string into an array of typed tokens.
+ *
+ * Token types: `keyword`, `string`, `number`, `comment`, `property`,
+ * `function`, `bracket`, `punctuation`, `fletbox-color`, `fletbox-widget`,
+ * `whitespace`, `text`.
+ *
+ * @param {string} code - Source code to tokenize.
+ * @returns {Array<{type: string, value: string}>} Ordered token array.
+ * @example
+ * tokenize('const x = 42;')
+ * // [
+ * //   { type: 'keyword', value: 'const' },
+ * //   { type: 'whitespace', value: ' ' },
+ * //   { type: 'property', value: 'x' },
+ * //   ...
+ * // ]
+ */
 export const tokenize = (code) => {
   const tokens = [];
   let i = 0;
@@ -261,6 +292,13 @@ export const tokenize = (code) => {
 };
 
 // ========== GENERATE HTML WITH COLORS ==========
+/**
+ * Tokenizes `code` and wraps each token in a `<span>` with an inline `color`
+ * style matching {@link highlightColors}. Whitespace and unrecognized tokens
+ * are emitted without a wrapper.
+ * @param {string} code - Source code to highlight.
+ * @returns {string} HTML string safe for insertion into `innerHTML`.
+ */
 export const generateHighlightedHtml = (code) => {
   const tokens = tokenize(code);
   let html = "";
@@ -282,6 +320,13 @@ export const generateHighlightedHtml = (code) => {
 };
 
 // ========== ESCAPE HTML ==========
+/**
+ * Escapes HTML special characters so that token values can be safely inserted
+ * into a `<span>` element's content.
+ * @param {string} text - Raw token text.
+ * @returns {string} HTML-safe string.
+ * @private
+ */
 const escapeHtml = (text) => {
   return text
     .replace(/&/g, "&amp;")

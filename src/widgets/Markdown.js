@@ -3,48 +3,61 @@ import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 
 /**
- * Simple Markdown parser (lightweight, no dependencies)
+ * Lightweight Markdown-to-HTML parser with no external dependencies.
+ *
+ * Supports: headings (h1–h3), bold, italic, inline code, code blocks,
+ * links, images, unordered/ordered lists, blockquotes, horizontal rules,
+ * and basic paragraphs.
+ *
+ * This is intentionally a simplified implementation — for production use
+ * with complex Markdown (tables, nested lists, GFM extensions) consider
+ * replacing this with a battle-tested library such as `marked` or `micromark`.
+ *
+ * @param {string} text - Raw Markdown string to convert.
+ * @returns {string} HTML string. Output may contain tags but no `<script>` or event handlers
+ *   unless `allowDangerousHtml` is explicitly set on the widget.
  */
 const parseMarkdown = (text) => {
   if (!text) return "";
 
   let html = text;
 
-  // Headers
+  // Headings (order matters: h3 before h2 before h1 to avoid partial matches)
   html = html.replace(/^### (.*$)/gm, "<h3>$1</h3>");
   html = html.replace(/^## (.*$)/gm, "<h2>$1</h2>");
   html = html.replace(/^# (.*$)/gm, "<h1>$1</h1>");
 
-  // Bold
+  // Bold (both ** and __ syntax)
   html = html.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
   html = html.replace(/__(.*?)__/g, "<strong>$1</strong>");
 
-  // Italic
+  // Italic (both * and _ syntax)
   html = html.replace(/\*(.*?)\*/g, "<em>$1</em>");
   html = html.replace(/_(.*?)_/g, "<em>$1</em>");
 
-  // Code inline
+  // Inline code
   html = html.replace(/`(.*?)`/g, "<code>$1</code>");
 
-  // Code block
+  // Fenced code blocks (must come after inline code to avoid double-matching)
   html = html.replace(/```(.*?)```/gs, "<pre><code>$1</code></pre>");
 
-  // Links
+  // Links — opens in a new tab with rel="noopener" for security
   html = html.replace(
     /\[(.*?)\]\((.*?)\)/g,
     '<a href="$2" target="_blank" rel="noopener">$1</a>',
   );
 
-  // Images
+  // Images (before link regex would steal the ! prefix)
   html = html.replace(
     /!\[(.*?)\]\((.*?)\)/g,
     '<img src="$2" alt="$1" loading="lazy">',
   );
 
-  // Lists
+  // Unordered lists
   html = html.replace(/^\s*-\s(.*$)/gm, "<li>$1</li>");
   html = html.replace(/(<li>.*<\/li>)/s, "<ul>$1</ul>");
 
+  // Ordered lists
   html = html.replace(/^\s*\d+\.\s(.*$)/gm, "<li>$1</li>");
   html = html.replace(/(<li>.*<\/li>)/s, "<ol>$1</ol>");
 
@@ -54,15 +67,88 @@ const parseMarkdown = (text) => {
   // Horizontal rule
   html = html.replace(/^---$/gm, "<hr>");
 
-  // Paragraphs
+  // Wrap bare text lines in <p> tags (skip lines that already start with an HTML tag)
   html = html.replace(/^(?!<[a-z]|$)(.*$)/gm, "<p>$1</p>");
 
-  // Line breaks
+  // Double newlines become line breaks
   html = html.replace(/\n\n/g, "<br>");
 
   return html;
 };
 
+/**
+ * @typedef {Object} MarkdownProps
+ * @property {string} [text] - Markdown source string. Also aliased as `source` and `content`.
+ * @property {string} [source] - Alias for `text`.
+ * @property {string} [content] - Alias for `text`.
+ * @property {string} [children] - Alias for `text` (supports passing markdown as a child string).
+ *
+ * @property {number} [fontSize=14] - Base font size in pixels.
+ * @property {string} [fontFamily] - CSS font-family for the rendered text.
+ * @property {number} [lineHeight=1.6] - Line height multiplier.
+ * @property {string} [color] - Default text color.
+ *
+ * @property {string} [linkColor] - Color of hyperlinks.
+ * @property {string} [linkHoverColor] - Color of hyperlinks on hover.
+ * @property {boolean} [linkUnderline=false] - Whether to underline links by default.
+ *
+ * @property {string} [codeBgColor] - Background color for inline `code` spans.
+ * @property {string} [codeColor] - Text color for inline `code` spans.
+ * @property {number} [codeFontSize=12] - Font size for inline code.
+ * @property {string} [codeFontFamily] - Font family for inline code.
+ * @property {number} [codeBorderRadius=4] - Border radius for inline code backgrounds.
+ * @property {string} [codePadding] - Padding for inline code.
+ *
+ * @property {string} [preBgColor] - Background color for fenced code blocks.
+ * @property {number} [preBorderRadius=8] - Border radius for code block containers.
+ * @property {string} [prePadding] - Padding inside code blocks.
+ * @property {string} [preMargin] - Margin around code blocks.
+ *
+ * @property {string} [blockquoteBorderColor] - Left-border color for blockquotes.
+ * @property {number} [blockquoteBorderWidth=4] - Left-border width for blockquotes in pixels.
+ * @property {string} [blockquoteColor] - Text color inside blockquotes.
+ * @property {string} [blockquotePadding] - Padding inside blockquotes.
+ * @property {string} [blockquoteMargin] - Margin around blockquotes.
+ *
+ * @property {string} [headingColor] - Color applied to all heading elements.
+ * @property {string} [headingMargin] - Margin applied to all heading elements.
+ *
+ * @property {string} [listMargin] - Margin around list elements.
+ * @property {string} [listPadding] - Padding (left) for list elements.
+ * @property {string} [listItemMargin] - Margin for individual list items.
+ *
+ * @property {string} [imageMaxWidth="100%"] - Max width for rendered images.
+ * @property {number} [imageBorderRadius=0] - Border radius for rendered images.
+ *
+ * @property {number|string} [padding=0] - Padding of the outer container.
+ * @property {number} [maxHeight] - Maximum height; enables scrolling when content overflows.
+ * @property {string} [overflow="auto"] - CSS overflow value.
+ * @property {string} [backgroundColor="transparent"] - Background color of the container.
+ * @property {number} [borderRadius=0] - Border radius of the container.
+ *
+ * @property {boolean} [allowDangerousHtml=false] - When true, parsed HTML is set directly without
+ *   sanitization. Only use with fully trusted Markdown sources.
+ */
+
+/**
+ * Renders a Markdown string as styled HTML inside a widget container.
+ *
+ * Injects a single `<style id="markdown-styles">` tag into `<head>` the first time
+ * a Markdown widget is mounted, so all styling is shared across instances while still
+ * respecting the per-instance style props (the styles are regenerated each time a new
+ * widget is created — the last one to mount wins for shared rules).
+ *
+ * Content is sanitized by default: `<script>` tags and inline event handlers (`on*`)
+ * are stripped. Set `allowDangerousHtml` to bypass this only when the source is trusted.
+ *
+ * Public API on the returned element:
+ * - `updateContent(newText)` — re-renders with new Markdown source
+ * - `getContent()` — returns current inner HTML
+ * - `getSource()` — returns the original Markdown string
+ *
+ * @param {MarkdownProps} props
+ * @returns {HTMLElement} The container element with rendered Markdown inside.
+ */
 export const Markdown = (props) => {
   const {
     text,
@@ -81,7 +167,7 @@ export const Markdown = (props) => {
     linkHoverColor = colors.primary,
     linkUnderline = false,
 
-    // Code styling
+    // Inline code styling
     codeBgColor = colors.gray100,
     codeColor = colors.danger,
     codeFontSize = 12,
@@ -89,7 +175,7 @@ export const Markdown = (props) => {
     codeBorderRadius = 4,
     codePadding = "0.2em 0.4em",
 
-    // Code block styling
+    // Fenced code block styling
     preBgColor = colors.gray100,
     preBorderRadius = 8,
     prePadding = "1em",
@@ -122,19 +208,19 @@ export const Markdown = (props) => {
     backgroundColor = "transparent",
     borderRadius = 0,
 
-    // Other
+    // Safety: set to true only when the Markdown source is fully trusted
     allowDangerousHtml = false,
 
     ...rest
   } = props;
 
-  // Get markdown source from props
+  // Resolve the markdown source from any of the supported prop aliases
   const markdownText = text || source || content || children || "";
 
-  // Parse markdown to HTML
+  // Parse Markdown to raw HTML
   const rawHtml = parseMarkdown(markdownText);
 
-  // Create main container with WidgetFactory
+  // Outer container
   const container = WidgetFactory({
     tag: "div",
     fontFamily: fontFamily,
@@ -150,7 +236,7 @@ export const Markdown = (props) => {
     ...rest,
   });
 
-  // Create content div with HTML
+  // Inner div that receives the parsed HTML
   const contentDiv = WidgetFactory({
     tag: "div",
     className: "markdown-content",
@@ -159,7 +245,8 @@ export const Markdown = (props) => {
   if (allowDangerousHtml) {
     contentDiv.innerHTML = rawHtml;
   } else {
-    // Sanitize HTML (basic)
+    // Basic sanitization: strip <script> tags and inline event handlers.
+    // This is NOT a full XSS defense — for untrusted input use a proper sanitizer.
     const sanitized = rawHtml
       .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
       .replace(/on\w+\s*=/gi, "")
@@ -167,7 +254,9 @@ export const Markdown = (props) => {
     contentDiv.innerHTML = sanitized;
   }
 
-  // Add custom styles (injected only once)
+  // Inject global styles scoped to `.markdown-content` the first time any Markdown
+  // widget is rendered. Subsequent instances regenerate the tag with their own
+  // style values — the last widget to mount wins for shared properties.
   if (!document.querySelector("#markdown-styles")) {
     const style = document.createElement("style");
     style.id = "markdown-styles";
@@ -271,7 +360,10 @@ export const Markdown = (props) => {
 
   // ========== PUBLIC METHODS ==========
 
-  // Update markdown content
+  /**
+   * Re-renders the widget with new Markdown source.
+   * @param {string} newText - The updated Markdown string.
+   */
   container.updateContent = (newText) => {
     const newHtml = parseMarkdown(newText);
     if (allowDangerousHtml) {
@@ -285,10 +377,16 @@ export const Markdown = (props) => {
     }
   };
 
-  // Get raw HTML content
+  /**
+   * Returns the currently rendered inner HTML string.
+   * @returns {string}
+   */
   container.getContent = () => contentDiv.innerHTML;
 
-  // Get markdown source
+  /**
+   * Returns the original Markdown source string passed to the widget.
+   * @returns {string}
+   */
   container.getSource = () => markdownText;
 
   return container;

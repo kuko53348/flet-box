@@ -1,17 +1,26 @@
 // tools/mapList.js
 
 /**
- * Map an array to widgets or components
- * @param {Array|number|Object} list - Source array, number (length), or object
- * @param {Function} fn - Mapping function (item, index) => widget
- * @returns {Array} Array of widgets
+ * Maps an array, a numeric length, or a plain object to an array of widgets or
+ * any other value produced by the mapping function.
+ *
+ * - **Array**: iterates with `(item, index)`.
+ * - **Number**: treats the value as an array length and iterates with `(null, index)`.
+ * - **Object**: iterates over `Object.entries` with `(value, key, index)`.
+ *
+ * @param {Array|number|Object} list - Source collection.
+ * @param {Function} fn - Mapping function. Signature depends on source type:
+ *   - Array: `(item, index) => widget`
+ *   - Number: `(null, index) => widget`
+ *   - Object: `(value, key, index) => widget`
+ * @returns {Array} Array of mapped values.
  *
  * @example
  * // Map array to widgets
  * mapList(users, (user, i) => Text({ text: user.name }))
  *
  * @example
- * // Generate N widgets (number)
+ * // Generate N widgets from a number
  * mapList(5, (_, i) => Skeleton({ variant: 'text' }))
  *
  * @example
@@ -19,7 +28,7 @@
  * mapList({ a: 1, b: 2, c: 3 }, (value, key) => Text({ text: `${key}: ${value}` }))
  */
 export const mapList = (list, fn) => {
-  // Handle number (create array of that length)
+  // Handle number — create a virtual array of that length
   if (typeof list === "number") {
     const arr = [];
     for (let i = 0; i < list; i++) {
@@ -33,7 +42,7 @@ export const mapList = (list, fn) => {
     return list.map((item, index) => fn(item, index));
   }
 
-  // Handle object (iterate over entries)
+  // Handle plain object — iterate over its entries
   if (typeof list === "object" && list !== null) {
     return Object.entries(list).map(([key, value], index) =>
       fn(value, key, index),
@@ -44,10 +53,13 @@ export const mapList = (list, fn) => {
 };
 
 /**
- * Repeat same widget N times
- * @param {number} count - Number of repetitions
- * @param {Function|Widget} widget - Widget or function that returns widget
- * @returns {Array} Array of widgets
+ * Repeats a widget (or calls a factory function) `count` times and returns the
+ * resulting array.
+ *
+ * @param {number} count - Number of repetitions.
+ * @param {Function|*} widget - Widget instance to repeat, or a `(index) => widget`
+ *   factory function called on each iteration.
+ * @returns {Array} Array of widgets.
  *
  * @example
  * repeat(3, Button({ text: 'Click' }))
@@ -66,11 +78,15 @@ export const repeat = (count, widget) => {
 };
 
 /**
- * Generate a range of numbers
- * @param {number} start - Start value
- * @param {number} end - End value (exclusive)
- * @param {number} step - Step value (default: 1)
- * @returns {Array} Array of numbers
+ * Generates an array of numbers in the half-open interval `[start, end)` with
+ * a configurable step. Mirrors Python's `range()`.
+ *
+ * When called with a single argument, the range starts at `0`.
+ *
+ * @param {number} start - Start value (inclusive), or the exclusive end when `end` is omitted.
+ * @param {number} [end] - End value (exclusive). If omitted, `start` becomes the end and `0` is used as start.
+ * @param {number} [step=1] - Increment between values.
+ * @returns {number[]} Array of numbers.
  *
  * @example
  * range(5)        // [0, 1, 2, 3, 4]

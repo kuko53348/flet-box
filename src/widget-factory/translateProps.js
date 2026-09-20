@@ -797,7 +797,7 @@ export const ALL_PROPS = [
   // ==================== EVENTS ====================
   { prop: "onPress", domProp: "click", type: "event" },
   { prop: "onClick", domProp: "click", type: "event" },
-  { prop: "onclick", domProp: "click", type: "event" }, // ← Alias para minúscula
+  { prop: "onclick", domProp: "click", type: "event" }, // Lowercase alias
   { prop: "onDoublePress", domProp: "dblclick", type: "event" },
   { prop: "onRightClick", domProp: "contextmenu", type: "event" },
   { prop: "onHover", domProp: "mouseenter", type: "event" },
@@ -913,7 +913,7 @@ export const ALL_PROPS = [
   },
 
   // ==================== INTERNAL CONTROL FLAGS (no DOM output) ====================
-  // Consumed by effects.js / widgets via _originalProps; kept out of the DOM.
+  // Consumed by effects.js / widgets via _originalProps; never written to the DOM.
   { prop: "disableTransform", domProp: "disableTransform", type: "special" },
   { prop: "data", domProp: "data", type: "special" },
 ];
@@ -980,6 +980,19 @@ export const TEXT_PROP_SET = new Set(TEXT_PROPS);
 // ============================================================
 setPropNames(Object.keys(PROP_MAP));
 
+/**
+ * Looks up a prop definition by its custom name.
+ *
+ * Returns `null` and emits a warning (via `warnUnknownProp`) when the prop is
+ * not registered. The `context` object is forwarded to the warning function to
+ * allow widget-name–aware messages.
+ *
+ * @param {string} propName - The custom prop name to look up (e.g. `'w'`, `'onClick'`).
+ * @param {Object} [context={}] - Optional context for warning messages
+ *   (e.g. `{ widgetName: 'Button' }`).
+ * @returns {Object|null} The prop definition object from `ALL_PROPS`, or `null`
+ *   when the prop is unknown.
+ */
 export function getPropDefinition(propName, context = {}) {
   const def = PROP_MAP[propName];
   if (!def) {

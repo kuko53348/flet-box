@@ -5,6 +5,41 @@ import { Column } from "./Column.js";
 import { Text } from "./Text.js";
 import { colors, subscribeTheme } from "../utils/themes.js";
 
+/**
+ * @typedef {Object} ListTileProps
+ * @property {HTMLElement} [leftItem] - Widget rendered on the leading edge (e.g. an avatar or icon).
+ * @property {HTMLElement} [rightItem] - Widget rendered on the trailing edge (e.g. a chevron or switch).
+ * @property {string} [title] - Primary text line.
+ * @property {string} [subtitle] - Secondary text line rendered below the title at reduced size.
+ * @property {string} [description] - Tertiary text line rendered below the subtitle, typically muted.
+ * @property {Function} [onPress] - Click handler. When provided the tile becomes interactive.
+ * @property {boolean} [selected=false] - Highlights the tile with `selectedBgColor` and bolds the title.
+ * @property {boolean} [disabled=false] - Reduces opacity and removes interactivity.
+ * @property {boolean} [divider=false] - When true, appends a thin horizontal rule below the tile.
+ * @property {number} [paddingHorizontal=16] - Horizontal padding in pixels.
+ * @property {number} [paddingVertical=12] - Vertical padding in pixels.
+ * @property {number} [gap=12] - Gap between the left item, text column, and right item.
+ * @property {number} [elevation=0] - Drop-shadow depth. 0 means no shadow.
+ * @property {number} [borderRadius=0] - Corner radius of the tile in pixels.
+ * @property {string} [bgColor] - Default background color.
+ * @property {string} [selectedBgColor] - Background color when `selected` is true.
+ * @property {string} [hoverColor] - Background color on mouse hover (only when interactive).
+ * @property {Object} [titleProps={}] - Extra props forwarded to the `Text` widget for the title.
+ * @property {Object} [subtitleProps={}] - Extra props forwarded to the `Text` widget for the subtitle.
+ * @property {Object} [descriptionProps={}] - Extra props forwarded to the `Text` widget for the description.
+ */
+
+/**
+ * A single-row list item that follows the Material Design ListTile pattern.
+ *
+ * Composes a leading widget, a text column (title / subtitle / description),
+ * and a trailing widget into a horizontally-aligned row. Supports selection
+ * highlighting, hover effects, elevation shadows, and an optional divider.
+ * Automatically unsubscribes from the theme system when the tile is unmounted.
+ *
+ * @param {ListTileProps} props
+ * @returns {HTMLElement} The tile element (or a wrapper `<div>` when `divider` is true).
+ */
 export const ListTile = (props) => {
   const {
     leftItem,
@@ -30,9 +65,11 @@ export const ListTile = (props) => {
     ...rest
   } = props;
 
+  // Only add pointer cursor and hover/click behavior when an onPress handler exists
+  // and the tile is not disabled.
   const isInteractive = onPress && !disabled;
 
-  // Build text column
+  // Build text column — only include lines that were actually provided
   const textChildren = [];
 
   if (title) {
@@ -71,18 +108,19 @@ export const ListTile = (props) => {
     );
   }
 
+  // Wrap text lines in a Column only when at least one line was provided
   const centerColumn =
     textChildren.length > 0
       ? Column({
           gap: 2,
           alignItems: "flex-start",
           flex: 1,
-          minWidth: 0,
+          minWidth: 0, // allows the column to shrink below its content size in a flex row
           children: textChildren,
         })
       : null;
 
-  // Build main row
+  // Assemble the main content row: [leftItem] [textColumn] [rightItem]
   const rowChildren = [];
   if (leftItem) rowChildren.push(leftItem);
   if (centerColumn) rowChildren.push(centerColumn);
@@ -97,7 +135,7 @@ export const ListTile = (props) => {
     children: rowChildren,
   });
 
-  // Main tile using WidgetFactory
+  // Main tile element
   const tile = WidgetFactory({
     tag: "div",
     backgroundColor: selected ? selectedBgColor : bgColor,
@@ -115,7 +153,7 @@ export const ListTile = (props) => {
     ...rest,
   });
 
-  // Hover effects
+  // Hover effects — only when the tile can be interacted with
   if (isInteractive) {
     tile.addEventListener("mouseenter", () => {
       if (!selected) tile.style.backgroundColor = hoverColor;
@@ -133,7 +171,9 @@ export const ListTile = (props) => {
     });
   }
 
-  // Theme subscription
+  // Theme subscription — keep the background in sync with the active theme.
+  // Only subscribe when the caller has not overridden bgColor/selectedBgColor,
+  // to avoid fighting with explicit colors.
   let unsubscribeTheme = null;
   if (!props.bgColor && !props.selectedBgColor) {
     unsubscribeTheme = subscribeTheme(() => {
@@ -145,14 +185,14 @@ export const ListTile = (props) => {
     });
   }
 
-  // Cleanup
+  // Cleanup — unsubscribe from the theme system when the tile is unmounted
   const originalCleanup = tile._cleanup;
   tile._cleanup = () => {
     if (unsubscribeTheme) unsubscribeTheme();
     if (originalCleanup) originalCleanup();
   };
 
-  // Add divider if needed
+  // When a divider is requested, wrap the tile in a column and append a separator line
   if (divider) {
     const dividerLine = WidgetFactory({
       height: 1,
@@ -168,6 +208,7 @@ export const ListTile = (props) => {
       children: [tile, dividerLine],
     });
 
+    // Propagate cleanup to the outer container as well
     const originalContainerCleanup = container._cleanup;
     container._cleanup = () => {
       if (unsubscribeTheme) unsubscribeTheme();

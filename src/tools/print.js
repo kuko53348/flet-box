@@ -1,11 +1,17 @@
 // tools/print.js
-// Sistema de logging simple y elegante
+// Simple and clean logging system
 
 /**
- * Print function with simple syntax
- * @param {*} message - Message to print
- * @param {string} type - 'log' | 'warn' | 'error' | 'info' | 'success' | 'debug' (default: 'log')
- * @param {Object} options - Additional options (timestamp, label)
+ * A thin wrapper around `console` that adds icons, optional timestamps, and
+ * optional labels to log output. Objects are serialized to pretty-printed JSON.
+ *
+ * @param {*} message - Value to log. Objects are serialized with `JSON.stringify`.
+ * @param {"log"|"warn"|"error"|"info"|"success"|"debug"} [type="log"] - Log level.
+ *   Can also be passed as an options object for backwards compatibility.
+ * @param {Object} [options={}] - Additional formatting options.
+ * @param {boolean} [options.timestamp=false] - Prepend the current time.
+ * @param {string} [options.label=""] - Bracket-wrapped label inserted before the message.
+ * @param {boolean} [options.prefix=true] - Whether to prepend the level icon.
  * @returns {void}
  *
  * @example
@@ -15,7 +21,7 @@
  * print('Loading...', 'info', { timestamp: true })
  */
 export const print = (message, type = "log", options = {}) => {
-  // Si el segundo parámetro es un objeto (para compatibilidad)
+  // Allow the second argument to be an options object for backwards compatibility
   if (typeof type === "object") {
     options = type;
     type = "log";
@@ -34,7 +40,7 @@ export const print = (message, type = "log", options = {}) => {
 
   const config = styles[type] || styles.log;
 
-  // Formatear mensaje si es objeto
+  // Serialize objects to readable JSON
   let formattedMessage = message;
   if (typeof message === "object" && message !== null) {
     formattedMessage = JSON.stringify(message, null, 2);
@@ -48,11 +54,11 @@ export const print = (message, type = "log", options = {}) => {
 
   const finalMessage = parts.join(" ");
 
-  // Usar el método de consola adecuado
+  // Dispatch to the appropriate console method for the log level
   console[config.method](finalMessage);
 };
 
-// Shorthands más simples aún
+// Shorthand aliases (uncomment to enable individual exports):
 // export const log = (msg) => print(msg, "log");
 // export const warn = (msg) => print(msg, "warn");
 // export const error = (msg) => print(msg, "error");

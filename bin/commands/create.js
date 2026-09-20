@@ -1,4 +1,15 @@
-// bin/commands/create.js
+/**
+ * @file bin/commands/create.js
+ * @description Scaffolds a new FletBox project from one of several built-in templates.
+ *
+ * Supported templates:
+ * - `basic`    — AppBar + Drawer (default)
+ * - `blank`    — Minimal app with a single screen
+ * - `full`     — AppBar + Drawer + BottomNavigation
+ * - `sidebar`  — AppBar + Sidebar (desktop-first)
+ * - `adaptive` — Responsive layout that adapts between mobile and desktop
+ */
+
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -9,9 +20,24 @@ import { c, banner, gradient } from "../utils/colors.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Parse arguments to detect --adaptive flag
+/**
+ * Parses the raw CLI arguments passed after the project name to determine
+ * which template was requested and whether an explicit name was given.
+ *
+ * Flag-to-template mapping:
+ * - `--adaptive` → `"adaptive"`
+ * - `--blank`    → `"blank"`
+ * - `--full`     → `"full"`
+ * - `--sidebar`  → `"sidebar"`
+ * - (none)       → `"basic"` (default)
+ *
+ * Any non-flag argument (does not start with `--`) is treated as the project name.
+ *
+ * @param {string[]} args - Raw CLI arguments, may include flags and a project name.
+ * @returns {{ template: string, projectName: string|null }}
+ */
 const parseCreateArgs = (args) => {
-  let template = "basic"; // default
+  let template = "basic"; // default template
   let projectName = null;
   for (let i = 0; i < args.length; i++) {
     if (args[i] === "--adaptive") {
@@ -29,6 +55,22 @@ const parseCreateArgs = (args) => {
   return { template, projectName };
 };
 
+/**
+ * Creates a new FletBox project in a subdirectory of the current working directory.
+ *
+ * Steps performed:
+ * 1. Validates the project name and checks that the target folder does not exist.
+ * 2. Creates the required directory tree (varies by template).
+ * 3. Writes all static files: `index.html`, `package.json`, `.gitignore`, etc.
+ * 4. Copies bundled Material Icons fonts from the package's own `src/fonts/` directory.
+ * 5. Generates screens, layout components, and `src/app.js` based on the chosen template.
+ * 6. Makes `run.sh` executable.
+ *
+ * @async
+ * @param {string} projectName - Desired project folder name (validated by the caller).
+ * @param {string[]} [rawArgs=[]] - Additional CLI arguments forwarded from the main CLI dispatcher.
+ * @returns {Promise<void>}
+ */
 export const createProject = async (projectName, rawArgs = []) => {
   const { template, projectName: name } = parseCreateArgs([
     projectName,
@@ -54,7 +96,8 @@ export const createProject = async (projectName, rawArgs = []) => {
 
   console.log(banner("📦 Creating project", `${finalName} · ${template}`));
 
-  // Create directories
+  // Build the list of directories to create.
+  // All templates share a common base; non-blank templates add screens/components.
   const commonDirs = ["src", "src/assets/fonts", "src/database"];
   const extraDirs =
     template === "blank" ? [] : ["src/screens", "src/components"];
@@ -68,7 +111,7 @@ export const createProject = async (projectName, rawArgs = []) => {
     console.log(`${c("green", "📁")} Created: ${dir}`);
   }
 
-  // Create common files
+  // Write files shared by every template.
   createFile(path.join(projectPath, "index.html"), templates.indexHtml());
   createFile(
     path.join(projectPath, "package.json"),
@@ -90,7 +133,8 @@ export const createProject = async (projectName, rawArgs = []) => {
     templates.themesJs(),
   );
 
-  // Copy fonts (same as before)
+  // Copy bundled Material Icons fonts from the package's own src/fonts/ directory.
+  // The package ships the fonts so projects work offline without an extra install step.
   const sourcePackageDir = path.join(__dirname, "..", "..");
   const sourceFontsDir = path.join(sourcePackageDir, "src/fonts");
   const destFontsDir = path.join(projectPath, "src/assets/fonts");
@@ -103,11 +147,11 @@ export const createProject = async (projectName, rawArgs = []) => {
       copyFile(woff, path.join(destFontsDir, "MaterialIcons-Regular.woff2"));
   }
 
-  // Create screens and components based on template
+  // Generate screens and components according to the chosen template.
   if (template === "blank") {
     createFile(path.join(projectPath, "src/app.js"), templates.blankAppJs());
   } else {
-    // Shared screens
+    // All non-blank templates share these three starter screens.
     createFile(
       path.join(projectPath, "src/screens/RootScreen.js"),
       templates.rootScreenJs(),
@@ -125,12 +169,13 @@ export const createProject = async (projectName, rawArgs = []) => {
         path.join(projectPath, "src/screens/ProfileScreen.js"),
         templates.profileScreenJs(),
       );
+      // Barrel export so app.js can import all screens from one place.
       createFile(
         path.join(projectPath, "src/screens/index.js"),
         templates.screensIndexJs(),
       );
     }
-    // Layout components
+    // Layout components (skipped for blank).
     if (template !== "blank") {
       createFile(
         path.join(projectPath, "src/components/layouts/AppBarComponent.js"),
@@ -148,12 +193,13 @@ export const createProject = async (projectName, rawArgs = []) => {
           templates.sidebarJs(),
         );
       }
-      // DrawerMenu (use modular version for adaptive/full, simple for basic)
+      // Use the simpler, non-parameterised DrawerMenu for the basic template;
+      // all other templates get the modular version that accepts a custom items array.
       if (template === "basic") {
         createFile(
           path.join(projectPath, "src/components/layouts/DrawerMenu.js"),
           templates.drawerMenuJs(),
-        ); // original simple
+        );
       } else {
         createFile(
           path.join(projectPath, "src/components/layouts/DrawerMenu.js"),
@@ -161,7 +207,7 @@ export const createProject = async (projectName, rawArgs = []) => {
         );
       }
     }
-    // Main app.js
+    // Write the template-specific app entry point.
     switch (template) {
       case "basic":
         createFile(

@@ -1,7 +1,19 @@
 // core/assignProps.js
 import { setStyles } from "./tools.js";
 
-// ✅ Extrae el valor real si es una prop reactiva (incluso si es función)
+/**
+ * Extracts the real value from a prop that may be a reactive accessor or a
+ * plain reactive object.
+ *
+ * - If the value is a function flagged with `_isReactive`, calls it to get the
+ *   current value.
+ * - If the value is a reactive object (has `_isReactive === true`), returns
+ *   `_value` when available, otherwise falls back to `valueOf()`.
+ * - Otherwise returns the value unchanged.
+ *
+ * @param {*} val - The raw prop value (may be reactive or plain).
+ * @returns {*} The resolved runtime value.
+ */
 const getValue = (val) => {
   if (typeof val === "function" && val._isReactive) {
     return val();
@@ -12,7 +24,17 @@ const getValue = (val) => {
   return val;
 };
 
-// ✅ Aplica props especiales (shorthands)
+/**
+ * Applies a single "special" shorthand prop directly to the widget's style or
+ * dataset. Handles cases that are not pure CSS assignments, such as `value` for
+ * form elements, `variant` as a dataset attribute, and axis-aligned margin /
+ * padding shorthands.
+ *
+ * @param {HTMLElement} widget - The target DOM element.
+ * @param {string} key - The special prop name (e.g. `'marginVertical'`).
+ * @param {*} value - The raw value (resolved via `getValue` internally).
+ * @returns {void}
+ */
 const applySpecial = (widget, key, value) => {
   const val = getValue(value);
   const px = typeof val === "number" ? val + "px" : val;
@@ -50,6 +72,30 @@ const applySpecial = (widget, key, value) => {
   }
 };
 
+/**
+ * Applies a processed props object to a widget element.
+ *
+ * Handles five prop categories in order:
+ * 1. **style** – merged into the element's inline style via `setStyles`.
+ * 2. **textContent** – set as `value` on form elements, `textContent` elsewhere.
+ * 3. **events** – previous listeners are removed and the new set is attached.
+ *    `click` is assigned via `onclick` for reliable override behaviour.
+ * 4. **attributes** – applied with `setAttribute`, with special handling for
+ *    `className`, `disabled`, `checked`, and `selected`.
+ * 5. **special** – delegated to `applySpecial` for non-trivial shorthands.
+ *
+ * Any keys not in the known set are handled as a flat-prop fallback: `on*`
+ * functions become event listeners, common HTML attributes are set directly, and
+ * everything else is tried as an inline style.
+ *
+ * The `_updating` guard prevents re-entrant calls from triggering reactive
+ * side-effects during the assignment.
+ *
+ * @param {HTMLElement} widget - The target DOM element.
+ * @param {Object|null} props - Processed props object from `processProps`, or
+ *   `null` / `undefined` to no-op.
+ * @returns {HTMLElement} The same widget (for chaining).
+ */
 export const assignProps = (widget, props) => {
   if (!props) return widget;
 
@@ -58,14 +104,14 @@ export const assignProps = (widget, props) => {
 
   try {
     // ============================================================
-    // 1. ESTILOS
+    // 1. STYLES
     // ============================================================
     if (props.style && Object.keys(props.style).length > 0) {
       setStyles(widget, props.style);
     }
 
     // ============================================================
-    // 2. TEXTO
+    // 2. TEXT
     // ============================================================
     if (props.textContent !== undefined) {
       const textValue = getValue(props.textContent);
@@ -77,8 +123,9 @@ export const assignProps = (widget, props) => {
     }
 
     // ============================================================
-    // 3. EVENTOS
+    // 3. EVENTS
     // ============================================================
+    // Remove all previously registered listeners before adding the new ones.
     if (widget._events && widget._events.length > 0) {
       widget._events.forEach(({ event, handler }) => {
         widget.removeEventListener(event, handler);
@@ -101,7 +148,7 @@ export const assignProps = (widget, props) => {
     }
 
     // ============================================================
-    // 4. ATRIBUTOS
+    // 4. ATTRIBUTES
     // ============================================================
     if (props.attributes && Object.keys(props.attributes).length > 0) {
       Object.entries(props.attributes).forEach(([key, value]) => {
@@ -119,7 +166,7 @@ export const assignProps = (widget, props) => {
             widget.setAttribute(key, finalValue);
           }
         } catch (e) {
-          // Atributo inválido
+          // Invalid attribute – silently skip
         }
       });
     }
@@ -134,8 +181,10 @@ export const assignProps = (widget, props) => {
     }
 
     // ============================================================
-    // 6. FALLBACK PARA PROPS PLANAS
+    // 6. FALLBACK FOR FLAT PROPS
     // ============================================================
+    // Props not belonging to any known category are handled here as a best-
+    // effort: event handlers, common HTML attributes, and inline CSS.
     const knownKeys = new Set([
       "style",
       "events",

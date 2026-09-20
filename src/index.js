@@ -83,7 +83,7 @@ export {
 } from "./tools/index.js";
 
 // ========== UTILS ==========
-// src/index.js (sección de UTILS)
+// src/index.js (UTILS section)
 export {
   colors,
   setTheme,

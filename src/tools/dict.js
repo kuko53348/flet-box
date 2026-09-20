@@ -1,86 +1,178 @@
 // src/tools/dict.js
 // Python-like dictionary utilities
 
+/**
+ * A wrapper around a plain JavaScript object that exposes a Python-inspired
+ * dictionary API (`.get()`, `.keys()`, `.values()`, `.items()`, etc.).
+ */
 export class Dict {
+  /**
+   * @param {Object} [obj={}] - Initial key-value pairs.
+   */
   constructor(obj = {}) {
     this._data = { ...obj };
   }
 
-  // Get value with default (like Python's .get())
+  /**
+   * Returns the value for `key`, or `defaultValue` if the key is absent.
+   * Mirrors Python's `dict.get(key, default)`.
+   *
+   * @param {string} key - Key to look up.
+   * @param {*} [defaultValue=null] - Fallback value when the key is missing.
+   * @returns {*} The stored value or `defaultValue`.
+   */
   get(key, defaultValue = null) {
     return this._data[key] !== undefined ? this._data[key] : defaultValue;
   }
 
-  // Set value (like Python's assignment)
+  /**
+   * Sets a key to a value and returns `this` for chaining.
+   * Mirrors Python's assignment `d[key] = value`.
+   *
+   * @param {string} key - Key to set.
+   * @param {*} value - Value to store.
+   * @returns {Dict} This instance.
+   */
   set(key, value) {
     this._data[key] = value;
     return this;
   }
 
-  // Check if key exists (like Python's 'in')
+  /**
+   * Returns `true` if `key` exists in the dictionary.
+   * Mirrors Python's `key in d`.
+   *
+   * @param {string} key - Key to check.
+   * @returns {boolean}
+   */
   has(key) {
     return key in this._data;
   }
 
-  // Get all keys (like Python's .keys())
+  /**
+   * Returns an array of all keys in the dictionary.
+   * Mirrors Python's `dict.keys()`.
+   *
+   * @returns {string[]}
+   */
   keys() {
     return Object.keys(this._data);
   }
 
-  // Get all values (like Python's .values())
+  /**
+   * Returns an array of all values in the dictionary.
+   * Mirrors Python's `dict.values()`.
+   *
+   * @returns {*[]}
+   */
   values() {
     return Object.values(this._data);
   }
 
-  // Get all items (like Python's .items())
+  /**
+   * Returns an array of `[key, value]` pairs.
+   * Mirrors Python's `dict.items()`.
+   *
+   * @returns {Array<[string, *]>}
+   */
   items() {
     return Object.entries(this._data);
   }
 
-  // Delete key (like Python's del)
+  /**
+   * Deletes a key from the dictionary and returns `this` for chaining.
+   * Mirrors Python's `del d[key]`.
+   *
+   * @param {string} key - Key to remove.
+   * @returns {Dict} This instance.
+   */
   delete(key) {
     delete this._data[key];
     return this;
   }
 
-  // Get length (like Python's len())
+  /**
+   * The number of entries in the dictionary.
+   * Mirrors Python's `len(d)`.
+   *
+   * @type {number}
+   */
   get size() {
     return Object.keys(this._data).length;
   }
 
-  // Clear all (like Python's .clear())
+  /**
+   * Removes all entries and returns `this` for chaining.
+   * Mirrors Python's `dict.clear()`.
+   *
+   * @returns {Dict} This instance.
+   */
   clear() {
     this._data = {};
     return this;
   }
 
-  // Copy (like Python's .copy())
+  /**
+   * Returns a shallow copy of this dictionary as a new `Dict` instance.
+   * Mirrors Python's `dict.copy()`.
+   *
+   * @returns {Dict} A new `Dict` with the same entries.
+   */
   copy() {
     return new Dict({ ...this._data });
   }
 
-  // Update with another object (like Python's .update())
+  /**
+   * Merges another object or `Dict` into this dictionary, overwriting existing keys.
+   * Mirrors Python's `dict.update(other)`.
+   *
+   * @param {Object|Dict} other - Source of additional key-value pairs.
+   * @returns {Dict} This instance.
+   */
   update(other) {
     Object.assign(this._data, other instanceof Dict ? other._data : other);
     return this;
   }
 
-  // Convert to plain object
+  /**
+   * Returns the internal data as a plain JavaScript object.
+   *
+   * @returns {Object}
+   */
   toObject() {
     return { ...this._data };
   }
 
-  // Convert to JSON string
+  /**
+   * Serializes the dictionary to a JSON string.
+   *
+   * @returns {string}
+   */
   toJSON() {
     return JSON.stringify(this._data);
   }
 
-  // String representation (like Python's __str__)
+  /**
+   * Returns a debug-friendly string representation.
+   * Mirrors Python's `__str__`.
+   *
+   * @returns {string} e.g. `Dict({"key":"value"})`
+   */
   toString() {
     return `Dict(${JSON.stringify(this._data)})`;
   }
 
-  // Get nested value with dot notation
+  /**
+   * Reads a nested value using dot-notation path, returning `defaultValue` if any
+   * segment along the path is absent.
+   *
+   * @param {string} path - Dot-separated key path, e.g. `"user.address.city"`.
+   * @param {*} [defaultValue=null] - Fallback when the path does not exist.
+   * @returns {*} The nested value or `defaultValue`.
+   *
+   * @example
+   * dict.getNested("user.address.city", "Unknown")
+   */
   getNested(path, defaultValue = null) {
     const keys = path.split(".");
     let result = this._data;
@@ -91,7 +183,17 @@ export class Dict {
     return result;
   }
 
-  // Set nested value with dot notation
+  /**
+   * Sets a nested value at the given dot-notation path, creating intermediate
+   * objects as needed. Returns `this` for chaining.
+   *
+   * @param {string} path - Dot-separated key path, e.g. `"user.address.city"`.
+   * @param {*} value - Value to set at the path.
+   * @returns {Dict} This instance.
+   *
+   * @example
+   * dict.setNested("user.address.city", "New York")
+   */
   setNested(path, value) {
     const keys = path.split(".");
     const lastKey = keys.pop();
@@ -104,19 +206,34 @@ export class Dict {
     return this;
   }
 
-  // ForEach iteration
+  /**
+   * Iterates over all entries, calling `callback(value, key)` for each.
+   *
+   * @param {Function} callback - Called with `(value, key)` for each entry.
+   * @returns {void}
+   */
   forEach(callback) {
     Object.entries(this._data).forEach(([key, value]) => callback(value, key));
   }
 
-  // Map transformation
+  /**
+   * Maps over all entries and returns an array of the results.
+   *
+   * @param {Function} callback - Called with `(value, key)` for each entry; return the mapped value.
+   * @returns {Array<*>}
+   */
   map(callback) {
     return Object.entries(this._data).map(([key, value]) =>
       callback(value, key),
     );
   }
 
-  // Filter (returns new Dict)
+  /**
+   * Returns a new `Dict` containing only entries for which `callback` returns truthy.
+   *
+   * @param {Function} callback - Predicate called with `(value, key)`.
+   * @returns {Dict} Filtered dictionary.
+   */
   filter(callback) {
     const result = {};
     Object.entries(this._data).forEach(([key, value]) => {
@@ -126,15 +243,35 @@ export class Dict {
   }
 }
 
-// Factory function (like Python's dict())
+/**
+ * Factory function — creates a new `Dict` instance from a plain object.
+ * Mirrors Python's `dict()` constructor.
+ *
+ * @param {Object} [obj={}] - Initial key-value pairs.
+ * @returns {Dict}
+ *
+ * @example
+ * const d = dict({ name: "Alice", age: 30 });
+ * d.get("name"); // "Alice"
+ */
 export const dict = (obj = {}) => {
   return new Dict(obj);
 };
 
-// Create empty dict
+/**
+ * Creates and returns an empty `Dict`.
+ *
+ * @returns {Dict}
+ */
 export const emptyDict = () => new Dict({});
 
-// Create from JSON string
+/**
+ * Parses a JSON string and wraps the result in a `Dict`.
+ * Returns an empty `Dict` on parse failure.
+ *
+ * @param {string} jsonStr - JSON-encoded object string.
+ * @returns {Dict}
+ */
 export const fromJSON = (jsonStr) => {
   try {
     return new Dict(JSON.parse(jsonStr));
@@ -143,7 +280,16 @@ export const fromJSON = (jsonStr) => {
   }
 };
 
-// Create from entries array (like Python's dict([(key, value), ...]))
+/**
+ * Creates a `Dict` from an array of `[key, value]` pairs.
+ * Mirrors Python's `dict([(key, value), ...])`.
+ *
+ * @param {Array<[string, *]>} entries - Array of key-value pairs.
+ * @returns {Dict}
+ *
+ * @example
+ * fromEntries([["a", 1], ["b", 2]]) // Dict { a: 1, b: 2 }
+ */
 export const fromEntries = (entries) => {
   return new Dict(Object.fromEntries(entries));
 };

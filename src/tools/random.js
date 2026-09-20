@@ -1,6 +1,20 @@
-// src/components/flet-box/tools/random.js
+/**
+ * @file random.js
+ * Faker-style random data generators for prototyping and testing.
+ *
+ * All generators are grouped under the `random` namespace object.
+ * Functions that accept no arguments choose sensible defaults so you can
+ * call them without configuration for quick mocks.
+ *
+ * Important: the `firstNames` and `lastNames` arrays are intentionally
+ * Spanish-language sample data — they are runtime content, not developer
+ * comments, and are left unchanged.
+ *
+ * @module tools/random
+ */
 
-// Base data
+// ========== BASE DATA ==========
+// Sample name pools used by firstName / lastName / fullName / email generators.
 const firstNames = [
   "Ana",
   "Juan",

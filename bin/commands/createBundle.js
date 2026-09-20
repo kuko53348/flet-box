@@ -1,4 +1,17 @@
-// bin/commands/createBundle.js
+/**
+ * @file bin/commands/createBundle.js
+ * @description Builds a production-ready, self-contained bundle of a FletBox project.
+ *
+ * The command uses esbuild to tree-shake and minify the entire app (including the
+ * flet-box dependency) into a single `src/app.js` file inside the target directory.
+ * PWA assets (service worker, manifest, icons, fonts) are copied alongside it so
+ * the output folder can be served or deployed as-is.
+ *
+ * If flet-box is not present in `node_modules` (e.g. a fresh clone without
+ * `npm install`) the package is copied from the CLI's own source tree so the build
+ * can proceed without an internet connection.
+ */
+
 import { execSync } from "child_process";
 import fs from "fs";
 import path from "path";
@@ -8,7 +21,14 @@ import { c, banner, gradient } from "../utils/colors.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Recursively copy a folder
+/**
+ * Recursively copies a directory tree from `src` to `dest`, creating any
+ * missing intermediate directories.  Mirrors the behaviour of `cp -R`.
+ *
+ * @param {string} src  - Absolute path to the source directory.
+ * @param {string} dest - Absolute path to the destination directory.
+ * @returns {void}
+ */
 const copyFolderSync = (src, dest) => {
   if (!fs.existsSync(dest)) {
     fs.mkdirSync(dest, { recursive: true });
@@ -28,6 +48,32 @@ const copyFolderSync = (src, dest) => {
   }
 };
 
+/**
+ * Builds the current FletBox project into a deployable bundle directory.
+ *
+ * Output structure:
+ * ```
+ * <target>/
+ *   index.html
+ *   manifest.json
+ *   service-worker.js
+ *   run.sh
+ *   assets/           ← PWA icons (duplicate of src/assets for root-relative paths)
+ *   src/
+ *     app.js          ← single minified bundle (esbuild)
+ *     assets/         ← fonts + icons
+ *     styles/         ← global.css (if present)
+ *     screens/        ← source files (used by "View code" feature)
+ *     components/
+ *     modules/
+ *     database/
+ * ```
+ *
+ * @async
+ * @param {string|undefined} targetArg - Target directory name relative to the project
+ *   root.  Defaults to `"www"` when omitted.
+ * @returns {Promise<void>}
+ */
 export const createBundle = async (targetArg) => {
   const TARGET = targetArg || "www";
   console.log(banner("📦 FletBox Bundle", TARGET + "/"));
@@ -39,14 +85,15 @@ export const createBundle = async (targetArg) => {
   const nodeModulesDir = path.join(projectRoot, "node_modules");
   const fletBoxDir = path.join(nodeModulesDir, "flet-box");
 
-  // Make sure we are inside a FletBox project
+  // Guard: must be run from within a FletBox project.
   if (!fs.existsSync(appJs)) {
     console.error(c("red", "❌ Not a FletBox project"));
     console.log(c("gray", "Make sure you are in a project with src/app.js"));
     process.exit(1);
   }
 
-  // Check if flet-box is installed; otherwise copy it
+  // If flet-box is not installed, copy it from the CLI package so we can bundle
+  // without requiring `npm install` first (useful in offline / CI environments).
   if (!fs.existsSync(fletBoxDir)) {
     console.log(
       c("yellow", "⚠️ flet-box not found in node_modules, copying..."),
@@ -59,7 +106,7 @@ export const createBundle = async (targetArg) => {
     const sourceFletBox = path.join(__dirname, "..", "..");
     fs.mkdirSync(fletBoxDir, { recursive: true });
 
-    // Copy src/
+    // Copy src/ from the CLI package into node_modules/flet-box/src/.
     const sourceSrc = path.join(sourceFletBox, "src");
     const destSrc = path.join(fletBoxDir, "src");
     if (fs.existsSync(sourceSrc)) {
@@ -67,7 +114,7 @@ export const createBundle = async (targetArg) => {
       console.log(c("green", "✅ Copied flet-box/src"));
     }
 
-    // Copy package.json
+    // Copy package.json so esbuild can resolve the package correctly.
     const sourcePackage = path.join(sourceFletBox, "package.json");
     if (fs.existsSync(sourcePackage)) {
       fs.copyFileSync(sourcePackage, path.join(fletBoxDir, "package.json"));
@@ -75,7 +122,7 @@ export const createBundle = async (targetArg) => {
     }
   }
 
-  // Make sure esbuild is available
+  // Ensure esbuild is available; install it as a devDependency if not.
   try {
     execSync("npx --no-install esbuild --version", { stdio: "pipe" });
   } catch {
@@ -83,24 +130,26 @@ export const createBundle = async (targetArg) => {
     execSync("npm install --save-dev esbuild", { stdio: "inherit" });
   }
 
-  // Create a clean structure
+  // Wipe and recreate the target directory for a clean, reproducible output.
   console.log(c("blue", "\n📁 Creating structure..."));
   fs.rmSync(targetDir, { recursive: true, force: true });
   fs.mkdirSync(path.join(targetDir, "src"), { recursive: true });
   fs.mkdirSync(path.join(targetDir, "assets"), { recursive: true });
 
-  // Root static files (PWA + preview)
+  // Copy root-level PWA and preview files to the bundle root.
   for (const file of ["index.html", "manifest.json", "run.sh", "service-worker.js"]) {
     const src = path.join(projectRoot, file);
     if (fs.existsSync(src)) {
       const dest = path.join(targetDir, file);
       fs.copyFileSync(src, dest);
+      // run.sh must be executable so `bash run.sh` works without chmod by the user.
       if (file === "run.sh") fs.chmodSync(dest, 0o755);
       console.log(c("green", `✅ Copied: ${file}`));
     }
   }
 
-  // Si no hay index.html, usar uno por defecto
+  // Provide a minimal fallback index.html when the project doesn't have one
+  // (e.g. blank template that hasn't been customised yet).
   if (!fs.existsSync(path.join(targetDir, "index.html"))) {
     const defaultHtml = `<!DOCTYPE html>
 <html lang="en">
@@ -124,7 +173,8 @@ export const createBundle = async (targetArg) => {
     console.log(c("green", "✅ Created: index.html"));
   }
 
-  // Assets: iconos PWA + fuentes de iconos
+  // Copy assets (PWA icons + icon fonts) to both src/assets and the root assets/
+  // directory so that both relative paths used in index.html resolve correctly.
   if (fs.existsSync(path.join(srcDir, "assets"))) {
     fs.cpSync(
       path.join(srcDir, "assets"),
@@ -139,7 +189,7 @@ export const createBundle = async (targetArg) => {
     console.log(c("green", "✅ Copied: src/assets (fonts + PWA icons)"));
   }
 
-  // CSS global (lo carga index.html)
+  // Copy global CSS (loaded directly by index.html, not bundled by esbuild).
   const globalCss = path.join(srcDir, "styles", "global.css");
   if (fs.existsSync(globalCss)) {
     fs.mkdirSync(path.join(targetDir, "src", "styles"), { recursive: true });
@@ -147,7 +197,9 @@ export const createBundle = async (targetArg) => {
     console.log(c("green", "✅ Copied: global.css"));
   }
 
-  // Bundle with esbuild (including flet-box in the bundle)
+  // Bundle the entire application (app + flet-box) into a single minified ESM file.
+  // --external:*.css and --external:*.woff2 prevent esbuild from trying to inline
+  // binary assets, which would break the output or inflate the bundle size.
   console.log(c("blue", "\n📦 Bundling app.js (esbuild + tree-shaking)..."));
 
   const bundleCmd = [
@@ -163,7 +215,7 @@ export const createBundle = async (targetArg) => {
     "--external:*.woff2",
     "--resolve-extensions=.js,.json",
   ].join(" \n    ");
-  // The newline is for readability; execSync runs it as a single shell command
+  // The newlines are for readability only; join them back before passing to the shell.
   const cmd = bundleCmd.replace(/\n\s*/g, " ");
 
   try {
@@ -176,7 +228,7 @@ export const createBundle = async (targetArg) => {
     process.exit(1);
   }
 
-  // App source code (required by the "View code" button)
+  // Preserve the app source tree so the in-app "View code" feature can read it.
   for (const dir of ["modules", "screens", "database", "components"]) {
     const src = path.join(srcDir, dir);
     if (fs.existsSync(src)) {

@@ -1,10 +1,39 @@
-// widgets/Avatar.js
+/**
+ * @file Avatar.js
+ * @description A user avatar widget that renders an image, an icon, or
+ * initials derived from a name, depending on what props are provided.
+ * Falls back gracefully: image → icon → initials → generic person icon.
+ * Supports circular, rounded-square, and square shapes, and exposes a method
+ * to update its content without rebuilding the DOM.
+ */
+
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 import { Image } from "./Image.js";
 import { Icon } from "./Icon.js";
 import { Text } from "./Text.js";
 
+/**
+ * Creates an Avatar widget.
+ *
+ * Content priority (first match wins):
+ * 1. `src` — renders an `<img>` filling the avatar circle.
+ * 2. `icon` — renders a Material icon centered in the avatar.
+ * 3. `name` — extracts up to two initials and renders them as text.
+ * 4. Fallback — renders a generic "person" icon.
+ *
+ * @param {Object} props - Configuration for the avatar.
+ * @param {string} [props.src] - URL of a profile image.
+ * @param {string} [props.name] - Full name from which initials are derived (e.g. "Jane Doe" → "JD").
+ * @param {number} [props.size=40] - Diameter of the avatar in pixels.
+ * @param {number} [props.fontSize=16] - Font size of initials text in pixels (overridden by the auto-computed size when `size` changes).
+ * @param {'circle'|'rounded'|'square'} [props.shape='circle'] - Shape of the avatar container.
+ * @param {string} [props.bgColor=colors.primary] - Background color shown behind icons or initials.
+ * @param {string} [props.textColor=colors.text] - Color of icon or initials.
+ * @param {string} [props.icon] - Material icon name to display instead of an image or initials.
+ * @param {Function} [props.onPress] - Click handler. When provided, a hover scale effect is also applied.
+ * @returns {HTMLElement} The avatar container element, augmented with an `updateContent` method.
+ */
 export const Avatar = (props) => {
   let {
     src,
@@ -19,12 +48,19 @@ export const Avatar = (props) => {
     ...rest
   } = props;
 
-  // Determine borderRadius based on shape
+  // Map shape to a CSS border-radius value
   let borderRadius = "50%";
   if (shape === "rounded") borderRadius = `${size * 0.2}px`;
   if (shape === "square") borderRadius = "0";
 
-  // Get initials from full name
+  /**
+   * Extracts up to two initials from a full name.
+   * Single-word names return just the first letter; multi-word names use
+   * the first letter of the first and last words.
+   *
+   * @param {string} fullName - The user's full name.
+   * @returns {string} 1–2 uppercase initials, or "?" if the name is empty.
+   */
   const getInitials = (fullName) => {
     if (!fullName) return "?";
     const parts = fullName.trim().split(/\s+/);
@@ -34,7 +70,7 @@ export const Avatar = (props) => {
     ).toUpperCase();
   };
 
-  // Determine content based on src, icon, or name
+  // Choose the appropriate child element based on prop priority
   let content = null;
   if (src) {
     content = Image({
@@ -58,6 +94,7 @@ export const Avatar = (props) => {
       weight: "bold",
     });
   } else {
+    // Generic fallback when no content is supplied
     content = Icon({
       name: "person",
       size: size * 0.5,
@@ -65,7 +102,6 @@ export const Avatar = (props) => {
     });
   }
 
-  // Create avatar using WidgetFactory
   const avatar = WidgetFactory({
     display: "inline-flex",
     alignItems: "center",
@@ -86,7 +122,7 @@ export const Avatar = (props) => {
     ...rest,
   });
 
-  // Hover effects if onPress exists
+  // Add a subtle scale-up on hover when the avatar is interactive
   if (onPress) {
     avatar.addEventListener("mouseenter", () => {
       avatar.style.transform = "scale(1.05)";
@@ -96,9 +132,19 @@ export const Avatar = (props) => {
     });
   }
 
-  // Method to update avatar content dynamically
+  /**
+   * Updates the avatar's content and/or dimensions without recreating the element.
+   * Only the properties present in `newProps` are applied; others are left as-is.
+   *
+   * @param {Object} newProps - Partial props to apply.
+   * @param {string} [newProps.src] - New image URL.
+   * @param {string} [newProps.name] - New name (re-derives initials).
+   * @param {string} [newProps.icon] - New icon name.
+   * @param {string} [newProps.bgColor] - New background color.
+   * @param {number|string} [newProps.size] - New avatar diameter.
+   */
   avatar.updateContent = (newProps) => {
-    // Update properties
+    // Sync the mutable local variables with any supplied overrides
     if (newProps.src !== undefined) src = newProps.src;
     if (newProps.name !== undefined) name = newProps.name;
     if (newProps.icon !== undefined) icon = newProps.icon;
@@ -114,7 +160,7 @@ export const Avatar = (props) => {
         typeof newSize === "number" ? `${newSize * 0.4}px` : "16px";
     }
 
-    // Recreate content
+    // Rebuild the inner content using the updated props
     let newContent = null;
     if (newProps.src !== undefined || src !== undefined) {
       const finalSrc = newProps.src !== undefined ? newProps.src : src;
@@ -151,7 +197,7 @@ export const Avatar = (props) => {
       });
     }
 
-    // Replace child
+    // Replace the existing child with the new content
     while (avatar.firstChild) avatar.removeChild(avatar.firstChild);
     avatar.appendChild(newContent);
     avatar._child = newContent;

@@ -1,8 +1,28 @@
-// bin/commands/createScreen.js
+/**
+ * @file bin/commands/createScreen.js
+ * @description Generates one or more FletBox screen files inside `src/screens/`.
+ *
+ * Accepts either a screen name (e.g. `Settings`) or an integer (1–10) to
+ * generate a numbered batch (`Screen1`, `Screen2`, …).  After creation the
+ * command prints the import snippets and route entries needed to wire the new
+ * screens into `src/app.js`.
+ */
+
 import fs from "fs";
 import path from "path";
 import { c, banner, gradient, rainbow, section } from "../utils/colors.js";
 
+/**
+ * Returns the source code for a new FletBox screen module.
+ *
+ * The generated screen shows a centred gradient icon, a heading, a subtitle,
+ * and a pair of Back / Next action buttons — enough structure to be useful
+ * immediately without being opinionated about business logic.
+ *
+ * @param {string} name - PascalCase screen name used for the export identifier.
+ *   The file will be named `${name}Screen.js` and the export `${name}Screen`.
+ * @returns {string} JavaScript source code for the screen file.
+ */
 const screenTemplate = (name) => `// screens/${name}Screen.js
 import {
     Container, Column, Row, Text, Icon, Button, gradient, colors,
@@ -59,6 +79,24 @@ export const ${name}Screen = () => {
 export default ${name}Screen;
 `;
 
+/**
+ * Scaffolds one or more screen files in the current project's `src/screens/` directory.
+ *
+ * When `input` is a numeric string the function generates that many screens
+ * (capped at 10) named `Screen1Screen.js` … `Screen<n>Screen.js`.  When it
+ * is a plain name it generates a single file named `<input>Screen.js`.
+ *
+ * After writing the files the command prints ready-to-paste import statements
+ * and route object entries so developers can wire them up in `src/app.js`
+ * without searching for the correct syntax.
+ *
+ * Existing files are skipped with a warning — the command never overwrites work.
+ *
+ * @async
+ * @param {string} input - Either a screen name (e.g. `"Settings"`) or a
+ *   numeric string (e.g. `"3"`) to batch-create numbered screens.
+ * @returns {Promise<void>}
+ */
 export const createScreen = async (input) => {
   const projectRoot = process.cwd();
   const screensDir = path.join(projectRoot, "src", "screens");
@@ -72,9 +110,9 @@ export const createScreen = async (input) => {
 
   const screenNames = [];
 
-  // If it's a number, create multiple screens
+  // Numeric input: create a batch of sequentially numbered screens (max 10).
   if (!isNaN(input) && Number.isInteger(parseFloat(input))) {
-    const count = Math.min(parseInt(input), 10); // max 10
+    const count = Math.min(parseInt(input), 10);
     for (let i = 1; i <= count; i++) {
       screenNames.push(`Screen${i}`);
     }
@@ -89,6 +127,7 @@ export const createScreen = async (input) => {
     const filePath = path.join(screensDir, fileName);
 
     if (fs.existsSync(filePath)) {
+      // Skip with a warning — never overwrite existing screens.
       console.log(c("yellow", `  ⚠️ ${gradient(fileName, "#fbbf24", "#fb923c")} already exists, skipping ...`));
     } else {
       fs.writeFileSync(filePath, screenTemplate(name));
@@ -102,6 +141,7 @@ export const createScreen = async (input) => {
     console.log(`  ${c("brightGreen", "✔")} ${rainbow(f)}`),
   );
 
+  // Print wiring instructions so the developer knows exactly what to add to app.js.
   if (created > 0) {
     console.log(`\n${section("🔌", "WIRE THEM UP in src/app.js")}`);
     screenNames.forEach((name) => {

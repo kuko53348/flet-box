@@ -99,6 +99,14 @@ export const palettes = {
 // ========== SUBSCRIBERS ==========
 const themeSubscribers = [];
 
+/**
+ * Subscribes a callback to theme change events.
+ * @param {function(Object): void} callback - Function called with the new colors object on every theme change.
+ * @returns {function(): void} Unsubscribe function — call it to remove the listener.
+ * @example
+ * const unsub = subscribeTheme((colors) => console.log(colors.primary));
+ * unsub(); // stop listening
+ */
 export const subscribeTheme = (callback) => {
   if (typeof callback === "function") {
     themeSubscribers.push(callback);
@@ -109,6 +117,11 @@ export const subscribeTheme = (callback) => {
   };
 };
 
+/**
+ * Notifies all registered theme subscribers of a color change.
+ * Errors thrown by individual subscribers are caught and warned.
+ * @private
+ */
 const notifyThemeChange = () => {
   themeSubscribers.forEach((cb) => {
     try {
@@ -120,6 +133,13 @@ const notifyThemeChange = () => {
 };
 
 // ========== THEME FUNCTIONS ==========
+/**
+ * Applies a named theme palette to the global `colors` object, updates all
+ * CSS custom properties on `:root`, persists the choice to `localStorage`,
+ * and notifies all subscribers.
+ * @param {string} themeName - Name of the palette to apply (e.g. `"light"` or `"dark"`).
+ * @returns {Object} The updated `colors` object after the theme is applied.
+ */
 export const setTheme = (themeName) => {
   const palette = palettes[themeName];
   if (palette) {
@@ -151,6 +171,12 @@ export const setTheme = (themeName) => {
   return colors;
 };
 
+/**
+ * Returns the currently active theme name.
+ * Reads from `localStorage` first; falls back to the OS
+ * `prefers-color-scheme` media query; defaults to `"light"`.
+ * @returns {"light"|"dark"} The active theme name.
+ */
 export const getTheme = () => {
   try {
     const savedTheme = localStorage.getItem("fletbox-theme");
@@ -165,6 +191,10 @@ export const getTheme = () => {
   }
 };
 
+/**
+ * Switches between `"light"` and `"dark"` themes.
+ * @returns {"light"|"dark"} The new theme name after toggling.
+ */
 export const toggleTheme = () => {
   const currentTheme = getTheme();
   const newTheme = currentTheme === "light" ? "dark" : "light";
@@ -172,6 +202,11 @@ export const toggleTheme = () => {
   return newTheme;
 };
 
+/**
+ * Applies the OS-level color scheme preference only when no theme has been
+ * explicitly saved to `localStorage`.
+ * @returns {"light"|"dark"} The theme that was applied or already saved.
+ */
 export const applySystemTheme = () => {
   try {
     const savedTheme = localStorage.getItem("fletbox-theme");
@@ -189,6 +224,12 @@ export const applySystemTheme = () => {
   }
 };
 
+/**
+ * Registers a listener on the OS `prefers-color-scheme` media query and
+ * automatically calls {@link setTheme} whenever the system preference changes,
+ * but only when no theme has been explicitly saved to `localStorage`.
+ * @returns {function(): void} Cleanup function that removes the media-query listener.
+ */
 export const watchSystemTheme = () => {
   try {
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
@@ -206,6 +247,16 @@ export const watchSystemTheme = () => {
   }
 };
 
+/**
+ * Resolves a color by name from the active palette and optionally applies an
+ * alpha channel to hex values.
+ * @param {string} colorName - Key in the `colors` map (e.g. `"primary"`, `"border"`) or a raw CSS color string.
+ * @param {number} [opacity=1] - Alpha value between 0 and 1. Ignored for non-hex values.
+ * @returns {string} CSS color string (hex or `rgba(...)`).
+ * @example
+ * getColor("primary")       // "#6366f1"
+ * getColor("primary", 0.5)  // "rgba(99, 102, 241, 0.5)"
+ */
 export const getColor = (colorName, opacity = 1) => {
   const color = colors[colorName] || colorName;
   if (opacity === 1) return color;
@@ -220,11 +271,31 @@ export const getColor = (colorName, opacity = 1) => {
 };
 
 // ========== COMPONENTS ==========
+/**
+ * Thin wrapper component that applies a theme on render.
+ * Pass `theme` to force a specific palette; omit it to leave the active theme unchanged.
+ * @param {Object} props
+ * @param {*} props.children - Child content to render.
+ * @param {string|null} [props.theme=null] - Theme name to apply (`"light"` or `"dark"`).
+ * @returns {*} The `children` value, unchanged.
+ */
 export const ThemeProvider = ({ children, theme = null }) => {
   if (theme) setTheme(theme);
   return children;
 };
 
+/**
+ * Returns a hook-like object containing the full theme API.
+ * Useful for accessing the active colors and theme utilities from any component.
+ * @returns {{
+ *   colors: Object,
+ *   setTheme: function,
+ *   getTheme: function,
+ *   toggleTheme: function,
+ *   getColor: function,
+ *   applySystemTheme: function
+ * }}
+ */
 export const useTheme = () => {
   return {
     colors,

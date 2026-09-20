@@ -1,10 +1,36 @@
-// widgets/Chip.js
+/**
+ * @file Chip.js
+ * @description A compact label/tag widget, optionally adorned with a leading
+ * icon and a delete button. Supports "filled" and "outlined" variants with
+ * configurable colors, sizing, and elevation.
+ */
+
 import { WidgetFactory } from "../widget-factory/index.js";
 import { Row } from "./Row.js";
 import { Text } from "./Text.js";
 import { Icon } from "./Icon.js";
 import { colors } from "../utils/themes.js";
 
+/**
+ * Creates a Chip widget — a small interactive label commonly used for tags,
+ * filters, or multi-select values.
+ *
+ * @param {Object} props - Configuration for the chip.
+ * @param {string} props.label - The text displayed inside the chip.
+ * @param {string} [props.icon] - Optional Material icon name rendered before the label.
+ * @param {Function} [props.onPress] - Called when the chip is clicked. When provided, the cursor becomes a pointer and a hover opacity effect is added.
+ * @param {Function} [props.onDelete] - When provided, renders a close ("×") icon on the right side of the chip. Called when that icon is clicked.
+ * @param {'filled'|'outlined'} [props.variant='filled'] - Visual style. 'filled' uses a solid background; 'outlined' uses a transparent background with a border.
+ * @param {string} [props.color=colors.primary] - Chip accent color: used as the background (filled) or border/text (outlined).
+ * @param {string} [props.textColor] - Explicit text color override. Defaults to '#fff' (filled) or `color` (outlined).
+ * @param {string} [props.borderColor] - Explicit border color override (outlined variant only). Defaults to `color`.
+ * @param {number} [props.borderRadius=32] - Corner radius in pixels. High values produce a pill shape.
+ * @param {string} [props.padding='4px 12px'] - Internal padding of the chip row.
+ * @param {number} [props.gap=4] - Gap in pixels between icon, label, and delete icon.
+ * @param {number} [props.size=12] - Font size in pixels. Also scales the icons proportionally.
+ * @param {number} [props.elevation=0] - Box-shadow depth. 0 means no shadow.
+ * @returns {HTMLElement} The chip container element.
+ */
 export const Chip = (props) => {
   const {
     label,
@@ -23,7 +49,7 @@ export const Chip = (props) => {
     ...rest
   } = props;
 
-  // Determine colors based on variant
+  // Derive background, text, and border colors from the variant
   let bgColor, txtColor, brdColor;
 
   if (variant === "outlined") {
@@ -38,7 +64,7 @@ export const Chip = (props) => {
 
   const children = [];
 
-  // Left icon (optional)
+  // Optional leading icon — inherits the chip's text color for visual consistency
   if (icon) {
     children.push(
       Icon({
@@ -49,7 +75,6 @@ export const Chip = (props) => {
     );
   }
 
-  // Chip text
   children.push(
     Text({
       text: label,
@@ -59,7 +84,7 @@ export const Chip = (props) => {
     }),
   );
 
-  // Delete button (optional)
+  // Optional trailing delete button — stopPropagation prevents triggering onPress
   if (onDelete) {
     const closeIcon = Icon({
       name: "close",
@@ -74,7 +99,7 @@ export const Chip = (props) => {
     children.push(closeIcon);
   }
 
-  // Chip content using Row
+  // Inner Row lays out icon + label + delete icon horizontally
   const chipContent = Row({
     alignItems: "center",
     gap: gap,
@@ -92,7 +117,7 @@ export const Chip = (props) => {
     ...rest,
   });
 
-  // Main chip using WidgetFactory
+  // Outer wrapper element enables the onclick without styling conflicts
   const chip = WidgetFactory({
     display: "inline-block",
     cursor: onPress ? "pointer" : "default",
@@ -102,13 +127,14 @@ export const Chip = (props) => {
     ...rest,
   });
 
-  // Interactive effects (hover, press) - WidgetFactory already handles some
-  // We add custom hover effects for variant-specific behavior
+  // Hover effects that respect the chip's visual variant
   if (onPress) {
     chip.addEventListener("mouseenter", () => {
       if (variant === "filled") {
+        // Slightly dim the chip to signal interactivity
         chip.style.opacity = "0.85";
       } else if (chipContent) {
+        // Tint the outlined chip background subtly on hover
         chipContent.style.backgroundColor = `${color}10`;
       }
     });

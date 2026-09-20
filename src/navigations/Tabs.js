@@ -1,4 +1,4 @@
-// navigations/Tabs.js 
+// navigations/Tabs.js
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 import { Container } from "../widgets/Container.js";
@@ -6,6 +6,57 @@ import { Row } from "../widgets/Row.js";
 import { Text } from "../widgets/Text.js";
 import { Icon } from "../widgets/Icon.js";
 
+/**
+ * @typedef {Object} TabDefinition
+ * @property {string} label - Display text for the tab.
+ * @property {string} [title] - Alias for label.
+ * @property {string} [icon] - Material Icon name shown alongside the label.
+ * @property {number|string} [badge] - Badge value shown in a small chip on the tab.
+ */
+
+/**
+ * @typedef {Object} TabsProps
+ * @property {Array<string|TabDefinition>} [tabs=[]] - Tab definitions. A plain string is treated as the label.
+ * @property {HTMLElement[]} [children=[]] - Content panels, one per tab (matched by index).
+ * @property {number} [activeIndex=0] - Initially active tab index.
+ * @property {Function} [onChange] - Called with the new index whenever the active tab changes.
+ * @property {"underline"|"filled"|"pills"|"slider"} [variant="underline"] - Visual style of the tab bar.
+ * @property {"small"|"medium"|"large"} [size="medium"] - Size preset controlling padding, font size, and height.
+ * @property {string} [color] - Accent color (indicator, active icon).
+ * @property {string} [textColor] - Label color for inactive tabs.
+ * @property {string} [activeTextColor] - Label color for the active tab.
+ * @property {string} [bgColor] - Background fill of the tab bar (slider/filled variants).
+ * @property {string} [buttonColor] - Slider thumb color (slider variant).
+ * @property {"left"|"center"|"right"} [alignment="left"] - Alignment hint (not yet fully applied).
+ * @property {boolean} [fullWidth=true] - Whether tabs stretch to fill the available width.
+ * @property {boolean} [showDivider=true] - Whether to show a bottom border on the underline variant.
+ * @property {string} [dividerColor] - Color of the underline divider.
+ * @property {boolean} [showIcon=false] - Whether to render the tab's icon.
+ * @property {"left"|"right"} [iconPosition="left"] - Position of the icon relative to the label.
+ * @property {number} [iconSize=18] - Icon size in pixels.
+ * @property {Array<number|string>} [badges=[]] - Badge values indexed by tab position; overrides tab-level badge.
+ */
+
+/**
+ * Tabs renders a horizontal tab bar with associated content panels.
+ *
+ * Four visual variants are supported:
+ * - `underline` — a moving underline indicator below the active tab.
+ * - `filled` — tabs on a solid background, active tab visually distinct.
+ * - `pills` — rounded pill-shaped tab buttons.
+ * - `slider` — an animated filled thumb that slides under the active tab.
+ *
+ * The active tab tracks a `currentIndex` state internally. Keyboard
+ * navigation (Enter/Space) and ARIA attributes are included for accessibility.
+ *
+ * A ResizeObserver and a window resize listener keep the slider thumb
+ * position correct when the tab bar dimensions change.
+ *
+ * @param {TabsProps} props
+ * @returns {HTMLElement} The tabs container element, augmented with:
+ *   - `activeIndex` (getter/setter) — read or set the active tab index.
+ *   - `setActiveTab(index: number)` — alias for the setter.
+ */
 export const Tabs = (props) => {
   const {
     tabs = [],
@@ -35,6 +86,8 @@ export const Tabs = (props) => {
   let tabsWrapperRef = null;
   let tabButtonsRef = [];
 
+  // Size preset lookup — controls padding, font size, icon size, content
+  // padding, and minimum height in a single prop for consistent scaling.
   const sizes = {
     small: { p: "6px 12px", f: 12, g: 4, i: 14, cp: 12, h: 32 },
     medium: { p: "8px 16px", f: 14, g: 8, i: 18, cp: 16, h: 40 },
@@ -42,9 +95,17 @@ export const Tabs = (props) => {
   };
   const sz = sizes[size] || sizes.medium;
 
+  /** Extract display label from a tab definition or plain string. */
   const getLabel = (t) =>
     typeof t === "object" ? t.label || t.title : String(t);
+
+  /** Extract icon name from a tab definition (returns null for plain strings). */
   const getIcon = (t) => (typeof t === "object" ? t.icon || null : null);
+
+  /**
+   * Resolve the badge value for a given tab index.
+   * The `badges` prop array takes priority over the tab-level `badge` field.
+   */
   const getBadge = (i) => badges[i] || tabs[i]?.badge || null;
 
   const container = Container({
@@ -93,6 +154,7 @@ export const Tabs = (props) => {
     const badge = getBadge(idx);
     const isActive = currentIndex === idx;
 
+    // Build the row of content inside each tab button.
     const content = [];
     if (showIcon && icon && iconPosition === "left") {
       content.push(
@@ -138,9 +200,10 @@ export const Tabs = (props) => {
       transition: "all 0.2s",
       flex: fullWidth ? 1 : "0 0 auto",
       whiteSpace: "nowrap",
+      // Subtract the slider's internal padding so buttons don't overflow it.
       minHeight: sz.h - (variant === "slider" ? 8 : 0),
       style: { zIndex: 2 },
-      // --- NUEVO: Accesibilidad ---
+      // Accessibility: expose as a tab role with aria-selected.
       role: "tab",
       tabIndex: 0,
       "aria-selected": isActive.toString(),
@@ -154,7 +217,6 @@ export const Tabs = (props) => {
           }
         }
       },
-      // ----------------------------
       child: Row({
         alignItems: "center",
         justifyContent: "center",
@@ -176,6 +238,8 @@ export const Tabs = (props) => {
   });
   tabButtonsRef = tabButtons;
 
+  // The slider variant uses an absolutely positioned "thumb" div that
+  // animates to the active tab's position via CSS transform.
   if (variant === "slider") {
     sliderIndicator = WidgetFactory({
       tag: "div",
@@ -202,6 +266,9 @@ export const Tabs = (props) => {
   });
   container.appendChild(contentContainer);
 
+  /**
+   * Swap the content panel to the one matching `currentIndex`.
+   */
   const updateContent = () => {
     while (contentContainer.firstChild)
       contentContainer.removeChild(contentContainer.firstChild);
@@ -209,6 +276,10 @@ export const Tabs = (props) => {
     if (active instanceof HTMLElement) contentContainer.appendChild(active);
   };
 
+  /**
+   * Reposition the slider thumb to sit under the active tab button.
+   * Reads live DOM rectangles so it stays accurate after layout changes.
+   */
   const updateSliderPosition = () => {
     if (!sliderIndicator || !tabButtonsRef[currentIndex]) return;
     const btn = tabButtonsRef[currentIndex];
@@ -219,11 +290,17 @@ export const Tabs = (props) => {
     sliderIndicator.style.transform = `translateX(${left}px)`;
   };
 
+  /**
+   * Apply active/inactive styles to all tab buttons and update the content
+   * panel and slider position. Called on every tab change.
+   *
+   * @param {number} idx - The newly active tab index.
+   */
   const updateActiveTab = (idx) => {
     tabButtonsRef.forEach((btn, i) => {
       const isActive = i === idx;
-      
-      // --- NUEVO: Reflejar estado A11y ---
+
+      // Keep aria-selected in sync with the visual state.
       btn.setAttribute("aria-selected", isActive.toString());
 
       const textSpan = btn.querySelector("span:not(.material-icons)");
@@ -242,11 +319,15 @@ export const Tabs = (props) => {
     updateContent();
   };
 
+  // Defer the initial slider position calculation by one frame so the DOM
+  // has been laid out and getBoundingClientRect() returns real values.
   let initialPositionTimer = setTimeout(() => {
     initialPositionTimer = null;
     updateSliderPosition();
   }, 16);
 
+  // Debounced window resize handler — recomputes slider position after the
+  // layout has stabilised following the resize event.
   let resizeTimeout = null;
   let resizeObserver = null;
   const handleResize = () => {
@@ -259,11 +340,14 @@ export const Tabs = (props) => {
   };
   window.addEventListener("resize", handleResize);
 
+  // Also observe the tab bar element itself so the thumb repositions when
+  // the container resizes independently of the window (e.g. sidebar toggle).
   if (typeof ResizeObserver !== "undefined") {
     resizeObserver = new ResizeObserver(() => updateSliderPosition());
     if (tabsWrapperRef) resizeObserver.observe(tabsWrapperRef);
   }
 
+  // Cleanup: cancel timers and remove listeners when the component is unmounted.
   const originalCleanup = container._cleanup;
   container._cleanup = () => {
     if (initialPositionTimer) clearTimeout(initialPositionTimer);
@@ -273,6 +357,7 @@ export const Tabs = (props) => {
     if (originalCleanup) originalCleanup();
   };
 
+  // ========== PUBLIC API ==========
   Object.defineProperty(container, "activeIndex", {
     get: () => currentIndex,
     set: (idx) => {
@@ -283,6 +368,13 @@ export const Tabs = (props) => {
       }
     },
   });
+
+  /**
+   * Programmatically activate a tab by index.
+   * Equivalent to setting `container.activeIndex = idx`.
+   *
+   * @param {number} idx - Zero-based tab index.
+   */
   container.setActiveTab = (idx) => {
     container.activeIndex = idx;
   };
