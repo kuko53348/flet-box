@@ -1,9 +1,9 @@
 // core/inferSchema.js
 
 /**
- * Infiere un JSON Schema a partir de un objeto de ejemplo
- * @param {Object} example - Objeto de ejemplo
- * @param {string} name - Nombre del esquema (opcional)
+ * Infers a JSON Schema from an example object
+ * @param {Object} example - Example object
+ * @param {string} name - Schema name (optional)
  * @returns {Object} JSON Schema
  */
 export const inferSchema = (example, name = "Schema") => {

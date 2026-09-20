@@ -2,7 +2,7 @@
  * ANIMATED BOX - Widget with CSS animations
  * @module animations/AnimatedBox
  *
- * PROPIEDADES ANIMABLES COMPLETAS:
+ * COMPLETE ANIMABLE PROPERTIES:
  * - backgroundColor, color, borderRadius, opacity
  * - transform: scale, rotate, rotateX, rotateY, translateX, translateY
  * - width, height
@@ -10,23 +10,23 @@
  * - paddingTop/Right/Bottom/Left
  * - borderWidth, borderColor
  * - boxShadow (offsetX, offsetY, blur, spread, color)
- * - background (gradientes: linear, radial, conic)
+ * - background (gradients: linear, radial, conic)
  *
- * ⭐ AHORA: los números en propiedades de longitud (width, height, translate, etc.)
- *   se convierten automáticamente a rem (como en widget-factory)
+ * ⭐ NOW: numbers in length properties (width, height, translate, etc.)
+ *   are automatically converted to rem (as in widget-factory)
  */
 
 let animationCounter = 0;
 const injectedKeyframes = new Set();
 
-// Conversión a rem (como en tu widget-factory)
+// Conversion to rem (as in widget-factory)
 const toREM = (value) => {
   if (value === undefined || value === null) return undefined;
   if (typeof value === "number") return `${value / 16}rem`;
   return value;
 };
 
-// Efectos que deben usar rem (longitudes)
+// Effects that must use rem (lengths)
 const lengthEffects = new Set([
   "width",
   "height",
@@ -44,7 +44,7 @@ const lengthEffects = new Set([
   "borderRadius",
 ]);
 
-// Efectos que NO deben tener unidad (escalares, ángulos, opacidad)
+// Effects that must NOT have a unit (scalars, angles, opacity)
 const noUnitEffects = new Set([
   "scale",
   "rotate",
@@ -54,7 +54,7 @@ const noUnitEffects = new Set([
 ]);
 
 const effectMap = {
-  // Originales
+  // Originals
   bgColor: "backgroundColor",
   textColor: "color",
   rounded: "borderRadius",
@@ -65,7 +65,7 @@ const effectMap = {
   translateX: "translateX",
   translateY: "translateY",
   opacity: "opacity",
-  // Dimensiones y espaciado
+  // Dimensions and spacing
   width: "width",
   height: "height",
   marginTop: "marginTop",
@@ -78,16 +78,16 @@ const effectMap = {
   paddingLeft: "paddingLeft",
   borderWidth: "borderWidth",
   borderColor: "borderColor",
-  // Sombra
+  // Shadow
   boxShadow: "boxShadow",
   elevation: "boxShadow",
-  // Gradiente
+  // Gradient
   gradient: "background",
   textGradient: "background",
   backgroundGradient: "background",
 };
 
-// Interpolación de colores (hex, rgba, rgb)
+// Color interpolation (hex, rgba, rgb)
 const interpolateColor = (color1, color2, t) => {
   if (color1 === color2) return color1;
 
@@ -121,8 +121,8 @@ const interpolateColor = (color1, color2, t) => {
   return rgbToRgba(r, g, b, a);
 };
 
-// Interpolación para números con unidades (solo para propiedades que requieren unidad)
-// Si useREM es true, convierte el resultado a rem
+// Interpolation for numbers with units (only for properties that require a unit)
+// If useREM is true, converts the result to rem
 const interpolateNumber = (from, to, t, useREM = false) => {
   let fromNum, toNum, fromUnit, toUnit;
 
@@ -140,7 +140,7 @@ const interpolateNumber = (from, to, t, useREM = false) => {
 
   const value = fromNum + (toNum - fromNum) * t;
   if (useREM) {
-    // Si debemos usar rem, el valor resultante se expresa en rem
+    // If we must use rem, the resulting value is expressed in rem
     return `${value / 16}rem`;
   } else {
     const unit = fromUnit || toUnit || "px";
@@ -148,7 +148,7 @@ const interpolateNumber = (from, to, t, useREM = false) => {
   }
 };
 
-// Interpolación de boxShadow
+// boxShadow interpolation
 const interpolateBoxShadow = (shadow1, shadow2, t) => {
   if (!shadow1 || !shadow2) return shadow1 || shadow2;
   const parseShadow = (shadow) => {
@@ -168,7 +168,7 @@ const interpolateBoxShadow = (shadow1, shadow2, t) => {
   const s1 = parseShadow(shadow1);
   const s2 = parseShadow(shadow2);
   const interpolateLength = (len1, len2, t) =>
-    interpolateNumber(len1, len2, t, false); // boxShadow mantiene unidades originales
+    interpolateNumber(len1, len2, t, false); // boxShadow keeps original units
   const newOffsetX = interpolateLength(s1.offsetX, s2.offsetX, t);
   const newOffsetY = interpolateLength(s1.offsetY, s2.offsetY, t);
   const newBlur = interpolateLength(s1.blur, s2.blur, t);
@@ -177,7 +177,7 @@ const interpolateBoxShadow = (shadow1, shadow2, t) => {
   return `${newOffsetX} ${newOffsetY} ${newBlur} ${newSpread} ${newColor}`;
 };
 
-// Interpolación de gradientes (sin cambios)
+// Gradient interpolation (unchanged)
 const interpolateGradient = (gradient1, gradient2, t) => {
   if (!gradient1 || !gradient2) return gradient1 || gradient2;
 
@@ -325,7 +325,7 @@ const generateKeyframes = (animations) => {
           if (noUnitEffects.has(effect)) {
             value = cycledNum;
           } else if (lengthEffects.has(effect)) {
-            // Convertir a rem
+            // Convert to rem
             value = toREM(cycledNum);
           } else {
             const fromUnit = from.toString().replace(fromNum.toString(), "");
@@ -352,7 +352,7 @@ const generateKeyframes = (animations) => {
             const toNum = parseFloat(to);
             value = fromNum + (toNum - fromNum) * t;
           } else if (lengthEffects.has(effect)) {
-            // Convertir a rem usando interpolación numérica y luego a rem
+            // Convert to rem using numeric interpolation and then to rem
             const fromNum = parseFloat(from);
             const toNum = parseFloat(to);
             const rawValue = fromNum + (toNum - fromNum) * t;
@@ -363,7 +363,7 @@ const generateKeyframes = (animations) => {
         }
       }
 
-      // Transformaciones
+      // Transformations
       if (effect === "scale") {
         transformParts.push(`scale(${value})`);
       } else if (effect === "rotate") {
@@ -373,10 +373,10 @@ const generateKeyframes = (animations) => {
       } else if (effect === "rotateX") {
         transformParts.push(`rotateX(${value}deg)`);
       } else if (effect === "translateX" || effect === "translateY") {
-        // El valor ya debería venir en rem si era número, pero si ya tiene unidad se respeta
+        // The value should already come in rem if it was a number, but if it already has a unit it is kept
         transformParts.push(`${effect}(${value})`);
       }
-      // Estilos CSS
+      // CSS styles
       else if (effect === "opacity") {
         styleParts.push(`opacity: ${value};`);
       } else if (effect === "backgroundColor") {
@@ -428,7 +428,7 @@ export const AnimatedBox = ({
 }) => {
   if (!child) return null;
 
-  // Propagar posición al child
+  // Propagate position to child
   if (top) child.dataset.top = typeof top === "number" ? `${top}px` : top;
   if (right)
     child.dataset.right = typeof right === "number" ? `${right}px` : right;
@@ -441,23 +441,23 @@ export const AnimatedBox = ({
     const effect = effectMap[firstAnim.effect] || firstAnim.effect;
 
     if (firstAnim.effect === "textGradient") {
-      // Estos estilos van en el child (el Text)
+      // These styles go on the child (the Text)
       child.style.color = "transparent";
       child.style.backgroundClip = "text";
       child.style.webkitBackgroundClip = "text";
       child.style.backgroundColor = "transparent";
 
-      // El gradiente debe ir como background del child
-      // No esperar a la animación, aplicarlo directamente también al inicio
+      // The gradient must go as the child's background
+      // Don't wait for the animation, apply it directly at the start too
       const gradientValue = firstAnim.from;
       if (gradientValue) {
         child.style.background = gradientValue;
       }
     }
-    // Valores iniciales (conversión a rem si es longitud)
+    // Initial values (rem conversion if length)
     const setInitialStyle = (prop, value) => {
       if (value === undefined) return;
-      // Si es número y es una propiedad de longitud, convertir a rem
+      // If it is a number and a length property, convert to rem
       let finalValue = value;
       if (typeof value === "number" && lengthEffects.has(effect)) {
         finalValue = toREM(value);
@@ -498,7 +498,7 @@ export const AnimatedBox = ({
     const duration = animations[0]?.duration || 500;
     const iteration = animations[0]?.loop ? "infinite" : "1";
     // remove if brac
-    const animationDelay = animations[0]?.delay || delay; // ← AÑADE ESTA LÍNEA
+    const animationDelay = animations[0]?.delay || delay; // ← ADD THIS LINE
 
     // child.style.animation = `${name} ${duration}ms ${timing} ${delay} ${iteration} normal ${fillMode}`;
     child.style.animation = `${name} ${duration}ms ${timing} ${animationDelay} ${iteration} normal ${fillMode}`;

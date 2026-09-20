@@ -1,7 +1,7 @@
 // tests/widget-factory.test.js
-// Suite de regresión del corazón (widget-factory). Sin dependencias: corre en
-// el navegador servido por el dev server. Fija como contrato el comportamiento
-// actual para que el corazón quede congelado y solo se trabaje en widgets.
+// Regression suite for the core (widget-factory). No dependencies: it runs in
+// the browser served by the dev server. It sets the current behavior as the
+// contract so the core stays frozen and only widgets are worked on.
 import { WidgetFactory } from "../src/widget-factory/widgetFactory.js";
 import { _debugRegistrySize } from "../src/widget-factory/lifecycle.js";
 
@@ -32,7 +32,7 @@ const mount = (w) => {
 async function run() {
   const baseline = _debugRegistrySize();
 
-  // ---------- 1. Normalización de tag ----------
+  // ---------- 1. Tag normalization ----------
   eq("tag string → DIV", WidgetFactory("div").tagName, "DIV");
   eq("tag objeto {tag} → SPAN", WidgetFactory({ tag: "span" }).tagName, "SPAN");
   eq("objeto sin tag → DIV", WidgetFactory({}).tagName, "DIV");
@@ -54,7 +54,7 @@ async function run() {
   eq("zIndex num → sin unidad", WidgetFactory({ tag: "div", zIndex: 5 }).style.zIndex, "5");
   eq("width string → se respeta", WidgetFactory({ tag: "div", width: "50%" }).style.width, "50%");
 
-  // ---------- 4. Alias ≡ canónico (filosofía multi-dialecto) ----------
+  // ---------- 4. Alias ≡ canonical (multi-dialect philosophy) ----------
   const a = WidgetFactory({ tag: "div", bgColor: "#ff0000" });
   const b = WidgetFactory({ tag: "div", backgroundColor: "#ff0000" });
   eq("alias bgColor aplica", a.style.backgroundColor, "rgb(255, 0, 0)");
@@ -100,7 +100,7 @@ async function run() {
   await tick(60);
   eq("registro podado tras unmount (sin fuga)", _debugRegistrySize(), baseline);
 
-  // ---------- 7. Reparenting síncrono: sin teardown ----------
+  // ---------- 7. Synchronous reparenting: no teardown ----------
   const rw = WidgetFactory({ tag: "div" });
   let rm = 0;
   let ru = 0;
@@ -117,7 +117,7 @@ async function run() {
   await tick(60);
   eq("reparent: sigue registrado (unmount final)", ru, 1);
 
-  // ---------- 8. Ráfaga: ausencia de fugas ----------
+  // ---------- 8. Burst: no memory leaks ----------
   const burst = [];
   for (let i = 0; i < 30; i++) burst.push(mount(WidgetFactory({ tag: "div", padding: i })));
   await tick();

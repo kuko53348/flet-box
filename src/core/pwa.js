@@ -1,4 +1,4 @@
-// src/core/pwa.js - PWA functions listas para onPress
+// src/core/pwa.js - PWA functions ready for onPress
 let deferredPrompt = null;
 
 // Listen for install event (only in a browser; keep the module importable in Node/SSR/tests)
@@ -14,7 +14,7 @@ export const isPWAInstalled = () => {
   return window.matchMedia("(display-mode: standalone)").matches;
 };
 
-// Install - directo para onPress
+// Install - direct for onPress
 export const installPWA = () => {
   if (deferredPrompt) {
     deferredPrompt.prompt();
@@ -25,7 +25,7 @@ export const installPWA = () => {
   return false;
 };
 
-// Update - directo para onPress
+// Update - direct for onPress
 export const updatePWA = () => {
   if (navigator.serviceWorker) {
     navigator.serviceWorker.getRegistration().then((reg) => {
@@ -42,7 +42,7 @@ export const updatePWA = () => {
   return false;
 };
 
-// Remove - directo para onPress
+// Remove - direct for onPress
 export const removePWA = () => {
   if (navigator.userAgent.includes("Chrome")) {
     window.open("chrome://apps", "_blank");

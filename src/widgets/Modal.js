@@ -1,4 +1,4 @@
-// widgets/Modal.js - Con colores por defecto mejorados
+// widgets/Modal.js - With improved default colors
 import { WidgetFactory } from "../widget-factory/index.js";
 import { transition } from "../tools/index.js";
 import { colors } from "../utils/themes.js";
@@ -8,7 +8,7 @@ import { Row } from "./Row.js";
 import { Text } from "./Text.js";
 import { Icon } from "./Icon.js";
 
-// ========== COMPONENTES INTERNOS ==========
+// ========== INTERNAL COMPONENTS ==========
 
 const ModalOverlay = ({
   closeOnOverlayClick,
@@ -235,7 +235,7 @@ const ModalContainer = ({
       "transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1), opacity 0.3s ease",
   };
 
-  // Aplicar borde personalizado
+  // Apply custom border
   if (border) {
     containerStyle.border = border;
   } else if (borderWidth !== undefined && borderColor) {
@@ -249,39 +249,39 @@ const ModalContainer = ({
   });
 };
 
-// ========== MODAL PRINCIPAL ==========
+// ========== MAIN MODAL ==========
 export const Modal = (props = {}) => {
   const {
-    // Contenido
+    // Content
     title,
     content,
     actions = [],
 
-    // Comportamiento
+    // Behavior
     closeOnOverlayClick = true,
     closeOnEsc = true,
 
-    // Dimensiones
+    // Dimensions
     width = 480,
     minWidth = 320,
     maxWidth = "90%",
     maxHeight = "80vh",
 
-    // Estilos del contenedor principal
+    // Main container styles
     backgroundColor = colors.surface,
     borderRadius = 20,
     border = null,
     borderColor = colors.border,
     borderWidth = 1,
     shadow = null,
-    elevation = 3, // ← Nueva: sombra por elevación
+    elevation = 3, // ← New: shadow by elevation
 
-    // Padding del contenido
+    // Content padding
     padding = "20px",
     contentBgColor = colors.surface,
-    contentElevation = 0, // ← Sombra interior opcional
+    contentElevation = 0, // ← Optional inner shadow
 
-    // Header personalizable
+    // Customizable header
     showCloseButton = true,
     headerBgColor = colors.surface,
     headerTextColor = null,
@@ -289,7 +289,7 @@ export const Modal = (props = {}) => {
     headerPadding = null,
     headerElevation = 0,
 
-    // Footer personalizable
+    // Customizable footer
     footerBgColor = colors.surface,
     footerBorder = null,
     footerPadding = null,
@@ -345,7 +345,7 @@ export const Modal = (props = {}) => {
     if (e.key === "Escape" && isOpen) handleClose();
   };
 
-  // Construir modal UI
+  // Build modal UI
   const headerElement = ModalHeader({
     title,
     showCloseButton,
@@ -372,7 +372,7 @@ export const Modal = (props = {}) => {
     footerElevation,
   });
 
-  // Filtrar elementos nulos
+  // Filter out null elements
   const modalChildren = [headerElement, contentElement, footerElement].filter(
     Boolean,
   );
@@ -415,7 +415,7 @@ export const Modal = (props = {}) => {
       return isOpen;
     },
 
-    // Métodos para actualización dinámica
+    // Methods for dynamic updates
     updateContent: (newContent) => {
       if (contentElement) {
         while (contentElement.firstChild) {

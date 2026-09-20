@@ -1,4 +1,4 @@
-// widgets/Dropdown.js - Con textColor, borderRadius y bgColor unificados
+// widgets/Dropdown.js - With unified textColor, borderRadius and bgColor
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 import { Container } from "./Container.js";
@@ -21,15 +21,15 @@ export const Dropdown = (props) => {
     borderRadius = 8,
     color = colors.primary,
     bgColor = colors.surface,
-    textColor = colors.text, // ← NUEVO: color del texto general
-    optionHoverColor = colors.border, // ← fondo al hover sobre opción
+    textColor = colors.text, // ← NEW: general text color
+    optionHoverColor = colors.border, // ← hover background on option
     clearable = false,
     width = "100%",
     portal = true,
     ...rest
   } = props;
 
-  // Estado interno
+  // Internal state
   let isOpen = false;
   let selectedValue = value;
   let currentOptions = [...options];
@@ -41,7 +41,7 @@ export const Dropdown = (props) => {
   let currentClearable = clearable;
   let currentColor = color;
   let currentBgColor = bgColor;
-  let currentTextColor = textColor; // ← guardar textColor
+  let currentTextColor = textColor; // ← store textColor
   let currentBorderRadius = borderRadius;
   let currentOptionHoverColor = optionHoverColor;
 
@@ -64,7 +64,7 @@ export const Dropdown = (props) => {
   const findSelected = () =>
     currentOptions.find((opt) => getValue(opt) === selectedValue);
 
-  // Actualizar visualización del selector
+  // Update selector display
   const updateDisplay = () => {
     if (!selector) return;
     const selected = findSelected();
@@ -94,7 +94,7 @@ export const Dropdown = (props) => {
     }
   };
 
-  // Construir selector
+  // Build selector
   const selectedOption = findSelected();
   const displayText = selectedOption ? getLabel(selectedOption) : "";
   const displayIcon = selectedOption ? getIcon(selectedOption) : null;
@@ -152,7 +152,7 @@ export const Dropdown = (props) => {
       cursor: currentDisabled ? "not-allowed" : "pointer",
       opacity: currentDisabled ? 0.5 : 1,
       boxSizing: "border-box",
-      color: currentTextColor, // heredar color de texto
+      color: currentTextColor, // inherit text color
     },
     children: [
       Row({
@@ -165,7 +165,7 @@ export const Dropdown = (props) => {
     ],
   });
 
-  // Contenedor principal
+  // Main container
   const container = Container({
     style: { position: "relative", width: width },
     ...rest,
@@ -184,7 +184,7 @@ export const Dropdown = (props) => {
   }
   container.appendChild(selector);
 
-  // Funciones de menú (portal)
+  // Menu functions (portal)
   const closeMenu = () => {
     if (!isOpen) return;
     if (menuElement && menuElement.parentNode) {
@@ -242,13 +242,13 @@ export const Dropdown = (props) => {
         zIndex: 10000,
         border: `1px solid ${colors.border}`,
         backgroundColor: currentBgColor,
-        borderRadius: `${currentBorderRadius}px`, // mismo borderRadius
+        borderRadius: `${currentBorderRadius}px`, // same borderRadius
         boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
         maxHeight: "250px",
         overflowY: "auto",
         margin: 0,
         padding: 0,
-        color: currentTextColor, // heredar textColor
+        color: currentTextColor, // inherit textColor
       },
     });
 
@@ -349,7 +349,7 @@ export const Dropdown = (props) => {
     isOpen ? closeMenu() : openMenu();
   };
 
-  // API pública y reactividad
+  // Public API and reactivity
   const update = (newProps) => {
     let needsDisplayUpdate = false;
     if (newProps.options !== undefined) {

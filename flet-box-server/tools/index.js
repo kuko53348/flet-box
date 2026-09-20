@@ -1,4 +1,4 @@
-// index.js - Exportación centralizada (versión corregida)
+// index.js - Centralized export (fixed version)
 
 // ============================================================
 // CORE MODULES
@@ -11,7 +11,7 @@ export * from "./core/security.js";
 export * from "./core/server.js";
 
 // ============================================================
-// MODULES (antes tools)
+// MODULES (formerly tools)
 // ============================================================
 export * from "./modules/auth/index.js";
 export * from "./modules/database/index.js";
@@ -29,7 +29,7 @@ export * from "./modules/translate/index.js";
 export * from "./modules/validator/index.js";
 
 // ============================================================
-// DEFAULT EXPORT (para importaciones simplificadas)
+// DEFAULT EXPORT (for simplified imports)
 // ============================================================
 import * as core from "./core/index.js";
 import * as modules from "./modules/index.js";

@@ -1,6 +1,6 @@
 // core/runApp.js
 import { stopWebRefresh } from "../utils/stopWebRefresh.js";
-import { initRouter } from "../navigations/Router.js"; // ← IMPORTANTE: añadir esta línea
+import { initRouter } from "../navigations/Router.js"; // ← IMPORTANT: add this line
 import {
   applySystemTheme,
   watchSystemTheme,
@@ -19,7 +19,7 @@ export const runApp = (
   const root = document.getElementById(rootId);
   if (!root) return;
 
-  // Si preventRefresh es true (por defecto), deshabilitamos los refrescos
+  // If preventRefresh is true (default), we disable refreshes
   // if (preventRefresh) {
   //     stopWebRefresh();
   // }
@@ -28,11 +28,11 @@ export const runApp = (
   let unsubscribeTheme = null;
   let unwatchSystemTheme = null;
 
-  // Libera recursivamente los recursos de todo el árbol antes de reconstruirlo.
-  // El `_cleanup` del corazón NO es recursivo y el MutationObserver no lo invoca,
-  // así que sin este barrido cada re-render (setState / cambio de tema) abandonaría
-  // los listeners/rAF/timers de los descendientes. Dispara también los handlers de
-  // onUnmount (Slider/ListView liberan ahí) antes del `_cleanup` de cada widget.
+  // Recursively releases the resources of the whole tree before rebuilding it.
+  // The core `_cleanup` is NOT recursive and the MutationObserver does not invoke it,
+  // so without this sweep each re-render (setState / theme change) would leak
+  // the listeners/rAF/timers of the descendants. It also fires the
+  // onUnmount handlers (Slider/ListView release there) before each widget's `_cleanup`.
   const teardownTree = (rootEl) => {
     if (!rootEl) return;
     const walk = (el) => {
@@ -68,8 +68,8 @@ export const runApp = (
     const mainContainer = Container({
       margin: 0,
       padding: 0,
-      width: "100vw", // ← 100% del viewport
-      minHeight: "100vh", // ← 100% del viewport
+      width: "100vw", // ← 100% of the viewport
+      minHeight: "100vh", // ← 100% of the viewport
       display: "flex",
       flexDirection: "column",
       backgroundColor: colors.background,
@@ -92,35 +92,35 @@ export const runApp = (
 
   root.style.margin = "0";
   root.style.padding = "0";
-  root.style.width = "100vw"; // ← 100% del viewport
-  root.style.minHeight = "100vh"; // ← 100% del viewport
+  root.style.width = "100vw"; // ← 100% of the viewport
+  root.style.minHeight = "100vh"; // ← 100% of the viewport
   root.style.display = "flex";
   root.style.flexDirection = "column";
   root.style.backgroundColor = colors.background;
   root.style.color = colors.text;
   root.style.transition = "background-color 0.3s ease, color 0.3s ease";
 
-  // Liberar cualquier árbol previo (p. ej. de un runApp anterior / HMR) antes de vaciar.
+  // Release any previous tree (e.g. from a prior runApp / HMR) before clearing.
   Array.from(root.children).forEach((child) => teardownTree(child));
   root.innerHTML = "";
 
-  // 🔥 INICIALIZAR ROUTER si se proporcionan rutas
+  // 🔥 INITIALIZE ROUTER if routes are provided
   if (routes) {
     initRouter(routes);
   }
 
   renderApp();
 
-  // La suscripción de tema vive en el ámbito de runApp (NO encadenada a un
-  // contenedor transitorio), porque renderApp() reconstruye el contenedor en cada
-  // cambio; si se encadenara al primer contenedor, se auto-cancelaría tras un uso.
+  // The theme subscription lives in runApp's scope (NOT attached to a
+  // transient container), because renderApp() rebuilds the container on every
+  // change; if it were attached to the first container, it would auto-cancel after one use.
   unsubscribeTheme = subscribeTheme(() => {
     root.style.backgroundColor = colors.background;
     root.style.color = colors.text;
     renderApp();
   });
 
-  // Handle de teardown para desmontar la app limpiamente.
+  // Teardown handle to unmount the app cleanly.
   return {
     destroy: () => {
       if (unsubscribeTheme) {
@@ -140,7 +140,7 @@ export const runApp = (
   };
 };
 
-// Resto de funciones auxiliares (insertBy, prependBy, etc.) se mantienen igual
+// Remaining helper functions (insertBy, prependBy, etc.) stay the same
 export const insertBy = (widget, rootId = "root") => {
   const root = document.getElementById(rootId);
   if (root && widget instanceof HTMLElement) {

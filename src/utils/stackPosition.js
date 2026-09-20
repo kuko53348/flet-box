@@ -5,7 +5,7 @@ export const stackPosition = (widget, props) => {
   const bottom = props.bottom;
   const left = props.left;
 
-  // Guardar posición en dataset para que Stack lo use después
+  // Save position in dataset so Stack can use it later
   if (top !== undefined) widget.dataset.top = top;
   if (right !== undefined) widget.dataset.right = right;
   if (bottom !== undefined) widget.dataset.bottom = bottom;

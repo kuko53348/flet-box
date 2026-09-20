@@ -24,13 +24,13 @@ export const ListView = (props) => {
     ...rest
   } = props;
 
-  // Calcular altura final
+  // Calculate final height
   let finalHeight = height;
   if (expand) {
     finalHeight = "100%";
   }
 
-  // Elemento base
+  // Base element
   const element = WidgetFactory({
     tag: "div",
     width: width,
@@ -42,7 +42,7 @@ export const ListView = (props) => {
     ...rest,
   });
 
-  // Estructura interna
+  // Internal structure
   const scrollContainer = document.createElement("div");
   scrollContainer.style.flex = "1";
   scrollContainer.style.overflowY = "auto";
@@ -65,7 +65,7 @@ export const ListView = (props) => {
   scrollContainer.appendChild(innerContainer);
   element.appendChild(scrollContainer);
 
-  // Estado interno
+  // Internal state
   let _data = [...data];
   let _refreshing = false;
   let itemCache = new Map();
@@ -79,7 +79,7 @@ export const ListView = (props) => {
   let isGridMode = wrapItems;
   let cols = isGridMode ? Math.max(1, crossAxisCount) : 1;
 
-  // Funciones auxiliares
+  // Helper functions
   const getTotalRows = () => Math.ceil(_data.length / cols);
 
   const getItemTop = (index) => {
@@ -99,7 +99,7 @@ export const ListView = (props) => {
     innerContainer.style.height = `${getTotalHeight()}px`;
   };
 
-  // Renderizado virtual optimizado
+  // Optimized virtual rendering
   const renderVisibleItems = () => {
     if (!scrollContainer) return;
 
@@ -120,7 +120,7 @@ export const ListView = (props) => {
     visibleStart = start;
     visibleEnd = end;
 
-    // Usar fragment para minimizar reflows
+    // Use fragment to minimize reflows
     const fragment = document.createDocumentFragment();
 
     for (let i = start; i < end; i++) {
@@ -134,7 +134,7 @@ export const ListView = (props) => {
           }
           itemCache.set(i, itemEl);
         } catch (err) {
-          console.error("Error en renderItem:", err);
+          console.error("Error in renderItem:", err);
           itemEl = document.createElement("div");
           itemEl.textContent = "Error";
           itemEl.style.padding = "8px";
@@ -160,12 +160,12 @@ export const ListView = (props) => {
       fragment.appendChild(wrapper);
     }
 
-    // Limpiar y agregar nuevo contenido
+    // Clear and add new content
     visibleContainer.innerHTML = "";
     visibleContainer.appendChild(fragment);
   };
 
-  // Scroll handler con throttle
+  // Scroll handler with throttle
   const handleScroll = () => {
     if (!ticking) {
       requestAnimationFrame(() => {
@@ -301,7 +301,7 @@ export const ListView = (props) => {
     });
   };
 
-  // Métodos públicos
+  // Public methods
   const updateData = (newData) => {
     _data = [...newData];
     itemCache.clear();
@@ -334,7 +334,7 @@ export const ListView = (props) => {
   element.scrollToStart = scrollToTop;
   element.scrollToEnd = scrollToBottom;
 
-  // Reactividad
+  // Reactivity
   Object.defineProperty(element, "data", {
     get: () => _data,
     set: (newVal) => updateData(newVal),
@@ -351,23 +351,23 @@ export const ListView = (props) => {
     enumerable: true,
   });
 
-  // Ciclo de vida (CORREGIDO: render inicial después de layout)
+  // Lifecycle (FIXED: initial render after layout)
   element.onMount(() => {
     renderHeader();
     renderFooter();
     updateInnerHeight();
 
-    // Forzar un segundo render después de que el DOM esté completamente calculado
+    // Force a second render after the DOM is fully calculated
     requestAnimationFrame(() => {
-      updateInnerHeight(); // Recalcular altura total (header/footer ya están en el DOM)
-      renderVisibleItems(); // Renderizar los elementos visibles inicialmente
+      updateInnerHeight(); // Recalculate total height (header/footer are already in the DOM)
+      renderVisibleItems(); // Render the initially visible items
     });
 
     renderEmpty();
     scrollContainer.addEventListener("scroll", handleScroll);
     if (onRefresh) setupPullToRefresh();
 
-    // Añadir keyframes del spinner si no existen
+    // Add spinner keyframes if they don't exist
     if (!document.querySelector("#listview-spinner-style")) {
       const style = document.createElement("style");
       style.id = "listview-spinner-style";

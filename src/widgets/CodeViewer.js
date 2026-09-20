@@ -34,7 +34,7 @@ export const CodeViewer = (props) => {
     const highlightedLines = lines.map((line) => generateHighlightedHtml(line));
 
     if (showLineNumbers) {
-      // Actualizar números de línea
+      // Update line numbers
       if (lineNumbersColRef) {
         lineNumbersColRef.innerHTML = "";
         for (let i = 0; i < lines.length; i++) {
@@ -50,7 +50,7 @@ export const CodeViewer = (props) => {
         }
       }
 
-      // Actualizar código
+      // Update code
       if (codeColRef) {
         codeColRef.innerHTML = "";
         for (let i = 0; i < lines.length; i++) {
@@ -63,7 +63,7 @@ export const CodeViewer = (props) => {
         }
       }
     } else {
-      // Actualizar código sin números de línea
+      // Update code without line numbers
       if (codeWrapperRef) {
         codeWrapperRef.innerHTML = highlightedLines.join("\n");
       }
@@ -113,7 +113,7 @@ export const CodeViewer = (props) => {
     },
   });
 
-  // Construir contenido según showLineNumbers
+  // Build content according to showLineNumbers
   if (showLineNumbers) {
     const flexContainer = WidgetFactory({
       tag: "div",
@@ -159,7 +159,7 @@ export const CodeViewer = (props) => {
     flexContainer.appendChild(codeColRef);
     scrollWrapperRef.appendChild(flexContainer);
 
-    // Sincronizar scroll
+    // Sync scroll
     const syncScroll = () => {
       if (lineNumbersColRef) lineNumbersColRef.scrollTop = codeColRef.scrollTop;
     };
@@ -186,7 +186,7 @@ export const CodeViewer = (props) => {
 
   container.appendChild(scrollWrapperRef);
 
-  // Rellenar contenido inicial
+  // Fill initial content
   const lines = currentCode.split("\n");
   const highlightedLines = lines.map((line) => generateHighlightedHtml(line));
 
@@ -215,7 +215,7 @@ export const CodeViewer = (props) => {
     codeWrapperRef.innerHTML = highlightedLines.join("\n");
   }
 
-  // ========== MÉTODOS PÚBLICOS ==========
+  // ========== PUBLIC METHODS ==========
   container.updateCode = (newCode) => {
     currentCode =
       typeof newCode === "string" ? newCode : JSON.stringify(newCode, null, 2);

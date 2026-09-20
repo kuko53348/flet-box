@@ -1,6 +1,6 @@
 // utils/syntaxHighlight.js
 
-// ========== COLORES PARA FLETBOX ==========
+// ========== FLETBOX COLORS ==========
 const fletboxColors = {
   primary: "#6366f1",
   secondary: "#8b5cf6",
@@ -15,7 +15,7 @@ const fletboxColors = {
   border: "#e2e8f0",
 };
 
-// ========== PALABRAS CLAVE FLETBOX ==========
+// ========== FLETBOX KEYWORDS ==========
 const fletboxKeywords = [
   "Container",
   "Row",
@@ -63,7 +63,7 @@ const fletboxKeywords = [
   "httpPost",
 ];
 
-// ========== PALABRAS CLAVE JAVASCRIPT ==========
+// ========== JAVASCRIPT KEYWORDS ==========
 const jsKeywords = [
   "const",
   "let",
@@ -106,7 +106,7 @@ const jsKeywords = [
   "undefined",
 ];
 
-// ========== TIPOS DE TOKENS ==========
+// ========== TOKEN TYPES ==========
 const TokenType = {
   KEYWORD: "keyword",
   STRING: "string",
@@ -120,21 +120,21 @@ const TokenType = {
   FLETBOX_WIDGET: "fletbox-widget",
 };
 
-// ========== COLORES PARA CADA TOKEN ==========
+// ========== COLORS PER TOKEN ==========
 export const highlightColors = {
-  [TokenType.KEYWORD]: "#c678dd", // púrpura
-  [TokenType.STRING]: "#98c379", // verde
-  [TokenType.NUMBER]: "#d19a66", // naranja
-  [TokenType.COMMENT]: "#5c6370", // gris
-  [TokenType.PROPERTY]: "#e06c75", // rojo
-  [TokenType.FUNCTION]: "#61afef", // azul
-  [TokenType.BRACKET]: "#abb2bf", // gris claro
-  [TokenType.PUNCTUATION]: "#abb2bf", // gris claro
+  [TokenType.KEYWORD]: "#c678dd", // purple
+  [TokenType.STRING]: "#98c379", // green
+  [TokenType.NUMBER]: "#d19a66", // orange
+  [TokenType.COMMENT]: "#5c6370", // gray
+  [TokenType.PROPERTY]: "#e06c75", // red
+  [TokenType.FUNCTION]: "#61afef", // blue
+  [TokenType.BRACKET]: "#abb2bf", // light gray
+  [TokenType.PUNCTUATION]: "#abb2bf", // light gray
   [TokenType.FLETBOX_COLOR]: "#56b6c2", // cyan
-  [TokenType.FLETBOX_WIDGET]: "#e5c07b", // amarillo
+  [TokenType.FLETBOX_WIDGET]: "#e5c07b", // yellow
 };
 
-// ========== DETECTAR COLORES DE FLETBOX ==========
+// ========== DETECT FLETBOX COLORS ==========
 const isFletboxColor = (word) => {
   return (
     fletboxColors.hasOwnProperty(word) ||
@@ -144,12 +144,12 @@ const isFletboxColor = (word) => {
   );
 };
 
-// ========== DETECTAR WIDGETS DE FLETBOX ==========
+// ========== DETECT FLETBOX WIDGETS ==========
 const isFletboxWidget = (word) => {
   return fletboxKeywords.includes(word);
 };
 
-// ========== TOKENIZADOR PRINCIPAL ==========
+// ========== MAIN TOKENIZER ==========
 export const tokenize = (code) => {
   const tokens = [];
   let i = 0;
@@ -175,7 +175,7 @@ export const tokenize = (code) => {
       continue;
     }
 
-    // ========== COMENTARIOS ==========
+    // ========== COMMENTS ==========
     if (char === "/" && code[i + 1] === "/") {
       let start = i;
       while (i < len && code[i] !== "\n") i++;
@@ -198,7 +198,7 @@ export const tokenize = (code) => {
       continue;
     }
 
-    // ========== NÚMEROS ==========
+    // ========== NUMBERS ==========
     if (/[0-9]/.test(char)) {
       let start = i;
       while (i < len && /[0-9.]/.test(code[i])) i++;
@@ -209,13 +209,13 @@ export const tokenize = (code) => {
       continue;
     }
 
-    // ========== PALABRAS (identificadores) ==========
+    // ========== WORDS (identifiers) ==========
     if (/[a-zA-Z_$]/.test(char)) {
       let start = i;
       while (i < len && /[a-zA-Z0-9_$]/.test(code[i])) i++;
       const word = code.substring(start, i);
 
-      // Detectar tipo de palabra
+      // Detect word type
       if (isFletboxWidget(word)) {
         tokens.push({ type: TokenType.FLETBOX_WIDGET, value: word });
       } else if (isFletboxColor(word)) {
@@ -223,7 +223,7 @@ export const tokenize = (code) => {
       } else if (jsKeywords.includes(word)) {
         tokens.push({ type: TokenType.KEYWORD, value: word });
       } else if (word.match(/^[a-z][a-zA-Z0-9]*$/)) {
-        // Posible propiedad o función
+        // Possible property or function
         tokens.push({ type: TokenType.PROPERTY, value: word });
       } else {
         tokens.push({ type: TokenType.PROPERTY, value: word });
@@ -231,7 +231,7 @@ export const tokenize = (code) => {
       continue;
     }
 
-    // ========== BRACKETS Y PUNTUACIÓN ==========
+    // ========== BRACKETS AND PUNCTUATION ==========
     if ("{}[]()".includes(char)) {
       tokens.push({ type: TokenType.BRACKET, value: char });
       i++;
@@ -244,7 +244,7 @@ export const tokenize = (code) => {
       continue;
     }
 
-    // ========== ESPACIOS (los preservamos para formato) ==========
+    // ========== WHITESPACE (preserved for formatting) ==========
     if (/\s/.test(char)) {
       let start = i;
       while (i < len && /\s/.test(code[i])) i++;
@@ -252,7 +252,7 @@ export const tokenize = (code) => {
       continue;
     }
 
-    // ========== CUALQUIER OTRO CARÁCTER ==========
+    // ========== ANY OTHER CHARACTER ==========
     tokens.push({ type: "text", value: char });
     i++;
   }
@@ -260,7 +260,7 @@ export const tokenize = (code) => {
   return tokens;
 };
 
-// ========== GENERAR HTML CON COLORES ==========
+// ========== GENERATE HTML WITH COLORS ==========
 export const generateHighlightedHtml = (code) => {
   const tokens = tokenize(code);
   let html = "";
@@ -281,7 +281,7 @@ export const generateHighlightedHtml = (code) => {
   return html;
 };
 
-// ========== ESCAPAR HTML ==========
+// ========== ESCAPE HTML ==========
 const escapeHtml = (text) => {
   return text
     .replace(/&/g, "&amp;")

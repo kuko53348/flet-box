@@ -1,7 +1,7 @@
 // FletBox/services/http.js
 
 /*
- * HTTP requests module - Estilo Python requests
+ * HTTP requests module - Python requests style
  *
  * @example
  * // GET
@@ -20,20 +20,20 @@
  * // DELETE
  * await httpDelete('https://api.example.com/users/1');
  *
- * // Con headers
+ * // With headers
  * const data = await httpGet('https://api.example.com/protected', {
  *     headers: { 'Authorization': 'Bearer token123' }
  * });
  * // FletBox/services/http.js
  *
- * HTTP requests module - Estilo Python requests
+ * HTTP requests module - Python requests style
  *
  * @description
- * Módulo para hacer peticiones HTTP con sintaxis simple y consistente.
- * Soporta GET, POST, PUT, PATCH, DELETE con timeout, headers, y parámetros.
+ * Module for making HTTP requests with a simple and consistent syntax.
+ * Supports GET, POST, PUT, PATCH, DELETE with timeout, headers, and params.
  *
  * @example
- * // 1. GET - Obtener datos al iniciar
+ * // 1. GET - Fetch data on start
  * import { useEffect, useState } from 'react';
  * import { Container, Text, httpGet } from 'fletbox';
  *
@@ -50,13 +50,13 @@
  *
  *     return (
  *         <Container>
- *             <Text>Total usuarios: {users.length}</Text>
+ *             <Text>Total users: {users.length}</Text>
  *         </Container>
  *     );
  * }
  *
  * @example
- * // 2. POST - Crear datos
+ * // 2. POST - Create data
  * import { Button, Container, Text, httpPost } from 'fletbox';
  *
  * function CreateUserScreen() {
@@ -71,14 +71,14 @@
  *
  *     return (
  *         <Container>
- *             <Button label="Crear Usuario" onPress={createUser} />
- *             {result && <Text>Usuario creado ID: {result.id}</Text>}
+ *             <Button label="Create User" onPress={createUser} />
+ *             {result && <Text>User created ID: {result.id}</Text>}
  *         </Container>
  *     );
  * }
  *
  * @example
- * // 3. PUT - Actualizar datos completos
+ * // 3. PUT - Update full data
  * import { Button, Container, Text, httpPut } from 'fletbox';
  *
  * function UpdateUserScreen() {
@@ -93,14 +93,14 @@
  *
  *     return (
  *         <Container>
- *             <Button label="Actualizar Usuario" onPress={updateUser} />
- *             {result && <Text>Usuario actualizado: {result.name}</Text>}
+ *             <Button label="Update User" onPress={updateUser} />
+ *             {result && <Text>User updated: {result.name}</Text>}
  *         </Container>
  *     );
  * }
  *
  * @example
- * // 4. PATCH - Actualizar datos parciales
+ * // 4. PATCH - Update partial data
  * import { Button, Container, Text, httpPatch } from 'fletbox';
  *
  * function PatchUserScreen() {
@@ -115,14 +115,14 @@
  *
  *     return (
  *         <Container>
- *             <Button label="Actualizar Email" onPress={patchUser} />
- *             {result && <Text>Email actualizado: {result.email}</Text>}
+ *             <Button label="Update Email" onPress={patchUser} />
+ *             {result && <Text>Email updated: {result.email}</Text>}
  *         </Container>
  *     );
  * }
  *
  * @example
- * // 5. DELETE - Eliminar datos
+ * // 5. DELETE - Delete data
  * import { Button, Container, Text, httpDelete } from 'fletbox';
  *
  * function DeleteUserScreen() {
@@ -135,14 +135,14 @@
  *
  *     return (
  *         <Container>
- *             <Button label="Eliminar Usuario" onPress={deleteUser} />
- *             {deleted && <Text>Usuario eliminado</Text>}
+ *             <Button label="Delete User" onPress={deleteUser} />
+ *             {deleted && <Text>User deleted</Text>}
  *         </Container>
  *     );
  * }
  *
  * @example
- * // 6. GET con headers y parámetros
+ * // 6. GET with headers and params
  * import { useEffect, useState } from 'react';
  * import { Container, Text, httpGet } from 'fletbox';
  *
@@ -162,14 +162,14 @@
  *
  *     return (
  *         <Container>
- *             <Text>Nombre: {profile?.name}</Text>
+ *             <Text>Name: {profile?.name}</Text>
  *             <Text>Email: {profile?.email}</Text>
  *         </Container>
  *     );
  * }
  *
  * @example
- * // 7. Manejo de errores
+ * // 7. Error handling
  * import { useEffect, useState } from 'react';
  * import { Container, Text, httpGet } from 'fletbox';
  *
@@ -192,7 +192,7 @@
  *     return (
  *         <Container>
  *             {error && <Text color="red">Error: {error}</Text>}
- *             {data && <Text>Datos cargados</Text>}
+ *             {data && <Text>Data loaded</Text>}
  *         </Container>
  *     );
  * }
@@ -220,14 +220,14 @@
  *             {loading ? (
  *                 <ActivityIndicator size="large" />
  *             ) : (
- *                 <Text>Usuarios cargados: {users.length}</Text>
+ *                 <Text>Users loaded: {users.length}</Text>
  *             )}
  *         </Container>
  *     );
  * }
  *
  * @example
- * // 9. POST con loading
+ * // 9. POST with loading
  * import { useState } from 'react';
  * import { Button, Container, Text, ActivityIndicator, httpPost } from 'fletbox';
  *
@@ -239,7 +239,7 @@
  *         setLoading(true);
  *         try {
  *             const data = await httpPost('https://api.example.com/submit', {
- *                 body: { message: 'Hola mundo' }
+ *                 body: { message: 'Hello world' }
  *             });
  *             setResult(data);
  *         } finally {
@@ -252,25 +252,25 @@
  *             {loading ? (
  *                 <ActivityIndicator size="large" />
  *             ) : (
- *                 <Button label="Enviar" onPress={submit} />
+ *                 <Button label="Submit" onPress={submit} />
  *             )}
- *             {result && <Text>Enviado: {result.id}</Text>}
+ *             {result && <Text>Submitted: {result.id}</Text>}
  *         </Container>
  *     );
  * }
  *
  * @example
- * // 10. Timeout personalizado
+ * // 10. Custom timeout
  * import { httpGet } from 'fletbox';
  *
  * async function slowRequest() {
  *     try {
  *         const data = await httpGet('https://api.lenta.com/datos', {
- *             timeout: 5000  // 5 segundos máximo
+ *             timeout: 5000  // 5 seconds max
  *         });
  *         console.log(data);
  *     } catch (error) {
- *         console.log('Timeout o error:', error.message);
+ *         console.log('Timeout or error:', error.message);
  *     }
  * }
  */

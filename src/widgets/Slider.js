@@ -1,8 +1,8 @@
-// widgets/Slider.js - Versión corregida y completa
+// widgets/Slider.js - Corrected and complete version
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 
-// Inyección de keyframes solo una vez
+// Inject keyframes only once
 const injectedKeyframes = new Set();
 const injectKeyframes = (name, css) => {
   if (injectedKeyframes.has(name)) return;
@@ -23,13 +23,13 @@ injectKeyframes(
 
 export const Slider = (props) => {
   let {
-    // Valores básicos
+    // Basic values
     value = 0,
     min = 0,
     max = 100,
     step = 1,
     disabled = false,
-    // Apariencia
+    // Appearance
     width = "100%",
     height = 4,
     thumbSize = 20,
@@ -38,31 +38,31 @@ export const Slider = (props) => {
     thumbColor = "#fff",
     orientation = "horizontal",
     inverted = false,
-    // Texto y marcas
+    // Text and marks
     showValue = false,
     valuePrefix = "",
     valueSuffix = "",
     showMarks = false,
-    marks = [], // ← implementado
-    // Efectos visuales
+    marks = [], // ← implemented
+    // Visual effects
     striped = true,
     animatedStripes = false,
     stripeColor = "rgba(255,255,255,0.25)",
     glow = false,
-    // Eventos
+    // Events
     onChanged,
     onChangeEnd,
-    // Resto
+    // Rest
     ...rest
   } = props;
 
-  // Estado interno
+  // Internal state
   let currentValue = Math.min(Math.max(value, min), max);
   let currentMin = min;
   let currentMax = max;
   let currentStep = step;
 
-  // Porcentaje (0..1) siempre en dirección positiva (sin invertir)
+  // Percentage (0..1) always in positive direction (not inverted)
   let rawPercent = (currentValue - currentMin) / (currentMax - currentMin);
   let displayPercent = inverted ? 1 - rawPercent : rawPercent;
 
@@ -72,7 +72,7 @@ export const Slider = (props) => {
     typeof trackSizePx === "number" ? `${trackSizePx}px` : trackSizePx;
   let thumbSizeNum = typeof thumbSize === "number" ? thumbSize : 20;
 
-  // Contenedor principal
+  // Main container
   const container = WidgetFactory({
     tag: "div",
     width: isHorizontal ? width : "auto",
@@ -81,7 +81,7 @@ export const Slider = (props) => {
     ...rest,
   });
 
-  // ---------- Display del valor ----------
+  // ---------- Value display ----------
   let valueDisplay = null;
   if (showValue) {
     valueDisplay = WidgetFactory({
@@ -96,7 +96,7 @@ export const Slider = (props) => {
     container.appendChild(valueDisplay);
   }
 
-  // ---------- Wrapper (asegura altura/anchura fija) ----------
+  // ---------- Wrapper (ensures fixed height/width) ----------
   const wrapper = WidgetFactory({
     tag: "div",
     position: "relative",
@@ -108,14 +108,14 @@ export const Slider = (props) => {
           alignItems: "center",
         }
       : {
-          height: "100%", // para vertical, el wrapper ocupa todo el alto
+          height: "100%", // for vertical, the wrapper takes the full height
           display: "flex",
           justifyContent: "center",
         }),
   });
   container.appendChild(wrapper);
 
-  // ---------- Track (fondo) ----------
+  // ---------- Track (background) ----------
   const track = WidgetFactory({
     tag: "div",
     position: "relative",
@@ -134,7 +134,7 @@ export const Slider = (props) => {
   });
   wrapper.appendChild(track);
 
-  // ---------- Fill (progreso) ----------
+  // ---------- Fill (progress) ----------
   const fill = WidgetFactory({
     tag: "div",
     position: "absolute",
@@ -165,7 +165,7 @@ export const Slider = (props) => {
   if (glow) fill.style.animation = "slider-glow 1.5s ease-in-out infinite";
   track.appendChild(fill);
 
-  // ---------- Thumb (bolita) ----------
+  // ---------- Thumb (knob) ----------
   const thumb = WidgetFactory({
     tag: "div",
     position: "absolute",
@@ -190,7 +190,7 @@ export const Slider = (props) => {
   });
   wrapper.appendChild(thumb);
 
-  // ---------- Marcas (marks) ----------
+  // ---------- Marks ----------
   let marksContainer = null;
   if (showMarks) {
     marksContainer = WidgetFactory({
@@ -218,10 +218,10 @@ export const Slider = (props) => {
     renderMarks();
   }
 
-  // ---------- Funciones auxiliares ----------
+  // ---------- Helper functions ----------
   function renderMarks() {
     if (!marksContainer) return;
-    // Limpiar marcas anteriores
+    // Clear previous marks
     while (marksContainer.firstChild)
       marksContainer.removeChild(marksContainer.firstChild);
 
@@ -291,7 +291,7 @@ export const Slider = (props) => {
     return marksList;
   }
 
-  // Actualiza la posición del fill y del thumb
+  // Update the position of the fill and thumb
   function updateUI() {
     rawPercent = (currentValue - currentMin) / (currentMax - currentMin);
     displayPercent = inverted ? 1 - rawPercent : rawPercent;
@@ -356,7 +356,7 @@ export const Slider = (props) => {
     if (triggerEnd && onChangeEnd) onChangeEnd(currentValue);
   }
 
-  // ---------- Eventos de arrastre ----------
+  // ---------- Drag events ----------
   let dragging = false;
   let currentPointerId = null;
   let hasMoved = false;
@@ -429,7 +429,7 @@ export const Slider = (props) => {
   thumb.addEventListener("mousedown", onStart);
   thumb.addEventListener("touchstart", onStart);
 
-  // ---------- ResizeObserver para reposicionar thumb ----------
+  // ---------- ResizeObserver to reposition thumb ----------
   let resizeObserver = null;
   if (typeof ResizeObserver !== "undefined") {
     resizeObserver = new ResizeObserver(() => {
@@ -440,7 +440,7 @@ export const Slider = (props) => {
     window.addEventListener("resize", updateThumbPosition);
   }
 
-  // ---------- API pública y reactividad ----------
+  // ---------- Public API and reactivity ----------
   const update = (newProps) => {
     let needsUpdate = false;
     if (newProps.min !== undefined && newProps.min !== currentMin) {
@@ -486,7 +486,7 @@ export const Slider = (props) => {
   container.getValue = () => currentValue;
   container.update = update;
 
-  // ---------- Limpieza ----------
+  // ---------- Cleanup ----------
   const cleanup = () => {
     if (resizeObserver) {
       resizeObserver.disconnect();
@@ -505,7 +505,7 @@ export const Slider = (props) => {
   if (container.onUnmount) container.onUnmount(cleanup);
   else container._cleanup = cleanup;
 
-  // Inicializar posición
+  // Initialize position
   setTimeout(() => updateThumbPosition(), 0);
   return container;
 };

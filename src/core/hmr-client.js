@@ -80,7 +80,7 @@ export const registerModule = (url, module) => {
   modules.set(url, module);
 };
 
-// ✅ Añadida la función getHMR para que coincida con la exportación de index.js
+// ✅ Added the getHMR function to match the export in index.js
 export const getHMR = () => ws;
 
 export default { initHMR, registerModule, getHMR };

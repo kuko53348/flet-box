@@ -2,12 +2,12 @@
 import { SQLite } from '../modules/betterSqlite.js';
 
 /**
- * Define una base de datos
- * @param {Object} config - Configuración de la base de datos
- * @param {string} config.type - Tipo de base de datos ('sqlite', 'postgres', 'mysql')
- * @param {string} config.path - Ruta de la base de datos (para SQLite)
- * @param {Object} config.tables - Definición de tablas
- * @returns {Object} Base de datos con acceso a las tablas
+ * Defines a database
+ * @param {Object} config - Database configuration
+ * @param {string} config.type - Database type ('sqlite', 'postgres', 'mysql')
+ * @param {string} config.path - Database path (for SQLite)
+ * @param {Object} config.tables - Table definitions
+ * @returns {Object} Database with access to the tables
  */
 export const Database = (config) => {
     const {
@@ -24,62 +24,62 @@ export const Database = (config) => {
         throw new Error(`Database type "${type}" not supported yet`);
     }
 
-    // Crear tablas automáticamente
+    // Create tables automatically
     const dbProxy = {};
 
     for (const [tableName, schema] of Object.entries(tables)) {
-        // Crear tabla si no existe
+        // Create the table if it does not exist
         const [success, message] = connection.createTable(tableName, schema);
         if (!success) {
             console.warn(`⚠️ ${message}`);
         }
 
-        // Crear acceso a la tabla
+        // Create access to the table
         dbProxy[tableName] = {
-            // Leer todos
+            // Read all
             readAll: (fetchOne = false) => {
                 return connection.readAll(tableName, fetchOne);
             },
-            // Insertar
+            // Insert
             insert: (data) => {
                 return connection.insert(tableName, data);
             },
-            // Actualizar
+            // Update
             update: (data, where) => {
                 return connection.update(tableName, data, where);
             },
-            // Eliminar
+            // Delete
             delete: (where) => {
                 return connection.delete(tableName, where);
             },
-            // Leer donde
+            // Read where
             readWhere: (where, fetchOne = false) => {
                 return connection.readWhere(tableName, where, fetchOne);
             },
-            // Leer último
+            // Read last
             readLast: (orderBy = 'rowid', limit = 10, fetchOne = false) => {
                 return connection.readLast(tableName, orderBy, limit, fetchOne);
             },
-            // Verificar columna
+            // Check column
             checkColumn: (columnName) => {
                 return connection.checkColumn(tableName, columnName);
             },
-            // Agregar columna
+            // Add column
             addColumn: (columnName, dataType = 'TEXT') => {
                 return connection.addColumn(tableName, columnName, dataType);
             },
-            // Limpiar tabla
+            // Clear table
             clear: () => {
                 return connection.clearTable(tableName);
             },
-            // Eliminar tabla
+            // Drop table
             drop: () => {
                 return connection.dropTable(tableName);
             },
         };
     }
 
-    // Añadir métodos generales
+    // Add general methods
     dbProxy._raw = connection;
     dbProxy._tables = tables;
     dbProxy._createTable = (tableName, schema) => {

@@ -1,10 +1,10 @@
-// widgets/CircularBar.js - Funcionalidades extendidas sin romper lo existente
+// widgets/CircularBar.js - Extended features without breaking existing ones
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 
 export const CircularBar = (props) => {
   let {
-    // === Núcleo (ya existente) ===
+    // === Core (existing) ===
     value = 0,
     max = 100,
     size = null,
@@ -25,48 +25,48 @@ export const CircularBar = (props) => {
     ...rest
   } = props;
 
-  // === NUEVAS PROPS (opcionales, no rompen) ===
+  // === NEW PROPS (optional, non-breaking) ===
   const {
-    // Formato del valor
+    // Value format
     valueFormat = "percent", // 'percent', 'value', 'custom'
     valueSuffix = "",
     valuePrefix = "",
     valueDecimals = 0,
     customValueFormatter = null, // (currentValue, max) => string
 
-    // Gradiente
+    // Gradient
     gradient = null, // array de colores ['red', 'yellow', 'green'] o string con gradiente CSS
     gradientAngle = 135,
 
-    // Sombra
+    // Shadow
     shadowBlur = 0,
     shadowColor = "rgba(0,0,0,0.3)",
 
-    // Efectos visuales adicionales
+    // Additional visual effects
     glow = false,
-    glowColor = null, // si no se especifica, usa el color del trazo
+    glowColor = null, // if not specified, uses the stroke color
 
-    // Marcadores (puntos en el perímetro)
+    // Markers (points on the perimeter)
     markers = [], // [{ value, color, size, label }]
 
-    // Anillo interior extra (para dona con dos capas)
+    // Extra inner ring (for a two-layer donut)
     innerStrokeWidth = 0,
     innerColor = null,
 
-    // Eventos
+    // Events
     onClick = null,
     onHover = null,
 
-    // Texto adicional
+    // Additional text
     subtitle = null,
     subtitleColor = colors.textSecondary,
     subtitleSize = 10,
 
-    // Tooltip al pasar el ratón
+    // Tooltip on mouse hover
     tooltip = null,
   } = props;
 
-  // Variables internas (sin cambios en la lógica central)
+  // Internal variables (no changes to the core logic)
   let canvas = null;
   let ctx = null;
   let animationId = null;
@@ -135,7 +135,7 @@ export const CircularBar = (props) => {
     ctx.lineCap = lineCap;
     ctx.stroke();
 
-    // Anillo interior (opcional)
+    // Inner ring (optional)
     if (innerStrokeWidth > 0 && innerColor) {
       ctx.beginPath();
       ctx.arc(
@@ -176,7 +176,7 @@ export const CircularBar = (props) => {
 
   const drawMarkers = () => {
     if (!markers.length) return;
-    // Radio del círculo interior (donde va el trazo)
+    // Inner circle radius (where the stroke goes)
     const r = getRadius();
     const center = getCenter();
     markers.forEach((m) => {

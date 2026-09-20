@@ -1,13 +1,13 @@
-// core/routeValidator.js - Valida que la ruta exista en la definición
+// core/routeValidator.js - Validates that the route exists in the definitions
 
 export const routeValidator = (routes) => {
   return (req, res, next) => {
     const path = req.url.split("?")[0];
 
-    // Verificar si la ruta existe en las definiciones
+    // Check whether the route exists in the definitions
     let routeExists = false;
     for (const [routePath] of Object.entries(routes)) {
-      // Convertir ruta con parámetros a regex
+      // Convert a route with parameters to regex
       const regex = new RegExp(
         "^" + routePath.replace(/:([^/]+)/g, "([^/]+)") + "$",
       );

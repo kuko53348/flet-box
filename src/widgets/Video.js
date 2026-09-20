@@ -30,11 +30,11 @@ export const Video = (props) => {
   video.autoplay = Boolean(autoplay);
   if (poster) video.poster = poster;
 
-  // Guardar métodos nativos
+  // Save native methods
   const nativePlay = video.play.bind(video);
   const nativePause = video.pause.bind(video);
 
-  // Añadir métodos personalizados ANTES de llamar al ref
+  // Add custom methods BEFORE calling the ref
   video.playVideo = () => {
     nativePlay().catch((error) => console.warn("Video play failed:", error));
     return video;
@@ -77,7 +77,7 @@ export const Video = (props) => {
     return video;
   };
 
-  // Llamar al ref después de añadir los métodos
+  // Call the ref after adding the methods
   if (ref && typeof ref === "function") {
     ref(video);
   }

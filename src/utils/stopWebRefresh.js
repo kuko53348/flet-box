@@ -1,6 +1,6 @@
 // utils/stopWebRefresh.js
 export const stopWebRefresh = () => {
-  // 1. Bloquear teclas de refresco (F5, Ctrl+R, Cmd+R)
+  // 1. Block refresh keys (F5, Ctrl+R, Cmd+R)
   window.addEventListener("keydown", (e) => {
     if (
       e.key === "F5" ||
@@ -8,16 +8,16 @@ export const stopWebRefresh = () => {
       (e.metaKey && (e.key === "r" || e.key === "R"))
     ) {
       e.preventDefault();
-      console.log("🚫 Refresco deshabilitado (teclado)");
+      console.log("🚫 Refresh disabled (keyboard)");
     }
   });
 
-  // 2. Bloquear clic derecho (menú contextual)
+  // 2. Block right-click (context menu)
   document.body.addEventListener("contextmenu", (e) => {
     e.preventDefault();
   });
 
-  // 3. Bloquear pull-to-refresh en móviles de forma selectiva
+  // 3. Block pull-to-refresh on mobile selectively
   let touchStartY = 0;
   let isAtTop = false;
 
@@ -25,31 +25,31 @@ export const stopWebRefresh = () => {
     "touchstart",
     (e) => {
       touchStartY = e.touches[0].clientY;
-      // Comprobar si estamos en el tope del documento
+      // Check if we are at the top of the document
       isAtTop =
         window.scrollY === 0 && document.documentElement.scrollTop === 0;
     },
     { passive: true },
-  ); // passive: true mejora rendimiento
+  ); // passive: true improves performance
 
   window.addEventListener(
     "touchmove",
     (e) => {
       const deltaY = e.touches[0].clientY - touchStartY;
-      // Solo prevenir si: estamos en el tope, el movimiento es hacia abajo (deltaY > 0),
-      // y además el evento no ocurre dentro de un elemento con scroll propio.
+      // Only prevent if: we are at the top, the movement is downward (deltaY > 0),
+      // and the event does not occur inside an element with its own scroll.
       if (isAtTop && deltaY > 0) {
-        // Intentar bloquear solo si el destino no es un elemento con scroll
+        // Try to block only if the target is not a scrolling element
         let target = e.target;
         while (target && target !== document.body) {
           const overflowY = window.getComputedStyle(target).overflowY;
           if (overflowY === "auto" || overflowY === "scroll") {
-            // El toque está dentro de un contenedor con scroll, permitir movimiento
+            // The touch is inside a scrolling container, allow movement
             return;
           }
           target = target.parentElement;
         }
-        // Si llegamos aquí, no hay scroll interno en el camino → bloquear pull-to-refresh
+        // If we get here, there's no internal scroll in the way → block pull-to-refresh
         e.preventDefault();
       }
     },

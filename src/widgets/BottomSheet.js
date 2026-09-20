@@ -1,4 +1,4 @@
-// widgets/BottomSheet.js - Versión corregida (con stopPropagation)
+// widgets/BottomSheet.js - Fixed version (with stopPropagation)
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 import { Row } from "./Row.js";
@@ -19,7 +19,7 @@ export const BottomSheet = (props) => {
     closeOnDragDown = true,
     showCloseButton = true,
 
-    // Colores
+    // Colors
     backgroundColor = colors.surface,
     overlayColor = "rgba(0, 0, 0, 0.5)",
     dragHandleColor = colors.border,
@@ -27,11 +27,11 @@ export const BottomSheet = (props) => {
     headerBorderColor = colors.border,
     actionBorderColor = colors.border,
 
-    // Bordes y sombras
+    // Borders and shadows
     borderRadius = 24,
     shadow = "0 -4px 12px rgba(0,0,0,0.1)",
 
-    // Espaciado
+    // Spacing
     headerPadding = "0 16px 8px 16px",
     contentPadding = "0 16px",
     actionPadding = "12px 16px",
@@ -39,7 +39,7 @@ export const BottomSheet = (props) => {
     dragHandleWidth = 40,
     dragHandleHeight = 4,
 
-    // Animación
+    // Animation
     animationDuration = 300,
 
     // Z-index
@@ -59,7 +59,7 @@ export const BottomSheet = (props) => {
   let startY = 0;
   let currentY = 0;
 
-  // ✅ Overlay con onclick
+  // ✅ Overlay with onclick
   overlay = WidgetFactory({
     position: "fixed",
     top: 0,
@@ -72,21 +72,21 @@ export const BottomSheet = (props) => {
     visibility: "hidden",
     transition: `opacity ${animationDuration}ms ease, visibility ${animationDuration}ms ease`,
     // onclick: (e) => {
-    //   // ✅ Solo cerrar si el clic fue directamente en el overlay (no en el sheet)
+    //   // ✅ Only close if the click was directly on the overlay (not on the sheet)
     //   if (e.target === overlay && closeOnOverlayClick) {
     //     close();
     //   }
     // },
   });
 
-  // ✅ Drag handle con stopPropagation
+  // ✅ Drag handle with stopPropagation
   const dragHandle = showDragHandle
     ? WidgetFactory({
         display: "flex",
         justifyContent: "center",
         padding: dragHandlePadding,
         cursor: "grab",
-        onclick: (e) => e.stopPropagation(), // ✅ Evita que el clic llegue al overlay
+onclick: (e) => e.stopPropagation(), // ✅ Prevents the click from reaching the overlay
         child: WidgetFactory({
           width: dragHandleWidth,
           height: dragHandleHeight,
@@ -153,7 +153,7 @@ export const BottomSheet = (props) => {
     child: content,
   });
 
-  // ✅ SheetContainer con stopPropagation
+  // ✅ SheetContainer with stopPropagation
   sheetContainer = WidgetFactory({
     position: "fixed",
     bottom: 0,
@@ -171,7 +171,7 @@ export const BottomSheet = (props) => {
     flexDirection: "column",
     zIndex: zIndex,
     overflow: "hidden",
-    // onclick: (e) => e.stopPropagation(), // ✅ Evita que el clic llegue al overlay
+    // onclick: (e) => e.stopPropagation(), // ✅ Prevents the click from reaching the overlay
   });
 
   // Body
@@ -189,7 +189,7 @@ export const BottomSheet = (props) => {
 
   // Drag handlers
   const onTouchStart = (e) => {
-    // ✅ Prevenir que el evento de arrastre se propague al overlay
+    // ✅ Prevent the drag event from propagating to the overlay
     e.stopPropagation();
     startY = e.touches ? e.touches[0].clientY : e.clientY;
     currentY = startY;

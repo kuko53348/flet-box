@@ -1,26 +1,26 @@
-// core/validator.js - Validación de datos por tipo
+// core/validator.js - Data type validation
 const validators = {
   string: (value) => typeof value === "string",
   number: (value) => typeof value === "number" && !isNaN(value),
   boolean: (value) => typeof value === "boolean",
   email: (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
   url: (value) => /^https?:\/\/[^\s]+$/.test(value),
-  date: (value) => /^\d{4}-\d{2}-\d{2}$/.test(value), // formato YYYY-MM-DD
+  date: (value) => /^\d{4}-\d{2}-\d{2}$/.test(value), // format YYYY-MM-DD
   datetime: (value) =>
     /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/.test(value),
   alphanumeric: (value) => /^[a-zA-Z0-9]*$/.test(value),
-  text: (value) => /^[a-zA-Z0-9 .,!?¿¡\-:+=@]*$/.test(value), // seguro para textos
+  text: (value) => /^[a-zA-Z0-9 .,!?¿¡\-:+=@]*$/.test(value), // safe for texts
   uuid: (value) =>
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
       value,
     ),
-  // puedes añadir más tipos según necesites
+  // you can add more types as needed
 };
 
 /**
- * Valida un objeto contra un esquema de tipos
- * @param {Object} data - Datos a validar
- * @param {Object} schema - { campo: { type: 'email', required: true, ... } }
+ * Validates an object against a type schema
+ * @param {Object} data - Data to validate
+ * @param {Object} schema - { field: { type: 'email', required: true, ... } }
  * @returns {Object} { valid: boolean, errors: Array, data: Object }
  */
 export const validateByType = (data, schema) => {
@@ -31,19 +31,19 @@ export const validateByType = (data, schema) => {
     const value = data[field];
     const { type, required = false, message } = rules;
 
-    // Si es requerido y no está presente
+    // If required and not present
     if (required && (value === undefined || value === null || value === "")) {
       errors.push({ field, message: message || `${field} is required` });
       continue;
     }
 
-    // Si no es requerido y está vacío, se omite la validación
+    // If not required and empty, validation is skipped
     if (!required && (value === undefined || value === null || value === "")) {
       result[field] = value;
       continue;
     }
 
-    // Validar tipo
+    // Validate type
     const validator = validators[type];
     if (!validator) {
       errors.push({ field, message: `Unknown type '${type}' for ${field}` });
@@ -58,11 +58,11 @@ export const validateByType = (data, schema) => {
       continue;
     }
 
-    // Si pasa, guardamos el valor (ya validado)
+    // If valid, save the value (already validated)
     result[field] = value;
   }
 
-  // Si hay campos extra no definidos en el esquema, los rechazamos (opcional)
+  // If there are extra fields not defined in the schema, reject them (optional)
   const extraFields = Object.keys(data).filter((key) => !schema[key]);
   if (extraFields.length > 0) {
     errors.push({

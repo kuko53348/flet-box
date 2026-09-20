@@ -9,4 +9,4 @@ export * from "./routeValidator.js";
 export * from "./security/index.js";
 export * from "./inferSchema.js";
 export * from "./autoValidate.js";
-export * from "./security/detector.js"; // opcional, ya está en security/index
+export * from "./security/detector.js"; // optional, already in security/index

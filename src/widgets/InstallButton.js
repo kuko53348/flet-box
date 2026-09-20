@@ -51,7 +51,7 @@ export const InstallButton = (props) => {
     }
   };
 
-  // Crear botón usando el componente Button de flet-box
+  // Create button using the flet-box Button component
   button = Button({
     text: text,
     variant: variant,
@@ -76,7 +76,7 @@ export const InstallButton = (props) => {
     ...rest,
   });
 
-  // Escuchar eventos
+  // Listen to events
   const handleBeforeInstallPrompt = (e) => {
     e.preventDefault();
     deferredPrompt = e;
@@ -92,7 +92,7 @@ export const InstallButton = (props) => {
   window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
   window.addEventListener("appinstalled", handleAppInstalled);
 
-  // Limpiar
+  // Cleanup
   const cleanup = () => {
     window.removeEventListener(
       "beforeinstallprompt",

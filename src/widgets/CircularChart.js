@@ -45,7 +45,7 @@ export const CircularChart = (props) => {
 
   if (!Array.isArray(data)) data = [];
 
-  // Configurar ángulos para semi‑círculo
+  // Configure angles for semi-circle
   if (semiCircle) {
     switch (semiCircle) {
       case "top":
@@ -189,7 +189,7 @@ export const CircularChart = (props) => {
     return defaultColors[index % defaultColors.length];
   };
 
-  // Dibuja cada segmento con el redondeo en sus extremos (cada uno con su color)
+  // Draw each segment with rounded ends (each one with its own color)
   const drawRoundedSegment = (slice, index) => {
     const r = getRadiusVal() / 2;
     const innerR = finalInnerRadius !== null ? finalInnerRadius : 0;
@@ -199,7 +199,7 @@ export const CircularChart = (props) => {
     const end = slice.end;
     const color = getColor(index, slice.original?.color);
 
-    // Para donut con cornerRadius > 0: dibujar como trazo redondeado en ambos extremos
+    // For donut with cornerRadius > 0: draw as a rounded stroke on both ends
     if (cornerRadius > 0 && innerR > 0) {
       const thickness = r - innerR;
       const midRadius = (r + innerR) / 2;
@@ -208,11 +208,11 @@ export const CircularChart = (props) => {
       ctx.arc(cx, cy, midRadius, start, end);
       ctx.lineWidth = thickness;
       ctx.strokeStyle = color;
-      ctx.lineCap = "round"; // Redondea los dos extremos del segmento
+      ctx.lineCap = "round"; // Rounds both ends of the segment
       ctx.stroke();
       ctx.restore();
     } else {
-      // Modo normal (relleno)
+      // Normal mode (fill)
       ctx.save();
       ctx.beginPath();
       if (innerR > 0) {
@@ -229,7 +229,7 @@ export const CircularChart = (props) => {
       ctx.restore();
     }
 
-    // Borde entre segmentos (opcional)
+    // Border between segments (optional)
     if (sliceBorderWidth > 0 && sliceBorderColor) {
       ctx.save();
       ctx.strokeStyle = sliceBorderColor;
@@ -248,7 +248,7 @@ export const CircularChart = (props) => {
       ctx.restore();
     }
 
-    // Rounded para pie chart (extremos redondeados)
+    // Rounded for pie chart (rounded ends)
     if (rounded && !innerR) {
       const midAngle = (start + end) / 2;
       const x = cx + r * Math.cos(midAngle);
@@ -259,7 +259,7 @@ export const CircularChart = (props) => {
       ctx.fill();
     }
 
-    // Etiquetas
+    // Labels
     if (showLabels && slice.value > 0) {
       const midAngle = (start + end) / 2;
       const labelRadius = innerR > 0 ? (innerR + r) / 2 : r * 0.7;
@@ -467,7 +467,7 @@ export const CircularChart = (props) => {
       ...rest,
     });
 
-    // Eliminar canvas antiguo si existe
+    // Remove old canvas if it exists
     const oldCanvas = container.querySelector("canvas");
     if (oldCanvas) oldCanvas.remove();
 

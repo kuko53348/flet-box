@@ -20,12 +20,12 @@ export const Badge = (props) => {
     ...rest
   } = props;
 
-  // Color de fondo
+  // Background color
   const finalBgColor = bgColor || color || colors.danger;
 
   let unsubscribeTheme = null;
 
-  // Verificar si debe mostrar el badge
+  // Check if the badge should be shown
   const hasValue = value !== undefined && value !== null && value !== "";
   const showBadge =
     hasValue &&
@@ -35,13 +35,13 @@ export const Badge = (props) => {
     return child || null;
   }
 
-  // Formatear valor
+  // Format value
   let displayValue = value;
   if (typeof value === "number" && max && value > max) {
     displayValue = `${max}+`;
   }
 
-  // Posiciones
+  // Positions
   const positions = {
     "top-right": {
       top: -offset,
@@ -67,7 +67,7 @@ export const Badge = (props) => {
 
   const pos = positions[position] || positions["top-right"];
 
-  // Badge element usando WidgetFactory con centrado correcto
+  // Badge element using WidgetFactory with correct centering
   const badgeElement = WidgetFactory({
     position: "absolute",
     top: pos.top,
@@ -98,14 +98,14 @@ export const Badge = (props) => {
     }),
   });
 
-  // Tema dinámico
+  // Dynamic theme
   if (!bgColor && !color) {
     unsubscribeTheme = subscribeTheme(() => {
       badgeElement.style.backgroundColor = colors.danger;
     });
   }
 
-  // Validar child
+  // Validate child
   const validChild = child instanceof HTMLElement ? child : null;
 
   if (!validChild) {
@@ -130,7 +130,7 @@ export const Badge = (props) => {
     if (originalCleanup) originalCleanup();
   };
 
-  // Método para actualizar valor
+  // Method to update value
   badgeStack.updateValue = (newValue) => {
     let newDisplayValue = newValue;
     if (typeof newValue === "number" && max && newValue > max) {

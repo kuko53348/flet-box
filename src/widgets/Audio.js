@@ -57,7 +57,7 @@ export const Audio = (props) => {
     }
   };
 
-  // Intentar obtener duración del elemento audio
+  // Try to get duration from the audio element
   const tryGetDurationFromAudio = () => {
     const d = audio.duration;
     if (d && d !== Infinity && d > 0) {
@@ -77,7 +77,7 @@ export const Audio = (props) => {
     }, 200);
   };
 
-  // Fallback: usar AudioContext para calcular duración si el elemento no puede
+  // Fallback: use AudioContext to calculate duration if the element cannot
   const fallbackGetDuration = async () => {
     if (audioContextFallbackAttempted) return;
     audioContextFallbackAttempted = true;
@@ -97,7 +97,7 @@ export const Audio = (props) => {
     }
   };
 
-  // Eventos del elemento audio
+  // Audio element events
   audio.addEventListener("loadedmetadata", () => {
     if (!tryGetDurationFromAudio()) pollDuration();
   });
@@ -117,23 +117,23 @@ export const Audio = (props) => {
   });
   audio.addEventListener("error", (e) => console.warn("[Audio] Error:", e));
 
-  // Inicial: intentar duración directa
+  // Initial: try direct duration
   if (!tryGetDurationFromAudio()) {
     pollDuration();
-    // Si tras 2 segundos sigue sin duración, lanzar fallback con fetch
+    // If after 2 seconds there is still no duration, trigger the fetch fallback
     setTimeout(() => {
       if (!duration) fallbackGetDuration();
     }, 2000);
   }
 
-  // Limpiar
+  // Cleanup
   const originalCleanup = audio._cleanup;
   audio._cleanup = () => {
     if (durationPoll) clearInterval(durationPoll);
     if (originalCleanup) originalCleanup();
   };
 
-  // Métodos públicos
+  // Public methods
   audio.playAudio = () => {
     nativePlay().catch((e) => console.warn(e));
     return audio;

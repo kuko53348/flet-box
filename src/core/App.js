@@ -1,11 +1,11 @@
 // src/core/App.js
-// FletBox Kids - Ultra simple: solo recibe UN widget
+// FletBox Kids - Ultra simple: only receives ONE widget
 
 export const App = (widget) => {
   let root = document.getElementById("root");
   if (!root) {
-    // Nunca vaciar document.body (borraría scripts/markup del host);
-    // crear un contenedor raíz dedicado en su lugar.
+    // Never clear document.body (it would wipe the host's scripts/markup);
+    // create a dedicated root container instead.
     root = document.createElement("div");
     root.id = "root";
     document.body.appendChild(root);

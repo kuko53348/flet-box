@@ -1,20 +1,20 @@
 // src/modules/FletBox/utils/units.js
 // import { toREM, setBaseFontSize, toPX } from './utils/units.js';
 //
-// // Configuración global (opcional)
-// setBaseFontSize(16);  // 1rem = 16px (por defecto)
+// // Global configuration (optional)
+// setBaseFontSize(16);  // 1rem = 16px (default)
 //
-// // Conversiones automáticas
+// // Automatic conversions
 // toREM(16)    // "1rem"
 // toREM(24)    // "1.5rem"
 // toREM(8)     // "0.5rem"
 //
-// // Strings pasan directo
+// // Strings pass through as-is
 // toREM('16px')  // "16px"
 // toREM('1rem')  // "1rem"
 // toREM('50%')   // "50%"
 //
-// // Para píxeles exactos
+// // For exact pixels
 // toPX(16)     // "16px"
 // toPX(24)     // "24px"
 // toPX('1rem') // "1rem"
@@ -22,8 +22,8 @@
 let BASE_FONT_SIZE = 16;
 
 /**
- * Establece el tamaño base de fuente para la conversión rem
- * @param {number} size - Tamaño base en píxeles (por defecto 16)
+ * Sets the base font size for rem conversion
+ * @param {number} size - Base size in pixels (default 16)
  * @example
  * setBaseFontSize(16); // 1rem = 16px
  * setBaseFontSize(20); // 1rem = 20px
@@ -34,9 +34,9 @@ export const setBaseFontSize = (size) => {
 };
 
 /**
- * Convierte un valor numérico a rem, o mantiene strings como están
- * @param {number|string} value - Valor a convertir
- * @returns {string} Valor convertido (ej: "1rem", "16px", "50%")
+ * Converts a numeric value to rem, or keeps strings as they are
+ * @param {number|string} value - Value to convert
+ * @returns {string} Converted value (e.g. "1rem", "16px", "50%")
  * @example
  * toREM(16)     // "1rem"
  * toREM(8)      // "0.5rem"
@@ -47,24 +47,24 @@ export const setBaseFontSize = (size) => {
 export const toREM = (value) => {
   if (value === undefined || value === null) return undefined;
 
-  // Si es número, convertir a rem
+  // If it is a number, convert to rem
   if (typeof value === "number") {
     return `${value / BASE_FONT_SIZE}rem`;
   }
 
-  // Si es string, devolverlo tal cual
+  // If it is a string, return it as-is
   if (typeof value === "string") {
     return value;
   }
 
-  // Para otros tipos (objetos, booleanos, etc.)
+  // For other types (objects, booleans, etc.)
   return String(value);
 };
 
 /**
- * Convierte un valor a píxeles si es número, o mantiene strings
- * @param {number|string} value - Valor a convertir
- * @returns {string} Valor en píxeles o string original
+ * Converts a value to pixels if it is a number, or keeps strings
+ * @param {number|string} value - Value to convert
+ * @returns {string} Value in pixels or original string
  * @example
  * toPX(16)     // "16px"
  * toPX('1rem') // "1rem"
@@ -81,7 +81,7 @@ export const toPX = (value) => {
 };
 
 /**
- * Obtiene el tamaño base actual
- * @returns {number} Tamaño base en píxeles
+ * Gets the current base size
+ * @returns {number} Base size in pixels
  */
 export const getBaseFontSize = () => BASE_FONT_SIZE;

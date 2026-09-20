@@ -1,4 +1,4 @@
-// widgets/Tooltip.js - Corregido (usando text en lugar de textContent)
+// widgets/Tooltip.js - Fixed (using text instead of textContent)
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 
@@ -48,7 +48,7 @@ export const Tooltip = (props) => {
   const createTooltip = () => {
     if (tooltipElement) return tooltipElement;
 
-    // ✅ CORREGIDO: usar "text" en lugar de "textContent"
+    // ✅ FIXED: use "text" instead of "textContent"
     const content = WidgetFactory({
       backgroundColor: bgColor,
       borderRadius:
@@ -60,7 +60,7 @@ export const Tooltip = (props) => {
         borderWidth > 0 ? `${borderWidth}px solid ${borderColor}` : "none",
       child: WidgetFactory({
         tag: "span",
-        text: text, // ✅ "text" es la prop correcta en FletBox
+        text: text, // ✅ "text" is the correct prop in FletBox
         fontSize: typeof fontSize === "number" ? `${fontSize}px` : fontSize,
         color: textColor,
         textAlign: textAlign,

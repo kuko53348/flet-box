@@ -47,7 +47,7 @@ export const DroppBox = (props) => {
   let isActive = false;
   let isValidTarget = false;
 
-  // ✅ CORREGIDO: Usar WidgetFactory correctamente (sin tag)
+  // ✅ FIXED: Use WidgetFactory correctly (without tag)
   const wrapper = WidgetFactory({
     tag: "div",
     position: "relative",
@@ -63,7 +63,7 @@ export const DroppBox = (props) => {
     ...rest,
   });
 
-  // Si hay child, agregarlo
+  // If there is a child, add it
   if (child) {
     if (child instanceof HTMLElement) {
       wrapper.appendChild(child);

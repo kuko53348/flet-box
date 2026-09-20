@@ -1,9 +1,9 @@
-// widgets/SnackBar.js - Versión definitiva con colores del tema
+// widgets/SnackBar.js - Definitive version with theme colors
 import { WidgetFactory } from "../widget-factory/index.js";
 import { border } from "../tools/index.js";
 import { colors } from "../utils/themes.js";
 
-// Colores de respaldo (si el tema aún no está inicializado)
+// Fallback colors (if the theme is not initialized yet)
 const FALLBACK = {
   gray800: "#1e293b",
   primary: "#6366f1",
@@ -15,7 +15,7 @@ const FALLBACK = {
   white: "#ffffff",
 };
 
-// Función segura para obtener color del tema
+// Safe function to get theme color
 const getThemeColor = (name, fallback) => {
   try {
     return (colors && colors[name]) || fallback;
@@ -51,7 +51,7 @@ export function SnackBar(options) {
     onClose,
   } = options;
 
-  // Presets usando colores del tema (con fallback)
+  // Presets using theme colors (with fallback)
   const presets = {
     normal: {
       bg: colors.surface,
@@ -85,7 +85,7 @@ export function SnackBar(options) {
   const finalText = customText || preset.text;
   const finalAction = customAction || preset.action;
 
-  // Crear contenedor principal
+  // Create main container
   const snackbar = WidgetFactory({
     tag: "div",
     position: "fixed",
@@ -143,7 +143,7 @@ export function SnackBar(options) {
     }, animationDuration);
   };
 
-  // Mensaje
+  // Message
   const messageEl = WidgetFactory({
     tag: "span",
     flex: 1,
@@ -152,7 +152,7 @@ export function SnackBar(options) {
   });
   snackbar.appendChild(messageEl);
 
-  // Botón de acción
+  // Action button
   let actionBtn = null;
   if (action) {
     actionBtn = WidgetFactory({
@@ -182,7 +182,7 @@ export function SnackBar(options) {
     snackbar.appendChild(actionBtn);
   }
 
-  // Botón de cierre (si es dismissible y no hay acción)
+  // Close button (if dismissible and no action)
   let closeBtn = null;
   if (dismissible && !action) {
     closeBtn = WidgetFactory({
@@ -208,9 +208,9 @@ export function SnackBar(options) {
     snackbar.appendChild(closeBtn);
   }
 
-  // Añadir al DOM
+  // Add to DOM
   document.body.appendChild(snackbar);
-  // Forzar reflow
+  // Force reflow
   snackbar.offsetHeight;
 
   show();

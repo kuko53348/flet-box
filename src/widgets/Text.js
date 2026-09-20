@@ -1,4 +1,4 @@
-// widgets/Text.js (corregido)
+// widgets/Text.js (fixed)
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 
@@ -17,7 +17,7 @@ export const Text = (props) => {
     text,
     value,
     children,
-    size = 16, // ✅ valor por defecto
+    size = 16, // ✅ default value
     color = colors.textSecondary,
     backgroundColor = "transparent",
     weight = "normal",
@@ -65,10 +65,10 @@ export const Text = (props) => {
     cssStyles.textDecoration = "line-through";
   }
 
-  // ✅ En lugar de 'textContent', usa 'text' (que está en translateProps)
+  // ✅ Instead of 'textContent', use 'text' (which is in translateProps)
   let element = WidgetFactory({
     tag: baseTag,
-    text: textContent, // ✅ CAMBIADO: text en lugar de textContent
+    text: textContent, // ✅ CHANGED: text instead of textContent
     ...cssStyles,
     ...rest,
   });

@@ -1,4 +1,4 @@
-// widgets/Icon.js (corregido)
+// widgets/Icon.js (fixed)
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 
@@ -15,7 +15,7 @@ export const Icon = (props) => {
   return WidgetFactory({
     tag: "span",
     className: "material-icons",
-    text: iconName, // ✅ CAMBIADO: text en lugar de textContent
+    text: iconName, // ✅ CHANGED: text instead of textContent
     fontSize: typeof size === "number" ? `${size}px` : size,
     color: color,
     display: "inline-flex",

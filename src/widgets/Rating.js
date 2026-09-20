@@ -1,4 +1,4 @@
-// widgets/Rating.js - Versión definitiva (mouse + touch + swipe)
+// widgets/Rating.js - Definitive version (mouse + touch + swipe)
 import { WidgetFactory } from "../widget-factory/index.js";
 import { Row } from "./Row.js";
 import { Text } from "./Text.js";
@@ -25,20 +25,20 @@ export const Rating = (props) => {
     ...rest
   } = props;
 
-  // Colores desde el tema
+  // Colors from theme
   let activeColor =
     propActiveColor !== undefined ? propActiveColor : colors.warning;
   let inactiveColor =
     propInactiveColor !== undefined ? propInactiveColor : colors.border;
   let currentValue = Math.min(Math.max(value, 0), max);
 
-  let starIcons = []; // almacena los elementos SPAN de cada estrella
-  let starWrappers = []; // almacena los contenedores (para eventos)
+  let starIcons = []; // stores the SPAN elements of each star
+  let starWrappers = []; // stores the wrappers (for events)
   let valueTextRef = null;
   let unsubscribeTheme = null;
-  let touchActive = false; // para evitar conflictos con mouse
+  let touchActive = false; // to avoid conflicts with mouse
 
-  // Actualiza todas las estrellas según currentValue
+  // Update all stars according to currentValue
   const updateStars = () => {
     for (let i = 0; i < max; i++) {
       const starNumber = i + 1;
@@ -64,7 +64,7 @@ export const Rating = (props) => {
     }
   };
 
-  // Cambia el valor real (persistente)
+  // Change the actual value (persistent)
   const setValue = (newValue) => {
     if (readOnly) return;
     let clamped = Math.min(Math.max(newValue, 0), max);
@@ -74,7 +74,7 @@ export const Rating = (props) => {
     if (onChange) onChange(currentValue);
   };
 
-  // Previsualización temporal (hover o touchmove)
+  // Temporary preview (hover or touchmove)
   const previewValue = (starIndex) => {
     for (let i = 0; i < max; i++) {
       const span = starIcons[i];
@@ -89,12 +89,12 @@ export const Rating = (props) => {
     }
   };
 
-  // Restaura la visualización según el valor real
+  // Restore the display according to the actual value
   const restoreFromPreview = () => {
     updateStars();
   };
 
-  // ========== CREACIÓN DE ESTRELLAS ==========
+  // ========== STAR CREATION ==========
   for (let i = 0; i < max; i++) {
     const icon = Icon({
       name: iconInactive,
@@ -106,16 +106,16 @@ export const Rating = (props) => {
       cursor: readOnly ? "default" : "pointer",
       transition: "transform 0.1s ease",
       child: icon,
-      style: { padding: "4px" }, // área táctil más grande
+      style: { padding: "4px" }, // larger touch area
     });
 
     starIcons.push(icon);
     starWrappers.push(wrapper);
 
     if (!readOnly) {
-      // ----- EVENTOS MOUSE -----
+      // ----- MOUSE EVENTS -----
       wrapper.addEventListener("mouseenter", () => {
-        if (touchActive) return; // evitar conflicto con touch
+        if (touchActive) return; // avoid conflict with touch
         wrapper.style.transform = "scale(1.15)";
         previewValue(i);
       });
@@ -135,7 +135,7 @@ export const Rating = (props) => {
         setValue(newValue);
       });
 
-      // ----- EVENTOS TÁCTILES -----
+      // ----- TOUCH EVENTS -----
       wrapper.addEventListener("touchstart", (e) => {
         e.preventDefault();
         touchActive = true;
@@ -165,7 +165,7 @@ export const Rating = (props) => {
       wrapper.addEventListener("touchend", (e) => {
         e.preventDefault();
         wrapper.style.transform = "scale(1)";
-        // Determinar qué estrella está actualmente previsualizada (la que tenga iconActive)
+        // Determine which star is currently previewed (the one with iconActive)
         let selectedIndex = -1;
         for (let idx = 0; idx < starIcons.length; idx++) {
           if (starIcons[idx].textContent === iconActive) {
@@ -176,7 +176,7 @@ export const Rating = (props) => {
         if (selectedIndex !== -1) {
           let newValue = selectedIndex + 1;
           if (allowHalf) {
-            // Para touch, consideramos siempre el entero; si quieres media estrella, se puede ajustar
+            // For touch, we always consider the integer; if you want half a star, it can be adjusted
           }
           setValue(newValue);
         } else {
@@ -192,7 +192,7 @@ export const Rating = (props) => {
     }
   }
 
-  // Contenedor de estrellas
+  // Stars container
   const starsContainer = Row({
     alignItems: "center",
     gap: gap,
@@ -200,10 +200,10 @@ export const Rating = (props) => {
     children: starWrappers,
   });
 
-  // Aseguramos estado inicial
+  // Ensure initial state
   updateStars();
 
-  // Construcción final
+  // Final construction
   const children = [starsContainer];
   if (showValue) {
     const valueText = Text({
@@ -226,7 +226,7 @@ export const Rating = (props) => {
     ...rest,
   });
 
-  // Tema dinámico
+  // Dynamic theme
   if (propActiveColor === undefined || propInactiveColor === undefined) {
     unsubscribeTheme = subscribeTheme(() => {
       if (propActiveColor === undefined) activeColor = colors.warning;

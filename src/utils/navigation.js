@@ -1,13 +1,13 @@
 // components/flet-box/utils/navigation.js
 
 /**
- * Añade capacidades de navegación completa a un widget:
- * - parent (subir)
- * - children (bajar, por índice)
- * - findById (búsqueda por id)
- * - siblings (hermanos)
- * - tree (vista de árbol)
- * - path (ruta completa hasta la raíz)
+ * Adds full navigation capabilities to a widget:
+ * - parent (go up)
+ * - children (go down, by index)
+ * - findById (search by id)
+ * - siblings (siblings)
+ * - tree (tree view)
+ * - path (full path to the root)
  */
 
 const navigated = new WeakSet();
@@ -17,7 +17,7 @@ export const addNavigation = (widget) => {
   navigated.add(widget);
 
   // ========================================================================
-  // 1. PARENT (ya lo tienes en parentable, lo incluimos aquí también)
+  // 1. PARENT (you already have it in parentable, we include it here too)
   // ========================================================================
   if (!widget.hasOwnProperty("parent")) {
     let _parent = null;
@@ -32,7 +32,7 @@ export const addNavigation = (widget) => {
   }
 
   // ========================================================================
-  // 2. CHILDREN (array de hijos directos)
+  // 2. CHILDREN (array of direct children)
   // ========================================================================
   if (!widget._children) {
     widget._children = [];
@@ -48,7 +48,7 @@ export const addNavigation = (widget) => {
   });
 
   // ========================================================================
-  // 3. FIRST CHILD / LAST CHILD (atajos)
+  // 3. FIRST CHILD / LAST CHILD (shortcuts)
   // ========================================================================
   Object.defineProperty(widget, "firstChild", {
     get: () => widget._children[0] || null,
@@ -61,7 +61,7 @@ export const addNavigation = (widget) => {
   });
 
   // ========================================================================
-  // 4. SIBLINGS (hermanos, sin incluirse a sí mismo)
+  // 4. SIBLINGS (excluding itself)
   // ========================================================================
   Object.defineProperty(widget, "siblings", {
     get: () => {
@@ -93,7 +93,7 @@ export const addNavigation = (widget) => {
   });
 
   // ========================================================================
-  // 6. INDEX (posición entre hermanos)
+  // 6. INDEX (position among siblings)
   // ========================================================================
   Object.defineProperty(widget, "index", {
     get: () => {
@@ -104,7 +104,7 @@ export const addNavigation = (widget) => {
   });
 
   // ========================================================================
-  // 7. ROOT (subir hasta la raíz)
+  // 7. ROOT (go up to the root)
   // ========================================================================
   Object.defineProperty(widget, "root", {
     get: () => {
@@ -118,7 +118,7 @@ export const addNavigation = (widget) => {
   });
 
   // ========================================================================
-  // 8. PATH (ruta desde la raíz hasta el widget)
+  // 8. PATH (path from the root to the widget)
   // ========================================================================
   Object.defineProperty(widget, "path", {
     get: () => {
@@ -138,7 +138,7 @@ export const addNavigation = (widget) => {
   });
 
   // ========================================================================
-  // 9. DEPTH (profundidad en el árbol)
+  // 9. DEPTH (depth in the tree)
   // ========================================================================
   Object.defineProperty(widget, "depth", {
     get: () => {
@@ -154,7 +154,7 @@ export const addNavigation = (widget) => {
   });
 
   // ========================================================================
-  // 10. findById (búsqueda hacia abajo por id)
+  // 10. findById (downward search by id)
   // ========================================================================
   widget.findById = function (id) {
     if (this.id === id) return this;
@@ -168,7 +168,7 @@ export const addNavigation = (widget) => {
   };
 
   // ========================================================================
-  // 11. findAll (búsqueda hacia abajo por nombre de widget)
+  // 11. findAll (downward search by widget name)
   // ========================================================================
   widget.findAll = function (widgetName) {
     const results = [];
@@ -182,7 +182,7 @@ export const addNavigation = (widget) => {
   };
 
   // ========================================================================
-  // 12. TREE (vista de árbol para debug)
+  // 12. TREE (tree view for debugging)
   // ========================================================================
   widget._generateTree = function (indent = 0, isLast = true, prefix = "") {
     const connector = indent === 0 ? "" : isLast ? "└── " : "├── ";
@@ -216,7 +216,7 @@ export const addNavigation = (widget) => {
   });
 
   // ========================================================================
-  // 13. _getTreeProps (sobrescribible por cada widget para mostrar props)
+  // 13. _getTreeProps (overridable by each widget to display props)
   // ========================================================================
   widget._getTreeProps = function () {
     const name = this._widgetName || "";

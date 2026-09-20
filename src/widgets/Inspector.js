@@ -63,10 +63,10 @@ const stringifyValue = (value, indent = 0) => {
  * Gets the real widget name
  */
 const getWidgetName = (widget) => {
-  // ✅ Ahora _widgetName está definido
+  // ✅ Now _widgetName is defined
   if (widget._widgetName) return widget._widgetName;
 
-  // Fallback basado en tagName
+  // Fallback based on tagName
   if (widget.classList?.contains("material-icons")) return "Icon";
   if (widget.tagName === "BUTTON") return "Button";
   if (widget.tagName === "INPUT") return "Input";

@@ -1,4 +1,4 @@
-// widgets/Chart.js - Con curvas suaves y gradiente de relleno
+// widgets/Chart.js - With smooth curves and fill gradient
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 
@@ -16,10 +16,10 @@ export const Chart = (props) => {
     barColor = colors.primary,
     lineColor = colors.primary,
     areaColor = `${colors.primary}40`,
-    // Nuevas props para curvas y gradiente
-    smooth = false, // si true, dibuja líneas curvas suaves
-    areaGradient = false, // si true, rellena área con gradiente (solo área)
-    areaGradientColors = null, // array de dos colores para gradiente, ej. ['#ff0000', '#00ff00']
+    // New props for curves and gradient
+    smooth = false, // if true, draws smooth curved lines
+    areaGradient = false, // if true, fills area with gradient (area only)
+    areaGradientColors = null, // array of two colors for gradient, e.g. ['#ff0000', '#00ff00']
     candleUpColor = colors.success,
     candleDownColor = colors.danger,
     axisColor = colors.border,
@@ -138,9 +138,9 @@ export const Chart = (props) => {
 
     if (points.length < 2) return;
 
-    // Dibujar el área (relleno)
+    // Draw the area (fill)
     if (isArea) {
-      // Crear gradiente vertical si se solicita
+      // Create vertical gradient if requested
       let fillStyle = areaColor;
       if (areaGradient) {
         let grad;
@@ -167,7 +167,7 @@ export const Chart = (props) => {
       }
       ctx.beginPath();
       if (smooth) {
-        // Área con curvas suaves
+        // Area with smooth curves
         ctx.moveTo(points[0].x, points[0].y);
         for (let i = 0; i < points.length - 1; i++) {
           const xc = (points[i].x + points[i + 1].x) / 2;
@@ -185,7 +185,7 @@ export const Chart = (props) => {
         ctx.fillStyle = fillStyle;
         ctx.fill();
       } else {
-        // Área con líneas rectas
+        // Area with straight lines
         ctx.moveTo(points[0].x, points[0].y);
         for (let i = 1; i < points.length; i++) {
           ctx.lineTo(points[i].x, points[i].y);
@@ -197,7 +197,7 @@ export const Chart = (props) => {
       }
     }
 
-    // Dibujar la línea (borde)
+    // Draw the line (border)
     ctx.beginPath();
     ctx.moveTo(points[0].x, points[0].y);
     if (smooth) {
@@ -221,7 +221,7 @@ export const Chart = (props) => {
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Dibujar puntos
+    // Draw points
     points.forEach((point) => {
       ctx.fillStyle = lineColor;
       ctx.beginPath();

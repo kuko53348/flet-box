@@ -1,4 +1,4 @@
-// widgets/AlertDialog.js - Basado en Modal
+// widgets/AlertDialog.js - Based on Modal
 import { Modal } from "./Modal.js";
 import { Button } from "./Button.js";
 import { Text } from "./Text.js";
@@ -20,7 +20,7 @@ export const AlertDialog = (props) => {
     ...rest
   } = props;
 
-  // Colores según variante
+  // Colors per variant
   const variantColors = {
     normal: { confirm: colors.primary, icon: "info", iconColor: colors.info },
     danger: {
@@ -41,7 +41,7 @@ export const AlertDialog = (props) => {
   };
   const variantStyle = variantColors[variant] || variantColors.normal;
 
-  // Icono según variante
+  // Icon per variant
   const icon = Icon({
     name: variantStyle.icon,
     size: 40,
@@ -49,7 +49,7 @@ export const AlertDialog = (props) => {
     marginBottom: 8,
   });
 
-  // Contenido del modal
+  // Modal content
   const content = Column({
     alignItems: "center",
     style: { textAlign: "center" },
@@ -73,7 +73,7 @@ export const AlertDialog = (props) => {
     ],
   });
 
-  // Acciones
+  // Actions
   const actions = [];
 
   if (showCancel) {
@@ -109,7 +109,7 @@ export const AlertDialog = (props) => {
   let modal = null;
   let closeModal = () => {};
 
-  // Crear modal
+  // Create modal
   modal = Modal({
     content: content,
     actions: actions,
@@ -124,7 +124,7 @@ export const AlertDialog = (props) => {
 
   closeModal = () => modal.close();
 
-  // Métodos públicos
+  // Public methods
   const open = () => modal.open();
   const close = () => modal.close();
 

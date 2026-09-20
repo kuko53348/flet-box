@@ -2,16 +2,16 @@
 import { SchemaValidator } from "./security/validation.js";
 
 export const autoValidate = (req, res, next) => {
-  // Buscar la ruta que coincida
-  const route = req._route; // Necesitas asignar la ruta en server.js
+  // Find the matching route
+  const route = req._route; // You need to assign the route in server.js
   if (!route) return next();
 
-  // Buscar el primer esquema en la ruta
+  // Find the first schema on the route
   const schemas = route.schemas || {};
   const schemaKeys = Object.keys(schemas);
   if (schemaKeys.length === 0) return next();
 
-  // Tomar el primer esquema (o podrías elegir por nombre)
+  // Take the first schema (or you could choose by name)
   const schemaName = schemaKeys[0];
   const schema = schemas[schemaName];
 

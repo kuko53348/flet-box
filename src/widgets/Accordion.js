@@ -1,4 +1,4 @@
-// widgets/Accordion.js - Versión corregida (expande correctamente)
+// widgets/Accordion.js - Fixed version (expands correctly)
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 import { Container } from "./Container.js";
@@ -14,29 +14,29 @@ export const Accordion = (props) => {
     onToggle,
     variant = "contained", // 'contained', 'outlined', 'ghost'
     borderRadius = 8,
-    // Colores
+    // Colors
     bgColor = colors.surface,
     titleColor = colors.text,
     expandedColor = colors.primary,
-    // Bordes
+    // Borders
     border = null,
     borderColor = colors.border,
     borderWidth = 1,
-    // Título
+    // Title
     titleSize = 14,
     titleWeight = "500",
     titlePadding = "12px 16px",
-    // Contenido
+    // Content
     contentPadding = "16px",
-    // Icono
+    // Icon
     iconCollapsed = "chevron_right",
     iconExpanded = "expand_more",
     iconColor = colors.textSecondary,
     iconSize = 20,
-    // Divisor
+    // Divider
     divider = true,
     dividerColor = colors.border,
-    // Estado
+    // State
     disabled = false,
     animate = true,
     animationDuration = 300,
@@ -44,7 +44,7 @@ export const Accordion = (props) => {
     ...rest
   } = props;
 
-  // Estado interno
+  // Internal state
   let isExpanded = expanded;
   let currentTitle = title;
   let currentChildren = children;
@@ -78,23 +78,23 @@ export const Accordion = (props) => {
   let resizeObserver = null;
   let isAnimating = false;
 
-  // ========== FUNCIONES DE ACTUALIZACIÓN UI ==========
+  // ========== UI UPDATE FUNCTIONS ==========
   const updateUI = () => {
     if (!titleElement || !iconElement || !titleBar || !contentInner) return;
 
-    // Texto del título
+    // Title text
     if (titleElement.textContent !== currentTitle) {
       titleElement.textContent = currentTitle;
     }
 
-    // Estilos del título
+    // Title styles
     titleElement.style.color = isExpanded
       ? currentExpandedColor
       : currentTitleColor;
     titleElement.style.fontSize = `${currentTitleSize}px`;
     titleElement.style.fontWeight = currentTitleWeight;
 
-    // Icono
+    // Icon
     iconElement.setAttribute(
       "name",
       isExpanded ? currentIconExpanded : currentIconCollapsed,
@@ -102,7 +102,7 @@ export const Accordion = (props) => {
     iconElement.style.color = currentIconColor;
     iconElement.style.fontSize = `${currentIconSize}px`;
 
-    // Barra del título
+    // Title bar
     titleBar.style.cursor = currentDisabled ? "not-allowed" : "pointer";
     titleBar.style.opacity = currentDisabled ? "0.5" : "1";
     titleBar.style.padding = currentTitlePadding;
@@ -115,14 +115,14 @@ export const Accordion = (props) => {
       titleBar.style.backgroundColor = "transparent";
     }
 
-    // Divisor
+    // Divider
     if (currentDivider && isExpanded) {
       contentInner.style.borderTop = `1px solid ${currentDividerColor}`;
     } else {
       contentInner.style.borderTop = "none";
     }
 
-    // Borde del contenedor principal
+    // Main container border
     if (currentBorder) {
       container.style.border = currentBorder;
     } else if (currentVariant === "outlined") {
@@ -131,7 +131,7 @@ export const Accordion = (props) => {
       container.style.border = "none";
     }
 
-    // Fondo del contenedor
+    // Container background
     if (currentVariant === "contained") {
       container.style.backgroundColor = currentBgColor;
     } else {
@@ -142,7 +142,7 @@ export const Accordion = (props) => {
     container.style.borderRadius = `${currentBorderRadius}px`;
     container.style.overflow = "hidden";
 
-    // Sombra
+    // Shadow
     if (currentElevation > 0) {
       const shadows = {
         1: "0 1px 3px rgba(0,0,0,0.12)",
@@ -155,14 +155,14 @@ export const Accordion = (props) => {
       container.style.boxShadow = "none";
     }
 
-    // Padding del contenido
+    // Content padding
     contentInner.style.padding = currentContentPadding;
   };
 
-  // ========== ANIMACIÓN DE ALTURA CORREGIDA ==========
+  // ========== FIXED HEIGHT ANIMATION ==========
   const getContentHeight = () => {
     if (!contentInner) return 0;
-    // Forzar cálculo correcto incluyendo padding y márgenes
+    // Force correct calculation including padding and margins
     const clone = contentInner.cloneNode(true);
     clone.style.position = "absolute";
     clone.style.visibility = "hidden";
@@ -193,14 +193,14 @@ export const Accordion = (props) => {
     isAnimating = true;
     isExpanded = true;
 
-    // Mostrar contenido para medir
+    // Show content to measure
     contentWrapper.style.display = "block";
     contentInner.style.display = "block";
 
-    // Forzar reflow
+    // Force reflow
     void contentWrapper.offsetHeight;
 
-    // Medir altura real
+    // Measure actual height
     const targetHeight = getContentHeight() + "px";
 
     setHeight("0px");
@@ -222,7 +222,7 @@ export const Accordion = (props) => {
 
     isAnimating = true;
 
-    // Obtener altura actual
+    // Get current height
     const currentHeight = contentInner.scrollHeight + "px";
     contentWrapper.style.overflow = "hidden";
     setHeight(currentHeight);
@@ -247,7 +247,7 @@ export const Accordion = (props) => {
     else expand();
   };
 
-  // ========== OBSERVAR CAMBIOS DE TAMAÑO ==========
+  // ========== WATCH SIZE CHANGES ==========
   const setupResizeObserver = () => {
     if (!contentInner || !animate) return;
     if (typeof ResizeObserver !== "undefined") {
@@ -267,7 +267,7 @@ export const Accordion = (props) => {
     }
   };
 
-  // ========== CONSTRUCCIÓN DEL WIDGET ==========
+  // ========== WIDGET CONSTRUCTION ==========
   const container = Container({
     style: {
       width: "100%",
@@ -276,7 +276,7 @@ export const Accordion = (props) => {
     ...rest,
   });
 
-  // Barra del título
+  // Title bar
   titleElement = Text({
     text: currentTitle,
     size: currentTitleSize,
@@ -312,7 +312,7 @@ export const Accordion = (props) => {
     children: [titleElement, iconElement],
   });
 
-  // Wrapper con animación de altura
+  // Wrapper with height animation
   contentWrapper = WidgetFactory({
     tag: "div",
     overflow: "hidden",
@@ -323,7 +323,7 @@ export const Accordion = (props) => {
     display: isExpanded ? "block" : "none",
   });
 
-  // Contenido interior (sin animación, solo se oculta/muestra)
+  // Inner content (no animation, only shown/hidden)
   contentInner = Container({
     style: {
       padding: currentContentPadding,
@@ -339,16 +339,16 @@ export const Accordion = (props) => {
   container.appendChild(titleBar);
   container.appendChild(contentWrapper);
 
-  // Aplicar estilos iniciales
+  // Apply initial styles
   updateUI();
 
-  // Evento click
+  // Click event
   titleBar.onclick = () => toggle();
 
-  // Observador de tamaño
+  // Size observer
   setupResizeObserver();
 
-  // ========== MÉTODOS PÚBLICOS Y REACTIVIDAD ==========
+  // ========== PUBLIC METHODS AND REACTIVITY ==========
   const setExpanded = (exp, triggerCallback = true) => {
     if (exp === isExpanded) return;
     if (exp) expand(triggerCallback);
@@ -364,7 +364,7 @@ export const Accordion = (props) => {
     }
     if (newProps.children !== undefined) {
       currentChildren = newProps.children;
-      // Reemplazar contenido
+      // Replace content
       while (contentInner.firstChild)
         contentInner.removeChild(contentInner.firstChild);
       const childrenArray = Array.isArray(currentChildren)
@@ -375,7 +375,7 @@ export const Accordion = (props) => {
         else if (typeof child === "string")
           contentInner.appendChild(document.createTextNode(child));
       });
-      // Si está expandido, reajustar altura
+      // If expanded, readjust height
       if (isExpanded && animate && !isAnimating) {
         const newHeight = getContentHeight() + "px";
         if (contentWrapper.style.height !== "auto") {
@@ -423,7 +423,7 @@ export const Accordion = (props) => {
     if (needsUIUpdate) updateUI();
   };
 
-  // Propiedades reactivas
+  // Reactive properties
   Object.defineProperty(container, "expanded", {
     get: () => isExpanded,
     set: (val) => setExpanded(val, true),
@@ -436,7 +436,7 @@ export const Accordion = (props) => {
   container.toggle = toggle;
   container.update = update;
 
-  // ========== LIMPIEZA ==========
+  // ========== CLEANUP ==========
   const cleanup = () => {
     if (resizeObserver) resizeObserver.disconnect();
     if (contentWrapper && contentWrapper._cleanup) contentWrapper._cleanup();

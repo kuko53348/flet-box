@@ -38,7 +38,7 @@ export const createExpressServer = (routes, options = {}) => {
     const path = route.originalPath;
     const handlers = [...route.middleware];
 
-    // Middleware para asignar _route y añadir query al contexto
+    // Middleware to assign _route and add query to the context
     handlers.push((req, res, next) => {
       req._route = route;
       next();
@@ -51,7 +51,7 @@ export const createExpressServer = (routes, options = {}) => {
           ...req.params,
           req,
           routes,
-          query: req.query, // ← AÑADIDO
+          query: req.query, // ← ADDED
         };
         const result = route.handler(context);
         if (result && typeof result.then === "function") {

@@ -1,39 +1,39 @@
 // src/modules/FletBox/services/Storage.js
 
 /**
- * Storage - Almacenamiento local para DOM (síncrono, similar a localStorage)
+ * Storage - Local DOM storage (synchronous, similar to localStorage)
  *
- * @description Usa localStorage del navegador para persistir datos.
- * Soporta strings, objetos, arrays, números, booleanos.
+ * @description Uses the browser's localStorage to persist data.
+ * Supports strings, objects, arrays, numbers, booleans.
  *
  * @example
  * import { saveData, getData, deleteData, clearAllData, getAllKeys, getAllData } from './services/Storage.js';
  *
- * // Guardar
+ * // Save
  * saveData('user', { name: 'Juan', age: 30 });
  *
- * // Leer
+ * // Read
  * const user = getData('user');
  *
- * // Eliminar
+ * // Delete
  * deleteData('user');
  *
- * // Limpiar todo
+ * // Clear everything
  * clearAllData();
  *
- * // Obtener todas las claves
+ * // Get all keys
  * const keys = getAllKeys();
  *
- * // Obtener todos los datos
+ * // Get all data
  * const allData = getAllData();
  */
 
 // ========== CREATE / UPDATE ==========
 /**
- * Guarda o actualiza un dato en localStorage
- * @param {string} key - Clave del dato
- * @param {any} value - Valor a guardar (string, object, array, number, boolean)
- * @returns {boolean} - true si se guardó correctamente
+ * Saves or updates a value in localStorage
+ * @param {string} key - Data key
+ * @param {any} value - Value to save (string, object, array, number, boolean)
+ * @returns {boolean} - true if saved successfully
  */
 export const saveData = (key, value) => {
   try {
@@ -48,9 +48,9 @@ export const saveData = (key, value) => {
 
 // ========== READ ==========
 /**
- * Obtiene un dato de localStorage
- * @param {string} key - Clave del dato
- * @returns {any} - El valor guardado o null si no existe
+ * Gets a value from localStorage
+ * @param {string} key - Data key
+ * @returns {any} - The saved value or null if it does not exist
  */
 export const getData = (key) => {
   try {
@@ -62,11 +62,11 @@ export const getData = (key) => {
   }
 };
 
-// ========== READ (síncrono directo) ==========
+// ========== READ (direct synchronous) ==========
 /**
- * Obtiene un dato de localStorage de forma síncrona (alias de getData)
- * @param {string} key - Clave del dato
- * @returns {any} - El valor guardado o null si no existe
+ * Gets a value from localStorage synchronously (alias of getData)
+ * @param {string} key - Data key
+ * @returns {any} - The saved value or null if it does not exist
  */
 export const getDataSync = (key) => {
   return getData(key);
@@ -74,10 +74,10 @@ export const getDataSync = (key) => {
 
 // ========== UPDATE ==========
 /**
- * Actualiza un dato existente (solo si existe)
- * @param {string} key - Clave del dato
- * @param {any} newValue - Nuevo valor
- * @returns {boolean} - true si se actualizó, false si no existía
+ * Updates an existing value (only if it exists)
+ * @param {string} key - Data key
+ * @param {any} newValue - New value
+ * @returns {boolean} - true if updated, false if it did not exist
  */
 export const updateData = (key, newValue) => {
   try {
@@ -94,9 +94,9 @@ export const updateData = (key, newValue) => {
 
 // ========== DELETE ==========
 /**
- * Elimina un dato de localStorage
- * @param {string} key - Clave del dato
- * @returns {boolean} - true si se eliminó correctamente
+ * Deletes a value from localStorage
+ * @param {string} key - Data key
+ * @returns {boolean} - true if removed successfully
  */
 export const deleteData = (key) => {
   try {
@@ -110,8 +110,8 @@ export const deleteData = (key) => {
 
 // ========== DELETE ALL ==========
 /**
- * Elimina TODOS los datos de localStorage
- * @returns {boolean} - true si se limpió correctamente
+ * Deletes ALL data from localStorage
+ * @returns {boolean} - true if cleared successfully
  */
 export const clearAllData = () => {
   try {
@@ -125,9 +125,9 @@ export const clearAllData = () => {
 
 // ========== UTILS ==========
 /**
- * Verifica si existe una clave en localStorage
- * @param {string} key - Clave a verificar
- * @returns {boolean} - true si existe
+ * Checks whether a key exists in localStorage
+ * @param {string} key - Key to check
+ * @returns {boolean} - true if it exists
  */
 export const hasData = (key) => {
   try {
@@ -139,8 +139,8 @@ export const hasData = (key) => {
 };
 
 /**
- * Obtiene todas las claves guardadas en localStorage
- * @returns {string[]} - Array de claves
+ * Gets all keys saved in localStorage
+ * @returns {string[]} - Array of keys
  */
 export const getAllKeys = () => {
   try {
@@ -157,8 +157,8 @@ export const getAllKeys = () => {
 };
 
 /**
- * Obtiene todos los datos guardados en localStorage
- * @returns {Object} - Objeto con todas las claves y valores
+ * Gets all data saved in localStorage
+ * @returns {Object} - Object with all keys and values
  */
 export const getAllData = () => {
   try {
@@ -182,8 +182,8 @@ export const getAllData = () => {
 };
 
 /**
- * Obtiene el tamaño aproximado usado en localStorage (en bytes)
- * @returns {number} - Tamaño en bytes
+ * Gets the approximate size used in localStorage (in bytes)
+ * @returns {number} - Size in bytes
  */
 export const getStorageSize = () => {
   try {
@@ -203,9 +203,9 @@ export const getStorageSize = () => {
 };
 
 /**
- * Elimina datos por prefijo de clave
- * @param {string} prefix - Prefijo de las claves a eliminar
- * @returns {number} - Cantidad de elementos eliminados
+ * Deletes data by key prefix
+ * @param {string} prefix - Prefix of the keys to delete
+ * @returns {number} - Number of deleted items
  */
 export const deleteDataByPrefix = (prefix) => {
   try {
@@ -232,9 +232,9 @@ export const deleteDataByPrefix = (prefix) => {
 };
 
 /**
- * Elimina datos por sufijo de clave
- * @param {string} suffix - Sufijo de las claves a eliminar
- * @returns {number} - Cantidad de elementos eliminados
+ * Deletes data by key suffix
+ * @param {string} suffix - Suffix of the keys to delete
+ * @returns {number} - Number of deleted items
  */
 export const deleteDataBySuffix = (suffix) => {
   try {
@@ -261,8 +261,8 @@ export const deleteDataBySuffix = (suffix) => {
 };
 
 /**
- * Obtiene el número total de items en localStorage
- * @returns {number} - Número de items
+ * Gets the total number of items in localStorage
+ * @returns {number} - Number of items
  */
 export const getItemCount = () => {
   try {
@@ -274,8 +274,8 @@ export const getItemCount = () => {
 };
 
 /**
- * Verifica si localStorage está disponible
- * @returns {boolean} - true si está disponible
+ * Checks whether localStorage is available
+ * @returns {boolean} - true if available
  */
 export const isStorageAvailable = () => {
   try {

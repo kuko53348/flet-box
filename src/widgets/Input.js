@@ -1,4 +1,4 @@
-// widgets/Input.js - VERSIÓN COMPLETA Y FUNCIONAL
+// widgets/Input.js - COMPLETE AND FUNCTIONAL VERSION
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 import { Icon } from "./Icon.js";
@@ -40,19 +40,19 @@ export const Input = (props) => {
     ...rest
   } = props;
 
-  // ========== ESTADO INTERNO ==========
+  // ========== INTERNAL STATE ==========
   let currentValue = value;
   let isValid = true;
   let validationMessage = "";
 
-  // Referencias
+  // References
   let inputElement = null;
   let validationIcon = null;
   let errorMessageElement = null;
   let inputWrapper = null;
   let container = null;
 
-  // ========== TAMAÑOS ==========
+  // ========== SIZES ==========
   const sizes = {
     small: { padding: "6px 12px", fontSize: "12px", iconSize: 16 },
     medium: { padding: "10px 14px", fontSize: "14px", iconSize: 20 },
@@ -60,7 +60,7 @@ export const Input = (props) => {
   };
   const sz = sizes[size] || sizes.medium;
 
-  // ========== VALIDACIÓN ==========
+  // ========== VALIDATION ==========
   const validateValue = (val) => {
     let valid = true;
     let message = "";
@@ -129,7 +129,7 @@ export const Input = (props) => {
     }
   };
 
-  // ========== ACTUALIZAR UI DE VALIDACIÓN ==========
+  // ========== UPDATE VALIDATION UI ==========
   const updateValidationUI = (valid) => {
     if (!inputWrapper) return;
 
@@ -194,9 +194,9 @@ export const Input = (props) => {
     if (onChange) onChange(filtered, event);
   };
 
-  // ========== CONSTRUIR UI ==========
+  // ========== BUILD UI ==========
 
-  // --- Contenedor principal con WidgetFactory ---
+  // --- Main container with WidgetFactory ---
   container = WidgetFactory({
     tag: "div",
     display: "inline-flex",
@@ -227,7 +227,7 @@ export const Input = (props) => {
     container.appendChild(labelEl);
   }
 
-  // --- Wrapper (contiene iconos + input) ---
+  // --- Wrapper (contains icons + input) ---
   let wrapperStyles = {
     display: "flex",
     alignItems: "center",
@@ -259,7 +259,7 @@ export const Input = (props) => {
     ...wrapperStyles,
   });
 
-  // --- Icono izquierdo ---
+  // --- Left icon ---
   if (iconLeft) {
     const iconEl = Icon({
       name: iconLeft,
@@ -273,7 +273,7 @@ export const Input = (props) => {
     inputWrapper.appendChild(iconEl);
   }
 
-  // --- INPUT NATIVO (la clave del éxito) ---
+  // --- NATIVE INPUT (the key to success) ---
   inputElement = document.createElement("input");
   inputElement.type = type;
   inputElement.placeholder = placeholder || "";
@@ -295,10 +295,10 @@ export const Input = (props) => {
   inputElement.style.color = disabled ? colors.textDisabled : colors.text;
   inputElement.style.cursor = disabled ? "not-allowed" : "text";
 
-  // Asignar tabIndex para que sea enfocable
+  // Assign tabIndex so it can be focused
   inputElement.tabIndex = 0;
 
-  // --- Eventos del input ---
+  // --- Input events ---
   inputElement.addEventListener("input", (e) => {
     handleInput(e.target.value, e);
   });
@@ -333,7 +333,7 @@ export const Input = (props) => {
 
   inputWrapper.appendChild(inputElement);
 
-  // --- Icono de validación ---
+  // --- Validation icon ---
   if (showValidationIcon && validation !== "none") {
     validationIcon = document.createElement("span");
     validationIcon.textContent = "";
@@ -347,7 +347,7 @@ export const Input = (props) => {
     inputWrapper.appendChild(validationIcon);
   }
 
-  // --- Icono derecho ---
+  // --- Right icon ---
   if (iconRight) {
     const iconEl = Icon({
       name: iconRight,
@@ -363,7 +363,7 @@ export const Input = (props) => {
 
   container.appendChild(inputWrapper);
 
-  // --- Mensaje de error ---
+  // --- Error message ---
   errorMessageElement = document.createElement("span");
   errorMessageElement.textContent = "";
   errorMessageElement.style.fontSize = "11px";
@@ -372,7 +372,7 @@ export const Input = (props) => {
   errorMessageElement.style.display = "none";
   container.appendChild(errorMessageElement);
 
-  // ========== FORZAR FOCO (móvil y escritorio) ==========
+  // ========== FORCE FOCUS (mobile and desktop) ==========
   inputWrapper.addEventListener("click", (e) => {
     if (e.target !== inputElement) {
       inputElement.focus();
@@ -395,7 +395,7 @@ export const Input = (props) => {
     }
   });
 
-  // ========== API PÚBLICA ==========
+  // ========== PUBLIC API ==========
   container.getValue = () => inputElement?.value || "";
   container.setValue = (newValue) => {
     currentValue = newValue;
@@ -417,7 +417,7 @@ export const Input = (props) => {
   container.focus = () => inputElement?.focus();
   container.blur = () => inputElement?.blur();
 
-  // Exponer el input por si se necesita
+  // Expose the input in case it is needed
   container._input = inputElement;
 
   return container;

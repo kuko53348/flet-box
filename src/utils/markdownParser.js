@@ -7,7 +7,7 @@ import { Icon } from "../widgets/Icon.js";
 import { CodeViewer } from "../widgets/CodeViewer.js";
 import { colors } from "./themes.js";
 
-// ========== TABLAS ==========
+// ========== TABLES ==========
 const isTableLine = (line) => {
   return (
     line.includes("|") &&
@@ -74,7 +74,7 @@ const parseTable = (lines, startIndex) => {
   return { widget: tableWidget, nextIndex: i };
 };
 
-// ========== TEXTO INLINE ==========
+// ========== INLINE TEXT ==========
 export const parseInlineToWidgets = (text) => {
   if (!text) return [Text({ text: "" })];
 
@@ -99,7 +99,7 @@ export const parseInlineToWidgets = (text) => {
   ];
 };
 
-// ========== PARSEADOR PRINCIPAL ==========
+// ========== MAIN PARSER ==========
 export const markdownToWidgets = (text, options = {}) => {
   if (!text) return [];
 
@@ -296,7 +296,7 @@ export const markdownToWidgets = (text, options = {}) => {
   return widgets;
 };
 
-// ========== EXPORTACIONES PRINCIPALES ==========
+// ========== MAIN EXPORTS ==========
 export const parseMarkdownToWidgets = markdownToWidgets;
 export const parseMarkdown = (text) => text;
 export const parseInlineMarkdown = (text) => text;
@@ -308,7 +308,7 @@ export const escapeHtml = (text) =>
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 
-// Exportación por defecto
+// Default export
 export default {
   markdownToWidgets,
   parseMarkdownToWidgets,

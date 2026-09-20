@@ -17,11 +17,11 @@ export const runServer = (
     globalMiddleware = [],
     useExpress = false,
     cleanInput = true,
-    validate = false, // Activa autoValidate
-    block = false, // Activa blockMalicious
+    validate = false, // Enables autoValidate
+    block = false, // Enables blockMalicious
   } = {},
 ) => {
-  // 📚 Documentación
+  // 📚 Documentation
   if (docs) {
     routes["/docs"] = {
       method: "GET",
@@ -35,13 +35,13 @@ export const runServer = (
 
   const finalGlobalMiddleware = [...globalMiddleware];
 
-  // 🧹 Limpieza automática (cleanInput)
+  // 🧹 Automatic cleaning (cleanInput)
   if (cleanInput) {
     finalGlobalMiddleware.push(securityCheck);
     console.log("🧹 Input sanitization enabled globally");
   }
 
-  // 🔒 Seguridad global (security: true)
+  // 🔒 Global security (security: true)
   if (security) {
     if (!finalGlobalMiddleware.includes(securityCheck)) {
       finalGlobalMiddleware.push(securityCheck);
@@ -49,26 +49,26 @@ export const runServer = (
     console.log("🔒 Security enabled globally");
   }
 
-  // ✅ Validación automática de esquemas (validate: true)
+  // ✅ Automatic schema validation (validate: true)
   if (validate) {
     finalGlobalMiddleware.push(autoValidate);
     console.log("✅ Automatic schema validation enabled");
   }
 
-  // 🛡️ Bloqueo de contenido malicioso (block: true)
+  // 🛡️ Malicious content blocking (block: true)
   if (block) {
     finalGlobalMiddleware.push(blockMalicious);
     console.log("🛡️ Malicious content blocking enabled");
   }
 
-  // 📊 Rate limit global
+  // 📊 Global rate limit
   if (rateLimitOptions) {
     const limiter = rateLimit(rateLimitOptions);
     finalGlobalMiddleware.push(limiter);
     console.log(`📊 Rate limit enabled globally: ${rateLimitOptions.max}/min`);
   }
 
-  // 🚀 Servidor (nativo o Express)
+  // 🚀 Server (native or Express)
   if (useExpress) {
     (async () => {
       try {
@@ -108,9 +108,9 @@ export const runServer = (
     return;
   }
 
-  // 🚀 MODO FLETBOX NATIVO
+  // 🚀 FLETBOX NATIVE MODE
   const server = createServer(routes, {
-    cors, // ← pasamos CORS al servidor nativo
+    cors, // ← pass CORS to the native server
     globalMiddleware: finalGlobalMiddleware,
   });
   server.listen(port, () => {

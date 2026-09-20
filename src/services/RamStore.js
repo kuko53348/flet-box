@@ -1,27 +1,27 @@
 // src/components/flet-box/services/RamStore.js
 
 /**
- * RamStore - Almacenamiento en RAM (memoria viva) con reactividad
+ * RamStore - In-memory storage (live memory) with reactivity
  *
  * @description
- * Misma API que Storage.js y Session.js, pero guarda en RAM.
- * Los datos se pierden al recargar la página.
- * Incluye subscribe() para reactividad entre widgets.
+ * Same API as Storage.js and Session.js, but keeps data in RAM.
+ * Data is lost when the page is reloaded.
+ * Includes subscribe() for reactivity between widgets.
  */
 
-// ========== ESTADO INTERNO (en RAM) ==========
+// ========== INTERNAL STATE (in RAM) ==========
 const ramStore = new Map();
 
-// ========== SUSCRIPTORES (para reactividad) ==========
+// ========== SUBSCRIBERS (for reactivity) ==========
 let subscribers = [];
 
-// ========== FUNCIÓN INTERNA PARA NOTIFICAR ==========
+// ========== INTERNAL FUNCTION TO NOTIFY ==========
 const notifySubscribers = (key, newValue, oldValue) => {
   subscribers.forEach((callback) => {
     try {
       callback(key, newValue, oldValue);
     } catch (e) {
-      console.error("[RamStore] Error en subscriber:", e);
+      console.error("[RamStore] Subscriber error:", e);
     }
   });
 };
@@ -29,9 +29,9 @@ const notifySubscribers = (key, newValue, oldValue) => {
 // ========== CREATE / UPDATE ==========
 
 /**
- * Guarda o actualiza un dato en RAM
- * @param {string} key - Clave del dato
- * @param {any} value - Valor a guardar
+ * Saves or updates a value in RAM
+ * @param {string} key - Data key
+ * @param {any} value - Value to save
  * @returns {boolean}
  */
 export const saveRam = (key, value) => {
@@ -50,8 +50,8 @@ export const saveRam = (key, value) => {
 // ========== READ ==========
 
 /**
- * Obtiene un dato de RAM
- * @param {string} key - Clave del dato
+ * Gets a value from RAM
+ * @param {string} key - Data key
  * @returns {any}
  */
 export const getRam = (key) => {
@@ -64,7 +64,7 @@ export const getRam = (key) => {
 };
 
 /**
- * Obtiene todos los datos de RAM
+ * Gets all data from RAM
  * @returns {Object}
  */
 export const getAllRam = () => {
@@ -81,7 +81,7 @@ export const getAllRam = () => {
 };
 
 /**
- * Obtiene todas las claves de RAM
+ * Gets all keys from RAM
  * @returns {string[]}
  */
 export const getAllRamKeys = () => {
@@ -94,7 +94,7 @@ export const getAllRamKeys = () => {
 };
 
 /**
- * Verifica si existe una clave en RAM
+ * Checks whether a key exists in RAM
  * @param {string} key
  * @returns {boolean}
  */
@@ -105,7 +105,7 @@ export const hasRam = (key) => {
 // ========== UPDATE ==========
 
 /**
- * Actualiza un dato existente (solo si existe)
+ * Updates an existing value (only if it exists)
  * @param {string} key
  * @param {any} newValue
  * @returns {boolean}
@@ -126,7 +126,7 @@ export const updateRam = (key, newValue) => {
 // ========== DELETE ==========
 
 /**
- * Elimina un dato de RAM
+ * Deletes a value from RAM
  * @param {string} key
  * @returns {boolean}
  */
@@ -145,7 +145,7 @@ export const deleteRam = (key) => {
 };
 
 /**
- * Elimina TODOS los datos de RAM
+ * Deletes ALL data from RAM
  * @returns {boolean}
  */
 export const clearAllRam = () => {
@@ -159,10 +159,10 @@ export const clearAllRam = () => {
   }
 };
 
-// ========== SUSCRIBIRSE (REACTIVIDAD) ==========
+// ========== SUBSCRIBE (REACTIVITY) ==========
 
 /**
- * Suscribe un callback a cambios en RAM
+ * Subscribes a callback to RAM changes
  * @param {Function} callback - (key, newValue, oldValue) => void
  * @returns {Function} - unsubscribe function
  */
@@ -170,7 +170,7 @@ export const subscribeRam = (callback) => {
   subscribers.push(callback);
   // console.log(`[RamStore] Subscriber added. Total: ${subscribers.length}`);
 
-  // Retornar función para desuscribirse
+  // Return a function to unsubscribe
   return () => {
     subscribers = subscribers.filter((s) => s !== callback);
     console.log(`[RamStore] Subscriber removed. Total: ${subscribers.length}`);
@@ -180,7 +180,7 @@ export const subscribeRam = (callback) => {
 // ========== UTILS ==========
 
 /**
- * Obtiene el número de items en RAM
+ * Gets the number of items in RAM
  * @returns {number}
  */
 export const getRamItemCount = () => {
@@ -188,7 +188,7 @@ export const getRamItemCount = () => {
 };
 
 /**
- * Verifica si RamStore está disponible
+ * Checks whether RamStore is available
  * @returns {boolean}
  */
 export const isRamAvailable = () => {

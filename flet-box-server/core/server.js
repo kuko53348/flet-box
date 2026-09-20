@@ -1,10 +1,10 @@
-// core/server.js - Con prioridad a rutas con parámetros
+// core/server.js - Prioritizing routes with parameters
 import http from "http";
 
 export const createServer = (routes, options = {}) => {
   const { globalMiddleware = [], cors = false } = options;
 
-  // Separar rutas con y sin parámetros
+  // Separate routes with and without parameters
   const routesWithParams = Object.values(routes).filter(
     (r) => r.paramNames && r.paramNames.length > 0,
   );
@@ -13,7 +13,7 @@ export const createServer = (routes, options = {}) => {
   );
 
   const server = http.createServer((req, res) => {
-    // ---- Definir métodos de respuesta con CORS automático ----
+    // ---- Define response methods with automatic CORS ----
     const sendJson = (data, status = 200) => {
       if (res.headersSent) return;
       if (cors) applyCorsHeaders(req, res);
@@ -23,7 +23,7 @@ export const createServer = (routes, options = {}) => {
     res.json = sendJson;
     res.error = (message, status = 400) => sendJson({ error: message }, status);
 
-    // ---- Manejo preflight OPTIONS ----
+    // ---- OPTIONS preflight handling ----
     if (cors && req.method === "OPTIONS") {
       applyCorsHeaders(req, res);
       res.writeHead(200);
@@ -35,7 +35,7 @@ export const createServer = (routes, options = {}) => {
     const pathname = url.pathname;
     const method = req.method;
 
-    // Guardar query params en req.query para fácil acceso
+    // Save query params in req.query for easy access
     req.query = Object.fromEntries(url.searchParams);
 
     if (method === "OPTIONS") {
@@ -59,11 +59,11 @@ export const createServer = (routes, options = {}) => {
           req.body = body ? body : {};
         }
 
-        // ---- BUSCAR RUTA CON PRIORIDAD ----
+        // ---- FIND ROUTE BY PRIORITY ----
         let matchedRoute = null;
         let params = {};
 
-        // 1. PRIMERO: Rutas con parámetros (ej: /notes/:id)
+        // 1. FIRST: Routes with parameters (e.g., /notes/:id)
         for (const route of routesWithParams) {
           if (route.method !== method) continue;
           if (route.regex) {
@@ -78,7 +78,7 @@ export const createServer = (routes, options = {}) => {
           }
         }
 
-        // 2. SEGUNDO: Rutas fijas (ej: /notes)
+        // 2. SECOND: Fixed routes (e.g., /notes)
         if (!matchedRoute) {
           for (const route of routesWithoutParams) {
             if (route.method !== method) continue;
@@ -98,10 +98,10 @@ export const createServer = (routes, options = {}) => {
           return res.error("Not found", 404);
         }
 
-        // ---- Asignar _route para autoValidate ----
+        // ---- Assign _route for autoValidate ----
         req._route = matchedRoute;
 
-        // ---- Combinar middlewares ----
+        // ---- Combine middlewares ----
         const allMiddleware = [
           ...globalMiddleware,
           ...(matchedRoute.middleware || []),
@@ -153,7 +153,7 @@ export const createServer = (routes, options = {}) => {
                 ...params,
                 req,
                 routes,
-                query: req.query, // ← SOLUCIÓN: pasar query params
+                query: req.query, // ← FIX: pass query params
               };
               result = matchedRoute.handler(context);
             }
@@ -195,7 +195,7 @@ export const createServer = (routes, options = {}) => {
   return server;
 };
 
-// ---- Función auxiliar para CORS ----
+// ---- Helper function for CORS ----
 function applyCorsHeaders(req, res) {
   const origin = req.headers.origin || "*";
   res.setHeader("Access-Control-Allow-Origin", origin);

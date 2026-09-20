@@ -1,40 +1,40 @@
 // src/modules/FletBox/services/Session.js
 
 /**
- * Session - Almacenamiento temporal para DOM (síncrono, similar a sessionStorage)
+ * Session - Temporary DOM storage (synchronous, similar to sessionStorage)
  *
- * @description Usa sessionStorage del navegador para persistir datos solo durante la sesión.
- * Los datos se eliminan al cerrar la pestaña o el navegador.
- * Soporta strings, objetos, arrays, números, booleanos.
+ * @description Uses the browser's sessionStorage to persist data only during the session.
+ * Data is removed when the tab or browser is closed.
+ * Supports strings, objects, arrays, numbers, booleans.
  *
  * @example
  * import { saveSession, getSession, deleteSession, clearAllSession, getAllSessionKeys, getAllSessionData } from './services/Session.js';
  *
- * // Guardar
+ * // Save
  * saveSession('user', { name: 'Juan', age: 30 });
  *
- * // Leer
+ * // Read
  * const user = getSession('user');
  *
- * // Eliminar
+ * // Delete
  * deleteSession('user');
  *
- * // Limpiar todo
+ * // Clear everything
  * clearAllSession();
  *
- * // Obtener todas las claves
+ * // Get all keys
  * const keys = getAllSessionKeys();
  *
- * // Obtener todos los datos
+ * // Get all data
  * const allData = getAllSessionData();
  */
 
 // ========== CREATE / UPDATE ==========
 /**
- * Guarda o actualiza un dato en sessionStorage
- * @param {string} key - Clave del dato
- * @param {any} value - Valor a guardar (string, object, array, number, boolean)
- * @returns {boolean} - true si se guardó correctamente
+ * Saves or updates a value in sessionStorage
+ * @param {string} key - Data key
+ * @param {any} value - Value to save (string, object, array, number, boolean)
+ * @returns {boolean} - true if saved successfully
  */
 export const saveSession = (key, value) => {
   try {
@@ -49,9 +49,9 @@ export const saveSession = (key, value) => {
 
 // ========== READ ==========
 /**
- * Obtiene un dato de sessionStorage
- * @param {string} key - Clave del dato
- * @returns {any} - El valor guardado o null si no existe
+ * Gets a value from sessionStorage
+ * @param {string} key - Data key
+ * @returns {any} - The saved value or null if it does not exist
  */
 export const getSession = (key) => {
   try {
@@ -63,11 +63,11 @@ export const getSession = (key) => {
   }
 };
 
-// ========== READ (síncrono directo) ==========
+// ========== READ (direct synchronous) ==========
 /**
- * Obtiene un dato de sessionStorage de forma síncrona (alias de getSession)
- * @param {string} key - Clave del dato
- * @returns {any} - El valor guardado o null si no existe
+ * Gets a value from sessionStorage synchronously (alias of getSession)
+ * @param {string} key - Data key
+ * @returns {any} - The saved value or null if it does not exist
  */
 export const getSessionSync = (key) => {
   return getSession(key);
@@ -75,10 +75,10 @@ export const getSessionSync = (key) => {
 
 // ========== UPDATE ==========
 /**
- * Actualiza un dato existente (solo si existe)
- * @param {string} key - Clave del dato
- * @param {any} newValue - Nuevo valor
- * @returns {boolean} - true si se actualizó, false si no existía
+ * Updates an existing value (only if it exists)
+ * @param {string} key - Data key
+ * @param {any} newValue - New value
+ * @returns {boolean} - true if updated, false if it did not exist
  */
 export const updateSession = (key, newValue) => {
   try {
@@ -95,9 +95,9 @@ export const updateSession = (key, newValue) => {
 
 // ========== DELETE ==========
 /**
- * Elimina un dato de sessionStorage
- * @param {string} key - Clave del dato
- * @returns {boolean} - true si se eliminó correctamente
+ * Deletes a value from sessionStorage
+ * @param {string} key - Data key
+ * @returns {boolean} - true if removed successfully
  */
 export const deleteSession = (key) => {
   try {
@@ -111,8 +111,8 @@ export const deleteSession = (key) => {
 
 // ========== DELETE ALL ==========
 /**
- * Elimina TODOS los datos de sessionStorage
- * @returns {boolean} - true si se limpió correctamente
+ * Deletes ALL data from sessionStorage
+ * @returns {boolean} - true if cleared successfully
  */
 export const clearAllSession = () => {
   try {
@@ -126,9 +126,9 @@ export const clearAllSession = () => {
 
 // ========== UTILS ==========
 /**
- * Verifica si existe una clave en sessionStorage
- * @param {string} key - Clave a verificar
- * @returns {boolean} - true si existe
+ * Checks whether a key exists in sessionStorage
+ * @param {string} key - Key to check
+ * @returns {boolean} - true if it exists
  */
 export const hasSession = (key) => {
   try {
@@ -140,8 +140,8 @@ export const hasSession = (key) => {
 };
 
 /**
- * Obtiene todas las claves guardadas en sessionStorage
- * @returns {string[]} - Array de claves
+ * Gets all keys saved in sessionStorage
+ * @returns {string[]} - Array of keys
  */
 export const getAllSessionKeys = () => {
   try {
@@ -158,8 +158,8 @@ export const getAllSessionKeys = () => {
 };
 
 /**
- * Obtiene todos los datos guardados en sessionStorage
- * @returns {Object} - Objeto con todas las claves y valores
+ * Gets all data saved in sessionStorage
+ * @returns {Object} - Object with all keys and values
  */
 export const getAllSessionData = () => {
   try {
@@ -183,8 +183,8 @@ export const getAllSessionData = () => {
 };
 
 /**
- * Obtiene el tamaño aproximado usado en sessionStorage (en bytes)
- * @returns {number} - Tamaño en bytes
+ * Gets the approximate size used in sessionStorage (in bytes)
+ * @returns {number} - Size in bytes
  */
 export const getSessionSize = () => {
   try {
@@ -204,9 +204,9 @@ export const getSessionSize = () => {
 };
 
 /**
- * Elimina datos por prefijo de clave
- * @param {string} prefix - Prefijo de las claves a eliminar
- * @returns {number} - Cantidad de elementos eliminados
+ * Deletes data by key prefix
+ * @param {string} prefix - Prefix of the keys to delete
+ * @returns {number} - Number of deleted items
  */
 export const deleteSessionByPrefix = (prefix) => {
   try {
@@ -233,9 +233,9 @@ export const deleteSessionByPrefix = (prefix) => {
 };
 
 /**
- * Elimina datos por sufijo de clave
- * @param {string} suffix - Sufijo de las claves a eliminar
- * @returns {number} - Cantidad de elementos eliminados
+ * Deletes data by key suffix
+ * @param {string} suffix - Suffix of the keys to delete
+ * @returns {number} - Number of deleted items
  */
 export const deleteSessionBySuffix = (suffix) => {
   try {
@@ -262,8 +262,8 @@ export const deleteSessionBySuffix = (suffix) => {
 };
 
 /**
- * Obtiene el número total de items en sessionStorage
- * @returns {number} - Número de items
+ * Gets the total number of items in sessionStorage
+ * @returns {number} - Number of items
  */
 export const getSessionItemCount = () => {
   try {
@@ -275,8 +275,8 @@ export const getSessionItemCount = () => {
 };
 
 /**
- * Verifica si sessionStorage está disponible
- * @returns {boolean} - true si está disponible
+ * Checks whether sessionStorage is available
+ * @returns {boolean} - true if available
  */
 export const isSessionAvailable = () => {
   try {

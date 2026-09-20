@@ -1,4 +1,4 @@
-// widgets/FloatingActionButton.js (o navigations/FloatingActionButton.js)
+// widgets/FloatingActionButton.js (or navigations/FloatingActionButton.js)
 /**
  * FloatingActionButton Component
  * @module widgets/FloatingActionButton

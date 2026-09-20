@@ -2,16 +2,16 @@
 import nodemailer from "nodemailer";
 
 /**
- * Envía un email usando Gmail SMTP
+ * Sends an email using Gmail SMTP
  *
- * @param {Object} options - Opciones del email
- * @param {string} options.sendTo - Destinatario del email
- * @param {string} options.title - Asunto del email
- * @param {number} options.personalCode - Código personal a enviar
- * @param {string} options.userName - Nombre del usuario
- * @param {string} options.user - Email remitente (default: justoneclick37@gmail.com)
- * @param {string} options.password - Contraseña de aplicación (default: gpae milb kxlm pdoq)
- * @returns {Promise<Object>} Información del email enviado
+ * @param {Object} options - Email options
+ * @param {string} options.sendTo - Email recipient
+ * @param {string} options.title - Email subject
+ * @param {number} options.personalCode - Personal code to send
+ * @param {string} options.userName - User name
+ * @param {string} options.user - Sender email (default: justoneclick37@gmail.com)
+ * @param {string} options.password - App password (default: gpae milb kxlm pdoq)
+ * @returns {Promise<Object>} Info about the sent email
  *
  * @example
  * await sendEmail({
@@ -111,14 +111,14 @@ export async function sendEmail({
 }
 
 // ============================================================
-// CLASE VERSIÓN (más completa)
+// CLASS VERSION (more complete)
 // ============================================================
 
 export class EmailService {
   /**
-   * @param {Object} config - Configuración del servicio de email
-   * @param {string} config.user - Email remitente
-   * @param {string} config.password - Contraseña de aplicación
+   * @param {Object} config - Email service configuration
+   * @param {string} config.user - Sender email
+   * @param {string} config.password - App password
    */
   constructor(config = {}) {
     this.user = config.user || "justoneclick37@gmail.com";
@@ -127,7 +127,7 @@ export class EmailService {
   }
 
   /**
-   * Inicializa el transporter (lazy loading)
+   * Initializes the transporter (lazy loading)
    */
   getTransporter() {
     if (!this.transporter) {
@@ -143,7 +143,7 @@ export class EmailService {
   }
 
   /**
-   * Envía un email
+   * Sends an email
    */
   async send({
     sendTo = "",
@@ -208,11 +208,11 @@ export class EmailService {
 }
 
 // ============================================================
-// EJEMPLO DE USO
+// USAGE EXAMPLE
 // ============================================================
 
 /*
-// Forma 1: Función simple
+// Form 1: Simple function
 import { sendEmail } from './email.js';
 
 await sendEmail({
@@ -222,7 +222,7 @@ await sendEmail({
   userName: 'name'
 });
 
-// Forma 2: Clase
+// Form 2: Class
 import { EmailService } from './email.js';
 
 const email = new EmailService({
@@ -237,6 +237,6 @@ await email.send({
   userName: 'name'
 });
 
-// Forma 3: Sin parámetros (usa defaults)
+// Form 3: No parameters (uses defaults)
 await sendEmail();
 */

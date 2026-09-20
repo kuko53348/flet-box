@@ -44,8 +44,8 @@ export const runSecureServer = (
     port,
     docs,
     cors,
-    security: true, // activa securityCheck
-    cleanInput: true, // también activa sanitización
+    security: true, // enables securityCheck
+    cleanInput: true, // also enables sanitization
     rateLimit: rateLimitOptions,
     globalMiddleware,
     validate,

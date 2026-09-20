@@ -1,6 +1,6 @@
 // src/components/flet-box/utils/themes.js
 
-// ========== COLORES POR DEFECTO (estáticos, seguros) ==========
+// ========== DEFAULT COLORS (static, safe) ==========
 const DEFAULT_COLORS = {
   primary: "#6366f1",
   secondary: "#8b5cf6",
@@ -35,10 +35,10 @@ const DEFAULT_COLORS = {
   infoBg: "#e5f5ff",
 };
 
-// ========== EXPORTAR colors (siempre definido) ==========
+// ========== EXPORT colors (always defined) ==========
 export let colors = { ...DEFAULT_COLORS };
 
-// ========== PALETAS ==========
+// ========== PALETTES ==========
 export const palettes = {
   light: {
     primary: "#00A5FF",
@@ -96,7 +96,7 @@ export const palettes = {
   },
 };
 
-// ========== SUSCRIPTORES ==========
+// ========== SUBSCRIBERS ==========
 const themeSubscribers = [];
 
 export const subscribeTheme = (callback) => {
@@ -119,7 +119,7 @@ const notifyThemeChange = () => {
   });
 };
 
-// ========== FUNCIONES DE TEMA ==========
+// ========== THEME FUNCTIONS ==========
 export const setTheme = (themeName) => {
   const palette = palettes[themeName];
   if (palette) {
@@ -130,7 +130,7 @@ export const setTheme = (themeName) => {
     });
   }
 
-  // Actualizar CSS variables
+  // Update CSS variables
   try {
     const root = document.documentElement;
     Object.keys(colors).forEach((key) => {
@@ -140,7 +140,7 @@ export const setTheme = (themeName) => {
     // Silently fail in non-browser environments
   }
 
-  // Guardar preferencia
+  // Save preference
   try {
     localStorage.setItem("fletbox-theme", themeName);
   } catch (e) {
@@ -219,7 +219,7 @@ export const getColor = (colorName, opacity = 1) => {
   return color;
 };
 
-// ========== COMPONENTES ==========
+// ========== COMPONENTS ==========
 export const ThemeProvider = ({ children, theme = null }) => {
   if (theme) setTheme(theme);
   return children;
@@ -236,7 +236,7 @@ export const useTheme = () => {
   };
 };
 
-// ========== INICIALIZACIÓN (segura) ==========
+// ========== INITIALIZATION (safe) ==========
 const initTheme = () => {
   try {
     const savedTheme = localStorage.getItem("fletbox-theme");
@@ -251,12 +251,12 @@ const initTheme = () => {
     }
     watchSystemTheme();
   } catch (e) {
-    // Si falla, usar valores por defecto
+    // If it fails, use default values
     console.warn("Theme initialization failed, using defaults");
   }
 };
 
-// Inicializar solo en entorno browser
+// Initialize only in browser environment
 if (typeof window !== "undefined" && typeof document !== "undefined") {
   initTheme();
 }
