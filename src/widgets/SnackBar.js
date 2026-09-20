@@ -120,6 +120,29 @@ export function SnackBar(options) {
     flexWrap: "wrap",
   });
 
+  let timeoutId = null;
+
+  const show = () => {
+    requestAnimationFrame(() => {
+      snackbar.style.opacity = "1";
+      snackbar.style.transform = "translateY(0)";
+    });
+    if (onShow) onShow();
+  };
+
+  const close = () => {
+    if (timeoutId) clearTimeout(timeoutId);
+    snackbar.style.opacity = "0";
+    snackbar.style.transform =
+      position === "bottom"
+        ? `translateY(calc(100% + ${margin}px))`
+        : `translateY(calc(-100% - ${margin}px))`;
+    setTimeout(() => {
+      if (snackbar.parentNode) snackbar.parentNode.removeChild(snackbar);
+      if (onClose) onClose();
+    }, animationDuration);
+  };
+
   // Mensaje
   const messageEl = WidgetFactory({
     tag: "span",
@@ -189,29 +212,6 @@ export function SnackBar(options) {
   document.body.appendChild(snackbar);
   // Forzar reflow
   snackbar.offsetHeight;
-
-  let timeoutId = null;
-
-  const show = () => {
-    requestAnimationFrame(() => {
-      snackbar.style.opacity = "1";
-      snackbar.style.transform = "translateY(0)";
-    });
-    if (onShow) onShow();
-  };
-
-  const close = () => {
-    if (timeoutId) clearTimeout(timeoutId);
-    snackbar.style.opacity = "0";
-    snackbar.style.transform =
-      position === "bottom"
-        ? `translateY(calc(100% + ${margin}px))`
-        : `translateY(calc(-100% - ${margin}px))`;
-    setTimeout(() => {
-      if (snackbar.parentNode) snackbar.parentNode.removeChild(snackbar);
-      if (onClose) onClose();
-    }, animationDuration);
-  };
 
   show();
   if (duration > 0) {

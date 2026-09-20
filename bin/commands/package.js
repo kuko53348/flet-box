@@ -3,11 +3,21 @@ import readline from "readline";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { execCmd, getPackagePath } from "../utils/helpers.js";
-import { c } from "../utils/colors.js";
+import { execCmd } from "../utils/helpers.js";
+import { c, gradient, rainbow, section, divider, panel } from "../utils/colors.js";
+import { execSpin } from "../utils/spinner.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+let FRAMEWORK_VERSION = "v1.0.0";
+try {
+  FRAMEWORK_VERSION =
+    "v" +
+    JSON.parse(
+      fs.readFileSync(path.join(__dirname, "../../package.json"), "utf8"),
+    ).version;
+} catch {}
 
 export const packageManager = async () => {
   const PACKAGE = "flet-box";
@@ -18,117 +28,104 @@ export const packageManager = async () => {
   });
   const question = (q) => new Promise((resolve) => rl.question(q, resolve));
 
+  process.on("SIGINT", () => {
+    console.log(`\n${rainbow("👋 Bye!")}\n`);
+    rl.close();
+    process.exit(0);
+  });
+
+  const run = (label, icon, color = "#6366f1") =>
+    console.log(`\n${divider(`${icon}  ${label}`, color)}`);
+
+  const opt = (n, name, desc, from = "#34d399", to = "#22d3ee") =>
+    `  ${gradient(`${n}.`, from, to)} ${c("bold", name.padEnd(10))}${c("dim", "·")} ${c("gray", desc)}`;
+
   while (true) {
     console.clear();
-    console.log(`
-${c("cyan", "╔════════════════════════════════════════════════════════════╗")}
-${c("cyan", "║")}                    ${c("bold", "📦 FletBox Package Manager")}                    ${c("cyan", "║")}
-${c("cyan", "╚════════════════════════════════════════════════════════════╝")}
+    console.log(`\n${panel("📦 FletBox Package Manager", FRAMEWORK_VERSION, { minW: 64 })}`);
+    console.log(
+      `
+${section("🔧", "LOCAL DEVELOPMENT")}
+${opt(1, "link", "Create global link")}
+${opt(2, "use", "Use link in current project")}
+${opt(3, "unlink", "Remove the link")}
+${opt(4, "list", "Show link status")}
 
-${c("yellow", "LOCAL DEVELOPMENT")}
-  ${c("green", "1.")} link      - Create global link
-  ${c("green", "2.")} use       - Use link in current project
-  ${c("green", "3.")} unlink    - Remove link
-  ${c("green", "4.")} list      - Show status
+${section("📦", "NPM REGISTRY")}
+${opt(5, "publish", "Publish to npm", "#38bdf8", "#6366f1")}
+${opt(6, "install", "npm install flet-box", "#38bdf8", "#6366f1")}
+${opt(7, "uninstall", "npm uninstall flet-box", "#38bdf8", "#6366f1")}
 
-${c("yellow", "NPM REGISTRY")}
-  ${c("green", "5.")} publish   - Publish to npm
-  ${c("green", "6.")} install   - npm install flet-box
-  ${c("green", "7.")} uninstall - npm uninstall flet-box
+${section("👤", "UTILS")}
+${opt(8, "whoami", "Show npm user", "#d946ef", "#8b5cf6")}
+${opt(9, "login", "Login to npm", "#d946ef", "#8b5cf6")}
+${opt(0, "exit", "Leave the manager", "#f43f5e", "#fb923c")}
 
-${c("yellow", "UTILS")}
-  ${c("green", "8.")} whoami    - Show npm user
-  ${c("green", "9.")} login     - Login to npm
+${divider("", "#3730a3")}
+${c("gray", "  Press Ctrl+C to exit at any time")} ${c("dim", "· " + FRAMEWORK_VERSION)}
+`,
+    );
 
-  ${c("green", "0.")} exit
+    const choice = await question(
+      `\n  ${gradient("❯", "#22d3ee", "#a855f7")} ${c("brightCyan", "Select option")}: `,
+    );
 
-${c("gray", "────────────────────────────────────────────────────────────")}
-${c("gray", "Press Ctrl+C to exit at any time")}
-`);
-
-    const opt = await question(`${c("cyan", "Select option")}: `);
-
-    switch (opt) {
+    switch (choice) {
       case "1":
-        console.log(`\n${c("blue", "🔗 Creating global link...")}`);
-        const linkResult = execCmd(`cd "${PKG_PATH}" && npm link`);
-        if (linkResult) {
-          console.log(`${c("green", "✅ Package linked globally")}`);
-        } else {
-          console.log(`${c("red", "❌ Failed to create link")}`);
-        }
+        execSpin("Creating global link...", `cd "${PKG_PATH}" && npm link`);
         break;
 
       case "2":
-        console.log(`\n${c("blue", "🔗 Using package in current project...")}`);
-        const useResult = execCmd(`npm link ${PACKAGE}`);
-        if (useResult) {
-          console.log(`${c("green", "✅ Now you can import from flet-box")}`);
-        } else {
-          console.log(`${c("red", "❌ Failed to link package")}`);
-        }
+        execSpin("Linking flet-box in current project...", `npm link ${PACKAGE}`);
         break;
 
       case "3":
-        console.log(`\n${c("red", "🗑️ Unlinking...")}`);
-        execCmd(`npm unlink ${PACKAGE}`);
-        console.log(`${c("green", "✅ Unlinked")}`);
+        execSpin("Unlinking flet-box...", `npm unlink ${PACKAGE}`);
         break;
 
       case "4":
-        console.log(`\n${c("blue", "📋 Status:")}`);
+        run("STATUS", "📋");
         execCmd(
-          `npm list -g --depth=0 2>/dev/null | grep ${PACKAGE} || echo "${c("gray", "Not linked globally")}"`,
+          `npm list -g --depth=0 2>/dev/null | grep ${PACKAGE} || echo "Not linked globally"`,
         );
-
         const localPath = path.join(process.cwd(), "node_modules", PACKAGE);
         if (fs.existsSync(localPath)) {
-          console.log(`${c("green", "✅ Installed locally")}`);
+          console.log(` ${gradient("✅ Installed locally", "#34d399", "#22d3ee")}`);
         } else {
-          console.log(`${c("gray", "❌ Not installed locally")}`);
+          console.log(` ${c("gray", "❌ Not installed locally")}`);
         }
         break;
 
       case "5":
-        console.log(`\n${c("magenta", "🌍 Publishing to npm...")}`);
-        const publishResult = execCmd(`cd "${PKG_PATH}" && npm publish`);
-        if (publishResult) {
-          console.log(`${c("green", "✅ Published successfully")}`);
-        } else {
-          console.log(`${c("red", "❌ Publishing failed")}`);
-        }
+        execSpin("Publishing to npm...", `cd "${PKG_PATH}" && npm publish`);
         break;
 
       case "6":
-        console.log(`\n${c("magenta", "🌍 Installing from npm...")}`);
-        execCmd(`npm install ${PACKAGE}`);
+        execSpin("Installing flet-box from npm...", `npm install ${PACKAGE}`);
         break;
 
       case "7":
-        console.log(`\n${c("red", "🗑️ Uninstalling...")}`);
-        execCmd(`npm uninstall ${PACKAGE}`);
+        execSpin("Uninstalling flet-box...", `npm uninstall ${PACKAGE}`);
         break;
 
       case "8":
-        console.log(`\n${c("blue", "👤 npm user:")}`);
-        execCmd(
-          `npm whoami 2>/dev/null || echo "${c("gray", "Not logged in")}"`,
-        );
+        run("WHOAMI", "👤");
+        execCmd(`npm whoami 2>/dev/null || echo "Not logged in"`);
         break;
 
       case "9":
-        console.log(`\n${c("blue", "🔐 Login to npm...")}`);
+        run("LOGIN", "🔐");
         execCmd(`npm adduser`);
         break;
 
       case "0":
-        console.log(`\n${c("yellow", "👋 Bye!")}`);
+        console.log(`\n${rainbow("👋 Bye!")}\n`);
         rl.close();
         return;
 
       default:
-        console.log(`\n${c("red", "❌ Invalid option")}`);
+        console.log(`\n ${c("red", "❌ Invalid option")}`);
     }
-    await question(`\n${c("gray", "Press Enter to continue...")}`);
+    await question(`\n  ${c("gray", "Press Enter to continue...")}`);
   }
 };

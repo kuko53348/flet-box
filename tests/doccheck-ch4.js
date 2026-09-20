@@ -1,8 +1,18 @@
 // Chapter 4 doc-verification probe fragment.
 // Asserts the documented behavior of: AlertDialog, Modal, BottomSheet, SnackBar, Tooltip, ProgressBar, CircularBar, Skeleton, FloatingActionButton, Pagination.
 export default function run(ctx) {
-  const { t, eq, cs, mount, W } = ctx;
+  const { t, eq, cs, mount, W, colors } = ctx;
   // W = widget namespace; t(name, fn); eq(actual, expected, msg?); cs(el)=getComputedStyle; mount(el) appends to off-screen host & returns el
+
+  // Resolves a hex token to its computed rgb at runtime (theme palettes vary).
+  const rgbOf = (color) => {
+    const d = document.createElement("div");
+    d.style.backgroundColor = color;
+    document.body.appendChild(d);
+    const c = getComputedStyle(d).backgroundColor;
+    d.remove();
+    return c;
+  };
 
   // ---------------- AlertDialog ----------------
   t("AlertDialog: returns controller {open, close, modal}, starts closed", () => {
@@ -111,7 +121,8 @@ export default function run(ctx) {
     s.open();
     eq(overlay.style.visibility, "visible");
     eq(overlay.style.opacity, "1");
-    eq(sheet.style.transform, "translateY(0)");
+    // Chromium serializes a zero-length translation back as "translateY(0px)".
+    eq(sheet.style.transform, "translateY(0px)");
     s.close();
     eq(sheet.style.transform, "translateY(100%)");
     eq(overlay.style.opacity, "0");
@@ -197,7 +208,7 @@ export default function run(ctx) {
     eq(track.style.height, "8px");
     eq(track.style.borderRadius, "4px"); // height / 2
     eq(cs(track).backgroundColor, "rgb(226, 232, 240)"); // colors.border
-    eq(cs(fill).backgroundColor, "rgb(99, 102, 241)"); // colors.primary
+    eq(cs(fill).backgroundColor, rgbOf(colors.primary));
   });
   t("ProgressBar: value 50 / max 100 -> fill width 50%", () => {
     const e = mount(W.ProgressBar({ value: 50 }));

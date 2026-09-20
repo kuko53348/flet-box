@@ -515,47 +515,52 @@ echo "Press Ctrl+C to stop"
 python3 -m http.server $PORT --bind $BIND
 `;
 
-export const createBundleSh = () => `#!/bin/bash
-echo "📦 Building FletBox project..."
+export const createBundleSh = (target = "www") => `#!/bin/bash
+# createBundle.sh — Bundle UNIFICADO a \${TARGET}/ (un solo app.js + PWA)
+# Uso: bash createBundle.sh [target]
+set -euo pipefail
+cd "\$(dirname "\$0")"
+TARGET="\${1:-${target}}"
 
-if ! command -v esbuild &> /dev/null && ! npx esbuild --version &> /dev/null; then
-    echo "esbuild not installed. Run: npm install --save-dev esbuild"
-    exit 1
+if ! npx --no-install esbuild --version >/dev/null 2>&1; then
+    echo "📦 Instalando esbuild (devDependency)…"
+    npm install --save-dev esbuild >/dev/null
 fi
 
-rm -rf dist && mkdir -p dist
+rm -rf "\$TARGET"
+mkdir -p "\$TARGET/src" "\$TARGET/assets"
 
-mkdir -p dist/src/assets/fonts
+# Root static files (PWA + preview)
+for f in index.html manifest.json run.sh service-worker.js; do
+    [ -f "\$f" ] && cp "\$f" "\$TARGET/"
+done
+[ -f "\$TARGET/run.sh" ] && chmod +x "\$TARGET/run.sh"
 
+# Assets: iconos PWA + fuentes de iconos
 if [ -d "src/assets" ]; then
-    cp -r src/assets/* dist/src/assets/ 2>/dev/null
+    cp -R src/assets/. "\$TARGET/src/assets/"
+    cp -R src/assets/. "\$TARGET/assets/"
 fi
 
-if [ -f "src/assets/fonts/icons.css" ]; then
-    cp src/assets/fonts/icons.css dist/src/assets/fonts/
-fi
-if [ -f "src/assets/fonts/MaterialIcons-Regular.woff2" ]; then
-    cp src/assets/fonts/MaterialIcons-Regular.woff2 dist/src/assets/fonts/
-fi
-
-[ -f "run.sh" ] && cp run.sh dist/
-[ -f "index.html" ] && cp index.html dist/
-
-echo "📦 Bundling app.js..."
-npx esbuild src/app.js \
-    --bundle \
-    --outfile=dist/src/app.js \
-    --format=esm \
-    --minify \
-    --target=es2020 \
-    --external:*.css \
-    --external:*.woff2
-
-if [ -f "src/lazyConfig.js" ]; then
-    npx esbuild src/lazyConfig.js --bundle --outfile=dist/lazyConfig.js --format=esm --minify
+# CSS global (lo carga index.html)
+if [ -f "src/styles/global.css" ]; then
+    mkdir -p "\$TARGET/src/styles"
+    cp src/styles/global.css "\$TARGET/src/styles/"
 fi
 
-[ -f "service-worker.js" ] && cp service-worker.js dist/
+# BUNDLE UNIFICADO: flet-box + widgets en UN solo app.js
+echo "📦 Bundling (esbuild + tree-shaking)…"
+npx esbuild src/app.js \\
+    --bundle --outfile="\$TARGET/src/app.js" --format=esm --minify \\
+    --tree-shaking=true --target=es2020 --define:FLETBOX_DEV=false \\
+    --external:*.css --external:*.woff2 --resolve-extensions=.js,.json
+
+# App source code (required by the "View code" button)
+for d in modules screens database components; do
+    [ -d "src/\$d" ] && cp -R "src/\$d" "\$TARGET/src/"
+done
+
+echo "✅ Bundle listo: \$TARGET/   Prueba: cd \$TARGET && bash run.sh"
 `;
 
 export const serviceWorkerJs = () => `// service-worker.js - PWA offline support

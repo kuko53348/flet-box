@@ -121,7 +121,8 @@ export default function run(ctx) {
     eq(e.style.display, "flex");
     eq(e.style.flexDirection, "column");
     eq(e.style.overflow, "hidden");
-    eq(e.style.flex, "1");
+    // Chromium normalizes the `flex: 1` shorthand to the full form when read back.
+    eq(e.style.flex, "1 1 0%");
   });
   t("ListView: default height is 400px", () => {
     const e = mount(W.ListView({}));
@@ -195,7 +196,8 @@ export default function run(ctx) {
   t("Avatar: shape controls border-radius (circle/rounded/square)", () => {
     eq(W.Avatar({ shape: "circle" }).style.borderRadius, "50%");
     eq(W.Avatar({ shape: "rounded", size: 40 }).style.borderRadius, "8px");
-    eq(W.Avatar({ shape: "square" }).style.borderRadius, "0");
+    // Zero serializes with units in Chromium: setting borderRadius "0" reads back "0px".
+    eq(W.Avatar({ shape: "square" }).style.borderRadius, "0px");
   });
   t("Avatar: size sets width/height in px", () => {
     const e = mount(W.Avatar({ size: 64 }));

@@ -4,7 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { createFile, copyFile, makeExecutable } from "../utils/helpers.js";
 import * as templates from "../utils/templates.js";
-import { c } from "../utils/colors.js";
+import { c, banner, gradient } from "../utils/colors.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -52,9 +52,7 @@ export const createProject = async (projectName, rawArgs = []) => {
     process.exit(1);
   }
 
-  console.log(
-    `\n${c("cyan", "📦 Creating project:")} ${finalName} (${template} template)\n`,
-  );
+  console.log(banner("📦 Creating project", `${finalName} · ${template}`));
 
   // Create directories
   const commonDirs = ["src", "src/assets/fonts", "src/database"];
@@ -197,10 +195,10 @@ export const createProject = async (projectName, rawArgs = []) => {
   makeExecutable(path.join(projectPath, "run.sh"));
 
   console.log(
-    `\n${c("green", "✅")} Project "${finalName}" created successfully!\n`,
+    `\n${gradient(` ✅ Project "${finalName}" created successfully!`, "#34d399", "#22d3ee")}\n`,
   );
-  console.log(`  ${c("cyan", "cd")} ${finalName}`);
-  console.log(`  ${c("cyan", "npm install")}`);
-  console.log(`  ${c("cyan", "npm run dev")}\n`);
+  console.log(`  ${c("brightCyan", "cd")} ${finalName}`);
+  console.log(`  ${c("brightCyan", "npm install")}`);
+  console.log(`  ${c("brightCyan", "npm run dev")}\n`);
   console.log(`${c("gray", `📱 Template: ${template}`)}\n`);
 };

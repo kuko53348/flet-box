@@ -2,11 +2,37 @@
 import http from "http";
 import fs from "fs";
 import path from "path";
+import readline from "readline";
 import { WebSocketServer } from "ws";
 import chokidar from "chokidar";
-import { c } from "../utils/colors.js";
+import { c, banner, rainbow, dot, typewriter } from "../utils/colors.js";
+import { spinner } from "../utils/spinner.js";
 
-// Detectar si estamos en el directorio del framework
+// Ask for a port interactively (Enter = use the default)
+const askPort = (message, fallback) =>
+  new Promise((resolve) => {
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+    rl.question(message, (answer) => {
+      rl.close();
+      const trimmed = (answer || "").trim();
+      if (trimmed === "") {
+        resolve(fallback);
+        return;
+      }
+      const n = Number(trimmed);
+      if (Number.isInteger(n) && n > 0 && n < 65536) {
+        resolve(n);
+      } else {
+        console.warn(c("yellow", `⚠️ Invalid port "${trimmed}", using ${fallback}`));
+        resolve(fallback);
+      }
+    });
+  });
+
+// Detect if we are in the framework root directory
 const isFrameworkRoot = (projectRoot) => {
   const packageJson = path.join(projectRoot, "package.json");
   if (fs.existsSync(packageJson)) {
@@ -31,6 +57,17 @@ export const runDevServer = async (options = {}) => {
   const projectRoot = process.cwd();
   const clients = new Set();
   let watcher = null;
+  let PORT = Number(port) || 8000;
+
+  console.log(banner("📡 FletBox Server", spaMode ? "SPA + Hot Reload" : "Static"));
+
+  // Interactive port: if no --port was passed and there is a TTY, ask
+  if (options.askPort && process.stdin.isTTY) {
+    PORT = await askPort(
+      c("cyan", `🌐 Server port [${PORT}]: `),
+      PORT,
+    );
+  }
 
   // Detectar si estamos en el framework
   const isFramework = isFrameworkRoot(projectRoot);
@@ -115,7 +152,7 @@ export const runDevServer = async (options = {}) => {
       let ext = path.extname(filePath).toLowerCase();
 
       fs.access(filePath, fs.constants.F_OK, (err) => {
-        // SPA fallback: si el archivo no existe y no tiene extensión, servir index.html
+        // SPA fallback: if the file doesn't exist and has no extension, serve index.html
         if (err && spaMode && (!ext || ext === "")) {
           filePath = path.join(projectRoot, "index.html");
           ext = ".html";
@@ -158,7 +195,7 @@ export const runDevServer = async (options = {}) => {
                   c("blue", "🔧 Framework mode: using direct HMR import"),
                 );
             } else {
-              // ✅ Proyecto normal: importar desde módulo npm
+              // ✅ Normal project: import from the npm module
               hmrScript = `
                                 <script type="module">
                                     import('flet-box').then(({ initHMR }) => {
@@ -193,9 +230,73 @@ export const runDevServer = async (options = {}) => {
     }
   });
 
+  let serverErrorHandled = false;
+
+  const stateDot = (on, color) => (on ? dot(color) : c("gray", "●"));
+  let boot = null;
+
+  const printReady = async (p) => {
+    if (boot) boot.succeed(`Dev server running on port ${p}`);
+    console.log("");
+    await typewriter(`● http://localhost:${p}`, { ms: 10, color: "#34d399" });
+    console.log(
+      `  ${stateDot(spaMode, "#22d3ee")} ${c("gray", "SPA")}        ${c("brightGreen", spaMode ? "ON " : "OFF")}`,
+    );
+    console.log(
+      `  ${stateDot(hotReload, "#a855f7")} ${c("gray", "Hot Reload")} ${c("brightGreen", hotReload ? "ON " : "OFF")}`,
+    );
+    console.log(
+      `  ${stateDot(logRequests, "#fbbf24")} ${c("gray", "Logging")}   ${c("brightGreen", logRequests ? "ON " : "OFF")}`,
+    );
+    if (isFramework) {
+      console.log(`\n  ${rainbow("🔧 Framework mode — direct HMR imports")}`);
+    }
+    console.log(c("gray", "\n  Press Ctrl+C to stop\n"));
+  };
+
+  const onServerError = async (err) => {
+    if (serverErrorHandled) return;
+    serverErrorHandled = true;
+
+    if (err && err.code === "EADDRINUSE") {
+      if (options.askPort && process.stdin.isTTY) {
+        if (boot) boot.stop();
+        boot = null;
+        const next = Number(PORT) + 1;
+        const newPort = await askPort(
+          c("yellow", `⚠️ Port ${PORT} in use. New port [${next}]: `),
+          next,
+        );
+        if (newPort !== PORT) {
+          console.log(c("blue", `🔄 Retrying on port ${newPort}...`));
+          PORT = newPort;
+          serverErrorHandled = false;
+          server.listen(PORT, () => printReady(PORT));
+          return;
+        }
+      }
+      console.error(c("red", `❌ Port ${PORT} is already in use`));
+      console.log(
+        c(
+          "gray",
+          `  → Try another port: flet-box run-spa --port ${Number(PORT) + 1}`,
+        ),
+      );
+      console.log(
+        c("gray", `  → Or stop the process: lsof -ti tcp:${PORT} | xargs kill`),
+      );
+    } else {
+      if (boot) boot.fail("Server startup failed");
+      console.error(c("red", "❌ Server error:"), err && err.message);
+    }
+    process.exit(1);
+  };
+  server.on("error", onServerError);
+
   // WebSocket para HMR
   if (hotReload) {
     const wss = new WebSocketServer({ server });
+    wss.on("error", onServerError);
 
     wss.on("connection", (ws) => {
       clients.add(ws);
@@ -269,18 +370,9 @@ export const runDevServer = async (options = {}) => {
     console.log(c("blue", "👀 Watching for file changes..."));
   }
 
-  server.listen(port, () => {
-    console.log(c("green", `✅ Server running at http://localhost:${port}`));
-    console.log(c("gray", `🎯 SPA Mode: ${spaMode ? "ON" : "OFF"}`));
-    console.log(c("gray", `🔥 Hot Reload: ${hotReload ? "ON" : "OFF"}`));
-    console.log(c("gray", `📊 Logging: ${logRequests ? "ON" : "OFF"}`));
-    if (isFramework) {
-      console.log(
-        c("blue", `🔧 Framework mode detected - using direct HMR imports`),
-      );
-    }
-    console.log(c("gray", "\nPress Ctrl+C to stop\n"));
-  });
+  // Boot spinner (skipped when an interactive port prompt may still happen)
+  boot = options.askPort && process.stdin.isTTY ? null : spinner(`Starting ${spaMode ? "SPA" : "static"} server...`);
+  server.listen(PORT, () => printReady(PORT));
 
   const cleanup = () => {
     console.log(c("yellow", "\n👋 Shutting down..."));

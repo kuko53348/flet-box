@@ -183,7 +183,8 @@ export default function run(ctx) {
     eq(e.getExpanded().length, 2);
     eq(e.children[0].children[0].children.length, 2); // row + children container
     const childRow = e.children[0].children[0].children[1].children[0].children[0];
-    eq(childRow.children[1].textContent, "A1");
+    // children[2] is the label cell (children[1] is the file icon when showIcons=true).
+    eq(childRow.children[2].textContent, "A1");
     eq(childRow.style.marginLeft, "20px");
 
     e.collapseAll();

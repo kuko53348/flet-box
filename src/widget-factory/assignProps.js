@@ -26,6 +26,11 @@ const applySpecial = (widget, key, value) => {
     case "variant":
       widget.dataset.variant = val;
       break;
+    case "style":
+      if (val && typeof val === "object" && !Array.isArray(val)) {
+        setStyles(widget, val);
+      }
+      break;
     case "marginVertical":
       widget.style.marginTop = px;
       widget.style.marginBottom = px;

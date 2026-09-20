@@ -1,13 +1,21 @@
 #!/usr/bin/env node
 
 // bin/cli.js - FletBox CLI with Hot Reload Support
+import { createRequire } from "module";
+import fs from "fs";
+import path from "path";
 import { createProject } from "./commands/create.js";
 import { packageManager } from "./commands/package.js";
 import { createBundle } from "./commands/createBundle.js";
 import { runDevServer } from "./commands/runServer.js";
 import { createScreen } from "./commands/createScreen.js";
 import { createComponent } from "./commands/createComponent.js";
-import { c, setupCtrlC } from "./utils/colors.js";
+import { killServer } from "./commands/killServer.js";
+import { runBundle } from "./commands/runBundle.js";
+import { c, gradient, section, banner, divider, width, setupCtrlC } from "./utils/colors.js";
+
+const require = createRequire(import.meta.url);
+const { version } = require("../package.json");
 
 // Activate global Ctrl+C handler
 setupCtrlC();
@@ -16,81 +24,104 @@ const args = process.argv.slice(2);
 const command = args[0];
 const projectName = args[1];
 
-console.clear();
+if (process.stdout.isTTY) {
+  console.clear();
+}
 
 const showHelp = () => {
+  const cmd = (name, desc, alias = "") =>
+    `  ${c("bold", gradient(name, "#22d3ee", "#6366f1"))}${" ".repeat(Math.max(1, 22 - width(name)))}${c("gray", desc)}${alias ? c("dim", "  (" + alias + ")") : ""}`;
+
+  const opt = (name, desc) =>
+    `  ${c("brightCyan", name)}${" ".repeat(Math.max(1, 24 - name.length))}${c("gray", desc)}`;
+
   console.log(`
-${c("cyan", "╔════════════════════════════════════════════════════════════╗")}
-${c("cyan", "║")}                       ${c("bold", "🚀 FletBox CLI")}                       ${c("cyan", "║")}
-${c("cyan", "╚════════════════════════════════════════════════════════════╝")}
+${banner("🚀 FletBox CLI", `v${version}`)}
 
-  ${c("yellow", "Commands:")}
+${section("🧭", "COMMANDS")}
+${cmd("create <name>", "Create a new project")}
+${cmd("create --adaptive", "responsive (mobile + desktop)")}
+${cmd("create --blank", "empty project")}
+${cmd("create --full", "AppBar+Drawer+BottomNav")}
+${cmd("create --sidebar", "desktop (Sidebar+AppBar)")}
+${cmd("screen <name|num>", "Create screen(s) (1-10)")}
+${cmd("component <name|num>", "Create component(s) (1-10)")}
+${cmd("createBundle [dir]", "Unified production bundle")}
+${cmd("   └─ [dir]", "target folder (default www)")}
+${cmd("run", "Static file server")}
+${cmd("run --hot", "Dev server with hot reload")}
+${cmd("run-spa", "SPA + hot reload")}
+${cmd("run-bundle [dir]", "Build & serve the bundle (single app.js)")}
+${cmd("pkg", "Open the package manager")}
+${cmd("kill-server [port]", "Kill servers on a port")}
+${cmd("--version | --help", "Version and this help")}
 
-  ${c("green", "flet-box create <name>")}            Create new project
-  ${c("green", "flet-box create <name> --adaptive")} responsive (mobile+desktop)
-  ${c("green", "flet-box create <name> --blank")}    create empty project
-  ${c("green", "flet-box create <name> --full")}     full App(AppBar+Drawer+BottomNav)
-  ${c("green", "flet-box create <name> --sidebar")}  desktop project (Sidebar+AppBar)
+${section("⚙️", "OPTIONS")}
+${opt("--port <n>, -p <n>", "Port (default 8000) — asked if not provided")}
+${opt("--hot", "Hot reload with run")}
+${opt("--quiet", "No request logging")}
+${opt("--dry-run | --list", "kill-server: just list, do not kill")}
 
-  ${c("green", "flet-box screen <name>")}        Create a new screen
-  ${c("green", "flet-box screen <number>")}      Create multiple screens (1-10)
-  ${c("green", "flet-box component <name>")}     Create a new component
-  ${c("green", "flet-box component <number>")}   Create multiple components (1-10)
-  ${c("green", "flet-box createBundle")}         Bundle project for production
-  ${c("green", "flet-box bundle")}               Alias for createBundle
-  ${c("green", "flet-box build")}                Alias for createBundle
-
-  ${c("green", "flet-box pkg")}                  Open package manager
-  ${c("green", "flet-box package")}              Alias for pkg
-  ${c("green", "flet-box manager")}              Alias for pkg
-
-  ${c("green", "flet-box run")}                  Start dev server (static mode)
-  ${c("green", "flet-box run-spa")}              Start dev server (SPA mode + hot reload)
-  ${c("green", "flet-box dev")}                  Alias for run
-  ${c("green", "flet-box serve")}                Alias for run
-
-  ${c("green", "flet-box --version")}            Show version
-  ${c("green", "flet-box -v")}                   Show version
-  ${c("green", "flet-box --help")}               Show this help
-  ${c("green", "flet-box -h")}                   Show this help
-
-  ${c("yellow", "Examples:")}
-  ${c("gray", "flet-box create my-app")}
+${section("✨", "EXAMPLES")}
   ${c("gray", "flet-box create my-app --adaptive")}
-  ${c("gray", "cd my-app")}
-  ${c("gray", "flet-box screen Home")}
-  ${c("gray", "flet-box component Card")}
-  ${c("gray", "flet-box run-spa")}
-  ${c("gray", "flet-box createBundle")}
+  ${c("gray", "cd my-app && flet-box run-spa")}
+  ${c("gray", "flet-box run-bundle            # build & preview production")}
+  ${c("gray", "flet-box kill-server 8000      # kill the parasite server")}
 
-${c("gray", "────────────────────────────────────────────────────────────")}
+${divider("", "#3730a3")}
+${c("dim", "  FletBox — ultra-light vanilla-JS UI framework")}
 `);
 };
-
-const version = "1.0.0";
 
 // Parse command line flags
 const parseFlags = () => {
   const flags = {
     port: 8000,
+    portExplicit: false,
     logRequests: true,
+    hot: false,
+    dryRun: false,
   };
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
 
-    if (arg === "--port" && args[i + 1]) {
-      const port = parseInt(args[i + 1]);
-      if (!isNaN(port) && port > 0 && port < 65536) {
-        flags.port = port;
+    if ((arg === "--port" || arg === "-p") && args[i + 1]) {
+      const p = Number(args[i + 1]);
+      if (Number.isInteger(p) && p > 0 && p < 65536) {
+        flags.port = p;
+        flags.portExplicit = true;
+      } else {
+        console.warn(
+          c("yellow", `⚠️ Invalid port "${args[i + 1]}", using ${flags.port}`),
+        );
       }
       i++;
     } else if (arg === "--quiet") {
       flags.logRequests = false;
+    } else if (arg === "--hot" || arg === "--hot-reload") {
+      flags.hot = true;
+    } else if (arg === "--dry-run" || arg === "--list" || arg === "--check") {
+      flags.dryRun = true;
     }
   }
 
   return flags;
+};
+
+// Validate the command runs inside a FletBox project
+const ensureProject = () => {
+  const inProject = fs.existsSync(path.join(process.cwd(), "src", "app.js"));
+  if (!inProject) {
+    console.error(c("red", "❌ Not inside a FletBox project"));
+    console.log(
+      c(
+        "gray",
+        "Run this inside a project folder with src/app.js (create one with: flet-box create <name>)",
+      ),
+    );
+    process.exit(1);
+  }
 };
 
 async function main() {
@@ -124,7 +155,8 @@ async function main() {
         break;
 
       case "screen":
-      case "screens":
+      case "screens": {
+        ensureProject();
         const screenInput = args[1];
         if (!screenInput) {
           console.error(c("red", "❌ Error: Screen name or number required"));
@@ -134,9 +166,11 @@ async function main() {
         }
         await createScreen(screenInput);
         break;
+      }
 
       case "component":
-      case "comp":
+      case "comp": {
+        ensureProject();
         const componentInput = args[1];
         if (!componentInput) {
           console.error(
@@ -148,11 +182,12 @@ async function main() {
         }
         await createComponent(componentInput);
         break;
+      }
 
       case "createBundle":
       case "bundle":
       case "build":
-        await createBundle();
+        await createBundle(args[1]);
         break;
 
       case "pkg":
@@ -161,24 +196,57 @@ async function main() {
         await packageManager();
         break;
 
+      case "kill-server":
+      case "kill":
+      case "killServer":
+      case "killsrv":
+        await killServer(
+          args[1] && /^\d+$/.test(args[1]) ? args[1] : flags.port,
+          { dryRun: flags.dryRun },
+        );
+        break;
+
       case "run":
       case "dev":
       case "serve":
+        ensureProject();
         await runDevServer({
           spaMode: false,
-          hotReload: false,
+          hotReload: flags.hot,
           port: flags.port,
+          askPort: !flags.portExplicit,
           logRequests: flags.logRequests,
         });
         break;
 
+      case "run-bundle":
+      case "runBundle":
+      case "preview": {
+        ensureProject();
+        const targetDir =
+          args[1] &&
+          /^[a-zA-Z0-9_][a-zA-Z0-9_-]*$/.test(args[1]) &&
+          !args[1].startsWith("-")
+            ? args[1]
+            : "www";
+        await runBundle({
+          target: targetDir,
+          port: flags.port,
+          askPort: !flags.portExplicit,
+          logRequests: flags.logRequests,
+        });
+        break;
+      }
+
       case "run-spa":
       case "runSpa":
       case "spa":
+        ensureProject();
         await runDevServer({
           spaMode: true,
           hotReload: true,
           port: flags.port,
+          askPort: !flags.portExplicit,
           logRequests: flags.logRequests,
         });
         break;
