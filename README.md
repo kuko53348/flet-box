@@ -2,6 +2,28 @@
 
 FletBox is a lightweight framework for building web interfaces with vanilla JavaScript using a declarative syntax inspired by Flet, but without external dependencies or a Virtual DOM.
 
+## Manual installation demo from GitHub
+
+```bash
+brew install node                 # macOS/Linux: ensure npm is fresh (Node >= 18)
+
+git clone https://github.com/kuko53348/flet-box.git
+cd flet-box
+npm link                          # link the flet-box CLI globally
+
+# create first app
+flet-box create appName               # scaffold your first app
+
+cd appName
+npm link flet-box
+
+# run app SPA Single Page Application
+flet-box run-spa
+
+# run bundle app manually
+flet-box run-bundle
+```
+
 ## Overview
 
 FletBox aims to combine the best of a declarative UI with the performance of the native DOM. Its goal is to let you create web applications and hybrid mobile apps with reusable components, global state, routing, and built-in utilities.
@@ -24,12 +46,6 @@ The project is geared toward:
 - Support for theme, PWA, and production builds
 - Compatibility with APK / mobile compilation
 - API with utilities for layouts, text, color, animations, and more
-
-## Installation
-
-```bash
-npm install flet-box
-```
 
 ## Getting-started documentation
 
