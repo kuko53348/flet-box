@@ -72,5 +72,6 @@ The docs are **one continuous book** — read it in order. The front cover maps 
 - [Tools & Utilities](docs/tools/README.md) — every helper function with signatures
 - [The CLI](docs/cli/README.md) — create, run, and build projects
 - [FletBox Server](docs/server/README.md) — backend toolkit: API, authentication, security, and data services
+- [SQLite and the API server](docs/server/data-services.md) — where your data lives (browser vs server), the `better-sqlite3` wrapper, and a full SQLite API example
 - [Mobile and platforms](docs/guides/mobile-and-platforms.md) — Android, iOS, PWA, and desktop
 - [Contributing](docs/CONTRIBUTING.md) — how to add code and docs
