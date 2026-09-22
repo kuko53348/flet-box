@@ -39,6 +39,7 @@ Front cover (this page)
 → Lists, arrays & data · tools/lists.md
 → Text & time · tools/text-and-time.md
 → State, memo & refs · tools/state.md
+→ Reactivity · tools/reactivity.md
 → Async, ids & logging · tools/async-ids-log.md
 → Device & environment · tools/device.md
 → Themes · tools/theme.md

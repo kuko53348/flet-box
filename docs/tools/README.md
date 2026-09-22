@@ -22,6 +22,7 @@ Each category is the next chapter of the reading path:
 | [Lists, arrays & data](lists.md) | `mapList`, `repeat`, `sort`, `unique`, `createList`, `dict`, `random` |
 | [Text & time](text-and-time.md) | `capitalize`, `truncate`, `formatDate`, media-time helpers |
 | [State, memo & refs](state.md) | `useState`, `memo`, `ref` |
+| [Reactivity in FletBox](reactivity.md) | Every way a widget updates: state, setters, theme, router, and more |
 | [Async, ids & logging](async-ids-log.md) | `delay`, `retry`, `uuid`, `shortId`, `print` |
 | [Device & environment](device.md) | `device`, `os`, `dimensions`, `clipboard` |
 | [Themes](theme.md) | `colors`, `setTheme`, `ThemeProvider`, `useTheme` |
@@ -72,6 +73,7 @@ Helpers for shaping collections and generating data.
 - `useWatchState(key, callback)` — subscribe to state changes; returns an unsubscribe function.
 - `memo(fn)`, `memoWithKey(fn, keyFn)`, `clearMemo(memoizedFn)` — cache expensive results.
 - `ref(...)` — hold a live reference to a widget and update it.
+- See [Reactivity in FletBox](reactivity.md) for the full catalogue of update mechanisms.
 
 ## Async, ids & logging
 

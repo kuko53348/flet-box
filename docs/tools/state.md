@@ -79,6 +79,7 @@ const second = parseMemo(jsonText); // cached, fast
 - `ref()` returns a function for a widget's `ref` prop; the handle gives you `update(props)` to push new props into the widget.
 
 ## Related pages
+- [Reactivity in FletBox](reactivity.md) — the full catalogue of every update mechanism.
 - [State guide](../guides/state.md) — full `useState` semantics.
 - [Text & time](text-and-time.md) — previous chapter.
 - [Async, ids & logging](async-ids-log.md) — next chapter.
@@ -88,7 +89,7 @@ const second = parseMemo(jsonText); // cached, fast
 ## Continue reading
 
 - **Previous:** [Text & time](text-and-time.md)
-- **Next:** [Async, ids & logging](async-ids-log.md)
+- **Next:** [Reactivity in FletBox](reactivity.md)
 - **Index:** [Tools index](README.md) · [The FletBox Book](../README.md)
 
 You are reading **Chapter 10 · Tools & Utilities** (4 of 12).
