@@ -1,8 +1,42 @@
 # Database and services
 
+## Where should your data live?
+
+A browser cannot run every database engine. The Node `better-sqlite3` library used by the server tools is a **native module** — it only runs on the server. Before choosing storage, decide where the data lives.
+
+### Option 1 — Browser only (no API)
+
+Data stays on the visitor's device. No server and no network calls.
+
+- **localStorage** — ships with the framework as `src/services/Storage.js` (`saveData`, `getData`, `updateData`, `deleteData`, ...). Synchronous, ~5 MB per origin, string values; the helpers serialize objects for you.
+- **IndexedDB** — asynchronous and much larger (gigabytes). Good for big records or offline files. Not bundled; call it directly or wrap it in a small helper.
+- **SQLite in the browser** — sql.js or sqlite-wasm run real SQL as WebAssembly. Not bundled.
+
+Choose this for drafts, per-device settings, offline caches, or single-user prototypes.
+
+### Option 2 — SQLite API server
+
+Data lives on your server and the UI talks to it over HTTP through the [API server section](#api-server-for-sqlite) below:
+
+```text
+UI widget (httpGet / httpPost / httpPut / httpDelete)
+        ↓ HTTPS + JSON
+Server routes (Api + runServer)
+        ↓
+SQLite (better-sqlite3 wrapper)
+```
+
+Choose this when data is shared between users or devices, must survive a browser reset, or is read by other systems.
+
+### Option 3 — Hybrid
+
+Use browser storage for offline cache and preferences, and sync with the API when the app is online.
+
 ## SQLite database
 
 The current `Database` helper supports SQLite through the `SQLite` wrapper.
+
+> **Current state:** the `flet-box-server` package declares `main: "index.js"` but no such file exists at its root, and `tools/index.js` points to a `modules/` folder that does not exist. The top-level imports below document the intended API; until the exports are fixed, use the working `SQLite` wrapper directly as shown in the [API server section](#api-server-for-sqlite).
 
 ```javascript
 import { Database } from "flet-box-server";
@@ -35,6 +69,69 @@ db.users.delete(["email", "ada@example.com"]);
 ```
 
 The lower-level SQLite class also provides table creation, updates, deletes, structure inspection, and reads.
+
+## API server for SQLite
+
+Wire the SQLite wrapper into the route server so the UI can read and write data safely over HTTP. Every wrapper method returns `[status, messageOrData]` — `true` when the operation succeeded.
+
+```javascript
+// server/index.js
+import { Api, runServer } from "flet-box-server/core/index.js";
+import { SQLite } from "flet-box-server/tools/betterSqlite.js";
+
+const db = new SQLite("data/app.db");
+db.createTable("users", {
+  id: "INTEGER PRIMARY KEY AUTOINCREMENT",
+  name: "TEXT",
+  email: "TEXT",
+});
+
+const routes = Api({
+  "/api/users": {
+    GET: () => {
+      const [ok, rows] = db.readAll("users");
+      return { ok, items: ok ? rows : [] };
+    },
+    POST: ({ body }) => {
+      const [ok, msg] = db.insert("users", {
+        name: body.name,
+        email: body.email,
+      });
+      return ok ? { ok } : { ok, error: msg };
+    },
+  },
+  "/api/users/:id": {
+    PUT: ({ id, body }) => {
+      const [ok, msg] = db.update("users", { email: body.email }, ["id", id]);
+      return ok ? { ok } : { ok, error: msg };
+    },
+    DELETE: ({ id }) => {
+      const [ok, msg] = db.delete("users", ["id", id]);
+      return ok ? { ok } : { ok, error: msg };
+    },
+  },
+});
+
+runServer(routes, { port: 3000, docs: true });
+```
+
+Consume the API from the UI with the framework HTTP client:
+
+```javascript
+// app.js (FletBox UI)
+import { httpGet, httpPost, httpPut, httpDelete } from "flet-box";
+
+const list = await httpGet("http://localhost:3000/api/users");
+const created = await httpPost("http://localhost:3000/api/users", {
+  body: { name: "Ada", email: "ada@example.com" },
+});
+const updated = await httpPut("http://localhost:3000/api/users/1", {
+  body: { email: "ada@lovelace.dev" },
+});
+const removed = await httpDelete("http://localhost:3000/api/users/1");
+```
+
+Start the server, then open the auto-generated docs at `http://localhost:3000/docs` to browse and test the endpoints.
 
 ## Redis cache
 

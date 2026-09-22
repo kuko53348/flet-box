@@ -11,7 +11,7 @@ If this is your first backend, read [Start here](START_HERE.md).
 - [Start here](START_HERE.md): create your first API step by step.
 - [API and routes](api.md): define endpoints, handlers, parameters, and schemas.
 - [Authentication and security](security.md): JWT, roles, sanitization, blocking, headers, and rate limits.
-- [Database and services](data-services.md): SQLite, cache, files, email, PDF, CSV, queues, and more.
+- [Database and services](data-services.md): where data lives (browser vs server), a dedicated SQLite API server example, cache, files, email, PDF, CSV, queues, and more.
 - [Deployment](deployment.md): environment variables, production settings, Docker, and operational checks.
 
 ## What the server does
