@@ -51,6 +51,9 @@ Markdown({ text: "# Hello\nThis is **bold** and `inline code`." });
 | `blockquoteColor` | Color | `colors.textSecondary` | Blockquote text color. |
 | `blockquotePadding` | string | `'0 1em'` | Blockquote padding. |
 | `blockquoteMargin` | string | `'1em 0'` | Blockquote margin. |
+| `tableBorderColor` | Color | `colors.gray300` | Border color for table cells. |
+| `tableHeaderBgColor` | Color | `colors.gray100` | Background color for header cells. |
+| `tableCellPadding` | string | `'0.4em 0.75em'` | Padding inside table cells. |
 | `headingColor` | Color | `colors.text` | `h1`–`h6` color. |
 | `headingMargin` | string | `'0.67em 0'` | `h1`–`h6` margin. |
 | `listMargin` | string | `'1em 0'` | `ul`/`ol` margin. |
@@ -168,14 +171,14 @@ Column({
 ## Notes
 
 - `Markdown` is exported from the package entry (`flet-box`) and re-exported through `src/widgets/index.js`.
-- Supported syntax: `#`/`##`/`###` headings, `**bold**`/`__bold__`, `*italic*`/`_italic_`, `` `inline code` ``, `[text](url)` links (opened with `target="_blank" rel="noopener"`), `- ` bullet items, `1. ` numbered items, `> ` blockquotes, `---` rules, and paragraphs.
-- Fenced code blocks (three backticks) do **not** produce `<pre><code>`: the inline-code rule runs first and eats the backticks. Use [CodeViewer](CodeViewer.md) for code samples.
+- Supported syntax: `#`/`##`/`###` headings, `**bold**`/`__bold__`, `*italic*`/`_italic_`, `` `inline code` ``, fenced code blocks (```` ``` ```` or `~~~`, with an optional info string used as `class="language-…"`), `[text](url)` links (opened with `target="_blank" rel="noopener"`), GFM pipe tables, `- ` bullet items, `1. ` numbered items, `> ` blockquotes, `---` rules, and paragraphs.
+- Fenced blocks, code spans and raw HTML are pulled out before the inline rules run, then restored afterwards. Without that ordering the inline-code rule eats the ``` fence, a `#` inside a sample becomes a heading, and emphasis rewrites attribute values. Code samples are escaped, so they show `<div>` as text instead of becoming an element.
+- Pipe tables need a delimiter row (`| --- | :---: | ---: |`) under the header; leading and trailing pipes are optional and `\|` keeps a pipe inside its cell. Column alignment comes from the delimiter, and short rows are padded to the header width.
 - `![alt](src)` images do **not** produce `<img>`: the link rule matches first, so you get a literal `!` followed by a link. The `img` styles in the injected sheet only apply to raw HTML you pass in.
 - Lists are fragile: any run of `<li>` also gets wrapped in an `<ol>` inside the `<ul>`, and mixing bullet and numbered items in one document produces malformed nesting. Keep one list style per block.
 - Only `h1`–`h3` are generated (`h4`–`h6` are styled but never emitted), and `####`+ markers render as literal text.
 - The stylesheet is injected **once per document** (`#markdown-styles`). The first `Markdown` instance created on the page decides `headingColor`, `linkColor`, `codeBgColor`, list spacing, and so on for every instance; only container-level props (`fontSize`, `color`, `lineHeight`, `padding`, `maxHeight`, `backgroundColor`, `borderRadius`) are per-instance.
-- Sanitizing is a regex pass that strips `<script>` blocks, `on*=` attributes, and `javascript:` URLs. It is **not** a real HTML sanitizer — never enable `allowDangerousHtml` for untrusted input.
-- Table CSS exists in the injected sheet, but the parser never generates tables; pipe tables render as plain paragraph text.
+- Sanitizing is a regex pass: it drops `<script>` elements, then walks real tags one at a time to strip `on*=` handlers and turn `javascript:` URLs into `#`. Because it is tag-scoped, escaped code samples keep their literal `onerror=` or `javascript:` text. It is **not** a real HTML sanitizer — never enable `allowDangerousHtml` for untrusted input.
 
 ## Related widgets
 - [CodeViewer](CodeViewer.md)

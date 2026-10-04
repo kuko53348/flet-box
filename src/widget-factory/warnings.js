@@ -9,7 +9,7 @@ let propNames = [];
 
 export function setPropNames(names) {
   propNames = names;
-  window.__FLETBOX_PROP_NAMES = names;
+  try { if (typeof window !== 'undefined') window.__FLETBOX_PROP_NAMES = names; } catch(e){}
 }
 
 function getSuggestions(name, limit = 3) {

@@ -1489,6 +1489,9 @@ declare module 'flet-box' {
     blockquoteColor?: Color;
     blockquotePadding?: Padding;
     blockquoteMargin?: Padding;
+    tableBorderColor?: Color;
+    tableHeaderBgColor?: Color;
+    tableCellPadding?: Padding;
     headingColor?: Color;
     headingMargin?: Padding;
     listMargin?: Padding;

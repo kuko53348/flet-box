@@ -82,12 +82,100 @@ export const runApp = (
   };
 
   /**
+   * Records which element holds focus inside a tree, so focus and the text caret
+   * can be handed back to the rebuilt tree.
+   *
+   * `renderApp` discards the whole tree on every state change, and removing a
+   * focused element drops focus to `<body>`. That made typing impossible in a
+   * controlled `<input>`: one keystroke fired `setState`, the rebuild removed the
+   * node, and focus was gone before the second character could be entered.
+   *
+   * The position of the element is recorded as the chain of child indices from
+   * `treeRoot` down to it, which is stable as long as the shape of the tree does
+   * not change between renders.
+   *
+   * @param {HTMLElement} treeRoot - Root of the tree about to be discarded.
+   * @returns {{ path: number[], tagName: string, start: number|null, end: number|null } | null}
+   *   Snapshot to pass to {@link restoreFocus}, or null when focus is elsewhere.
+   */
+  const captureFocus = (treeRoot) => {
+    if (!treeRoot || typeof document === "undefined") return null;
+    const active = document.activeElement;
+    if (!active || active === document.body) return null;
+    if (!treeRoot.contains(active)) return null;
+
+    const path = [];
+    let node = active;
+    while (node && node !== treeRoot) {
+      const parent = node.parentNode;
+      if (!parent) return null;
+      path.unshift(Array.prototype.indexOf.call(parent.children, node));
+      node = parent;
+    }
+    if (node !== treeRoot) return null;
+
+    // Only <input>/<textarea>/<select> expose a selection; other elements (and
+    // inputs like checkbox or number) throw or return null, so guard on type.
+    const selectable =
+      active instanceof HTMLInputElement &&
+      !["checkbox", "radio", "range", "color", "file", "button", "submit", "reset"].includes(
+        active.type,
+      );
+    let start = null;
+    let end = null;
+    if (selectable || active instanceof HTMLTextAreaElement) {
+      try {
+        start = active.selectionStart;
+        end = active.selectionEnd;
+      } catch (_) {
+        start = null;
+        end = null;
+      }
+    }
+
+    return { path, tagName: active.tagName, start, end };
+  };
+
+  /**
+   * Gives focus back to the element matching a {@link captureFocus} snapshot and
+   * restores its caret. A no-op when the rebuilt tree no longer has a focusable
+   * element at that position, which is the safe outcome after a route change.
+   *
+   * @param {{ path: number[], tagName: string, start: number|null, end: number|null } | null} snap
+   * @param {HTMLElement} treeRoot - Root of the freshly built tree.
+   * @returns {void}
+   */
+  const restoreFocus = (snap, treeRoot) => {
+    if (!snap || !treeRoot) return;
+    let node = treeRoot;
+    for (const index of snap.path) {
+      node = node && node.children ? node.children[index] : null;
+      if (!node) return;
+    }
+    if (!node || node.tagName !== snap.tagName) return;
+    if (typeof node.focus !== "function") return;
+
+    node.focus({ preventScroll: true });
+    if (snap.start !== null && typeof node.setSelectionRange === "function") {
+      try {
+        node.setSelectionRange(snap.start, snap.end ?? snap.start);
+      } catch (_) {
+        /* element does not support a selection after all */
+      }
+    }
+  };
+
+  /**
    * Builds the application tree and appends it to the root DOM node.
    *
    * Tears down the previous container (if any) before creating the new one so
    * that every re-render starts from a clean state.
    */
   const renderApp = () => {
+    const focusSnapshot = currentMainContainer
+      ? captureFocus(currentMainContainer)
+      : null;
+
     if (currentMainContainer) {
       teardownTree(currentMainContainer);
       if (currentMainContainer.parentNode) currentMainContainer.remove();
@@ -112,6 +200,8 @@ export const runApp = (
     root.appendChild(mainContainer);
     if (mainContainer.triggerMount) mainContainer.triggerMount();
     currentMainContainer = mainContainer;
+
+    restoreFocus(focusSnapshot, mainContainer);
   };
 
   // Register renderApp as the global re-render callback so that setState calls

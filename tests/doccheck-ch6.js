@@ -253,6 +253,114 @@ export default function run(ctx) {
       eq(dirty.querySelector("script"), null);
       if (!dirty.textContent.includes("safe")) throw new Error("text was dropped by the sanitizer");
     });
+
+    // --- fenced code blocks (regression: ``` was consumed by the inline-code
+    // --- rule before the block rule ran, so no <pre> was ever produced)
+    t("Markdown: fenced code becomes <pre><code> with a language class", () => {
+      const e = mount(W.Markdown({ text: "```js\nlet a = 1;\n```" }));
+      const code = e.querySelector("pre > code");
+      if (!code) throw new Error("no <pre><code> rendered");
+      eq(code.className, "language-js");
+      eq(code.textContent, "let a = 1;");
+    });
+
+    t("Markdown: fence keeps blank lines, '#' comments and snake_case", () => {
+      const src = "```bash\n# install deps\n\nmy_var_name=snake_case\n```";
+      const code = mount(W.Markdown({ text: src })).querySelector("pre > code");
+      eq(code.textContent, "# install deps\n\nmy_var_name=snake_case");
+    });
+
+    t("Markdown: fence content is escaped, never re-parsed as HTML", () => {
+      const e = mount(W.Markdown({ text: '```\n<div class="x">hi</div>\n```' }));
+      eq(e.querySelector("pre > code").textContent, '<div class="x">hi</div>');
+      eq(e.querySelectorAll("pre div").length, 0);
+    });
+
+    t("Markdown: tilde fences and unclosed fences are handled", () => {
+      const tilde = mount(W.Markdown({ text: "~~~\nplain\n~~~" }));
+      eq(tilde.querySelector("pre > code").textContent, "plain");
+      const open = mount(W.Markdown({ text: "```py\nx = 1" }));
+      eq(open.querySelector("pre > code").textContent, "x = 1");
+    });
+
+    t("Markdown: inline code escapes tags so a sample cannot swallow the document", () => {
+      const e = mount(
+        W.Markdown({ text: 'It renders a `<div>`. Then\n\n# real heading\n\nand `<style>`' }),
+      );
+      eq(e.querySelector("h1").textContent, "real heading");
+      eq(e.querySelectorAll("style").length, 0);
+      eq(e.querySelector("code").textContent, "<div>");
+    });
+
+    t("Markdown: sanitizing leaves code samples intact", () => {
+      const e = mount(W.Markdown({ text: "```\nconst r = await fetch(u)\n```" }));
+      eq(e.querySelector("pre > code").textContent, "const r = await fetch(u)");
+      const handler = mount(W.Markdown({ text: '<img src=x onerror="window.__pwned = 1">' }));
+      eq(handler.querySelector("[onerror]"), null);
+      const link = mount(W.Markdown({ text: "[x](javascript:window.__pwned=1)" }));
+      if (link.querySelector("a[href]").getAttribute("href").includes("javascript:"))
+        throw new Error("javascript: URL survived");
+    });
+
+    // --- GFM pipe tables
+    t("Markdown: pipe table becomes <table> with thead and tbody", () => {
+      const e = mount(
+        W.Markdown({ text: "| A | B |\n| --- | --- |\n| 1 | 2 |\n| 3 | 4 |" }),
+      );
+      const table = e.querySelector("table");
+      if (!table) throw new Error("no <table> rendered");
+      eq(table.querySelectorAll("thead th").length, 2);
+      eq(table.querySelectorAll("tbody tr").length, 2);
+      eq([...table.querySelectorAll("th")].map((x) => x.textContent).join("|"), "A|B");
+      eq(
+        [...table.querySelectorAll("tbody td")].map((x) => x.textContent.trim()).join(","),
+        "1,2,3,4",
+      );
+    });
+
+    t("Markdown: table honours :--- :---: and ---: alignment", () => {
+      const e = mount(
+        W.Markdown({ text: "| L | C | R | D |\n| :--- | :---: | ---: | --- |\n| a | b | c | d |" }),
+      );
+      const th = [...e.querySelectorAll("th")];
+      eq(th[0].getAttribute("style"), "text-align:left");
+      eq(th[1].getAttribute("style"), "text-align:center");
+      eq(th[2].getAttribute("style"), "text-align:right");
+      eq(th[3].getAttribute("style"), null);
+    });
+
+    t("Markdown: escaped pipe stays in its cell and rows pad to the header width", () => {
+      const e = mount(
+        W.Markdown({ text: "| A | B |\n| --- | --- |\n| x \\| y | z |" }),
+      );
+      eq(e.querySelectorAll("tbody td").length, 2);
+      eq(e.querySelector("tbody td").textContent.trim(), "x | y");
+
+      const short = mount(W.Markdown({ text: "| A | B |\n| --- | --- |\n| 1 |" }));
+      eq(short.querySelectorAll("tbody td").length, 2);
+      eq(short.querySelectorAll("tbody td")[1].textContent.trim(), "");
+    });
+
+    t("Markdown: a pipe table is only a table when a delimiter row follows", () => {
+      const e = mount(W.Markdown({ text: "| solo | una | linea |" }));
+      eq(e.querySelector("table"), null);
+      if (!e.textContent.includes("una")) throw new Error("text was dropped");
+    });
+
+    t("Markdown: a table inside a code fence stays code", () => {
+      const e = mount(W.Markdown({ text: "```\n| A | B |\n| --- | --- |\n| 1 | 2 |\n```" }));
+      eq(e.querySelector("table"), null);
+      eq(e.querySelector("pre > code").textContent, "| A | B |\n| --- | --- |\n| 1 | 2 |");
+    });
+
+    t("Markdown: table cells keep inline markup and are sanitized", () => {
+      const e = mount(
+        W.Markdown({ text: "| A | B | C |\n| --- | --- | --- |\n| **b** | `c=1` | <script>window.__pwned=1</script> |" }),
+      );
+      eq(e.querySelector("strong").textContent, "b");
+      eq(e.querySelector("td code").textContent, "c=1");
+      eq(e.querySelectorAll("script").length, 0);
+    });
   } else {
     t("Markdown: not re-exported from the widget namespace (documented in Notes)", () => {
       eq(W.Markdown, undefined);

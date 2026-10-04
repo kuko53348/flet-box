@@ -1,0 +1,4993 @@
+{
+  "FletBox widgets animation_fn": {
+    "prefix": "animation_fn",
+    "description": "Make a FletBox widgets animation_fn widget",
+    "body": [
+      "animation(\"fadeIn\", 0.3, \"ease\", \"infinite\"),"
+    ]
+  },
+  "FletBox widgets shuffle": {
+    "prefix": "shuffle",
+    "description": "Make a FletBox widgets shuffle widget",
+    "body": [
+      "shuffle([1, 2, 3, 4, 5]),"
+    ]
+  },
+  "FletBox widgets reverse_fn": {
+    "prefix": "reverse_fn",
+    "description": "Make a FletBox widgets reverse_fn widget",
+    "body": [
+      "reverse([1, 2, 3, 4]),"
+    ]
+  },
+  "FletBox widgets sort": {
+    "prefix": "sort",
+    "description": "Make a FletBox widgets sort widget",
+    "body": [
+      "sort(users, \"name\", \"asc\"),"
+    ]
+  },
+  "FletBox widgets unique": {
+    "prefix": "unique",
+    "description": "Make a FletBox widgets unique widget",
+    "body": [
+      "unique([1, 2, 2, 3, 4, 4]),"
+    ]
+  },
+  "FletBox widgets chunk": {
+    "prefix": "chunk",
+    "description": "Make a FletBox widgets chunk widget",
+    "body": [
+      "chunk([1, 2, 3, 4, 5], 2),"
+    ]
+  },
+  "FletBox widgets border_fn": {
+    "prefix": "border_fn",
+    "description": "Make a FletBox widgets border_fn widget",
+    "body": [
+      "border(1, \"solid\", \"#ccc\"),"
+    ]
+  },
+  "FletBox widgets clipboard.copy": {
+    "prefix": "clipboard.copy",
+    "description": "Make a FletBox widgets clipboard.copy widget",
+    "body": [
+      "clipboard.copy(\"flet-box\")"
+    ]
+  },
+  "FletBox widgets clipboard.copyWithFeedback": {
+    "prefix": "clipboard.copyWithFeedback",
+    "description": "Make a FletBox widgets clipboard.copyWithFeedback widget",
+    "body": [
+      "clipboard.copyWithFeedback(\"flet-box\", button)"
+    ]
+  },
+  "FletBox widgets clipboard.read": {
+    "prefix": "clipboard.read",
+    "description": "Make a FletBox widgets clipboard.read widget",
+    "body": [
+      "await clipboard.read()"
+    ]
+  },
+  "FletBox widgets color_fn": {
+    "prefix": "color_fn",
+    "description": "Make a FletBox widgets color_fn widget",
+    "body": [
+      "color(\"#6366f1\")"
+    ]
+  },
+  "FletBox widgets color.lighten": {
+    "prefix": "color.lighten",
+    "description": "Make a FletBox widgets color.lighten widget",
+    "body": [
+      "color(\"#6366f1\").lighten(20)"
+    ]
+  },
+  "FletBox widgets color.darken": {
+    "prefix": "color.darken",
+    "description": "Make a FletBox widgets color.darken widget",
+    "body": [
+      "color(\"#6366f1\").darken(10)"
+    ]
+  },
+  "FletBox widgets color.alpha": {
+    "prefix": "color.alpha",
+    "description": "Make a FletBox widgets color.alpha widget",
+    "body": [
+      "color(\"#6366f1\").alpha(0.8)"
+    ]
+  },
+  "FletBox widgets color.hex": {
+    "prefix": "color.hex",
+    "description": "Make a FletBox widgets color.hex widget",
+    "body": [
+      "color(\"#6366f1\").hex()"
+    ]
+  },
+  "FletBox widgets color.rgb": {
+    "prefix": "color.rgb",
+    "description": "Make a FletBox widgets color.rgb widget",
+    "body": [
+      "color(\"#6366f1\").rgb()"
+    ]
+  },
+  "FletBox widgets color.rgba": {
+    "prefix": "color.rgba",
+    "description": "Make a FletBox widgets color.rgba widget",
+    "body": [
+      "color(\"#6366f1\").rgba()"
+    ]
+  },
+  "FletBox widgets color.isDark": {
+    "prefix": "color.isDark",
+    "description": "Make a FletBox widgets color.isDark widget",
+    "body": [
+      "color(\"#6366f1\").isDark()"
+    ]
+  },
+  "FletBox widgets color.isLight": {
+    "prefix": "color.isLight",
+    "description": "Make a FletBox widgets color.isLight widget",
+    "body": [
+      "color(\"#6366f1\").isLight()"
+    ]
+  },
+  "FletBox widgets color.contrast": {
+    "prefix": "color.contrast",
+    "description": "Make a FletBox widgets color.contrast widget",
+    "body": [
+      "color(\"#6366f1\").contrast()"
+    ]
+  },
+  "FletBox widgets color.complement": {
+    "prefix": "color.complement",
+    "description": "Make a FletBox widgets color.complement widget",
+    "body": [
+      "color(\"#6366f1\").complement()"
+    ]
+  },
+  "FletBox widgets createList": {
+    "prefix": "createList",
+    "description": "Make a FletBox widgets createList widget",
+    "body": [
+      "createList({ id: () => random.id(), name: random.fullName() }, 10)"
+    ]
+  },
+  "FletBox widgets createList.fromData": {
+    "prefix": "createList.fromData",
+    "description": "Make a FletBox widgets createList.fromData widget",
+    "body": [
+      "createList.fromData(apiData, { id: (item) => item.userId })"
+    ]
+  },
+  "FletBox widgets createList.range": {
+    "prefix": "createList.range",
+    "description": "Make a FletBox widgets createList.range widget",
+    "body": [
+      "createList.range(1, 10)"
+    ]
+  },
+  "FletBox widgets createList.repeat": {
+    "prefix": "createList.repeat",
+    "description": "Make a FletBox widgets createList.repeat widget",
+    "body": [
+      "createList.repeat({ active: true }, 5)"
+    ]
+  },
+  "FletBox widgets createList.paginate": {
+    "prefix": "createList.paginate",
+    "description": "Make a FletBox widgets createList.paginate widget",
+    "body": [
+      "createList.paginate(users, 2, 20)"
+    ]
+  },
+  "FletBox widgets createList.search": {
+    "prefix": "createList.search",
+    "description": "Make a FletBox widgets createList.search widget",
+    "body": [
+      "createList.search(users, \"flet-box\", [\"name\", \"description\"])"
+    ]
+  },
+  "FletBox widgets createList.sort": {
+    "prefix": "createList.sort",
+    "description": "Make a FletBox widgets createList.sort widget",
+    "body": [
+      "createList.sort(users, \"age\", \"desc\")"
+    ]
+  },
+  "FletBox widgets createList.groupBy": {
+    "prefix": "createList.groupBy",
+    "description": "Make a FletBox widgets createList.groupBy widget",
+    "body": [
+      "createList.groupBy(users, \"status\")"
+    ]
+  },
+  "FletBox widgets delay_fn": {
+    "prefix": "delay_fn",
+    "description": "Make a FletBox widgets delay_fn widget",
+    "body": [
+      "await delay(1000)"
+    ]
+  },
+  "FletBox widgets withMinDelay": {
+    "prefix": "withMinDelay",
+    "description": "Make a FletBox widgets withMinDelay widget",
+    "body": [
+      "await withMinDelay(fetchData(), 800)"
+    ]
+  },
+  "FletBox widgets retry": {
+    "prefix": "retry",
+    "description": "Make a FletBox widgets retry widget",
+    "body": [
+      "await retry(fetchData, 3, 1000)"
+    ]
+  },
+  "FletBox widgets device.isMobile": {
+    "prefix": "device.isMobile",
+    "description": "Make a FletBox widgets device.isMobile widget",
+    "body": [
+      "device.isMobile()"
+    ]
+  },
+  "FletBox widgets device.isTablet": {
+    "prefix": "device.isTablet",
+    "description": "Make a FletBox widgets device.isTablet widget",
+    "body": [
+      "device.isTablet()"
+    ]
+  },
+  "FletBox widgets device.isDesktop": {
+    "prefix": "device.isDesktop",
+    "description": "Make a FletBox widgets device.isDesktop widget",
+    "body": [
+      "device.isDesktop()"
+    ]
+  },
+  "FletBox widgets device.orientation": {
+    "prefix": "device.orientation",
+    "description": "Make a FletBox widgets device.orientation widget",
+    "body": [
+      "device.orientation()"
+    ]
+  },
+  "FletBox widgets device.isTouch": {
+    "prefix": "device.isTouch",
+    "description": "Make a FletBox widgets device.isTouch widget",
+    "body": [
+      "device.isTouch()"
+    ]
+  },
+  "FletBox widgets device.hasGesture": {
+    "prefix": "device.hasGesture",
+    "description": "Make a FletBox widgets device.hasGesture widget",
+    "body": [
+      "device.hasGesture()"
+    ]
+  },
+  "FletBox widgets device.onOrientationChange": {
+    "prefix": "device.onOrientationChange",
+    "description": "Make a FletBox widgets device.onOrientationChange widget",
+    "body": [
+      "device.onOrientationChange((orient) => console.log(orient))"
+    ]
+  },
+  "FletBox widgets device.onResize": {
+    "prefix": "device.onResize",
+    "description": "Make a FletBox widgets device.onResize widget",
+    "body": [
+      "device.onResize((size) => console.log(size.width, size.height))"
+    ]
+  },
+  "FletBox widgets dimensions.width": {
+    "prefix": "dimensions.width",
+    "description": "Make a FletBox widgets dimensions.width widget",
+    "body": [
+      "dimensions.width"
+    ]
+  },
+  "FletBox widgets dimensions.height": {
+    "prefix": "dimensions.height",
+    "description": "Make a FletBox widgets dimensions.height widget",
+    "body": [
+      "dimensions.height"
+    ]
+  },
+  "FletBox widgets dimensions.get": {
+    "prefix": "dimensions.get",
+    "description": "Make a FletBox widgets dimensions.get widget",
+    "body": [
+      "dimensions.get()"
+    ]
+  },
+  "FletBox widgets dimensions.addListener": {
+    "prefix": "dimensions.addListener",
+    "description": "Make a FletBox widgets dimensions.addListener widget",
+    "body": [
+      "dimensions.addListener(({ width, height }) => console.log(width, height))"
+    ]
+  },
+  "FletBox widgets dimensions.removeListener": {
+    "prefix": "dimensions.removeListener",
+    "description": "Make a FletBox widgets dimensions.removeListener widget",
+    "body": [
+      "dimensions.removeListener(callback)"
+    ]
+  },
+  "FletBox widgets dict": {
+    "prefix": "dict",
+    "description": "Make a FletBox widgets dict widget",
+    "body": [
+      "dict({ a: 1, b: 2 })"
+    ]
+  },
+  "FletBox widgets emptyDict": {
+    "prefix": "emptyDict",
+    "description": "Make a FletBox widgets emptyDict widget",
+    "body": [
+      "emptyDict()"
+    ]
+  },
+  "FletBox widgets fromJSON": {
+    "prefix": "fromJSON",
+    "description": "Make a FletBox widgets fromJSON widget",
+    "body": [
+      "fromJSON('{\"key\": \"value\"}')"
+    ]
+  },
+  "FletBox widgets fromEntries": {
+    "prefix": "fromEntries",
+    "description": "Make a FletBox widgets fromEntries widget",
+    "body": [
+      "fromEntries([[\"a\", 1], [\"b\", 2]])"
+    ]
+  },
+  "FletBox widgets Dict": {
+    "prefix": "Dict",
+    "description": "Make a FletBox widgets Dict widget",
+    "body": [
+      "new Dict({ name: \"flet-box\" })"
+    ]
+  },
+  "FletBox widgets filter_fn": {
+    "prefix": "filter_fn",
+    "description": "Make a FletBox widgets filter_fn widget",
+    "body": [
+      "filter({ blur: 5, brightness: 0.8, contrast: 1.2 })"
+    ]
+  },
+  "FletBox widgets flex_fn": {
+    "prefix": "flex_fn",
+    "description": "Make a FletBox widgets flex_fn widget",
+    "body": [
+      "flex(1, 0, \"auto\")"
+    ]
+  },
+  "FletBox widgets gradient_fn": {
+    "prefix": "gradient_fn",
+    "description": "Make a FletBox widgets gradient_fn widget",
+    "body": [
+      "gradient(\"linear\", [\"#6366f1\", \"#8b5cf6\"], 135)"
+    ]
+  },
+  "FletBox widgets grid_fn": {
+    "prefix": "grid_fn",
+    "description": "Make a FletBox widgets grid_fn widget",
+    "body": [
+      "grid({ columns: 3, gap: 16 })"
+    ]
+  },
+  "FletBox widgets mapList": {
+    "prefix": "mapList",
+    "description": "Make a FletBox widgets mapList widget",
+    "body": [
+      "mapList([1, 2, 3], (item, i) => Text({ text: item }))"
+    ]
+  },
+  "FletBox widgets repeat": {
+    "prefix": "repeat",
+    "description": "Make a FletBox widgets repeat widget",
+    "body": [
+      "repeat(5, (i) => Button({ text: f\"Item {i}\" }))"
+    ]
+  },
+  "FletBox widgets range": {
+    "prefix": "range",
+    "description": "Make a FletBox widgets range widget",
+    "body": [
+      "range(0, 10, 2)"
+    ]
+  },
+  "FletBox widgets memo": {
+    "prefix": "memo",
+    "description": "Make a FletBox widgets memo widget",
+    "body": [
+      "memo(expensiveFunction)"
+    ]
+  },
+  "FletBox widgets memoWithKey": {
+    "prefix": "memoWithKey",
+    "description": "Make a FletBox widgets memoWithKey widget",
+    "body": [
+      "memoWithKey(expensiveFunction, (a, b) => f\"{a}-{b}\")"
+    ]
+  },
+  "FletBox widgets clearMemo": {
+    "prefix": "clearMemo",
+    "description": "Make a FletBox widgets clearMemo widget",
+    "body": [
+      "clearMemo(memoizedFn)"
+    ]
+  },
+  "FletBox widgets os.name": {
+    "prefix": "os.name",
+    "description": "Make a FletBox widgets os.name widget",
+    "body": [
+      "os.name()"
+    ]
+  },
+  "FletBox widgets os.version": {
+    "prefix": "os.version",
+    "description": "Make a FletBox widgets os.version widget",
+    "body": [
+      "os.version()"
+    ]
+  },
+  "FletBox widgets os.isMobile": {
+    "prefix": "os.isMobile",
+    "description": "Make a FletBox widgets os.isMobile widget",
+    "body": [
+      "os.isMobile()"
+    ]
+  },
+  "FletBox widgets os.isDesktop": {
+    "prefix": "os.isDesktop",
+    "description": "Make a FletBox widgets os.isDesktop widget",
+    "body": [
+      "os.isDesktop()"
+    ]
+  },
+  "FletBox widgets random.number": {
+    "prefix": "random.number",
+    "description": "Make a FletBox widgets random.number widget",
+    "body": [
+      "random.number(1, 100)"
+    ]
+  },
+  "FletBox widgets random.string": {
+    "prefix": "random.string",
+    "description": "Make a FletBox widgets random.string widget",
+    "body": [
+      "random.string(8)"
+    ]
+  },
+  "FletBox widgets random.firstName": {
+    "prefix": "random.firstName",
+    "description": "Make a FletBox widgets random.firstName widget",
+    "body": [
+      "random.firstName()"
+    ]
+  },
+  "FletBox widgets random.lastName": {
+    "prefix": "random.lastName",
+    "description": "Make a FletBox widgets random.lastName widget",
+    "body": [
+      "random.lastName()"
+    ]
+  },
+  "FletBox widgets random.fullName": {
+    "prefix": "random.fullName",
+    "description": "Make a FletBox widgets random.fullName widget",
+    "body": [
+      "random.fullName()"
+    ]
+  },
+  "FletBox widgets random.email": {
+    "prefix": "random.email",
+    "description": "Make a FletBox widgets random.email widget",
+    "body": [
+      "random.email(\"flet-box\")"
+    ]
+  },
+  "FletBox widgets random.date": {
+    "prefix": "random.date",
+    "description": "Make a FletBox widgets random.date widget",
+    "body": [
+      "random.date(\"2024-01-01\", \"2025-01-01\")"
+    ]
+  },
+  "FletBox widgets random.dateString": {
+    "prefix": "random.dateString",
+    "description": "Make a FletBox widgets random.dateString widget",
+    "body": [
+      "random.dateString(\"2024-01-01\", \"2025-01-01\")"
+    ]
+  },
+  "FletBox widgets random.time": {
+    "prefix": "random.time",
+    "description": "Make a FletBox widgets random.time widget",
+    "body": [
+      "random.time()"
+    ]
+  },
+  "FletBox widgets random.timeAmPm": {
+    "prefix": "random.timeAmPm",
+    "description": "Make a FletBox widgets random.timeAmPm widget",
+    "body": [
+      "random.timeAmPm()"
+    ]
+  },
+  "FletBox widgets random.datetime": {
+    "prefix": "random.datetime",
+    "description": "Make a FletBox widgets random.datetime widget",
+    "body": [
+      "random.datetime()"
+    ]
+  },
+  "FletBox widgets random.timestamp": {
+    "prefix": "random.timestamp",
+    "description": "Make a FletBox widgets random.timestamp widget",
+    "body": [
+      "random.timestamp()"
+    ]
+  },
+  "FletBox widgets random.dayOfWeek": {
+    "prefix": "random.dayOfWeek",
+    "description": "Make a FletBox widgets random.dayOfWeek widget",
+    "body": [
+      "random.dayOfWeek()"
+    ]
+  },
+  "FletBox widgets random.month": {
+    "prefix": "random.month",
+    "description": "Make a FletBox widgets random.month widget",
+    "body": [
+      "random.month()"
+    ]
+  },
+  "FletBox widgets random.age": {
+    "prefix": "random.age",
+    "description": "Make a FletBox widgets random.age widget",
+    "body": [
+      "random.age()"
+    ]
+  },
+  "FletBox widgets random.boolean": {
+    "prefix": "random.boolean",
+    "description": "Make a FletBox widgets random.boolean widget",
+    "body": [
+      "random.boolean()"
+    ]
+  },
+  "FletBox widgets random.choice": {
+    "prefix": "random.choice",
+    "description": "Make a FletBox widgets random.choice widget",
+    "body": [
+      "random.choice([\"flet-box\", \"light\", \"weight\"])"
+    ]
+  },
+  "FletBox widgets random.id": {
+    "prefix": "random.id",
+    "description": "Make a FletBox widgets random.id widget",
+    "body": [
+      "random.id()"
+    ]
+  },
+  "FletBox widgets random.hexColor": {
+    "prefix": "random.hexColor",
+    "description": "Make a FletBox widgets random.hexColor widget",
+    "body": [
+      "random.hexColor()"
+    ]
+  },
+  "FletBox widgets random.rgbColor": {
+    "prefix": "random.rgbColor",
+    "description": "Make a FletBox widgets random.rgbColor widget",
+    "body": [
+      "random.rgbColor()"
+    ]
+  },
+  "FletBox widgets ref_fn": {
+    "prefix": "ref_fn",
+    "description": "Make a FletBox widgets ref_fn widget",
+    "body": [
+      "const myWidgetRef = ref()"
+    ]
+  },
+  "FletBox widgets rgba": {
+    "prefix": "rgba",
+    "description": "Make a FletBox widgets rgba widget",
+    "body": [
+      "rgba(99, 102, 241, 0.8)"
+    ]
+  },
+  "FletBox widgets shadow_fn": {
+    "prefix": "shadow_fn",
+    "description": "Make a FletBox widgets shadow_fn widget",
+    "body": [
+      "shadow(0, 4, 8, 0, rgba(0,0,0,0.1))"
+    ]
+  },
+  "FletBox widgets capitalize": {
+    "prefix": "capitalize",
+    "description": "Make a FletBox widgets capitalize widget",
+    "body": [
+      "capitalize(\"flet-box\")"
+    ]
+  },
+  "FletBox widgets capitalizeWords": {
+    "prefix": "capitalizeWords",
+    "description": "Make a FletBox widgets capitalizeWords widget",
+    "body": [
+      "capitalizeWords(\"flet-box light weight\")"
+    ]
+  },
+  "FletBox widgets lowerCase": {
+    "prefix": "lowerCase",
+    "description": "Make a FletBox widgets lowerCase widget",
+    "body": [
+      "lowerCase(\"FLET-BOX\")"
+    ]
+  },
+  "FletBox widgets upperCase": {
+    "prefix": "upperCase",
+    "description": "Make a FletBox widgets upperCase widget",
+    "body": [
+      "upperCase(\"flet-box\")"
+    ]
+  },
+  "FletBox widgets reverseString": {
+    "prefix": "reverseString",
+    "description": "Make a FletBox widgets reverseString widget",
+    "body": [
+      "reverseString(\"flet-box\")"
+    ]
+  },
+  "FletBox widgets truncate": {
+    "prefix": "truncate",
+    "description": "Make a FletBox widgets truncate widget",
+    "body": [
+      "truncate(\"flet-box is awesome\", 10, \"...\")"
+    ]
+  },
+  "FletBox widgets formatDate": {
+    "prefix": "formatDate",
+    "description": "Make a FletBox widgets formatDate widget",
+    "body": [
+      "formatDate(new Date(), \"YYYY-MM-DD\")"
+    ]
+  },
+  "FletBox widgets relativeTime": {
+    "prefix": "relativeTime",
+    "description": "Make a FletBox widgets relativeTime widget",
+    "body": [
+      "relativeTime(\"2024-01-01\")"
+    ]
+  },
+  "FletBox widgets sleep": {
+    "prefix": "sleep",
+    "description": "Make a FletBox widgets sleep widget",
+    "body": [
+      "await sleep(500)"
+    ]
+  },
+  "FletBox widgets now": {
+    "prefix": "now",
+    "description": "Make a FletBox widgets now widget",
+    "body": [
+      "now()"
+    ]
+  },
+  "FletBox widgets transform_fn": {
+    "prefix": "transform_fn",
+    "description": "Make a FletBox widgets transform_fn widget",
+    "body": [
+      "transform({ translate: [10, 20], rotate: 45, scale: 1.2 })"
+    ]
+  },
+  "FletBox widgets transition_fn": {
+    "prefix": "transition_fn",
+    "description": "Make a FletBox widgets transition_fn widget",
+    "body": [
+      "transition({ property: \"all\", duration: 0.3, timing: \"ease\" })"
+    ]
+  },
+  "FletBox widgets useState": {
+    "prefix": "useState",
+    "description": "Make a FletBox widgets useState widget",
+    "body": [
+      "const [count, setCount] = useState(\"counter\", 0)"
+    ]
+  },
+  "FletBox widgets useWatchState": {
+    "prefix": "useWatchState",
+    "description": "Make a FletBox widgets useWatchState widget",
+    "body": [
+      "useWatchState(\"counter\", (newVal, oldVal) => console.log(newVal))"
+    ]
+  },
+  "FletBox widgets uuid": {
+    "prefix": "uuid",
+    "description": "Make a FletBox widgets uuid widget",
+    "body": [
+      "uuid()"
+    ]
+  },
+  "FletBox widgets shortId": {
+    "prefix": "shortId",
+    "description": "Make a FletBox widgets shortId widget",
+    "body": [
+      "shortId()"
+    ]
+  },
+  "FletBox widgets numericId": {
+    "prefix": "numericId",
+    "description": "Make a FletBox widgets numericId widget",
+    "body": [
+      "numericId(6)"
+    ]
+  },
+  "FletBox widgets timestampId": {
+    "prefix": "timestampId",
+    "description": "Make a FletBox widgets timestampId widget",
+    "body": [
+      "timestampId()"
+    ]
+  },
+  "FletBox widgets colors": {
+    "prefix": "colors",
+    "description": "Make a FletBox widgets colors widget",
+    "body": [
+      "colors.primary"
+    ]
+  },
+  "FletBox widgets setTheme": {
+    "prefix": "setTheme",
+    "description": "Make a FletBox widgets setTheme widget",
+    "body": [
+      "setTheme(\"dark\")"
+    ]
+  },
+  "FletBox widgets getTheme": {
+    "prefix": "getTheme",
+    "description": "Make a FletBox widgets getTheme widget",
+    "body": [
+      "getTheme()"
+    ]
+  },
+  "FletBox widgets toggleTheme": {
+    "prefix": "toggleTheme",
+    "description": "Make a FletBox widgets toggleTheme widget",
+    "body": [
+      "toggleTheme()"
+    ]
+  },
+  "FletBox widgets subscribeTheme": {
+    "prefix": "subscribeTheme",
+    "description": "Make a FletBox widgets subscribeTheme widget",
+    "body": [
+      "subscribeTheme((colors) => console.log(colors.primary))"
+    ]
+  },
+  "FletBox widgets applySystemTheme": {
+    "prefix": "applySystemTheme",
+    "description": "Make a FletBox widgets applySystemTheme widget",
+    "body": [
+      "applySystemTheme()"
+    ]
+  },
+  "FletBox widgets watchSystemTheme": {
+    "prefix": "watchSystemTheme",
+    "description": "Make a FletBox widgets watchSystemTheme widget",
+    "body": [
+      "watchSystemTheme()"
+    ]
+  },
+  "FletBox widgets getColor": {
+    "prefix": "getColor",
+    "description": "Make a FletBox widgets getColor widget",
+    "body": [
+      "getColor(\"primary\", 0.8)"
+    ]
+  },
+  "FletBox widgets httpGet": {
+    "prefix": "httpGet",
+    "description": "Make a FletBox widgets httpGet widget",
+    "body": [
+      "const data = await httpGet(\"https://api.example.com/users\")"
+    ]
+  },
+  "FletBox widgets httpPost": {
+    "prefix": "httpPost",
+    "description": "Make a FletBox widgets httpPost widget",
+    "body": [
+      "const newUser = await httpPost(\"https://api.example.com/users\", { body: { name: \"flet-box\" } })"
+    ]
+  },
+  "FletBox widgets httpPut": {
+    "prefix": "httpPut",
+    "description": "Make a FletBox widgets httpPut widget",
+    "body": [
+      "const updated = await httpPut(\"https://api.example.com/users/1\", { body: { name: \"flet-box\" } })"
+    ]
+  },
+  "FletBox widgets httpPatch": {
+    "prefix": "httpPatch",
+    "description": "Make a FletBox widgets httpPatch widget",
+    "body": [
+      "const patched = await httpPatch(\"https://api.example.com/users/1\", { body: { name: \"flet-box\" } })"
+    ]
+  },
+  "FletBox widgets httpDelete": {
+    "prefix": "httpDelete",
+    "description": "Make a FletBox widgets httpDelete widget",
+    "body": [
+      "await httpDelete(\"https://api.example.com/users/1\")"
+    ]
+  },
+  "FletBox widgets saveRam": {
+    "prefix": "saveRam",
+    "description": "Make a FletBox widgets saveRam widget",
+    "body": [
+      "saveRam(\"user\", { name: \"flet-box\" })"
+    ]
+  },
+  "FletBox widgets getRam": {
+    "prefix": "getRam",
+    "description": "Make a FletBox widgets getRam widget",
+    "body": [
+      "const user = getRam(\"user\")"
+    ]
+  },
+  "FletBox widgets hasRam": {
+    "prefix": "hasRam",
+    "description": "Make a FletBox widgets hasRam widget",
+    "body": [
+      "hasRam(\"user\")"
+    ]
+  },
+  "FletBox widgets updateRam": {
+    "prefix": "updateRam",
+    "description": "Make a FletBox widgets updateRam widget",
+    "body": [
+      "updateRam(\"user\", { name: \"flet-box v2\" })"
+    ]
+  },
+  "FletBox widgets deleteRam": {
+    "prefix": "deleteRam",
+    "description": "Make a FletBox widgets deleteRam widget",
+    "body": [
+      "deleteRam(\"user\")"
+    ]
+  },
+  "FletBox widgets clearAllRam": {
+    "prefix": "clearAllRam",
+    "description": "Make a FletBox widgets clearAllRam widget",
+    "body": [
+      "clearAllRam()"
+    ]
+  },
+  "FletBox widgets subscribeRam": {
+    "prefix": "subscribeRam",
+    "description": "Make a FletBox widgets subscribeRam widget",
+    "body": [
+      "subscribeRam((key, newValue, oldValue) => console.log(key, newValue))"
+    ]
+  },
+  "FletBox widgets getAllRam": {
+    "prefix": "getAllRam",
+    "description": "Make a FletBox widgets getAllRam widget",
+    "body": [
+      "getAllRam()"
+    ]
+  },
+  "FletBox widgets getAllRamKeys": {
+    "prefix": "getAllRamKeys",
+    "description": "Make a FletBox widgets getAllRamKeys widget",
+    "body": [
+      "getAllRamKeys()"
+    ]
+  },
+  "FletBox widgets getRamItemCount": {
+    "prefix": "getRamItemCount",
+    "description": "Make a FletBox widgets getRamItemCount widget",
+    "body": [
+      "getRamItemCount()"
+    ]
+  },
+  "FletBox widgets isRamAvailable": {
+    "prefix": "isRamAvailable",
+    "description": "Make a FletBox widgets isRamAvailable widget",
+    "body": [
+      "isRamAvailable()"
+    ]
+  },
+  "FletBox widgets saveSession": {
+    "prefix": "saveSession",
+    "description": "Make a FletBox widgets saveSession widget",
+    "body": [
+      "saveSession(\"token\", \"abc123\")"
+    ]
+  },
+  "FletBox widgets getSession": {
+    "prefix": "getSession",
+    "description": "Make a FletBox widgets getSession widget",
+    "body": [
+      "const token = getSession(\"token\")"
+    ]
+  },
+  "FletBox widgets getSessionSync": {
+    "prefix": "getSessionSync",
+    "description": "Make a FletBox widgets getSessionSync widget",
+    "body": [
+      "getSessionSync(\"token\")"
+    ]
+  },
+  "FletBox widgets hasSession": {
+    "prefix": "hasSession",
+    "description": "Make a FletBox widgets hasSession widget",
+    "body": [
+      "hasSession(\"token\")"
+    ]
+  },
+  "FletBox widgets updateSession": {
+    "prefix": "updateSession",
+    "description": "Make a FletBox widgets updateSession widget",
+    "body": [
+      "updateSession(\"token\", \"newToken\")"
+    ]
+  },
+  "FletBox widgets deleteSession": {
+    "prefix": "deleteSession",
+    "description": "Make a FletBox widgets deleteSession widget",
+    "body": [
+      "deleteSession(\"token\")"
+    ]
+  },
+  "FletBox widgets clearAllSession": {
+    "prefix": "clearAllSession",
+    "description": "Make a FletBox widgets clearAllSession widget",
+    "body": [
+      "clearAllSession()"
+    ]
+  },
+  "FletBox widgets getAllSessionKeys": {
+    "prefix": "getAllSessionKeys",
+    "description": "Make a FletBox widgets getAllSessionKeys widget",
+    "body": [
+      "getAllSessionKeys()"
+    ]
+  },
+  "FletBox widgets getAllSessionData": {
+    "prefix": "getAllSessionData",
+    "description": "Make a FletBox widgets getAllSessionData widget",
+    "body": [
+      "getAllSessionData()"
+    ]
+  },
+  "FletBox widgets getSessionSize": {
+    "prefix": "getSessionSize",
+    "description": "Make a FletBox widgets getSessionSize widget",
+    "body": [
+      "getSessionSize()"
+    ]
+  },
+  "FletBox widgets deleteSessionByPrefix": {
+    "prefix": "deleteSessionByPrefix",
+    "description": "Make a FletBox widgets deleteSessionByPrefix widget",
+    "body": [
+      "deleteSessionByPrefix(\"user_\")"
+    ]
+  },
+  "FletBox widgets deleteSessionBySuffix": {
+    "prefix": "deleteSessionBySuffix",
+    "description": "Make a FletBox widgets deleteSessionBySuffix widget",
+    "body": [
+      "deleteSessionBySuffix(\"_temp\")"
+    ]
+  },
+  "FletBox widgets getSessionItemCount": {
+    "prefix": "getSessionItemCount",
+    "description": "Make a FletBox widgets getSessionItemCount widget",
+    "body": [
+      "getSessionItemCount()"
+    ]
+  },
+  "FletBox widgets isSessionAvailable": {
+    "prefix": "isSessionAvailable",
+    "description": "Make a FletBox widgets isSessionAvailable widget",
+    "body": [
+      "isSessionAvailable()"
+    ]
+  },
+  "FletBox widgets saveData": {
+    "prefix": "saveData",
+    "description": "Make a FletBox widgets saveData widget",
+    "body": [
+      "saveData(\"settings\", { theme: \"dark\" })"
+    ]
+  },
+  "FletBox widgets getData": {
+    "prefix": "getData",
+    "description": "Make a FletBox widgets getData widget",
+    "body": [
+      "const settings = getData(\"settings\")"
+    ]
+  },
+  "FletBox widgets getDataSync": {
+    "prefix": "getDataSync",
+    "description": "Make a FletBox widgets getDataSync widget",
+    "body": [
+      "getDataSync(\"settings\")"
+    ]
+  },
+  "FletBox widgets hasData": {
+    "prefix": "hasData",
+    "description": "Make a FletBox widgets hasData widget",
+    "body": [
+      "hasData(\"settings\")"
+    ]
+  },
+  "FletBox widgets updateData": {
+    "prefix": "updateData",
+    "description": "Make a FletBox widgets updateData widget",
+    "body": [
+      "updateData(\"settings\", { theme: \"light\" })"
+    ]
+  },
+  "FletBox widgets deleteData": {
+    "prefix": "deleteData",
+    "description": "Make a FletBox widgets deleteData widget",
+    "body": [
+      "deleteData(\"settings\")"
+    ]
+  },
+  "FletBox widgets clearAllData": {
+    "prefix": "clearAllData",
+    "description": "Make a FletBox widgets clearAllData widget",
+    "body": [
+      "clearAllData()"
+    ]
+  },
+  "FletBox widgets getAllKeys": {
+    "prefix": "getAllKeys",
+    "description": "Make a FletBox widgets getAllKeys widget",
+    "body": [
+      "getAllKeys()"
+    ]
+  },
+  "FletBox widgets getAllData": {
+    "prefix": "getAllData",
+    "description": "Make a FletBox widgets getAllData widget",
+    "body": [
+      "getAllData()"
+    ]
+  },
+  "FletBox widgets getStorageSize": {
+    "prefix": "getStorageSize",
+    "description": "Make a FletBox widgets getStorageSize widget",
+    "body": [
+      "getStorageSize()"
+    ]
+  },
+  "FletBox widgets deleteDataByPrefix": {
+    "prefix": "deleteDataByPrefix",
+    "description": "Make a FletBox widgets deleteDataByPrefix widget",
+    "body": [
+      "deleteDataByPrefix(\"user_\")"
+    ]
+  },
+  "FletBox widgets deleteDataBySuffix": {
+    "prefix": "deleteDataBySuffix",
+    "description": "Make a FletBox widgets deleteDataBySuffix widget",
+    "body": [
+      "deleteDataBySuffix(\"_cache\")"
+    ]
+  },
+  "FletBox widgets getItemCount": {
+    "prefix": "getItemCount",
+    "description": "Make a FletBox widgets getItemCount widget",
+    "body": [
+      "getItemCount()"
+    ]
+  },
+  "FletBox widgets isStorageAvailable": {
+    "prefix": "isStorageAvailable",
+    "description": "Make a FletBox widgets isStorageAvailable widget",
+    "body": [
+      "isStorageAvailable()"
+    ]
+  },
+  "FletBox widgets getWidgetProps": {
+    "prefix": "getWidgetProps",
+    "description": "Make a FletBox widgets getWidgetProps widget",
+    "body": [
+      "getWidgetProps(myButton)"
+    ]
+  },
+  "FletBox widgets getWidgetProp": {
+    "prefix": "getWidgetProp",
+    "description": "Make a FletBox widgets getWidgetProp widget",
+    "body": [
+      "getWidgetProp(myButton, \"text\")"
+    ]
+  },
+  "FletBox widgets stringifyWidgetProps": {
+    "prefix": "stringifyWidgetProps",
+    "description": "Make a FletBox widgets stringifyWidgetProps widget",
+    "body": [
+      "stringifyWidgetProps(myButton)"
+    ]
+  },
+  "FletBox widgets markdownToWidgets": {
+    "prefix": "markdownToWidgets",
+    "description": "Make a FletBox widgets markdownToWidgets widget",
+    "body": [
+      "markdownToWidgets(\"# Hello\\n\\nThis is **bold**\")"
+    ]
+  },
+  "FletBox widgets parseMarkdownToWidgets": {
+    "prefix": "parseMarkdownToWidgets",
+    "description": "Make a FletBox widgets parseMarkdownToWidgets widget",
+    "body": [
+      "parseMarkdownToWidgets(markdownText)"
+    ]
+  },
+  "FletBox widgets parseInlineToWidgets": {
+    "prefix": "parseInlineToWidgets",
+    "description": "Make a FletBox widgets parseInlineToWidgets widget",
+    "body": [
+      "parseInlineToWidgets(\"text with **bold**\")"
+    ]
+  },
+  "FletBox widgets formatMediaTime": {
+    "prefix": "formatMediaTime",
+    "description": "Make a FletBox widgets formatMediaTime widget",
+    "body": [
+      "formatMediaTime(125)"
+    ]
+  },
+  "FletBox widgets formatMediaTimeLong": {
+    "prefix": "formatMediaTimeLong",
+    "description": "Make a FletBox widgets formatMediaTimeLong widget",
+    "body": [
+      "formatMediaTimeLong(3665)"
+    ]
+  },
+  "FletBox widgets getProgressPercent": {
+    "prefix": "getProgressPercent",
+    "description": "Make a FletBox widgets getProgressPercent widget",
+    "body": [
+      "getProgressPercent(30, 100)"
+    ]
+  },
+  "FletBox widgets percentToSeconds": {
+    "prefix": "percentToSeconds",
+    "description": "Make a FletBox widgets percentToSeconds widget",
+    "body": [
+      "percentToSeconds(50, 120)"
+    ]
+  },
+  "FletBox widgets formatMediaProgress": {
+    "prefix": "formatMediaProgress",
+    "description": "Make a FletBox widgets formatMediaProgress widget",
+    "body": [
+      "formatMediaProgress(75, 120)"
+    ]
+  },
+  "FletBox widgets stopWebRefresh": {
+    "prefix": "stopWebRefresh",
+    "description": "Make a FletBox widgets stopWebRefresh widget",
+    "body": [
+      "stopWebRefresh()"
+    ]
+  },
+  "FletBox widgets generateHighlightedHtml": {
+    "prefix": "generateHighlightedHtml",
+    "description": "Make a FletBox widgets generateHighlightedHtml widget",
+    "body": [
+      "generateHighlightedHtml(codeString)"
+    ]
+  },
+  "FletBox widgets TextInputValidator.onlyLetters": {
+    "prefix": "TextInputValidator.onlyLetters",
+    "description": "Make a FletBox widgets TextInputValidator.onlyLetters widget",
+    "body": [
+      "TextInputValidator.onlyLetters(\"Hola123\")"
+    ]
+  },
+  "FletBox widgets TextInputValidator.onlyNumbers": {
+    "prefix": "TextInputValidator.onlyNumbers",
+    "description": "Make a FletBox widgets TextInputValidator.onlyNumbers widget",
+    "body": [
+      "TextInputValidator.onlyNumbers(\"abc123\")"
+    ]
+  },
+  "FletBox widgets TextInputValidator.isEmail": {
+    "prefix": "TextInputValidator.isEmail",
+    "description": "Make a FletBox widgets TextInputValidator.isEmail widget",
+    "body": [
+      "TextInputValidator.isEmail(\"test@example.com\")"
+    ]
+  },
+  "FletBox widgets TextInputValidator.onlyAlphanumeric": {
+    "prefix": "TextInputValidator.onlyAlphanumeric",
+    "description": "Make a FletBox widgets TextInputValidator.onlyAlphanumeric widget",
+    "body": [
+      "TextInputValidator.onlyAlphanumeric(\"Hola 123!\")"
+    ]
+  },
+  "FletBox widgets TextInputValidator.sanitize": {
+    "prefix": "TextInputValidator.sanitize",
+    "description": "Make a FletBox widgets TextInputValidator.sanitize widget",
+    "body": [
+      "TextInputValidator.sanitize(\"<script>alert(1)</script>\")"
+    ]
+  },
+  "FletBox widgets TextInputValidator.escapeHtml": {
+    "prefix": "TextInputValidator.escapeHtml",
+    "description": "Make a FletBox widgets TextInputValidator.escapeHtml widget",
+    "body": [
+      "TextInputValidator.escapeHtml(\"<div>Hola</div>\")"
+    ]
+  },
+  "FletBox widgets TextInputValidator.safeText": {
+    "prefix": "TextInputValidator.safeText",
+    "description": "Make a FletBox widgets TextInputValidator.safeText widget",
+    "body": [
+      "TextInputValidator.safeText(userInput)"
+    ]
+  },
+  "FletBox widgets TextInputValidator.isSafe": {
+    "prefix": "TextInputValidator.isSafe",
+    "description": "Make a FletBox widgets TextInputValidator.isSafe widget",
+    "body": [
+      "TextInputValidator.isSafe(userInput)"
+    ]
+  },
+  "FletBox widgets TextInputValidator.filter": {
+    "prefix": "TextInputValidator.filter",
+    "description": "Make a FletBox widgets TextInputValidator.filter widget",
+    "body": [
+      "TextInputValidator.filter(\"abc123\", \"a-z\")"
+    ]
+  },
+  "FletBox widgets TextInputValidator.limitLength": {
+    "prefix": "TextInputValidator.limitLength",
+    "description": "Make a FletBox widgets TextInputValidator.limitLength widget",
+    "body": [
+      "TextInputValidator.limitLength(\"Hello world\", 5)"
+    ]
+  },
+  "FletBox widgets TextInputValidator.isOnlyLetters": {
+    "prefix": "TextInputValidator.isOnlyLetters",
+    "description": "Make a FletBox widgets TextInputValidator.isOnlyLetters widget",
+    "body": [
+      "TextInputValidator.isOnlyLetters(\"Hola\")"
+    ]
+  },
+  "FletBox widgets TextInputValidator.isOnlyNumbers": {
+    "prefix": "TextInputValidator.isOnlyNumbers",
+    "description": "Make a FletBox widgets TextInputValidator.isOnlyNumbers widget",
+    "body": [
+      "TextInputValidator.isOnlyNumbers(\"123\")"
+    ]
+  },
+  "FletBox widgets TextInputValidator.filterEmail": {
+    "prefix": "TextInputValidator.filterEmail",
+    "description": "Make a FletBox widgets TextInputValidator.filterEmail widget",
+    "body": [
+      "TextInputValidator.filterEmail(\"user@domain.com\")"
+    ]
+  },
+  "FletBox widgets setBaseFontSize": {
+    "prefix": "setBaseFontSize",
+    "description": "Make a FletBox widgets setBaseFontSize widget",
+    "body": [
+      "setBaseFontSize(16)"
+    ]
+  },
+  "FletBox widgets toREM": {
+    "prefix": "toREM",
+    "description": "Make a FletBox widgets toREM widget",
+    "body": [
+      "toREM(16)"
+    ]
+  },
+  "FletBox widgets toPX": {
+    "prefix": "toPX",
+    "description": "Make a FletBox widgets toPX widget",
+    "body": [
+      "toPX(1.5)"
+    ]
+  },
+  "FletBox widgets getBaseFontSize": {
+    "prefix": "getBaseFontSize",
+    "description": "Make a FletBox widgets getBaseFontSize widget",
+    "body": [
+      "getBaseFontSize()"
+    ]
+  },
+  "FletBox widgets animate_fn": {
+    "prefix": "animate_fn",
+    "description": "Make a FletBox widgets animate_fn widget",
+    "body": [
+      "animate(widget, \"opacity\", 0, 1, 300, \"easeOut\")"
+    ]
+  },
+  "FletBox widgets animateAsync": {
+    "prefix": "animateAsync",
+    "description": "Make a FletBox widgets animateAsync widget",
+    "body": [
+      "await animateAsync(widget, \"width\", 100, 200, 500)"
+    ]
+  },
+  "FletBox widgets fadeOut": {
+    "prefix": "fadeOut",
+    "description": "Make a FletBox widgets fadeOut widget",
+    "body": [
+      "fadeOut(widget, 300)"
+    ]
+  },
+  "FletBox widgets fadeIn": {
+    "prefix": "fadeIn",
+    "description": "Make a FletBox widgets fadeIn widget",
+    "body": [
+      "fadeIn(widget, 300)"
+    ]
+  },
+  "FletBox widgets pulse": {
+    "prefix": "pulse",
+    "description": "Make a FletBox widgets pulse widget",
+    "body": [
+      "pulse(widget, 300)"
+    ]
+  },
+  "FletBox widgets fadeOutAsync": {
+    "prefix": "fadeOutAsync",
+    "description": "Make a FletBox widgets fadeOutAsync widget",
+    "body": [
+      "await fadeOutAsync(widget, 300)"
+    ]
+  },
+  "FletBox widgets fadeInAsync": {
+    "prefix": "fadeInAsync",
+    "description": "Make a FletBox widgets fadeInAsync widget",
+    "body": [
+      "await fadeInAsync(widget, 300)"
+    ]
+  },
+  "FletBox widgets pulseAsync": {
+    "prefix": "pulseAsync",
+    "description": "Make a FletBox widgets pulseAsync widget",
+    "body": [
+      "await pulseAsync(widget, 300)"
+    ]
+  },
+  "FletBox widgets id": {
+    "prefix": "id",
+    "description": "Make a FletBox widgets id widget",
+    "body": [
+      "id: \"myId\","
+    ]
+  },
+  "FletBox widgets className": {
+    "prefix": "className",
+    "description": "Make a FletBox widgets className widget",
+    "body": [
+      "className: \"my-class\","
+    ]
+  },
+  "FletBox widgets style": {
+    "prefix": "style",
+    "description": "Make a FletBox widgets style widget",
+    "body": [
+      "style: { marginTop: 10 },"
+    ]
+  },
+  "FletBox widgets key": {
+    "prefix": "key",
+    "description": "Make a FletBox widgets key widget",
+    "body": [
+      "key: item.id,"
+    ]
+  },
+  "FletBox widgets ref": {
+    "prefix": "ref",
+    "description": "Make a FletBox widgets ref widget",
+    "body": [
+      "ref: (el) => myRef = el,"
+    ]
+  },
+  "FletBox widgets children": {
+    "prefix": "children",
+    "description": "Make a FletBox widgets children widget",
+    "body": [
+      "children: [Text(\"A\"), Text(\"B\")],"
+    ]
+  },
+  "FletBox widgets child": {
+    "prefix": "child",
+    "description": "Make a FletBox widgets child widget",
+    "body": [
+      "child: Text(\"Hello\"),"
+    ]
+  },
+  "FletBox widgets padding": {
+    "prefix": "padding",
+    "description": "Make a FletBox widgets padding widget",
+    "body": [
+      "padding: padding(16),"
+    ]
+  },
+  "FletBox widgets padding.only": {
+    "prefix": "padding.only",
+    "description": "Make a FletBox widgets padding.only widget",
+    "body": [
+      "padding: padding: { top: 20, right: 50, bottom: 50, left: 50 },"
+    ]
+  },
+  "FletBox widgets padding.all": {
+    "prefix": "padding.all",
+    "description": "Make a FletBox widgets padding.all widget",
+    "body": [
+      "padding: padding({ all: 20 }),"
+    ]
+  },
+  "FletBox widgets padding.horizontal": {
+    "prefix": "padding.horizontal",
+    "description": "Make a FletBox widgets padding.horizontal widget",
+    "body": [
+      "padding: padding({ horizontal: 16, vertical: 8 }),"
+    ]
+  },
+  "FletBox widgets padding.vertical": {
+    "prefix": "padding.vertical",
+    "description": "Make a FletBox widgets padding.vertical widget",
+    "body": [
+      "padding: padding({ vertical: 12, horizontal: 24 }),"
+    ]
+  },
+  "FletBox widgets margin": {
+    "prefix": "margin",
+    "description": "Make a FletBox widgets margin widget",
+    "body": [
+      "margin: margin(16),"
+    ]
+  },
+  "FletBox widgets margin.all": {
+    "prefix": "margin.all",
+    "description": "Make a FletBox widgets margin.all widget",
+    "body": [
+      "margin: margin({ all: 20 }),"
+    ]
+  },
+  "FletBox widgets margin.only": {
+    "prefix": "margin.only",
+    "description": "Make a FletBox widgets margin.only widget",
+    "body": [
+      "margin: margin: { top: 20, right: 50, bottom: 50, left: 50 },"
+    ]
+  },
+  "FletBox widgets margin.horizontal": {
+    "prefix": "margin.horizontal",
+    "description": "Make a FletBox widgets margin.horizontal widget",
+    "body": [
+      "margin: margin({ horizontal: 16, vertical: 8 }),"
+    ]
+  },
+  "FletBox widgets margin.vertical": {
+    "prefix": "margin.vertical",
+    "description": "Make a FletBox widgets margin.vertical widget",
+    "body": [
+      "margin: margin({ vertical: 12, horizontal: 24 }),"
+    ]
+  },
+  "FletBox widgets gap": {
+    "prefix": "gap",
+    "description": "Make a FletBox widgets gap widget",
+    "body": [
+      "gap: 8,"
+    ]
+  },
+  "FletBox widgets width": {
+    "prefix": "width",
+    "description": "Make a FletBox widgets width widget",
+    "body": [
+      "width: \"100%\","
+    ]
+  },
+  "FletBox widgets height": {
+    "prefix": "height",
+    "description": "Make a FletBox widgets height widget",
+    "body": [
+      "height: \"auto\","
+    ]
+  },
+  "FletBox widgets minWidth": {
+    "prefix": "minWidth",
+    "description": "Make a FletBox widgets minWidth widget",
+    "body": [
+      "minWidth: 300,"
+    ]
+  },
+  "FletBox widgets maxWidth": {
+    "prefix": "maxWidth",
+    "description": "Make a FletBox widgets maxWidth widget",
+    "body": [
+      "maxWidth: \"90%\","
+    ]
+  },
+  "FletBox widgets maxHeight": {
+    "prefix": "maxHeight",
+    "description": "Make a FletBox widgets maxHeight widget",
+    "body": [
+      "maxHeight: \"80vh\","
+    ]
+  },
+  "FletBox widgets flex": {
+    "prefix": "flex",
+    "description": "Make a FletBox widgets flex widget",
+    "body": [
+      "flex: 1,"
+    ]
+  },
+  "FletBox widgets expand": {
+    "prefix": "expand",
+    "description": "Make a FletBox widgets expand widget",
+    "body": [
+      "expand: true,"
+    ]
+  },
+  "FletBox widgets bgColor": {
+    "prefix": "bgColor",
+    "description": "Make a FletBox widgets bgColor widget",
+    "body": [
+      "bgColor: colors.surface,"
+    ]
+  },
+  "FletBox widgets backgroundColor": {
+    "prefix": "backgroundColor",
+    "description": "Make a FletBox widgets backgroundColor widget",
+    "body": [
+      "backgroundColor: colors.surface,"
+    ]
+  },
+  "FletBox widgets color": {
+    "prefix": "color",
+    "description": "Make a FletBox widgets color widget",
+    "body": [
+      "color: colors.text,"
+    ]
+  },
+  "FletBox widgets textColor": {
+    "prefix": "textColor",
+    "description": "Make a FletBox widgets textColor widget",
+    "body": [
+      "textColor: colors.primary,"
+    ]
+  },
+  "FletBox widgets gradient": {
+    "prefix": "gradient",
+    "description": "Make a FletBox widgets gradient widget",
+    "body": [
+      "gradient: \"linear-gradient(135deg, #667eea 0%, #764ba2 100%)\","
+    ]
+  },
+  "FletBox widgets opacity": {
+    "prefix": "opacity",
+    "description": "Make a FletBox widgets opacity widget",
+    "body": [
+      "opacity: 0.8,"
+    ]
+  },
+  "FletBox widgets border": {
+    "prefix": "border",
+    "description": "Make a FletBox widgets border widget",
+    "body": [
+      "border: border(1, \"solid\" ,\"#ccc\"),"
+    ]
+  },
+  "FletBox widgets borderRadius": {
+    "prefix": "borderRadius",
+    "description": "Make a FletBox widgets borderRadius widget",
+    "body": [
+      "borderRadius: 12,"
+    ]
+  },
+  "FletBox widgets borderWidth": {
+    "prefix": "borderWidth",
+    "description": "Make a FletBox widgets borderWidth widget",
+    "body": [
+      "borderWidth: 2,"
+    ]
+  },
+  "FletBox widgets borderColor": {
+    "prefix": "borderColor",
+    "description": "Make a FletBox widgets borderColor widget",
+    "body": [
+      "borderColor: colors.border,"
+    ]
+  },
+  "FletBox widgets borderStyle": {
+    "prefix": "borderStyle",
+    "description": "Make a FletBox widgets borderStyle widget",
+    "body": [
+      "borderStyle: \"solid\","
+    ]
+  },
+  "FletBox widgets elevation": {
+    "prefix": "elevation",
+    "description": "Make a FletBox widgets elevation widget",
+    "body": [
+      "elevation: 2,"
+    ]
+  },
+  "FletBox widgets shadow": {
+    "prefix": "shadow",
+    "description": "Make a FletBox widgets shadow widget",
+    "body": [
+      "shadow: shadow(0, 4, 8, 0, rgba(0,0,0,0.1),"
+    ]
+  },
+  "FletBox widgets boxShadow": {
+    "prefix": "boxShadow",
+    "description": "Make a FletBox widgets boxShadow widget",
+    "body": [
+      "boxShadow: shadow(0, 4, 8, 0, rgba(0,0,0,0.1),"
+    ]
+  },
+  "FletBox widgets position": {
+    "prefix": "position",
+    "description": "Make a FletBox widgets position widget",
+    "body": [
+      "position: \"absolute\","
+    ]
+  },
+  "FletBox widgets top": {
+    "prefix": "top",
+    "description": "Make a FletBox widgets top widget",
+    "body": [
+      "top: 20,"
+    ]
+  },
+  "FletBox widgets right": {
+    "prefix": "right",
+    "description": "Make a FletBox widgets right widget",
+    "body": [
+      "right: 20,"
+    ]
+  },
+  "FletBox widgets bottom": {
+    "prefix": "bottom",
+    "description": "Make a FletBox widgets bottom widget",
+    "body": [
+      "bottom: 20,"
+    ]
+  },
+  "FletBox widgets left": {
+    "prefix": "left",
+    "description": "Make a FletBox widgets left widget",
+    "body": [
+      "left: 20,"
+    ]
+  },
+  "FletBox widgets zIndex": {
+    "prefix": "zIndex",
+    "description": "Make a FletBox widgets zIndex widget",
+    "body": [
+      "zIndex: 9998,"
+    ]
+  },
+  "FletBox widgets alignItems": {
+    "prefix": "alignItems",
+    "description": "Make a FletBox widgets alignItems widget",
+    "body": [
+      "alignItems: \"center\","
+    ]
+  },
+  "FletBox widgets justifyContent": {
+    "prefix": "justifyContent",
+    "description": "Make a FletBox widgets justifyContent widget",
+    "body": [
+      "justifyContent: \"center\","
+    ]
+  },
+  "FletBox widgets flexDirection": {
+    "prefix": "flexDirection",
+    "description": "Make a FletBox widgets flexDirection widget",
+    "body": [
+      "flexDirection: \"row\","
+    ]
+  },
+  "FletBox widgets flexWrap": {
+    "prefix": "flexWrap",
+    "description": "Make a FletBox widgets flexWrap widget",
+    "body": [
+      "flexWrap: \"wrap\","
+    ]
+  },
+  "FletBox widgets text": {
+    "prefix": "text",
+    "description": "Make a FletBox widgets text widget",
+    "body": [
+      "text: \"Hello World\","
+    ]
+  },
+  "FletBox widgets size": {
+    "prefix": "size",
+    "description": "Make a FletBox widgets size widget",
+    "body": [
+      "size: \"medium\","
+    ]
+  },
+  "FletBox widgets weight": {
+    "prefix": "weight",
+    "description": "Make a FletBox widgets weight widget",
+    "body": [
+      "weight: \"bold\","
+    ]
+  },
+  "FletBox widgets align": {
+    "prefix": "align",
+    "description": "Make a FletBox widgets align widget",
+    "body": [
+      "align: \"center\","
+    ]
+  },
+  "FletBox widgets lineHeight": {
+    "prefix": "lineHeight",
+    "description": "Make a FletBox widgets lineHeight widget",
+    "body": [
+      "lineHeight: 1.5,"
+    ]
+  },
+  "FletBox widgets letterSpacing": {
+    "prefix": "letterSpacing",
+    "description": "Make a FletBox widgets letterSpacing widget",
+    "body": [
+      "letterSpacing: 0.5,"
+    ]
+  },
+  "FletBox widgets transform": {
+    "prefix": "transform",
+    "description": "Make a FletBox widgets transform widget",
+    "body": [
+      "transform: \"scale(1.05)\","
+    ]
+  },
+  "FletBox widgets transition": {
+    "prefix": "transition",
+    "description": "Make a FletBox widgets transition widget",
+    "body": [
+      "transition: \"all 0.2s ease\","
+    ]
+  },
+  "FletBox widgets overflow": {
+    "prefix": "overflow",
+    "description": "Make a FletBox widgets overflow widget",
+    "body": [
+      "overflow: \"auto\","
+    ]
+  },
+  "FletBox widgets cursor": {
+    "prefix": "cursor",
+    "description": "Make a FletBox widgets cursor widget",
+    "body": [
+      "cursor: \"pointer\","
+    ]
+  },
+  "FletBox widgets onPress": {
+    "prefix": "onPress",
+    "description": "Make a FletBox widgets onPress widget",
+    "body": [
+      "onPress: () => console.log(\"clicked\"),"
+    ]
+  },
+  "FletBox widgets onClick": {
+    "prefix": "onClick",
+    "description": "Make a FletBox widgets onClick widget",
+    "body": [
+      "onClick: () => console.log(\"clicked\"),"
+    ]
+  },
+  "FletBox widgets onDoublePress": {
+    "prefix": "onDoublePress",
+    "description": "Make a FletBox widgets onDoublePress widget",
+    "body": [
+      "onDoublePress: () => console.log(\"double click\"),"
+    ]
+  },
+  "FletBox widgets onRightClick": {
+    "prefix": "onRightClick",
+    "description": "Make a FletBox widgets onRightClick widget",
+    "body": [
+      "onRightClick: () => console.log(\"right click\"),"
+    ]
+  },
+  "FletBox widgets onMouseEnter": {
+    "prefix": "onMouseEnter",
+    "description": "Make a FletBox widgets onMouseEnter widget",
+    "body": [
+      "onMouseEnter: () => console.log(\"enter\"),"
+    ]
+  },
+  "FletBox widgets onMouseLeave": {
+    "prefix": "onMouseLeave",
+    "description": "Make a FletBox widgets onMouseLeave widget",
+    "body": [
+      "onMouseLeave: () => console.log(\"leave\"),"
+    ]
+  },
+  "FletBox widgets onScroll": {
+    "prefix": "onScroll",
+    "description": "Make a FletBox widgets onScroll widget",
+    "body": [
+      "onScroll: (e) => console.log(e.target.scrollTop),"
+    ]
+  },
+  "FletBox widgets onWheel": {
+    "prefix": "onWheel",
+    "description": "Make a FletBox widgets onWheel widget",
+    "body": [
+      "onWheel: (e) => console.log(e.deltaY),"
+    ]
+  },
+  "FletBox widgets onChange": {
+    "prefix": "onChange",
+    "description": "Make a FletBox widgets onChange widget",
+    "body": [
+      "onChange: (val) => console.log(val),"
+    ]
+  },
+  "FletBox widgets onInput": {
+    "prefix": "onInput",
+    "description": "Make a FletBox widgets onInput widget",
+    "body": [
+      "onInput: (val) => console.log(val),"
+    ]
+  },
+  "FletBox widgets onFocus": {
+    "prefix": "onFocus",
+    "description": "Make a FletBox widgets onFocus widget",
+    "body": [
+      "onFocus: (e) => console.log(\"focus\"),"
+    ]
+  },
+  "FletBox widgets onBlur": {
+    "prefix": "onBlur",
+    "description": "Make a FletBox widgets onBlur widget",
+    "body": [
+      "onBlur: (e) => console.log(\"blur\"),"
+    ]
+  },
+  "FletBox widgets onHover": {
+    "prefix": "onHover",
+    "description": "Make a FletBox widgets onHover widget",
+    "body": [
+      "onHover: () => console.log(\"hover\"),"
+    ]
+  },
+  "FletBox widgets disabled": {
+    "prefix": "disabled",
+    "description": "Make a FletBox widgets disabled widget",
+    "body": [
+      "disabled: true,"
+    ]
+  },
+  "FletBox widgets readonly": {
+    "prefix": "readonly",
+    "description": "Make a FletBox widgets readonly widget",
+    "body": [
+      "readonly: true,"
+    ]
+  },
+  "FletBox widgets required": {
+    "prefix": "required",
+    "description": "Make a FletBox widgets required widget",
+    "body": [
+      "required: true,"
+    ]
+  },
+  "FletBox widgets checked": {
+    "prefix": "checked",
+    "description": "Make a FletBox widgets checked widget",
+    "body": [
+      "checked: true,"
+    ]
+  },
+  "FletBox widgets selected": {
+    "prefix": "selected",
+    "description": "Make a FletBox widgets selected widget",
+    "body": [
+      "selected: true,"
+    ]
+  },
+  "FletBox widgets expanded": {
+    "prefix": "expanded",
+    "description": "Make a FletBox widgets expanded widget",
+    "body": [
+      "expanded: true,"
+    ]
+  },
+  "FletBox widgets value": {
+    "prefix": "value",
+    "description": "Make a FletBox widgets value widget",
+    "body": [
+      "value: \"\","
+    ]
+  },
+  "FletBox widgets placeholder": {
+    "prefix": "placeholder",
+    "description": "Make a FletBox widgets placeholder widget",
+    "body": [
+      "placeholder: \"Enter text...\","
+    ]
+  },
+  "FletBox widgets label": {
+    "prefix": "label",
+    "description": "Make a FletBox widgets label widget",
+    "body": [
+      "label: \"Username\","
+    ]
+  },
+  "FletBox widgets error": {
+    "prefix": "error",
+    "description": "Make a FletBox widgets error widget",
+    "body": [
+      "error: true,"
+    ]
+  },
+  "FletBox widgets icon": {
+    "prefix": "icon",
+    "description": "Make a FletBox widgets icon widget",
+    "body": [
+      "icon: \"star\","
+    ]
+  },
+  "FletBox widgets iconLeft": {
+    "prefix": "iconLeft",
+    "description": "Make a FletBox widgets iconLeft widget",
+    "body": [
+      "iconLeft: \"favorite\","
+    ]
+  },
+  "FletBox widgets iconRight": {
+    "prefix": "iconRight",
+    "description": "Make a FletBox widgets iconRight widget",
+    "body": [
+      "iconRight: \"arrow_forward\","
+    ]
+  },
+  "FletBox widgets iconTop": {
+    "prefix": "iconTop",
+    "description": "Make a FletBox widgets iconTop widget",
+    "body": [
+      "iconTop: \"upload\","
+    ]
+  },
+  "FletBox widgets iconBottom": {
+    "prefix": "iconBottom",
+    "description": "Make a FletBox widgets iconBottom widget",
+    "body": [
+      "iconBottom: \"download\","
+    ]
+  },
+  "FletBox widgets iconPosition": {
+    "prefix": "iconPosition",
+    "description": "Make a FletBox widgets iconPosition widget",
+    "body": [
+      "iconPosition: \"left\","
+    ]
+  },
+  "FletBox widgets iconSize": {
+    "prefix": "iconSize",
+    "description": "Make a FletBox widgets iconSize widget",
+    "body": [
+      "iconSize: 20,"
+    ]
+  },
+  "FletBox widgets iconColor": {
+    "prefix": "iconColor",
+    "description": "Make a FletBox widgets iconColor widget",
+    "body": [
+      "iconColor: colors.textSecondary,"
+    ]
+  },
+  "FletBox widgets variant": {
+    "prefix": "variant",
+    "description": "Make a FletBox widgets variant widget",
+    "body": [
+      "variant: \"filled\","
+    ]
+  },
+  "FletBox widgets fullWidth": {
+    "prefix": "fullWidth",
+    "description": "Make a FletBox widgets fullWidth widget",
+    "body": [
+      "fullWidth: true,"
+    ]
+  },
+  "FletBox widgets validation": {
+    "prefix": "validation",
+    "description": "Make a FletBox widgets validation widget",
+    "body": [
+      "validation: \"email\","
+    ]
+  },
+  "FletBox widgets maxLength": {
+    "prefix": "maxLength",
+    "description": "Make a FletBox widgets maxLength widget",
+    "body": [
+      "maxLength: 50,"
+    ]
+  },
+  "FletBox widgets customPattern": {
+    "prefix": "customPattern",
+    "description": "Make a FletBox widgets customPattern widget",
+    "body": [
+      "customPattern: \"^[A-Za-z]+$\","
+    ]
+  },
+  "FletBox widgets showValidationMessage": {
+    "prefix": "showValidationMessage",
+    "description": "Make a FletBox widgets showValidationMessage widget",
+    "body": [
+      "showValidationMessage: true,"
+    ]
+  },
+  "FletBox widgets showValidationIcon": {
+    "prefix": "showValidationIcon",
+    "description": "Make a FletBox widgets showValidationIcon widget",
+    "body": [
+      "showValidationIcon: true,"
+    ]
+  },
+  "FletBox widgets onValidated": {
+    "prefix": "onValidated",
+    "description": "Make a FletBox widgets onValidated widget",
+    "body": [
+      "onValidated: (isValid, msg) => console.log(isValid, msg),"
+    ]
+  },
+  "FletBox widgets type": {
+    "prefix": "type",
+    "description": "Make a FletBox widgets type widget",
+    "body": [
+      "type: \"text\","
+    ]
+  },
+  "FletBox widgets inputmode": {
+    "prefix": "inputmode",
+    "description": "Make a FletBox widgets inputmode widget",
+    "body": [
+      "inputmode: \"text\","
+    ]
+  },
+  "FletBox widgets autocomplete": {
+    "prefix": "autocomplete",
+    "description": "Make a FletBox widgets autocomplete widget",
+    "body": [
+      "autocomplete: \"off\","
+    ]
+  },
+  "FletBox widgets pattern": {
+    "prefix": "pattern",
+    "description": "Make a FletBox widgets pattern widget",
+    "body": [
+      "pattern: \"[A-Za-z]{3}\","
+    ]
+  },
+  "FletBox widgets name": {
+    "prefix": "name",
+    "description": "Make a FletBox widgets name widget",
+    "body": [
+      "name: \"username\","
+    ]
+  },
+  "FletBox widgets min": {
+    "prefix": "min",
+    "description": "Make a FletBox widgets min widget",
+    "body": [
+      "min: 0,"
+    ]
+  },
+  "FletBox widgets max": {
+    "prefix": "max",
+    "description": "Make a FletBox widgets max widget",
+    "body": [
+      "max: 100,"
+    ]
+  },
+  "FletBox widgets step": {
+    "prefix": "step",
+    "description": "Make a FletBox widgets step widget",
+    "body": [
+      "step: 1,"
+    ]
+  },
+  "FletBox widgets onChanged": {
+    "prefix": "onChanged",
+    "description": "Make a FletBox widgets onChanged widget",
+    "body": [
+      "onChanged: (val) => console.log(val),"
+    ]
+  },
+  "FletBox widgets onChangeEnd": {
+    "prefix": "onChangeEnd",
+    "description": "Make a FletBox widgets onChangeEnd widget",
+    "body": [
+      "onChangeEnd: (val) => console.log(\"final\", val),"
+    ]
+  },
+  "FletBox widgets showValue": {
+    "prefix": "showValue",
+    "description": "Make a FletBox widgets showValue widget",
+    "body": [
+      "showValue: true,"
+    ]
+  },
+  "FletBox widgets valuePrefix": {
+    "prefix": "valuePrefix",
+    "description": "Make a FletBox widgets valuePrefix widget",
+    "body": [
+      "valuePrefix: \"$\","
+    ]
+  },
+  "FletBox widgets valueSuffix": {
+    "prefix": "valueSuffix",
+    "description": "Make a FletBox widgets valueSuffix widget",
+    "body": [
+      "valueSuffix: \" \u20ac\","
+    ]
+  },
+  "FletBox widgets inverted": {
+    "prefix": "inverted",
+    "description": "Make a FletBox widgets inverted widget",
+    "body": [
+      "inverted: true,"
+    ]
+  },
+  "FletBox widgets orientation": {
+    "prefix": "orientation",
+    "description": "Make a FletBox widgets orientation widget",
+    "body": [
+      "orientation: \"horizontal\","
+    ]
+  },
+  "FletBox widgets options": {
+    "prefix": "options",
+    "description": "Make a FletBox widgets options widget",
+    "body": [
+      "options: [{ label: \"Option 1\", value: 1 }],"
+    ]
+  },
+  "FletBox widgets clearable": {
+    "prefix": "clearable",
+    "description": "Make a FletBox widgets clearable widget",
+    "body": [
+      "clearable: true,"
+    ]
+  },
+  "FletBox widgets portal": {
+    "prefix": "portal",
+    "description": "Make a FletBox widgets portal widget",
+    "body": [
+      "portal: true,"
+    ]
+  },
+  "FletBox widgets optionHoverColor": {
+    "prefix": "optionHoverColor",
+    "description": "Make a FletBox widgets optionHoverColor widget",
+    "body": [
+      "optionHoverColor: colors.gray100,"
+    ]
+  },
+  "FletBox widgets allowHalf": {
+    "prefix": "allowHalf",
+    "description": "Make a FletBox widgets allowHalf widget",
+    "body": [
+      "allowHalf: true,"
+    ]
+  },
+  "FletBox widgets iconActive": {
+    "prefix": "iconActive",
+    "description": "Make a FletBox widgets iconActive widget",
+    "body": [
+      "iconActive: \"star\","
+    ]
+  },
+  "FletBox widgets iconInactive": {
+    "prefix": "iconInactive",
+    "description": "Make a FletBox widgets iconInactive widget",
+    "body": [
+      "iconInactive: \"star_border\","
+    ]
+  },
+  "FletBox widgets iconHalf": {
+    "prefix": "iconHalf",
+    "description": "Make a FletBox widgets iconHalf widget",
+    "body": [
+      "iconHalf: \"star_half\","
+    ]
+  },
+  "FletBox widgets maxRating": {
+    "prefix": "maxRating",
+    "description": "Make a FletBox widgets maxRating widget",
+    "body": [
+      "max: 5,"
+    ]
+  },
+  "FletBox widgets activeColor": {
+    "prefix": "activeColor",
+    "description": "Make a FletBox widgets activeColor widget",
+    "body": [
+      "activeColor: colors.warning,"
+    ]
+  },
+  "FletBox widgets inactiveColor": {
+    "prefix": "inactiveColor",
+    "description": "Make a FletBox widgets inactiveColor widget",
+    "body": [
+      "inactiveColor: colors.border,"
+    ]
+  },
+  "FletBox widgets progress": {
+    "prefix": "progress",
+    "description": "Make a FletBox widgets progress widget",
+    "body": [
+      "progress: 50,"
+    ]
+  },
+  "FletBox widgets indeterminate": {
+    "prefix": "indeterminate",
+    "description": "Make a FletBox widgets indeterminate widget",
+    "body": [
+      "indeterminate: true,"
+    ]
+  },
+  "FletBox widgets striped": {
+    "prefix": "striped",
+    "description": "Make a FletBox widgets striped widget",
+    "body": [
+      "striped: true,"
+    ]
+  },
+  "FletBox widgets animatedStripes": {
+    "prefix": "animatedStripes",
+    "description": "Make a FletBox widgets animatedStripes widget",
+    "body": [
+      "animatedStripes: true,"
+    ]
+  },
+  "FletBox widgets stripeColor": {
+    "prefix": "stripeColor",
+    "description": "Make a FletBox widgets stripeColor widget",
+    "body": [
+      "stripeColor: rgba(255,255,255,0.3),"
+    ]
+  },
+  "FletBox widgets glow": {
+    "prefix": "glow",
+    "description": "Make a FletBox widgets glow widget",
+    "body": [
+      "glow: true,"
+    ]
+  },
+  "FletBox widgets valueProgress": {
+    "prefix": "valueProgress",
+    "description": "Make a FletBox widgets valueProgress widget",
+    "body": [
+      "value: 50,"
+    ]
+  },
+  "FletBox widgets maxProgress": {
+    "prefix": "maxProgress",
+    "description": "Make a FletBox widgets maxProgress widget",
+    "body": [
+      "max: 100,"
+    ]
+  },
+  "FletBox widgets heightProgress": {
+    "prefix": "heightProgress",
+    "description": "Make a FletBox widgets heightProgress widget",
+    "body": [
+      "height: 8,"
+    ]
+  },
+  "FletBox widgets colorProgress": {
+    "prefix": "colorProgress",
+    "description": "Make a FletBox widgets colorProgress widget",
+    "body": [
+      "color: colors.primary,"
+    ]
+  },
+  "FletBox widgets backgroundColorProgress": {
+    "prefix": "backgroundColorProgress",
+    "description": "Make a FletBox widgets backgroundColorProgress widget",
+    "body": [
+      "backgroundColor: colors.border,"
+    ]
+  },
+  "FletBox widgets borderRadiusProgress": {
+    "prefix": "borderRadiusProgress",
+    "description": "Make a FletBox widgets borderRadiusProgress widget",
+    "body": [
+      "borderRadius: 4,"
+    ]
+  },
+  "FletBox widgets onDelete": {
+    "prefix": "onDelete",
+    "description": "Make a FletBox widgets onDelete widget",
+    "body": [
+      "onDelete: () => console.log(\"deleted\"),"
+    ]
+  },
+  "FletBox widgets labelChip": {
+    "prefix": "labelChip",
+    "description": "Make a FletBox widgets labelChip widget",
+    "body": [
+      "label: \"Chip label\","
+    ]
+  },
+  "FletBox widgets iconChip": {
+    "prefix": "iconChip",
+    "description": "Make a FletBox widgets iconChip widget",
+    "body": [
+      "icon: \"star\","
+    ]
+  },
+  "FletBox widgets title": {
+    "prefix": "title",
+    "description": "Make a FletBox widgets title widget",
+    "body": [
+      "title: \"hello guy!!!\","
+    ]
+  },
+  "FletBox widgets subtitle": {
+    "prefix": "subtitle",
+    "description": "Make a FletBox widgets subtitle widget",
+    "body": [
+      "subtitle: \"Completed\","
+    ]
+  },
+  "FletBox widgets description": {
+    "prefix": "description",
+    "description": "Make a FletBox widgets description widget",
+    "body": [
+      "description: \"More details\","
+    ]
+  },
+  "FletBox widgets leftItem": {
+    "prefix": "leftItem",
+    "description": "Make a FletBox widgets leftItem widget",
+    "body": [
+      "leftItem: Icon({ name: \"person\" }),"
+    ]
+  },
+  "FletBox widgets rightItem": {
+    "prefix": "rightItem",
+    "description": "Make a FletBox widgets rightItem widget",
+    "body": [
+      "rightItem: Icon({ name: \"chevron_right\" }),"
+    ]
+  },
+  "FletBox widgets divider": {
+    "prefix": "divider",
+    "description": "Make a FletBox widgets divider widget",
+    "body": [
+      "divider: true,"
+    ]
+  },
+  "FletBox widgets hoverColor": {
+    "prefix": "hoverColor",
+    "description": "Make a FletBox widgets hoverColor widget",
+    "body": [
+      "hoverColor: colors.gray100,"
+    ]
+  },
+  "FletBox widgets selectedBgColor": {
+    "prefix": "selectedBgColor",
+    "description": "Make a FletBox widgets selectedBgColor widget",
+    "body": [
+      "selectedBgColor: `${colors.primary}20`,"
+    ]
+  },
+  "FletBox widgets elevationCard": {
+    "prefix": "elevationCard",
+    "description": "Make a FletBox widgets elevationCard widget",
+    "body": [
+      "elevation: 2,"
+    ]
+  },
+  "FletBox widgets shape": {
+    "prefix": "shape",
+    "description": "Make a FletBox widgets shape widget",
+    "body": [
+      "shape: \"circle\","
+    ]
+  },
+  "FletBox widgets src": {
+    "prefix": "src",
+    "description": "Make a FletBox widgets src widget",
+    "body": [
+      "src: \"https://example.com/avatar.jpg\","
+    ]
+  },
+  "FletBox widgets alt": {
+    "prefix": "alt",
+    "description": "Make a FletBox widgets alt widget",
+    "body": [
+      "alt: \"avatar\","
+    ]
+  },
+  "FletBox widgets fit": {
+    "prefix": "fit",
+    "description": "Make a FletBox widgets fit widget",
+    "body": [
+      "fit: \"cover\","
+    ]
+  },
+  "FletBox widgets poster": {
+    "prefix": "poster",
+    "description": "Make a FletBox widgets poster widget",
+    "body": [
+      "poster: \"thumbnail.jpg\","
+    ]
+  },
+  "FletBox widgets buttonText": {
+    "prefix": "buttonText",
+    "description": "Make a FletBox widgets buttonText widget",
+    "body": [
+      "text: \"Click me\","
+    ]
+  },
+  "FletBox widgets onLongPress": {
+    "prefix": "onLongPress",
+    "description": "Make a FletBox widgets onLongPress widget",
+    "body": [
+      "onLongPress: () => console.log(\"long press\"),"
+    ]
+  },
+  "FletBox widgets onToggle": {
+    "prefix": "onToggle",
+    "description": "Make a FletBox widgets onToggle widget",
+    "body": [
+      "onToggle: (val) => console.log(val),"
+    ]
+  },
+  "FletBox widgets onCheck": {
+    "prefix": "onCheck",
+    "description": "Make a FletBox widgets onCheck widget",
+    "body": [
+      "onCheck: (val) => console.log(val),"
+    ]
+  },
+  "FletBox widgets onSelect": {
+    "prefix": "onSelect",
+    "description": "Make a FletBox widgets onSelect widget",
+    "body": [
+      "onSelect: (val) => console.log(val),"
+    ]
+  },
+  "FletBox widgets message": {
+    "prefix": "message",
+    "description": "Make a FletBox widgets message widget",
+    "body": [
+      "message: \"Are you sure?\","
+    ]
+  },
+  "FletBox widgets action": {
+    "prefix": "action",
+    "description": "Make a FletBox widgets action widget",
+    "body": [
+      "action: \"Undo\","
+    ]
+  },
+  "FletBox widgets onAction": {
+    "prefix": "onAction",
+    "description": "Make a FletBox widgets onAction widget",
+    "body": [
+      "onAction: () => console.log(\"action\"),"
+    ]
+  },
+  "FletBox widgets duration": {
+    "prefix": "duration",
+    "description": "Make a FletBox widgets duration widget",
+    "body": [
+      "duration: 3000,"
+    ]
+  },
+  "FletBox widgets typeSnackbar": {
+    "prefix": "typeSnackbar",
+    "description": "Make a FletBox widgets typeSnackbar widget",
+    "body": [
+      "type: \"success\","
+    ]
+  },
+  "FletBox widgets dismissible": {
+    "prefix": "dismissible",
+    "description": "Make a FletBox widgets dismissible widget",
+    "body": [
+      "dismissible: true,"
+    ]
+  },
+  "FletBox widgets positionSnackbar": {
+    "prefix": "positionSnackbar",
+    "description": "Make a FletBox widgets positionSnackbar widget",
+    "body": [
+      "position: \"bottom\","
+    ]
+  },
+  "FletBox widgets onShow": {
+    "prefix": "onShow",
+    "description": "Make a FletBox widgets onShow widget",
+    "body": [
+      "onShow: () => console.log(\"snackbar shown\"),"
+    ]
+  },
+  "FletBox widgets content": {
+    "prefix": "content",
+    "description": "Make a FletBox widgets content widget",
+    "body": [
+      "content: Text({ text: \"Modal content\" }),"
+    ]
+  },
+  "FletBox widgets actions": {
+    "prefix": "actions",
+    "description": "Make a FletBox widgets actions widget",
+    "body": [
+      "actions: [Button({ text: \"Close\", onPress: () => modal.close() })],"
+    ]
+  },
+  "FletBox widgets closeOnOverlayClick": {
+    "prefix": "closeOnOverlayClick",
+    "description": "Make a FletBox widgets closeOnOverlayClick widget",
+    "body": [
+      "closeOnOverlayClick: true,"
+    ]
+  },
+  "FletBox widgets closeOnEsc": {
+    "prefix": "closeOnEsc",
+    "description": "Make a FletBox widgets closeOnEsc widget",
+    "body": [
+      "closeOnEsc: true,"
+    ]
+  },
+  "FletBox widgets showCloseButton": {
+    "prefix": "showCloseButton",
+    "description": "Make a FletBox widgets showCloseButton widget",
+    "body": [
+      "showCloseButton: true,"
+    ]
+  },
+  "FletBox widgets overlayColor": {
+    "prefix": "overlayColor",
+    "description": "Make a FletBox widgets overlayColor widget",
+    "body": [
+      "overlayColor: rgba(0,0,0,0.5),"
+    ]
+  },
+  "FletBox widgets contentBgColor": {
+    "prefix": "contentBgColor",
+    "description": "Make a FletBox widgets contentBgColor widget",
+    "body": [
+      "contentBgColor: colors.surface,"
+    ]
+  },
+  "FletBox widgets headerBgColor": {
+    "prefix": "headerBgColor",
+    "description": "Make a FletBox widgets headerBgColor widget",
+    "body": [
+      "headerBgColor: colors.primary,"
+    ]
+  },
+  "FletBox widgets headerTextColor": {
+    "prefix": "headerTextColor",
+    "description": "Make a FletBox widgets headerTextColor widget",
+    "body": [
+      "headerTextColor: \"#fff\","
+    ]
+  },
+  "FletBox widgets headerBorder": {
+    "prefix": "headerBorder",
+    "description": "Make a FletBox widgets headerBorder widget",
+    "body": [
+      "headerBorder: false,"
+    ]
+  },
+  "FletBox widgets headerPadding": {
+    "prefix": "headerPadding",
+    "description": "Make a FletBox widgets headerPadding widget",
+    "body": [
+      "headerPadding: \"16px 20px\","
+    ]
+  },
+  "FletBox widgets footerBgColor": {
+    "prefix": "footerBgColor",
+    "description": "Make a FletBox widgets footerBgColor widget",
+    "body": [
+      "footerBgColor: colors.gray100,"
+    ]
+  },
+  "FletBox widgets footerBorder": {
+    "prefix": "footerBorder",
+    "description": "Make a FletBox widgets footerBorder widget",
+    "body": [
+      "footerBorder: false,"
+    ]
+  },
+  "FletBox widgets footerPadding": {
+    "prefix": "footerPadding",
+    "description": "Make a FletBox widgets footerPadding widget",
+    "body": [
+      "footerPadding: \"12px 20px\","
+    ]
+  },
+  "FletBox widgets onOpen": {
+    "prefix": "onOpen",
+    "description": "Make a FletBox widgets onOpen widget",
+    "body": [
+      "onOpen: () => console.log(\"opened\"),"
+    ]
+  },
+  "FletBox widgets onClose": {
+    "prefix": "onClose",
+    "description": "Make a FletBox widgets onClose widget",
+    "body": [
+      "onClose: () => console.log(\"closed\"),"
+    ]
+  },
+  "FletBox widgets confirmText": {
+    "prefix": "confirmText",
+    "description": "Make a FletBox widgets confirmText widget",
+    "body": [
+      "confirmText: \"OK\","
+    ]
+  },
+  "FletBox widgets cancelText": {
+    "prefix": "cancelText",
+    "description": "Make a FletBox widgets cancelText widget",
+    "body": [
+      "cancelText: \"Cancel\","
+    ]
+  },
+  "FletBox widgets onConfirm": {
+    "prefix": "onConfirm",
+    "description": "Make a FletBox widgets onConfirm widget",
+    "body": [
+      "onConfirm: () => console.log(\"confirmed\"),"
+    ]
+  },
+  "FletBox widgets onCancel": {
+    "prefix": "onCancel",
+    "description": "Make a FletBox widgets onCancel widget",
+    "body": [
+      "onCancel: () => console.log(\"cancelled\"),"
+    ]
+  },
+  "FletBox widgets variantDialog": {
+    "prefix": "variantDialog",
+    "description": "Make a FletBox widgets variantDialog widget",
+    "body": [
+      "variant: \"danger\","
+    ]
+  },
+  "FletBox widgets showDragHandle": {
+    "prefix": "showDragHandle",
+    "description": "Make a FletBox widgets showDragHandle widget",
+    "body": [
+      "showDragHandle: true,"
+    ]
+  },
+  "FletBox widgets closeOnDragDown": {
+    "prefix": "closeOnDragDown",
+    "description": "Make a FletBox widgets closeOnDragDown widget",
+    "body": [
+      "closeOnDragDown: true,"
+    ]
+  },
+  "FletBox widgets modalContentElevation": {
+    "prefix": "modalContentElevation",
+    "description": "Make a FletBox widgets modalContentElevation widget",
+    "body": [
+      "contentElevation: 0,"
+    ]
+  },
+  "FletBox widgets modalHeaderElevation": {
+    "prefix": "modalHeaderElevation",
+    "description": "Make a FletBox widgets modalHeaderElevation widget",
+    "body": [
+      "headerElevation: 0,"
+    ]
+  },
+  "FletBox widgets modalFooterElevation": {
+    "prefix": "modalFooterElevation",
+    "description": "Make a FletBox widgets modalFooterElevation widget",
+    "body": [
+      "footerElevation: 0,"
+    ]
+  },
+  "FletBox widgets bottomSheetDragHandleColor": {
+    "prefix": "bottomSheetDragHandleColor",
+    "description": "Make a FletBox widgets bottomSheetDragHandleColor widget",
+    "body": [
+      "dragHandleColor: colors.border,"
+    ]
+  },
+  "FletBox widgets bottomSheetHeaderBorderColor": {
+    "prefix": "bottomSheetHeaderBorderColor",
+    "description": "Make a FletBox widgets bottomSheetHeaderBorderColor widget",
+    "body": [
+      "headerBorderColor: colors.border,"
+    ]
+  },
+  "FletBox widgets bottomSheetActionBorderColor": {
+    "prefix": "bottomSheetActionBorderColor",
+    "description": "Make a FletBox widgets bottomSheetActionBorderColor widget",
+    "body": [
+      "actionBorderColor: colors.border,"
+    ]
+  },
+  "FletBox widgets bottomSheetHeaderPadding": {
+    "prefix": "bottomSheetHeaderPadding",
+    "description": "Make a FletBox widgets bottomSheetHeaderPadding widget",
+    "body": [
+      "headerPadding: \"0 16px 8px 16px\","
+    ]
+  },
+  "FletBox widgets bottomSheetContentPadding": {
+    "prefix": "bottomSheetContentPadding",
+    "description": "Make a FletBox widgets bottomSheetContentPadding widget",
+    "body": [
+      "contentPadding: \"0 16px\","
+    ]
+  },
+  "FletBox widgets bottomSheetActionPadding": {
+    "prefix": "bottomSheetActionPadding",
+    "description": "Make a FletBox widgets bottomSheetActionPadding widget",
+    "body": [
+      "actionPadding: \"12px 16px\","
+    ]
+  },
+  "FletBox widgets bottomSheetDragHandlePadding": {
+    "prefix": "bottomSheetDragHandlePadding",
+    "description": "Make a FletBox widgets bottomSheetDragHandlePadding widget",
+    "body": [
+      "dragHandlePadding: \"12px 0 8px 0\","
+    ]
+  },
+  "FletBox widgets bottomSheetDragHandleWidth": {
+    "prefix": "bottomSheetDragHandleWidth",
+    "description": "Make a FletBox widgets bottomSheetDragHandleWidth widget",
+    "body": [
+      "dragHandleWidth: 40,"
+    ]
+  },
+  "FletBox widgets bottomSheetDragHandleHeight": {
+    "prefix": "bottomSheetDragHandleHeight",
+    "description": "Make a FletBox widgets bottomSheetDragHandleHeight widget",
+    "body": [
+      "dragHandleHeight: 4,"
+    ]
+  },
+  "FletBox widgets bottomSheetOverlayZIndex": {
+    "prefix": "bottomSheetOverlayZIndex",
+    "description": "Make a FletBox widgets bottomSheetOverlayZIndex widget",
+    "body": [
+      "overlayZIndex: 9998,"
+    ]
+  },
+  "FletBox widgets onToggleAccordion": {
+    "prefix": "onToggleAccordion",
+    "description": "Make a FletBox widgets onToggleAccordion widget",
+    "body": [
+      "onToggle: (expanded) => console.log(expanded),"
+    ]
+  },
+  "FletBox widgets variantAccordion": {
+    "prefix": "variantAccordion",
+    "description": "Make a FletBox widgets variantAccordion widget",
+    "body": [
+      "variant: \"contained\","
+    ]
+  },
+  "FletBox widgets animate": {
+    "prefix": "animate",
+    "description": "Make a FletBox widgets animate widget",
+    "body": [
+      "animate: true,"
+    ]
+  },
+  "FletBox widgets animationDuration": {
+    "prefix": "animationDuration",
+    "description": "Make a FletBox widgets animationDuration widget",
+    "body": [
+      "animationDuration: 300,"
+    ]
+  },
+  "FletBox widgets iconCollapsed": {
+    "prefix": "iconCollapsed",
+    "description": "Make a FletBox widgets iconCollapsed widget",
+    "body": [
+      "iconCollapsed: \"chevron_right\","
+    ]
+  },
+  "FletBox widgets iconExpanded": {
+    "prefix": "iconExpanded",
+    "description": "Make a FletBox widgets iconExpanded widget",
+    "body": [
+      "iconExpanded: \"expand_more\","
+    ]
+  },
+  "FletBox widgets iconColorAccordion": {
+    "prefix": "iconColorAccordion",
+    "description": "Make a FletBox widgets iconColorAccordion widget",
+    "body": [
+      "iconColor: colors.textSecondary,"
+    ]
+  },
+  "FletBox widgets iconSizeAccordion": {
+    "prefix": "iconSizeAccordion",
+    "description": "Make a FletBox widgets iconSizeAccordion widget",
+    "body": [
+      "iconSize: 20,"
+    ]
+  },
+  "FletBox widgets titlePadding": {
+    "prefix": "titlePadding",
+    "description": "Make a FletBox widgets titlePadding widget",
+    "body": [
+      "titlePadding: \"12px 16px\","
+    ]
+  },
+  "FletBox widgets contentPadding": {
+    "prefix": "contentPadding",
+    "description": "Make a FletBox widgets contentPadding widget",
+    "body": [
+      "contentPadding: \"16px\","
+    ]
+  },
+  "FletBox widgets childrenAccordion": {
+    "prefix": "childrenAccordion",
+    "description": "Make a FletBox widgets childrenAccordion widget",
+    "body": [
+      "children: Text(\"Content\"),"
+    ]
+  },
+  "FletBox widgets expandedColor": {
+    "prefix": "expandedColor",
+    "description": "Make a FletBox widgets expandedColor widget",
+    "body": [
+      "expandedColor: colors.primary,"
+    ]
+  },
+  "FletBox widgets steps": {
+    "prefix": "steps",
+    "description": "Make a FletBox widgets steps widget",
+    "body": [
+      "steps: [{ label: \"Step 1\", content: Text(\"Step 1 content\") }],"
+    ]
+  },
+  "FletBox widgets activeStep": {
+    "prefix": "activeStep",
+    "description": "Make a FletBox widgets activeStep widget",
+    "body": [
+      "activeStep: 0,"
+    ]
+  },
+  "FletBox widgets onStepChange": {
+    "prefix": "onStepChange",
+    "description": "Make a FletBox widgets onStepChange widget",
+    "body": [
+      "onStepChange: (index) => console.log(index),"
+    ]
+  },
+  "FletBox widgets orientationStepper": {
+    "prefix": "orientationStepper",
+    "description": "Make a FletBox widgets orientationStepper widget",
+    "body": [
+      "orientation: \"horizontal\","
+    ]
+  },
+  "FletBox widgets variantStepper": {
+    "prefix": "variantStepper",
+    "description": "Make a FletBox widgets variantStepper widget",
+    "body": [
+      "variant: \"circles\","
+    ]
+  },
+  "FletBox widgets showLabelsStepper": {
+    "prefix": "showLabelsStepper",
+    "description": "Make a FletBox widgets showLabelsStepper widget",
+    "body": [
+      "showLabels: true,"
+    ]
+  },
+  "FletBox widgets showNavigation": {
+    "prefix": "showNavigation",
+    "description": "Make a FletBox widgets showNavigation widget",
+    "body": [
+      "showNavigation: true,"
+    ]
+  },
+  "FletBox widgets nextLabel": {
+    "prefix": "nextLabel",
+    "description": "Make a FletBox widgets nextLabel widget",
+    "body": [
+      "nextLabel: \"Next\","
+    ]
+  },
+  "FletBox widgets backLabel": {
+    "prefix": "backLabel",
+    "description": "Make a FletBox widgets backLabel widget",
+    "body": [
+      "backLabel: \"Back\","
+    ]
+  },
+  "FletBox widgets finishLabel": {
+    "prefix": "finishLabel",
+    "description": "Make a FletBox widgets finishLabel widget",
+    "body": [
+      "finishLabel: \"Finish\","
+    ]
+  },
+  "FletBox widgets onFinish": {
+    "prefix": "onFinish",
+    "description": "Make a FletBox widgets onFinish widget",
+    "body": [
+      "onFinish: () => console.log(\"finished\"),"
+    ]
+  },
+  "FletBox widgets totalItems": {
+    "prefix": "totalItems",
+    "description": "Make a FletBox widgets totalItems widget",
+    "body": [
+      "totalItems: 100,"
+    ]
+  },
+  "FletBox widgets pageSize": {
+    "prefix": "pageSize",
+    "description": "Make a FletBox widgets pageSize widget",
+    "body": [
+      "pageSize: 10,"
+    ]
+  },
+  "FletBox widgets currentPage": {
+    "prefix": "currentPage",
+    "description": "Make a FletBox widgets currentPage widget",
+    "body": [
+      "currentPage: 1,"
+    ]
+  },
+  "FletBox widgets onPageChange": {
+    "prefix": "onPageChange",
+    "description": "Make a FletBox widgets onPageChange widget",
+    "body": [
+      "onPageChange: (page) => console.log(page),"
+    ]
+  },
+  "FletBox widgets showFirstLast": {
+    "prefix": "showFirstLast",
+    "description": "Make a FletBox widgets showFirstLast widget",
+    "body": [
+      "showFirstLast: true,"
+    ]
+  },
+  "FletBox widgets showPrevNext": {
+    "prefix": "showPrevNext",
+    "description": "Make a FletBox widgets showPrevNext widget",
+    "body": [
+      "showPrevNext: true,"
+    ]
+  },
+  "FletBox widgets maxButtons": {
+    "prefix": "maxButtons",
+    "description": "Make a FletBox widgets maxButtons widget",
+    "body": [
+      "maxButtons: 5,"
+    ]
+  },
+  "FletBox widgets showTotal": {
+    "prefix": "showTotal",
+    "description": "Make a FletBox widgets showTotal widget",
+    "body": [
+      "showTotal: true,"
+    ]
+  },
+  "FletBox widgets nodes": {
+    "prefix": "nodes",
+    "description": "Make a FletBox widgets nodes widget",
+    "body": [
+      "nodes: [{ id: \"1\", label: \"Root\", children: [] }],"
+    ]
+  },
+  "FletBox widgets onToggleTree": {
+    "prefix": "onToggleTree",
+    "description": "Make a FletBox widgets onToggleTree widget",
+    "body": [
+      "onToggle: (nodeId, isExpanded) => console.log(nodeId, isExpanded),"
+    ]
+  },
+  "FletBox widgets expandedNodes": {
+    "prefix": "expandedNodes",
+    "description": "Make a FletBox widgets expandedNodes widget",
+    "body": [
+      "expandedNodes: [\"1\"],"
+    ]
+  },
+  "FletBox widgets indent": {
+    "prefix": "indent",
+    "description": "Make a FletBox widgets indent widget",
+    "body": [
+      "indent: 20,"
+    ]
+  },
+  "FletBox widgets showIcons": {
+    "prefix": "showIcons",
+    "description": "Make a FletBox widgets showIcons widget",
+    "body": [
+      "showIcons: true,"
+    ]
+  },
+  "FletBox widgets folderIcon": {
+    "prefix": "folderIcon",
+    "description": "Make a FletBox widgets folderIcon widget",
+    "body": [
+      "folderIcon: \"folder\","
+    ]
+  },
+  "FletBox widgets folderOpenIcon": {
+    "prefix": "folderOpenIcon",
+    "description": "Make a FletBox widgets folderOpenIcon widget",
+    "body": [
+      "folderOpenIcon: \"folder_open\","
+    ]
+  },
+  "FletBox widgets fileIcon": {
+    "prefix": "fileIcon",
+    "description": "Make a FletBox widgets fileIcon widget",
+    "body": [
+      "fileIcon: \"insert_drive_file\","
+    ]
+  },
+  "FletBox widgets expandIcon": {
+    "prefix": "expandIcon",
+    "description": "Make a FletBox widgets expandIcon widget",
+    "body": [
+      "expandIcon: \"chevron_right\","
+    ]
+  },
+  "FletBox widgets collapseIcon": {
+    "prefix": "collapseIcon",
+    "description": "Make a FletBox widgets collapseIcon widget",
+    "body": [
+      "collapseIcon: \"expand_more\","
+    ]
+  },
+  "FletBox widgets defaultExpanded": {
+    "prefix": "defaultExpanded",
+    "description": "Make a FletBox widgets defaultExpanded widget",
+    "body": [
+      "defaultExpanded: true,"
+    ]
+  },
+  "FletBox widgets selectable": {
+    "prefix": "selectable",
+    "description": "Make a FletBox widgets selectable widget",
+    "body": [
+      "selectable: true,"
+    ]
+  },
+  "FletBox widgets selectedNodeId": {
+    "prefix": "selectedNodeId",
+    "description": "Make a FletBox widgets selectedNodeId widget",
+    "body": [
+      "selectedNodeId: \"1\","
+    ]
+  },
+  "FletBox widgets nodePadding": {
+    "prefix": "nodePadding",
+    "description": "Make a FletBox widgets nodePadding widget",
+    "body": [
+      "nodePadding: \"6px 4px\","
+    ]
+  },
+  "FletBox widgets nodeGap": {
+    "prefix": "nodeGap",
+    "description": "Make a FletBox widgets nodeGap widget",
+    "body": [
+      "nodeGap: 4,"
+    ]
+  },
+  "FletBox widgets childrenGap": {
+    "prefix": "childrenGap",
+    "description": "Make a FletBox widgets childrenGap widget",
+    "body": [
+      "childrenGap: 2,"
+    ]
+  },
+  "FletBox widgets iconSizeTree": {
+    "prefix": "iconSizeTree",
+    "description": "Make a FletBox widgets iconSizeTree widget",
+    "body": [
+      "iconSize: 18,"
+    ]
+  },
+  "FletBox widgets treeHoverBgColor": {
+    "prefix": "treeHoverBgColor",
+    "description": "Make a FletBox widgets treeHoverBgColor widget",
+    "body": [
+      "hoverBgColor: colors.gray100,"
+    ]
+  },
+  "FletBox widgets treeSelectedBgColor": {
+    "prefix": "treeSelectedBgColor",
+    "description": "Make a FletBox widgets treeSelectedBgColor widget",
+    "body": [
+      "selectedBgColor: `${colors.primary}20`,"
+    ]
+  },
+  "FletBox widgets treeTextColor": {
+    "prefix": "treeTextColor",
+    "description": "Make a FletBox widgets treeTextColor widget",
+    "body": [
+      "textColor: colors.text,"
+    ]
+  },
+  "FletBox widgets treeSelectedTextColor": {
+    "prefix": "treeSelectedTextColor",
+    "description": "Make a FletBox widgets treeSelectedTextColor widget",
+    "body": [
+      "selectedTextColor: colors.primary,"
+    ]
+  },
+  "FletBox widgets treeIconColor": {
+    "prefix": "treeIconColor",
+    "description": "Make a FletBox widgets treeIconColor widget",
+    "body": [
+      "iconColor: colors.textSecondary,"
+    ]
+  },
+  "FletBox widgets treeFolderIconColor": {
+    "prefix": "treeFolderIconColor",
+    "description": "Make a FletBox widgets treeFolderIconColor widget",
+    "body": [
+      "folderIconColor: colors.warning,"
+    ]
+  },
+  "FletBox widgets typeChart": {
+    "prefix": "typeChart",
+    "description": "Make a FletBox widgets typeChart widget",
+    "body": [
+      "type: \"line\","
+    ]
+  },
+  "FletBox widgets labels": {
+    "prefix": "labels",
+    "description": "Make a FletBox widgets labels widget",
+    "body": [
+      "labels: [\"Jan\", \"Feb\", \"Mar\"],"
+    ]
+  },
+  "FletBox widgets data": {
+    "prefix": "data",
+    "description": "Make a FletBox widgets data widget",
+    "body": [
+      "data: [10, 20, 30],"
+    ]
+  },
+  "FletBox widgets barColor": {
+    "prefix": "barColor",
+    "description": "Make a FletBox widgets barColor widget",
+    "body": [
+      "barColor: colors.primary,"
+    ]
+  },
+  "FletBox widgets lineColor": {
+    "prefix": "lineColor",
+    "description": "Make a FletBox widgets lineColor widget",
+    "body": [
+      "lineColor: colors.primary,"
+    ]
+  },
+  "FletBox widgets areaColor": {
+    "prefix": "areaColor",
+    "description": "Make a FletBox widgets areaColor widget",
+    "body": [
+      "areaColor: `${colors.primary}40`,"
+    ]
+  },
+  "FletBox widgets candleUpColor": {
+    "prefix": "candleUpColor",
+    "description": "Make a FletBox widgets candleUpColor widget",
+    "body": [
+      "candleUpColor: colors.success,"
+    ]
+  },
+  "FletBox widgets candleDownColor": {
+    "prefix": "candleDownColor",
+    "description": "Make a FletBox widgets candleDownColor widget",
+    "body": [
+      "candleDownColor: colors.danger,"
+    ]
+  },
+  "FletBox widgets axisColor": {
+    "prefix": "axisColor",
+    "description": "Make a FletBox widgets axisColor widget",
+    "body": [
+      "axisColor: colors.border,"
+    ]
+  },
+  "FletBox widgets textColorChart": {
+    "prefix": "textColorChart",
+    "description": "Make a FletBox widgets textColorChart widget",
+    "body": [
+      "textColor: colors.textSecondary,"
+    ]
+  },
+  "FletBox widgets yAxisColor": {
+    "prefix": "yAxisColor",
+    "description": "Make a FletBox widgets yAxisColor widget",
+    "body": [
+      "yAxisColor: colors.primary,"
+    ]
+  },
+  "FletBox widgets showGrid": {
+    "prefix": "showGrid",
+    "description": "Make a FletBox widgets showGrid widget",
+    "body": [
+      "showGrid: true,"
+    ]
+  },
+  "FletBox widgets showLabelsChart": {
+    "prefix": "showLabelsChart",
+    "description": "Make a FletBox widgets showLabelsChart widget",
+    "body": [
+      "showLabels: true,"
+    ]
+  },
+  "FletBox widgets showValues": {
+    "prefix": "showValues",
+    "description": "Make a FletBox widgets showValues widget",
+    "body": [
+      "showValues: false,"
+    ]
+  },
+  "FletBox widgets smooth": {
+    "prefix": "smooth",
+    "description": "Make a FletBox widgets smooth widget",
+    "body": [
+      "smooth: true,"
+    ]
+  },
+  "FletBox widgets areaGradient": {
+    "prefix": "areaGradient",
+    "description": "Make a FletBox widgets areaGradient widget",
+    "body": [
+      "areaGradient: true,"
+    ]
+  },
+  "FletBox widgets areaGradientColors": {
+    "prefix": "areaGradientColors",
+    "description": "Make a FletBox widgets areaGradientColors widget",
+    "body": [
+      "areaGradientColors: [\"#ff0000\", \"#00ff00\"],"
+    ]
+  },
+  "FletBox widgets candleWidth": {
+    "prefix": "candleWidth",
+    "description": "Make a FletBox widgets candleWidth widget",
+    "body": [
+      "candleWidth: 8,"
+    ]
+  },
+  "FletBox widgets candleSpacing": {
+    "prefix": "candleSpacing",
+    "description": "Make a FletBox widgets candleSpacing widget",
+    "body": [
+      "candleSpacing: 2,"
+    ]
+  },
+  "FletBox widgets chartPadding": {
+    "prefix": "chartPadding",
+    "description": "Make a FletBox widgets chartPadding widget",
+    "body": [
+      "padding: { top: 20, right: 50, bottom: 50, left: 50 },"
+    ]
+  },
+  "FletBox widgets chartBgColor": {
+    "prefix": "chartBgColor",
+    "description": "Make a FletBox widgets chartBgColor widget",
+    "body": [
+      "bgColor: colors.surface,"
+    ]
+  },
+  "FletBox widgets valueQR": {
+    "prefix": "valueQR",
+    "description": "Make a FletBox widgets valueQR widget",
+    "body": [
+      "value: \"https://flet-box.dev\","
+    ]
+  },
+  "FletBox widgets sizeQR": {
+    "prefix": "sizeQR",
+    "description": "Make a FletBox widgets sizeQR widget",
+    "body": [
+      "size: 200,"
+    ]
+  },
+  "FletBox widgets bgColorQR": {
+    "prefix": "bgColorQR",
+    "description": "Make a FletBox widgets bgColorQR widget",
+    "body": [
+      "bgColor: \"#ffffff\","
+    ]
+  },
+  "FletBox widgets fgColorQR": {
+    "prefix": "fgColorQR",
+    "description": "Make a FletBox widgets fgColorQR widget",
+    "body": [
+      "fgColor: \"#000000\","
+    ]
+  },
+  "FletBox widgets errorCorrection": {
+    "prefix": "errorCorrection",
+    "description": "Make a FletBox widgets errorCorrection widget",
+    "body": [
+      "errorCorrection: \"M\","
+    ]
+  },
+  "FletBox widgets strokeWidth": {
+    "prefix": "strokeWidth",
+    "description": "Make a FletBox widgets strokeWidth widget",
+    "body": [
+      "strokeWidth: 12,"
+    ]
+  },
+  "FletBox widgets trackColor": {
+    "prefix": "trackColor",
+    "description": "Make a FletBox widgets trackColor widget",
+    "body": [
+      "trackColor: colors.border,"
+    ]
+  },
+  "FletBox widgets thumbColor": {
+    "prefix": "thumbColor",
+    "description": "Make a FletBox widgets thumbColor widget",
+    "body": [
+      "thumbColor: \"#fff\","
+    ]
+  },
+  "FletBox widgets valueColorCircular": {
+    "prefix": "valueColorCircular",
+    "description": "Make a FletBox widgets valueColorCircular widget",
+    "body": [
+      "valueColor: colors.text,"
+    ]
+  },
+  "FletBox widgets valueSizeCircular": {
+    "prefix": "valueSizeCircular",
+    "description": "Make a FletBox widgets valueSizeCircular widget",
+    "body": [
+      "valueSize: 24,"
+    ]
+  },
+  "FletBox widgets labelCircular": {
+    "prefix": "labelCircular",
+    "description": "Make a FletBox widgets labelCircular widget",
+    "body": [
+      "label: \"Progress\","
+    ]
+  },
+  "FletBox widgets labelColor": {
+    "prefix": "labelColor",
+    "description": "Make a FletBox widgets labelColor widget",
+    "body": [
+      "labelColor: colors.text,"
+    ]
+  },
+  "FletBox widgets lineCap": {
+    "prefix": "lineCap",
+    "description": "Make a FletBox widgets lineCap widget",
+    "body": [
+      "lineCap: \"round\","
+    ]
+  },
+  "FletBox widgets valueFormat": {
+    "prefix": "valueFormat",
+    "description": "Make a FletBox widgets valueFormat widget",
+    "body": [
+      "valueFormat: \"percent\","
+    ]
+  },
+  "FletBox widgets valueDecimals": {
+    "prefix": "valueDecimals",
+    "description": "Make a FletBox widgets valueDecimals widget",
+    "body": [
+      "valueDecimals: 0,"
+    ]
+  },
+  "FletBox widgets onComplete": {
+    "prefix": "onComplete",
+    "description": "Make a FletBox widgets onComplete widget",
+    "body": [
+      "onComplete: () => console.log(\"animation complete\"),"
+    ]
+  },
+  "FletBox widgets gradientCircular": {
+    "prefix": "gradientCircular",
+    "description": "Make a FletBox widgets gradientCircular widget",
+    "body": [
+      "gradient: [\"red\", \"yellow\", \"green\"],"
+    ]
+  },
+  "FletBox widgets shadowBlur": {
+    "prefix": "shadowBlur",
+    "description": "Make a FletBox widgets shadowBlur widget",
+    "body": [
+      "shadowBlur: 4,"
+    ]
+  },
+  "FletBox widgets shadowColor": {
+    "prefix": "shadowColor",
+    "description": "Make a FletBox widgets shadowColor widget",
+    "body": [
+      "shadowColor: rgba(0,0,0,0.5),"
+    ]
+  },
+  "FletBox widgets glowCircular": {
+    "prefix": "glowCircular",
+    "description": "Make a FletBox widgets glowCircular widget",
+    "body": [
+      "glow: true,"
+    ]
+  },
+  "FletBox widgets glowColor": {
+    "prefix": "glowColor",
+    "description": "Make a FletBox widgets glowColor widget",
+    "body": [
+      "glowColor: \"#ff0000\","
+    ]
+  },
+  "FletBox widgets markers": {
+    "prefix": "markers",
+    "description": "Make a FletBox widgets markers widget",
+    "body": [
+      "markers: [{ value: 25, color: \"red\", size: 6, label: \"A\" }],"
+    ]
+  },
+  "FletBox widgets innerStrokeWidth": {
+    "prefix": "innerStrokeWidth",
+    "description": "Make a FletBox widgets innerStrokeWidth widget",
+    "body": [
+      "innerStrokeWidth: 4,"
+    ]
+  },
+  "FletBox widgets innerColor": {
+    "prefix": "innerColor",
+    "description": "Make a FletBox widgets innerColor widget",
+    "body": [
+      "innerColor: colors.gray300,"
+    ]
+  },
+  "FletBox widgets onClickCircular": {
+    "prefix": "onClickCircular",
+    "description": "Make a FletBox widgets onClickCircular widget",
+    "body": [
+      "onClick: ({ value, percent }) => console.log(value),"
+    ]
+  },
+  "FletBox widgets onHoverCircular": {
+    "prefix": "onHoverCircular",
+    "description": "Make a FletBox widgets onHoverCircular widget",
+    "body": [
+      "onHover: (isHovering) => console.log(isHovering),"
+    ]
+  },
+  "FletBox widgets subtitleColor": {
+    "prefix": "subtitleColor",
+    "description": "Make a FletBox widgets subtitleColor widget",
+    "body": [
+      "subtitleColor: colors.textSecondary,"
+    ]
+  },
+  "FletBox widgets subtitleSize": {
+    "prefix": "subtitleSize",
+    "description": "Make a FletBox widgets subtitleSize widget",
+    "body": [
+      "subtitleSize: 10,"
+    ]
+  },
+  "FletBox widgets tooltipCircular": {
+    "prefix": "tooltipCircular",
+    "description": "Make a FletBox widgets tooltipCircular widget",
+    "body": [
+      "tooltip: \"Progress: 75%\","
+    ]
+  },
+  "FletBox widgets animateCircular": {
+    "prefix": "animateCircular",
+    "description": "Make a FletBox widgets animateCircular widget",
+    "body": [
+      "animate: true,"
+    ]
+  },
+  "FletBox widgets animationDurationCircular": {
+    "prefix": "animationDurationCircular",
+    "description": "Make a FletBox widgets animationDurationCircular widget",
+    "body": [
+      "animationDuration: 1000,"
+    ]
+  },
+  "FletBox widgets valueCircular": {
+    "prefix": "valueCircular",
+    "description": "Make a FletBox widgets valueCircular widget",
+    "body": [
+      "value: 75,"
+    ]
+  },
+  "FletBox widgets maxCircular": {
+    "prefix": "maxCircular",
+    "description": "Make a FletBox widgets maxCircular widget",
+    "body": [
+      "max: 100,"
+    ]
+  },
+  "FletBox widgets colorCircular": {
+    "prefix": "colorCircular",
+    "description": "Make a FletBox widgets colorCircular widget",
+    "body": [
+      "color: colors.primary,"
+    ]
+  },
+  "FletBox widgets backgroundColorCircular": {
+    "prefix": "backgroundColorCircular",
+    "description": "Make a FletBox widgets backgroundColorCircular widget",
+    "body": [
+      "backgroundColor: colors.gray200,"
+    ]
+  },
+  "FletBox widgets sizeCircular": {
+    "prefix": "sizeCircular",
+    "description": "Make a FletBox widgets sizeCircular widget",
+    "body": [
+      "size: 200,"
+    ]
+  },
+  "FletBox widgets items": {
+    "prefix": "items",
+    "description": "Make a FletBox widgets items widget",
+    "body": [
+      "items: [image1, image2, image3],"
+    ]
+  },
+  "FletBox widgets autoPlay": {
+    "prefix": "autoPlay",
+    "description": "Make a FletBox widgets autoPlay widget",
+    "body": [
+      "autoPlay: true,"
+    ]
+  },
+  "FletBox widgets interval": {
+    "prefix": "interval",
+    "description": "Make a FletBox widgets interval widget",
+    "body": [
+      "interval: 3000,"
+    ]
+  },
+  "FletBox widgets showArrows": {
+    "prefix": "showArrows",
+    "description": "Make a FletBox widgets showArrows widget",
+    "body": [
+      "showArrows: true,"
+    ]
+  },
+  "FletBox widgets showDots": {
+    "prefix": "showDots",
+    "description": "Make a FletBox widgets showDots widget",
+    "body": [
+      "showDots: true,"
+    ]
+  },
+  "FletBox widgets infinite": {
+    "prefix": "infinite",
+    "description": "Make a FletBox widgets infinite widget",
+    "body": [
+      "infinite: true,"
+    ]
+  },
+  "FletBox widgets dotColor": {
+    "prefix": "dotColor",
+    "description": "Make a FletBox widgets dotColor widget",
+    "body": [
+      "dotColor: colors.gray300,"
+    ]
+  },
+  "FletBox widgets dotActiveColor": {
+    "prefix": "dotActiveColor",
+    "description": "Make a FletBox widgets dotActiveColor widget",
+    "body": [
+      "dotActiveColor: colors.primary,"
+    ]
+  },
+  "FletBox widgets dotSize": {
+    "prefix": "dotSize",
+    "description": "Make a FletBox widgets dotSize widget",
+    "body": [
+      "dotSize: 8,"
+    ]
+  },
+  "FletBox widgets dotActiveSize": {
+    "prefix": "dotActiveSize",
+    "description": "Make a FletBox widgets dotActiveSize widget",
+    "body": [
+      "dotActiveSize: 20,"
+    ]
+  },
+  "FletBox widgets buttonBgColorCarousel": {
+    "prefix": "buttonBgColorCarousel",
+    "description": "Make a FletBox widgets buttonBgColorCarousel widget",
+    "body": [
+      "buttonBgColor: colors.surface,"
+    ]
+  },
+  "FletBox widgets buttonIconColor": {
+    "prefix": "buttonIconColor",
+    "description": "Make a FletBox widgets buttonIconColor widget",
+    "body": [
+      "buttonIconColor: colors.secondary,"
+    ]
+  },
+  "FletBox widgets buttonSizeCarousel": {
+    "prefix": "buttonSizeCarousel",
+    "description": "Make a FletBox widgets buttonSizeCarousel widget",
+    "body": [
+      "buttonSize: 36,"
+    ]
+  },
+  "FletBox widgets buttonIconSizeCarousel": {
+    "prefix": "buttonIconSizeCarousel",
+    "description": "Make a FletBox widgets buttonIconSizeCarousel widget",
+    "body": [
+      "buttonIconSize: 24,"
+    ]
+  },
+  "FletBox widgets onIndexChange": {
+    "prefix": "onIndexChange",
+    "description": "Make a FletBox widgets onIndexChange widget",
+    "body": [
+      "onIndexChange: (index) => console.log(index),"
+    ]
+  },
+  "FletBox widgets autoplay": {
+    "prefix": "autoplay",
+    "description": "Make a FletBox widgets autoplay widget",
+    "body": [
+      "autoplay: true,"
+    ]
+  },
+  "FletBox widgets controls": {
+    "prefix": "controls",
+    "description": "Make a FletBox widgets controls widget",
+    "body": [
+      "controls: true,"
+    ]
+  },
+  "FletBox widgets loopMedia": {
+    "prefix": "loopMedia",
+    "description": "Make a FletBox widgets loopMedia widget",
+    "body": [
+      "loop: true,"
+    ]
+  },
+  "FletBox widgets muted": {
+    "prefix": "muted",
+    "description": "Make a FletBox widgets muted widget",
+    "body": [
+      "muted: true,"
+    ]
+  },
+  "FletBox widgets volume": {
+    "prefix": "volume",
+    "description": "Make a FletBox widgets volume widget",
+    "body": [
+      "volume: 0.8,"
+    ]
+  },
+  "FletBox widgets onPlay": {
+    "prefix": "onPlay",
+    "description": "Make a FletBox widgets onPlay widget",
+    "body": [
+      "onPlay: () => console.log(\"playing\"),"
+    ]
+  },
+  "FletBox widgets onPause": {
+    "prefix": "onPause",
+    "description": "Make a FletBox widgets onPause widget",
+    "body": [
+      "onPause: () => console.log(\"paused\"),"
+    ]
+  },
+  "FletBox widgets onEnd": {
+    "prefix": "onEnd",
+    "description": "Make a FletBox widgets onEnd widget",
+    "body": [
+      "onEnd: () => console.log(\"ended\"),"
+    ]
+  },
+  "FletBox widgets onTimeUpdate": {
+    "prefix": "onTimeUpdate",
+    "description": "Make a FletBox widgets onTimeUpdate widget",
+    "body": [
+      "onTimeUpdate: (sec, dur, percent) => console.log(sec, dur, percent),"
+    ]
+  },
+  "FletBox widgets onProgress": {
+    "prefix": "onProgress",
+    "description": "Make a FletBox widgets onProgress widget",
+    "body": [
+      "onProgress: (percent) => console.log(percent),"
+    ]
+  },
+  "FletBox widgets onLoad": {
+    "prefix": "onLoad",
+    "description": "Make a FletBox widgets onLoad widget",
+    "body": [
+      "onLoad: (duration) => console.log(duration),"
+    ]
+  },
+  "FletBox widgets onDragStart": {
+    "prefix": "onDragStart",
+    "description": "Make a FletBox widgets onDragStart widget",
+    "body": [
+      "onDragStart: (e, data) => console.log(data),"
+    ]
+  },
+  "FletBox widgets onDragEnd": {
+    "prefix": "onDragEnd",
+    "description": "Make a FletBox widgets onDragEnd widget",
+    "body": [
+      "onDragEnd: (e, data) => console.log(data),"
+    ]
+  },
+  "FletBox widgets onDrop": {
+    "prefix": "onDrop",
+    "description": "Make a FletBox widgets onDrop widget",
+    "body": [
+      "onDrop: (data, group, e) => console.log(data),"
+    ]
+  },
+  "FletBox widgets onDragEnter": {
+    "prefix": "onDragEnter",
+    "description": "Make a FletBox widgets onDragEnter widget",
+    "body": [
+      "onDragEnter: (e) => console.log(\"enter\"),"
+    ]
+  },
+  "FletBox widgets onDragLeave": {
+    "prefix": "onDragLeave",
+    "description": "Make a FletBox widgets onDragLeave widget",
+    "body": [
+      "onDragLeave: (e) => console.log(\"leave\"),"
+    ]
+  },
+  "FletBox widgets onDragOver": {
+    "prefix": "onDragOver",
+    "description": "Make a FletBox widgets onDragOver widget",
+    "body": [
+      "onDragOver: (e) => console.log(\"over\"),"
+    ]
+  },
+  "FletBox widgets acceptGroups": {
+    "prefix": "acceptGroups",
+    "description": "Make a FletBox widgets acceptGroups widget",
+    "body": [
+      "acceptGroups: [\"default\"],"
+    ]
+  },
+  "FletBox widgets group": {
+    "prefix": "group",
+    "description": "Make a FletBox widgets group widget",
+    "body": [
+      "group: \"default\","
+    ]
+  },
+  "FletBox widgets cloneOnDrag": {
+    "prefix": "cloneOnDrag",
+    "description": "Make a FletBox widgets cloneOnDrag widget",
+    "body": [
+      "cloneOnDrag: true,"
+    ]
+  },
+  "FletBox widgets dragImage": {
+    "prefix": "dragImage",
+    "description": "Make a FletBox widgets dragImage widget",
+    "body": [
+      "dragImage: customImage,"
+    ]
+  },
+  "FletBox widgets dragData": {
+    "prefix": "dragData",
+    "description": "Make a FletBox widgets dragData widget",
+    "body": [
+      "data: { id: 1, name: \"item\" },"
+    ]
+  },
+  "FletBox widgets dragOpacity": {
+    "prefix": "dragOpacity",
+    "description": "Make a FletBox widgets dragOpacity widget",
+    "body": [
+      "opacity: 0.5,"
+    ]
+  },
+  "FletBox widgets dragOverlayColor": {
+    "prefix": "dragOverlayColor",
+    "description": "Make a FletBox widgets dragOverlayColor widget",
+    "body": [
+      "dragOverlayColor: `${colors.primary}20`,"
+    ]
+  },
+  "FletBox widgets dragBorderColor": {
+    "prefix": "dragBorderColor",
+    "description": "Make a FletBox widgets dragBorderColor widget",
+    "body": [
+      "dragBorderColor: colors.primary,"
+    ]
+  },
+  "FletBox widgets droppBoxActiveBgColor": {
+    "prefix": "droppBoxActiveBgColor",
+    "description": "Make a FletBox widgets droppBoxActiveBgColor widget",
+    "body": [
+      "activeBgColor: `${colors.primary}20`,"
+    ]
+  },
+  "FletBox widgets droppBoxActiveBorderColor": {
+    "prefix": "droppBoxActiveBorderColor",
+    "description": "Make a FletBox widgets droppBoxActiveBorderColor widget",
+    "body": [
+      "activeBorderColor: colors.primary,"
+    ]
+  },
+  "FletBox widgets droppBoxActiveBorderWidth": {
+    "prefix": "droppBoxActiveBorderWidth",
+    "description": "Make a FletBox widgets droppBoxActiveBorderWidth widget",
+    "body": [
+      "activeBorderWidth: 2,"
+    ]
+  },
+  "FletBox widgets droppBoxActiveBorderStyle": {
+    "prefix": "droppBoxActiveBorderStyle",
+    "description": "Make a FletBox widgets droppBoxActiveBorderStyle widget",
+    "body": [
+      "activeBorderStyle: \"dashed\","
+    ]
+  },
+  "FletBox widgets droppBoxActiveShadow": {
+    "prefix": "droppBoxActiveShadow",
+    "description": "Make a FletBox widgets droppBoxActiveShadow widget",
+    "body": [
+      "activeShadow: `0 4px 12px ${colors.primary}40`,"
+    ]
+  },
+  "FletBox widgets droppBoxValidBgColor": {
+    "prefix": "droppBoxValidBgColor",
+    "description": "Make a FletBox widgets droppBoxValidBgColor widget",
+    "body": [
+      "validBgColor: `${colors.success}20`,"
+    ]
+  },
+  "FletBox widgets droppBoxValidBorderColor": {
+    "prefix": "droppBoxValidBorderColor",
+    "description": "Make a FletBox widgets droppBoxValidBorderColor widget",
+    "body": [
+      "validBorderColor: colors.success,"
+    ]
+  },
+  "FletBox widgets droppBoxInvalidBgColor": {
+    "prefix": "droppBoxInvalidBgColor",
+    "description": "Make a FletBox widgets droppBoxInvalidBgColor widget",
+    "body": [
+      "invalidBgColor: `${colors.danger}20`,"
+    ]
+  },
+  "FletBox widgets droppBoxInvalidBorderColor": {
+    "prefix": "droppBoxInvalidBorderColor",
+    "description": "Make a FletBox widgets droppBoxInvalidBorderColor widget",
+    "body": [
+      "invalidBorderColor: colors.danger,"
+    ]
+  },
+  "FletBox widgets droppBoxTransitionDuration": {
+    "prefix": "droppBoxTransitionDuration",
+    "description": "Make a FletBox widgets droppBoxTransitionDuration widget",
+    "body": [
+      "transitionDuration: \"0.2s\","
+    ]
+  },
+  "FletBox widgets droppBoxTransitionTiming": {
+    "prefix": "droppBoxTransitionTiming",
+    "description": "Make a FletBox widgets droppBoxTransitionTiming widget",
+    "body": [
+      "transitionTiming: \"ease\","
+    ]
+  },
+  "FletBox widgets droppBoxShowFeedback": {
+    "prefix": "droppBoxShowFeedback",
+    "description": "Make a FletBox widgets droppBoxShowFeedback widget",
+    "body": [
+      "showFeedback: true,"
+    ]
+  },
+  "FletBox widgets tooltipText": {
+    "prefix": "tooltipText",
+    "description": "Make a FletBox widgets tooltipText widget",
+    "body": [
+      "text: \"Tooltip text\","
+    ]
+  },
+  "FletBox widgets tooltipPosition": {
+    "prefix": "tooltipPosition",
+    "description": "Make a FletBox widgets tooltipPosition widget",
+    "body": [
+      "position: \"top\","
+    ]
+  },
+  "FletBox widgets delay": {
+    "prefix": "delay",
+    "description": "Make a FletBox widgets delay widget",
+    "body": [
+      "delay: 300,"
+    ]
+  },
+  "FletBox widgets showArrow": {
+    "prefix": "showArrow",
+    "description": "Make a FletBox widgets showArrow widget",
+    "body": [
+      "showArrow: true,"
+    ]
+  },
+  "FletBox widgets offset": {
+    "prefix": "offset",
+    "description": "Make a FletBox widgets offset widget",
+    "body": [
+      "offset: 8,"
+    ]
+  },
+  "FletBox widgets skeletonVariant": {
+    "prefix": "skeletonVariant",
+    "description": "Make a FletBox widgets skeletonVariant widget",
+    "body": [
+      "variant: \"text\","
+    ]
+  },
+  "FletBox widgets skeletonCount": {
+    "prefix": "skeletonCount",
+    "description": "Make a FletBox widgets skeletonCount widget",
+    "body": [
+      "count: 3,"
+    ]
+  },
+  "FletBox widgets skeletonGap": {
+    "prefix": "skeletonGap",
+    "description": "Make a FletBox widgets skeletonGap widget",
+    "body": [
+      "gap: 8,"
+    ]
+  },
+  "FletBox widgets skeletonAnimation": {
+    "prefix": "skeletonAnimation",
+    "description": "Make a FletBox widgets skeletonAnimation widget",
+    "body": [
+      "animation: \"pulse\","
+    ]
+  },
+  "FletBox widgets pulseDuration": {
+    "prefix": "pulseDuration",
+    "description": "Make a FletBox widgets pulseDuration widget",
+    "body": [
+      "pulseDuration: \"1.5s\","
+    ]
+  },
+  "FletBox widgets skeletonHighlightColor": {
+    "prefix": "skeletonHighlightColor",
+    "description": "Make a FletBox widgets skeletonHighlightColor widget",
+    "body": [
+      "highlightColor: colors.gray100,"
+    ]
+  },
+  "FletBox widgets skeletonShimmerColor": {
+    "prefix": "skeletonShimmerColor",
+    "description": "Make a FletBox widgets skeletonShimmerColor widget",
+    "body": [
+      "shimmerColor: colors.gray300,"
+    ]
+  },
+  "FletBox widgets skeletonWaveDuration": {
+    "prefix": "skeletonWaveDuration",
+    "description": "Make a FletBox widgets skeletonWaveDuration widget",
+    "body": [
+      "waveDuration: \"1.5s\","
+    ]
+  },
+  "FletBox widgets code": {
+    "prefix": "code",
+    "description": "Make a FletBox widgets code widget",
+    "body": [
+      "code: \"console.log(\\\"hello\\\"),\","
+    ]
+  },
+  "FletBox widgets codeTitle": {
+    "prefix": "codeTitle",
+    "description": "Make a FletBox widgets codeTitle widget",
+    "body": [
+      "title: \"example.js\","
+    ]
+  },
+  "FletBox widgets codeMaxHeight": {
+    "prefix": "codeMaxHeight",
+    "description": "Make a FletBox widgets codeMaxHeight widget",
+    "body": [
+      "maxHeight: 400,"
+    ]
+  },
+  "FletBox widgets codeFontSize": {
+    "prefix": "codeFontSize",
+    "description": "Make a FletBox widgets codeFontSize widget",
+    "body": [
+      "fontSize: 12,"
+    ]
+  },
+  "FletBox widgets showLineNumbers": {
+    "prefix": "showLineNumbers",
+    "description": "Make a FletBox widgets showLineNumbers widget",
+    "body": [
+      "showLineNumbers: true,"
+    ]
+  },
+  "FletBox widgets startingLineNumber": {
+    "prefix": "startingLineNumber",
+    "description": "Make a FletBox widgets startingLineNumber widget",
+    "body": [
+      "startingLineNumber: 1,"
+    ]
+  },
+  "FletBox widgets lineNumberWidth": {
+    "prefix": "lineNumberWidth",
+    "description": "Make a FletBox widgets lineNumberWidth widget",
+    "body": [
+      "lineNumberWidth: 40,"
+    ]
+  },
+  "FletBox widgets lineNumberColor": {
+    "prefix": "lineNumberColor",
+    "description": "Make a FletBox widgets lineNumberColor widget",
+    "body": [
+      "lineNumberColor: colors.secondary,"
+    ]
+  },
+  "FletBox widgets showHeader": {
+    "prefix": "showHeader",
+    "description": "Make a FletBox widgets showHeader widget",
+    "body": [
+      "showHeader: true,"
+    ]
+  },
+  "FletBox widgets codeBorderRadius": {
+    "prefix": "codeBorderRadius",
+    "description": "Make a FletBox widgets codeBorderRadius widget",
+    "body": [
+      "borderRadius: 8,"
+    ]
+  },
+  "FletBox widgets inspect": {
+    "prefix": "inspect",
+    "description": "Make a FletBox widgets inspect widget",
+    "body": [
+      "Inspector(widget),"
+    ]
+  },
+  "FletBox widgets printWidgetCode": {
+    "prefix": "printWidgetCode",
+    "description": "Make a FletBox widgets printWidgetCode widget",
+    "body": [
+      "printWidgetCode(widget),"
+    ]
+  },
+  "FletBox widgets inspectWidget": {
+    "prefix": "inspectWidget",
+    "description": "Make a FletBox widgets inspectWidget widget",
+    "body": [
+      "inspectWidget(widget),"
+    ]
+  },
+  "FletBox widgets markdownText": {
+    "prefix": "markdownText",
+    "description": "Make a FletBox widgets markdownText widget",
+    "body": [
+      "text: \"# Hello\\n\\nThis is **bold**\","
+    ]
+  },
+  "FletBox widgets linkColor": {
+    "prefix": "linkColor",
+    "description": "Make a FletBox widgets linkColor widget",
+    "body": [
+      "linkColor: colors.primary,"
+    ]
+  },
+  "FletBox widgets codeBgColor": {
+    "prefix": "codeBgColor",
+    "description": "Make a FletBox widgets codeBgColor widget",
+    "body": [
+      "codeBgColor: colors.gray100,"
+    ]
+  },
+  "FletBox widgets codeColor": {
+    "prefix": "codeColor",
+    "description": "Make a FletBox widgets codeColor widget",
+    "body": [
+      "codeColor: colors.danger,"
+    ]
+  },
+  "FletBox widgets preBgColor": {
+    "prefix": "preBgColor",
+    "description": "Make a FletBox widgets preBgColor widget",
+    "body": [
+      "preBgColor: colors.gray100,"
+    ]
+  },
+  "FletBox widgets blockquoteBorderColor": {
+    "prefix": "blockquoteBorderColor",
+    "description": "Make a FletBox widgets blockquoteBorderColor widget",
+    "body": [
+      "blockquoteBorderColor: colors.primary,"
+    ]
+  },
+  "FletBox widgets allowDangerousHtml": {
+    "prefix": "allowDangerousHtml",
+    "description": "Make a FletBox widgets allowDangerousHtml widget",
+    "body": [
+      "allowDangerousHtml: false,"
+    ]
+  },
+  "FletBox widgets installText": {
+    "prefix": "installText",
+    "description": "Make a FletBox widgets installText widget",
+    "body": [
+      "text: \"\ud83d\udcf2 Install\","
+    ]
+  },
+  "FletBox widgets onInstalled": {
+    "prefix": "onInstalled",
+    "description": "Make a FletBox widgets onInstalled widget",
+    "body": [
+      "onInstalled: () => console.log(\"installed\"),"
+    ]
+  },
+  "FletBox widgets leading": {
+    "prefix": "leading",
+    "description": "Make a FletBox widgets leading widget",
+    "body": [
+      "leading: Icon({ name: \"menu\" }),"
+    ]
+  },
+  "FletBox widgets actionsAppBar": {
+    "prefix": "actionsAppBar",
+    "description": "Make a FletBox widgets actionsAppBar widget",
+    "body": [
+      "actions: [Icon({ name: \"search\" }), Icon({ name: \"more_vert\" })],"
+    ]
+  },
+  "FletBox widgets showBackButton": {
+    "prefix": "showBackButton",
+    "description": "Make a FletBox widgets showBackButton widget",
+    "body": [
+      "showBackButton: true,"
+    ]
+  },
+  "FletBox widgets backButtonRoute": {
+    "prefix": "backButtonRoute",
+    "description": "Make a FletBox widgets backButtonRoute widget",
+    "body": [
+      "backButtonRoute: \"/home\","
+    ]
+  },
+  "FletBox widgets onBackPress": {
+    "prefix": "onBackPress",
+    "description": "Make a FletBox widgets onBackPress widget",
+    "body": [
+      "onBackPress: () => console.log(\"back\"),"
+    ]
+  },
+  "FletBox widgets centerTitle": {
+    "prefix": "centerTitle",
+    "description": "Make a FletBox widgets centerTitle widget",
+    "body": [
+      "centerTitle: true,"
+    ]
+  },
+  "FletBox widgets sticky": {
+    "prefix": "sticky",
+    "description": "Make a FletBox widgets sticky widget",
+    "body": [
+      "sticky: true,"
+    ]
+  },
+  "FletBox widgets hideOnScroll": {
+    "prefix": "hideOnScroll",
+    "description": "Make a FletBox widgets hideOnScroll widget",
+    "body": [
+      "hideOnScroll: true,"
+    ]
+  },
+  "FletBox widgets scrollThreshold": {
+    "prefix": "scrollThreshold",
+    "description": "Make a FletBox widgets scrollThreshold widget",
+    "body": [
+      "scrollThreshold: 100,"
+    ]
+  },
+  "FletBox widgets itemsBottomNav": {
+    "prefix": "itemsBottomNav",
+    "description": "Make a FletBox widgets itemsBottomNav widget",
+    "body": [
+      "items: [{ icon: \"home\", label: \"Home\", route: \"/\" }],"
+    ]
+  },
+  "FletBox widgets currentIndex": {
+    "prefix": "currentIndex",
+    "description": "Make a FletBox widgets currentIndex widget",
+    "body": [
+      "currentIndex: 0,"
+    ]
+  },
+  "FletBox widgets onTabChange": {
+    "prefix": "onTabChange",
+    "description": "Make a FletBox widgets onTabChange widget",
+    "body": [
+      "onTabChange: (index) => console.log(index),"
+    ]
+  },
+  "FletBox widgets selectedColor": {
+    "prefix": "selectedColor",
+    "description": "Make a FletBox widgets selectedColor widget",
+    "body": [
+      "selectedColor: colors.primary,"
+    ]
+  },
+  "FletBox widgets unselectedColor": {
+    "prefix": "unselectedColor",
+    "description": "Make a FletBox widgets unselectedColor widget",
+    "body": [
+      "unselectedColor: colors.textSecondary,"
+    ]
+  },
+  "FletBox widgets showLabels": {
+    "prefix": "showLabels",
+    "description": "Make a FletBox widgets showLabels widget",
+    "body": [
+      "showLabels: true,"
+    ]
+  },
+  "FletBox widgets useRouter": {
+    "prefix": "useRouter",
+    "description": "Make a FletBox widgets useRouter widget",
+    "body": [
+      "useRouter: true,"
+    ]
+  },
+  "FletBox widgets tabs": {
+    "prefix": "tabs",
+    "description": "Make a FletBox widgets tabs widget",
+    "body": [
+      "tabs: [\"Tab1\", \"Tab2\"],"
+    ]
+  },
+  "FletBox widgets childrenTabs": {
+    "prefix": "childrenTabs",
+    "description": "Make a FletBox widgets childrenTabs widget",
+    "body": [
+      "children: [Text(\"Content 1\"), Text(\"Content 2\")],"
+    ]
+  },
+  "FletBox widgets activeIndex": {
+    "prefix": "activeIndex",
+    "description": "Make a FletBox widgets activeIndex widget",
+    "body": [
+      "activeIndex: 0,"
+    ]
+  },
+  "FletBox widgets onChangeTabs": {
+    "prefix": "onChangeTabs",
+    "description": "Make a FletBox widgets onChangeTabs widget",
+    "body": [
+      "onChange: (index) => console.log(index),"
+    ]
+  },
+  "FletBox widgets variantTabs": {
+    "prefix": "variantTabs",
+    "description": "Make a FletBox widgets variantTabs widget",
+    "body": [
+      "variant: \"underline\","
+    ]
+  },
+  "FletBox widgets showDivider": {
+    "prefix": "showDivider",
+    "description": "Make a FletBox widgets showDivider widget",
+    "body": [
+      "showDivider: true,"
+    ]
+  },
+  "FletBox widgets dividerColorTabs": {
+    "prefix": "dividerColorTabs",
+    "description": "Make a FletBox widgets dividerColorTabs widget",
+    "body": [
+      "dividerColor: colors.border,"
+    ]
+  },
+  "FletBox widgets showIconTabs": {
+    "prefix": "showIconTabs",
+    "description": "Make a FletBox widgets showIconTabs widget",
+    "body": [
+      "showIcon: true,"
+    ]
+  },
+  "FletBox widgets iconPositionTabs": {
+    "prefix": "iconPositionTabs",
+    "description": "Make a FletBox widgets iconPositionTabs widget",
+    "body": [
+      "iconPosition: \"left\","
+    ]
+  },
+  "FletBox widgets iconSizeTabs": {
+    "prefix": "iconSizeTabs",
+    "description": "Make a FletBox widgets iconSizeTabs widget",
+    "body": [
+      "iconSize: 18,"
+    ]
+  },
+  "FletBox widgets badges": {
+    "prefix": "badges",
+    "description": "Make a FletBox widgets badges widget",
+    "body": [
+      "badges: [5, 10, 0],"
+    ]
+  },
+  "FletBox widgets drawerHeader": {
+    "prefix": "drawerHeader",
+    "description": "Make a FletBox widgets drawerHeader widget",
+    "body": [
+      "header: Text(\"Menu\"),"
+    ]
+  },
+  "FletBox widgets drawerBody": {
+    "prefix": "drawerBody",
+    "description": "Make a FletBox widgets drawerBody widget",
+    "body": [
+      "body: [DrawerItem({ label: \"Home\", route: \"/\" })],"
+    ]
+  },
+  "FletBox widgets drawerFooter": {
+    "prefix": "drawerFooter",
+    "description": "Make a FletBox widgets drawerFooter widget",
+    "body": [
+      "footer: Text(\"v1.0\"),"
+    ]
+  },
+  "FletBox widgets drawerWidth": {
+    "prefix": "drawerWidth",
+    "description": "Make a FletBox widgets drawerWidth widget",
+    "body": [
+      "width: 280,"
+    ]
+  },
+  "FletBox widgets drawerPosition": {
+    "prefix": "drawerPosition",
+    "description": "Make a FletBox widgets drawerPosition widget",
+    "body": [
+      "position: \"left\","
+    ]
+  },
+  "FletBox widgets blur": {
+    "prefix": "blur",
+    "description": "Make a FletBox widgets blur widget",
+    "body": [
+      "blur: true,"
+    ]
+  },
+  "FletBox widgets blurIntensity": {
+    "prefix": "blurIntensity",
+    "description": "Make a FletBox widgets blurIntensity widget",
+    "body": [
+      "blurIntensity: 4,"
+    ]
+  },
+  "FletBox widgets closeOnOverlayClickDrawer": {
+    "prefix": "closeOnOverlayClickDrawer",
+    "description": "Make a FletBox widgets closeOnOverlayClickDrawer widget",
+    "body": [
+      "closeOnOverlayClick: true,"
+    ]
+  },
+  "FletBox widgets closeOnEscDrawer": {
+    "prefix": "closeOnEscDrawer",
+    "description": "Make a FletBox widgets closeOnEscDrawer widget",
+    "body": [
+      "closeOnEsc: true,"
+    ]
+  },
+  "FletBox widgets elevationDrawer": {
+    "prefix": "elevationDrawer",
+    "description": "Make a FletBox widgets elevationDrawer widget",
+    "body": [
+      "elevation: 4,"
+    ]
+  },
+  "FletBox widgets drawerBorderRadius": {
+    "prefix": "drawerBorderRadius",
+    "description": "Make a FletBox widgets drawerBorderRadius widget",
+    "body": [
+      "borderRadius: 24,"
+    ]
+  },
+  "FletBox widgets expandedSidebar": {
+    "prefix": "expandedSidebar",
+    "description": "Make a FletBox widgets expandedSidebar widget",
+    "body": [
+      "expanded: true,"
+    ]
+  },
+  "FletBox widgets widthExpanded": {
+    "prefix": "widthExpanded",
+    "description": "Make a FletBox widgets widthExpanded widget",
+    "body": [
+      "widthExpanded: 260,"
+    ]
+  },
+  "FletBox widgets widthCollapsed": {
+    "prefix": "widthCollapsed",
+    "description": "Make a FletBox widgets widthCollapsed widget",
+    "body": [
+      "widthCollapsed: 60,"
+    ]
+  },
+  "FletBox widgets onToggleSidebar": {
+    "prefix": "onToggleSidebar",
+    "description": "Make a FletBox widgets onToggleSidebar widget",
+    "body": [
+      "onToggle: (expanded) => console.log(expanded),"
+    ]
+  },
+  "FletBox widgets borderRight": {
+    "prefix": "borderRight",
+    "description": "Make a FletBox widgets borderRight widget",
+    "body": [
+      "borderRight: `1px solid ${colors.border}`,"
+    ]
+  },
+  "FletBox widgets showTooltip": {
+    "prefix": "showTooltip",
+    "description": "Make a FletBox widgets showTooltip widget",
+    "body": [
+      "showTooltip: false,"
+    ]
+  },
+  "FletBox widgets tooltipDelay": {
+    "prefix": "tooltipDelay",
+    "description": "Make a FletBox widgets tooltipDelay widget",
+    "body": [
+      "tooltipDelay: 500,"
+    ]
+  },
+  "FletBox widgets route": {
+    "prefix": "route",
+    "description": "Make a FletBox widgets route widget",
+    "body": [
+      "route: \"/home\","
+    ]
+  },
+  "FletBox widgets trailingIcon": {
+    "prefix": "trailingIcon",
+    "description": "Make a FletBox widgets trailingIcon widget",
+    "body": [
+      "trailingIcon: \"chevron_right\","
+    ]
+  },
+  "FletBox widgets hintColor": {
+    "prefix": "hintColor",
+    "description": "Make a FletBox widgets hintColor widget",
+    "body": [
+      "hintColor: colors.gray100,"
+    ]
+  },
+  "FletBox widgets disableTransform": {
+    "prefix": "disableTransform",
+    "description": "Make a FletBox widgets disableTransform widget",
+    "body": [
+      "disableTransform: true,"
+    ]
+  },
+  "FletBox widgets closeOnPress": {
+    "prefix": "closeOnPress",
+    "description": "Make a FletBox widgets closeOnPress widget",
+    "body": [
+      "closeOnPress: true,"
+    ]
+  },
+  "FletBox widgets appBar": {
+    "prefix": "appBar",
+    "description": "Make a FletBox widgets appBar widget",
+    "body": [
+      "appBar: AppBar({ title: \"Home\" }),"
+    ]
+  },
+  "FletBox widgets body": {
+    "prefix": "body",
+    "description": "Make a FletBox widgets body widget",
+    "body": [
+      "body: Text(\"Content\"),"
+    ]
+  },
+  "FletBox widgets bottomBar": {
+    "prefix": "bottomBar",
+    "description": "Make a FletBox widgets bottomBar widget",
+    "body": [
+      "bottomBar: BottomNavigation({ items }),"
+    ]
+  },
+  "FletBox widgets fab": {
+    "prefix": "fab",
+    "description": "Make a FletBox widgets fab widget",
+    "body": [
+      "fab: FloatingActionButton({ icon: \"add\" }),"
+    ]
+  },
+  "FletBox widgets drawer": {
+    "prefix": "drawer",
+    "description": "Make a FletBox widgets drawer widget",
+    "body": [
+      "drawer: Drawer({ header, body }),"
+    ]
+  },
+  "FletBox widgets leftNavBar": {
+    "prefix": "leftNavBar",
+    "description": "Make a FletBox widgets leftNavBar widget",
+    "body": [
+      "leftNavBar: CollapsibleSideBar({ children }),"
+    ]
+  },
+  "FletBox widgets rightNavBar": {
+    "prefix": "rightNavBar",
+    "description": "Make a FletBox widgets rightNavBar widget",
+    "body": [
+      "rightNavBar: CollapsibleSideBar({ children }),"
+    ]
+  },
+  "FletBox widgets leftNavBarWidth": {
+    "prefix": "leftNavBarWidth",
+    "description": "Make a FletBox widgets leftNavBarWidth widget",
+    "body": [
+      "leftNavBarWidth: 260,"
+    ]
+  },
+  "FletBox widgets rightNavBarWidth": {
+    "prefix": "rightNavBarWidth",
+    "description": "Make a FletBox widgets rightNavBarWidth widget",
+    "body": [
+      "rightNavBarWidth: 260,"
+    ]
+  },
+  "FletBox widgets navSideBar": {
+    "prefix": "navSideBar",
+    "description": "Make a FletBox widgets navSideBar widget",
+    "body": [
+      "navSideBar: CollapsibleSideBar({ children }),"
+    ]
+  },
+  "FletBox widgets navSideBarWidth": {
+    "prefix": "navSideBarWidth",
+    "description": "Make a FletBox widgets navSideBarWidth widget",
+    "body": [
+      "navSideBarWidth: 260,"
+    ]
+  },
+  "FletBox widgets navSideBarPosition": {
+    "prefix": "navSideBarPosition",
+    "description": "Make a FletBox widgets navSideBarPosition widget",
+    "body": [
+      "navSideBarPosition: \"left\","
+    ]
+  },
+  "FletBox widgets routes": {
+    "prefix": "routes",
+    "description": "Make a FletBox widgets routes widget",
+    "body": [
+      "routes: { \"/\": HomeScreen, \"/about\": AboutScreen },"
+    ]
+  },
+  "FletBox widgets closeDrawerOnNavigate": {
+    "prefix": "closeDrawerOnNavigate",
+    "description": "Make a FletBox widgets closeDrawerOnNavigate widget",
+    "body": [
+      "closeDrawerOnNavigate: false,"
+    ]
+  },
+  "FletBox widgets renderItem": {
+    "prefix": "renderItem",
+    "description": "Make a FletBox widgets renderItem widget",
+    "body": [
+      "renderItem: (item, index) => Text({ text: item }),"
+    ]
+  },
+  "FletBox widgets itemSize": {
+    "prefix": "itemSize",
+    "description": "Make a FletBox widgets itemSize widget",
+    "body": [
+      "itemSize: 60,"
+    ]
+  },
+  "FletBox widgets bufferSize": {
+    "prefix": "bufferSize",
+    "description": "Make a FletBox widgets bufferSize widget",
+    "body": [
+      "bufferSize: 5,"
+    ]
+  },
+  "FletBox widgets showsScrollIndicator": {
+    "prefix": "showsScrollIndicator",
+    "description": "Make a FletBox widgets showsScrollIndicator widget",
+    "body": [
+      "showsScrollIndicator: true,"
+    ]
+  },
+  "FletBox widgets wrapItems": {
+    "prefix": "wrapItems",
+    "description": "Make a FletBox widgets wrapItems widget",
+    "body": [
+      "wrapItems: true,"
+    ]
+  },
+  "FletBox widgets crossAxisCount": {
+    "prefix": "crossAxisCount",
+    "description": "Make a FletBox widgets crossAxisCount widget",
+    "body": [
+      "crossAxisCount: 2,"
+    ]
+  },
+  "FletBox widgets onEndReached": {
+    "prefix": "onEndReached",
+    "description": "Make a FletBox widgets onEndReached widget",
+    "body": [
+      "onEndReached: () => fetchMore(),"
+    ]
+  },
+  "FletBox widgets onEndReachedThreshold": {
+    "prefix": "onEndReachedThreshold",
+    "description": "Make a FletBox widgets onEndReachedThreshold widget",
+    "body": [
+      "onEndReachedThreshold: 0.5,"
+    ]
+  },
+  "FletBox widgets onRefresh": {
+    "prefix": "onRefresh",
+    "description": "Make a FletBox widgets onRefresh widget",
+    "body": [
+      "onRefresh: (done) => { refresh(), done(), },"
+    ]
+  },
+  "FletBox widgets ListHeaderComponent": {
+    "prefix": "ListHeaderComponent",
+    "description": "Make a FletBox widgets ListHeaderComponent widget",
+    "body": [
+      "ListHeaderComponent: () => Text(\"Header\"),"
+    ]
+  },
+  "FletBox widgets ListFooterComponent": {
+    "prefix": "ListFooterComponent",
+    "description": "Make a FletBox widgets ListFooterComponent widget",
+    "body": [
+      "ListFooterComponent: () => Text(\"Footer\"),"
+    ]
+  },
+  "FletBox widgets ListEmptyComponent": {
+    "prefix": "ListEmptyComponent",
+    "description": "Make a FletBox widgets ListEmptyComponent widget",
+    "body": [
+      "ListEmptyComponent: () => Text(\"No data\"),"
+    ]
+  },
+  "FletBox widgets columns": {
+    "prefix": "columns",
+    "description": "Make a FletBox widgets columns widget",
+    "body": [
+      "columns: [{ key: \"id\", label: \"ID\" }],"
+    ]
+  },
+  "FletBox widgets rows": {
+    "prefix": "rows",
+    "description": "Make a FletBox widgets rows widget",
+    "body": [
+      "rows: [{ id: 1, name: \"John\" }],"
+    ]
+  },
+  "FletBox widgets hoverable": {
+    "prefix": "hoverable",
+    "description": "Make a FletBox widgets hoverable widget",
+    "body": [
+      "hoverable: true,"
+    ]
+  },
+  "FletBox widgets bordered": {
+    "prefix": "bordered",
+    "description": "Make a FletBox widgets bordered widget",
+    "body": [
+      "bordered: true,"
+    ]
+  },
+  "FletBox widgets onRowClick": {
+    "prefix": "onRowClick",
+    "description": "Make a FletBox widgets onRowClick widget",
+    "body": [
+      "onRowClick: (row, index) => console.log(row),"
+    ]
+  },
+  "FletBox widgets headerBgColorTable": {
+    "prefix": "headerBgColorTable",
+    "description": "Make a FletBox widgets headerBgColorTable widget",
+    "body": [
+      "headerBgColor: colors.gray100,"
+    ]
+  },
+  "FletBox widgets headerTextColorTable": {
+    "prefix": "headerTextColorTable",
+    "description": "Make a FletBox widgets headerTextColorTable widget",
+    "body": [
+      "headerTextColor: colors.text,"
+    ]
+  },
+  "FletBox widgets headerFontWeight": {
+    "prefix": "headerFontWeight",
+    "description": "Make a FletBox widgets headerFontWeight widget",
+    "body": [
+      "headerFontWeight: \"bold\","
+    ]
+  },
+  "FletBox widgets headerFontSize": {
+    "prefix": "headerFontSize",
+    "description": "Make a FletBox widgets headerFontSize widget",
+    "body": [
+      "headerFontSize: 14,"
+    ]
+  },
+  "FletBox widgets rowBgColor": {
+    "prefix": "rowBgColor",
+    "description": "Make a FletBox widgets rowBgColor widget",
+    "body": [
+      "rowBgColor: \"transparent\","
+    ]
+  },
+  "FletBox widgets rowTextColor": {
+    "prefix": "rowTextColor",
+    "description": "Make a FletBox widgets rowTextColor widget",
+    "body": [
+      "rowTextColor: colors.text,"
+    ]
+  },
+  "FletBox widgets rowFontSize": {
+    "prefix": "rowFontSize",
+    "description": "Make a FletBox widgets rowFontSize widget",
+    "body": [
+      "rowFontSize: 13,"
+    ]
+  },
+  "FletBox widgets stripedRowBgColor": {
+    "prefix": "stripedRowBgColor",
+    "description": "Make a FletBox widgets stripedRowBgColor widget",
+    "body": [
+      "stripedRowBgColor: colors.gray50,"
+    ]
+  },
+  "FletBox widgets hoverRowBgColor": {
+    "prefix": "hoverRowBgColor",
+    "description": "Make a FletBox widgets hoverRowBgColor widget",
+    "body": [
+      "hoverRowBgColor: `${colors.primary}10`,"
+    ]
+  },
+  "FletBox widgets borderColorTable": {
+    "prefix": "borderColorTable",
+    "description": "Make a FletBox widgets borderColorTable widget",
+    "body": [
+      "borderColor: colors.border,"
+    ]
+  },
+  "FletBox widgets borderWidthTable": {
+    "prefix": "borderWidthTable",
+    "description": "Make a FletBox widgets borderWidthTable widget",
+    "body": [
+      "borderWidth: 1,"
+    ]
+  },
+  "FletBox widgets cellPadding": {
+    "prefix": "cellPadding",
+    "description": "Make a FletBox widgets cellPadding widget",
+    "body": [
+      "cellPadding: \"10px 12px\","
+    ]
+  },
+  "FletBox widgets headerCellPadding": {
+    "prefix": "headerCellPadding",
+    "description": "Make a FletBox widgets headerCellPadding widget",
+    "body": [
+      "headerCellPadding: \"12px\","
+    ]
+  },
+  "FletBox widgets mini": {
+    "prefix": "mini",
+    "description": "Make a FletBox widgets mini widget",
+    "body": [
+      "mini: false,"
+    ]
+  },
+  "FletBox widgets extended": {
+    "prefix": "extended",
+    "description": "Make a FletBox widgets extended widget",
+    "body": [
+      "extended: false,"
+    ]
+  },
+  "FletBox widgets elevationFAB": {
+    "prefix": "elevationFAB",
+    "description": "Make a FletBox widgets elevationFAB widget",
+    "body": [
+      "elevation: 6,"
+    ]
+  },
+  "FletBox widgets chars": {
+    "prefix": "chars",
+    "description": "Make a FletBox widgets chars widget",
+    "body": [
+      "chars: \"01\u30a2\u30a4\u30a6\u30a8\u30aa\","
+    ]
+  },
+  "FletBox widgets fontSize": {
+    "prefix": "fontSize",
+    "description": "Make a FletBox widgets fontSize widget",
+    "body": [
+      "fontSize: 16,"
+    ]
+  },
+  "FletBox widgets speed": {
+    "prefix": "speed",
+    "description": "Make a FletBox widgets speed widget",
+    "body": [
+      "speed: 0.5,"
+    ]
+  },
+  "FletBox widgets fadeAmount": {
+    "prefix": "fadeAmount",
+    "description": "Make a FletBox widgets fadeAmount widget",
+    "body": [
+      "fadeAmount: 0.05,"
+    ]
+  },
+  "FletBox widgets resetProbability": {
+    "prefix": "resetProbability",
+    "description": "Make a FletBox widgets resetProbability widget",
+    "body": [
+      "resetProbability: 0.975,"
+    ]
+  },
+  "FletBox widgets useDynamicColor": {
+    "prefix": "useDynamicColor",
+    "description": "Make a FletBox widgets useDynamicColor widget",
+    "body": [
+      "useDynamicColor: true,"
+    ]
+  },
+  "FletBox widgets positionMatrix": {
+    "prefix": "positionMatrix",
+    "description": "Make a FletBox widgets positionMatrix widget",
+    "body": [
+      "position: \"fixed\","
+    ]
+  },
+  "FletBox widgets typeParallax": {
+    "prefix": "typeParallax",
+    "description": "Make a FletBox widgets typeParallax widget",
+    "body": [
+      "type: \"scroll\","
+    ]
+  },
+  "FletBox widgets speedParallax": {
+    "prefix": "speedParallax",
+    "description": "Make a FletBox widgets speedParallax widget",
+    "body": [
+      "speed: 0.5,"
+    ]
+  },
+  "FletBox widgets directionParallax": {
+    "prefix": "directionParallax",
+    "description": "Make a FletBox widgets directionParallax widget",
+    "body": [
+      "direction: \"vertical\","
+    ]
+  },
+  "FletBox widgets maxOffset": {
+    "prefix": "maxOffset",
+    "description": "Make a FletBox widgets maxOffset widget",
+    "body": [
+      "maxOffset: 100,"
+    ]
+  },
+  "FletBox widgets reverse": {
+    "prefix": "reverse",
+    "description": "Make a FletBox widgets reverse widget",
+    "body": [
+      "reverse: false,"
+    ]
+  },
+  "FletBox widgets onParallaxMove": {
+    "prefix": "onParallaxMove",
+    "description": "Make a FletBox widgets onParallaxMove widget",
+    "body": [
+      "onParallaxMove: ({ x, y }) => console.log(x, y),"
+    ]
+  },
+  "FletBox widgets durationParallax": {
+    "prefix": "durationParallax",
+    "description": "Make a FletBox widgets durationParallax widget",
+    "body": [
+      "duration: 300,"
+    ]
+  },
+  "FletBox widgets easing": {
+    "prefix": "easing",
+    "description": "Make a FletBox widgets easing widget",
+    "body": [
+      "easing: \"easeOut\","
+    ]
+  },
+  "FletBox widgets animations": {
+    "prefix": "animations",
+    "description": "Make a FletBox widgets animations widget",
+    "body": [
+      "animations: [{ effect: \"scale\", from: 1, to: 1.2, duration: 500 }],"
+    ]
+  },
+  "FletBox widgets sameTime": {
+    "prefix": "sameTime",
+    "description": "Make a FletBox widgets sameTime widget",
+    "body": [
+      "sameTime: false,"
+    ]
+  },
+  "FletBox widgets delayBetween": {
+    "prefix": "delayBetween",
+    "description": "Make a FletBox widgets delayBetween widget",
+    "body": [
+      "delayBetween: 0.1,"
+    ]
+  },
+  "FletBox widgets orientationAnimatedText": {
+    "prefix": "orientationAnimatedText",
+    "description": "Make a FletBox widgets orientationAnimatedText widget",
+    "body": [
+      "orientation: \"row\","
+    ]
+  },
+  "FletBox widgets timing": {
+    "prefix": "timing",
+    "description": "Make a FletBox widgets timing widget",
+    "body": [
+      "timing: \"ease\","
+    ]
+  },
+  "FletBox widgets fillMode": {
+    "prefix": "fillMode",
+    "description": "Make a FletBox widgets fillMode widget",
+    "body": [
+      "fillMode: \"forwards\","
+    ]
+  }
+}

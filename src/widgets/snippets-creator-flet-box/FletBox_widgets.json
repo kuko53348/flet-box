@@ -1,0 +1,2273 @@
+{
+  "FletBox widgets Container.basic": {
+    "prefix": "Container.basic",
+    "description": "Make a FletBox widgets Container.basic widget",
+    "body": [
+      "Container({ child: Text(\"Hello\") })"
+    ]
+  },
+  "FletBox widgets Container.normal": {
+    "prefix": "Container.normal",
+    "description": "Make a FletBox widgets Container.normal widget",
+    "body": [
+      "Container({",
+      "    padding: padding(16),",
+      "    bgColor: colors.surface,",
+      "    borderRadius: 12,",
+      "    child: Text({ text: \"Hello World\" })",
+      "})"
+    ]
+  },
+  "FletBox widgets Container.full": {
+    "prefix": "Container.full",
+    "description": "Make a FletBox widgets Container.full widget",
+    "body": [
+      "Container({",
+      "    width: \"100%\",",
+      "    height: 400,",
+      "    padding: padding({ horizontal: 20, vertical: 16 }),",
+      "    margin: margin({ top: 10, bottom: 20 }),",
+      "    gap: 12,",
+      "    bgColor: colors.surface,",
+      "    gradient: \"linear-gradient(135deg, #667eea 0%, #764ba2 100%)\",",
+      "    opacity: 0.95,",
+      "    borderRadius: 16,",
+      "    border: border(2, \"solid\", colors.border),",
+      "    elevation: 4,",
+      "    shadow: shadow(0, 8, 16, 0, \"rgba(0,0,0,0.15)\"),",
+      "    position: \"absolute\",",
+      "    zIndex: 100,",
+      "    direction: \"row\",",
+      "    justifyContent: \"space-between\",",
+      "    alignItems: \"center\",",
+      "    flexWrap: \"wrap\",",
+      "    flex: 1,",
+      "    transform: \"scale(1.02) translateY(-5px)\",",
+      "    transition: \"all 0.3s cubic-bezier(0.4, 0, 0.2, 1)\",",
+      "    overflow: \"auto\",",
+      "    cursor: \"pointer\",",
+      "    onPress: () => console.log(\"pressed\"),",
+      "    onLongPress: () => console.log(\"long\"),",
+      "    onHover: () => console.log(\"hover\"),",
+      "    id: \"main-container\",",
+      "    className: \"hero\",",
+      "    ref: (el) => containerRef = el,",
+      "    disabled: false,",
+      "    child: Text({ text: \"Complex Container\" })",
+      "})"
+    ]
+  },
+  "FletBox widgets Row.basic": {
+    "prefix": "Row.basic",
+    "description": "Make a FletBox widgets Row.basic widget",
+    "body": [
+      "Row({ children: [Text(\"A\"), Text(\"B\")] })"
+    ]
+  },
+  "FletBox widgets Row.normal": {
+    "prefix": "Row.normal",
+    "description": "Make a FletBox widgets Row.normal widget",
+    "body": [
+      "Row({",
+      "    gap: 12,",
+      "    justifyContent: \"space-between\",",
+      "    alignItems: \"center\",",
+      "    children: [Icon({ name: \"star\" }), Text({ text: \"Label\" })]",
+      "})"
+    ]
+  },
+  "FletBox widgets Row.full": {
+    "prefix": "Row.full",
+    "description": "Make a FletBox widgets Row.full widget",
+    "body": [
+      "Row({",
+      "    width: \"100%\",",
+      "    padding: padding(16),",
+      "    margin: margin({ vertical: 8 }),",
+      "    gap: 20,",
+      "    bgColor: colors.surface,",
+      "    borderRadius: 12,",
+      "    elevation: 2,",
+      "    justifyContent: \"space-evenly\",",
+      "    alignItems: \"stretch\",",
+      "    flexWrap: \"wrap\",",
+      "    onPress: () => console.log(\"row pressed\"),",
+      "    id: \"toolbar\",",
+      "    children: [",
+      "        Button({ text: \"Save\", iconLeft: \"save\" }),",
+      "        Button({ text: \"Cancel\", variant: \"outlined\" }),",
+      "        Icon({ name: \"more_vert\", onPress: () => console.log(\"menu\") })",
+      "    ]",
+      "})"
+    ]
+  },
+  "FletBox widgets Column.basic": {
+    "prefix": "Column.basic",
+    "description": "Make a FletBox widgets Column.basic widget",
+    "body": [
+      "Column({ children: [Text(\"A\"), Text(\"B\")] })"
+    ]
+  },
+  "FletBox widgets Column.normal": {
+    "prefix": "Column.normal",
+    "description": "Make a FletBox widgets Column.normal widget",
+    "body": [
+      "Column({",
+      "    gap: 16,",
+      "    justifyContent: \"center\",",
+      "    alignItems: \"center\",",
+      "    children: [Avatar({ name: \"User\" }), Text({ text: \"Welcome\" })]",
+      "})"
+    ]
+  },
+  "FletBox widgets Column.full": {
+    "prefix": "Column.full",
+    "description": "Make a FletBox widgets Column.full widget",
+    "body": [
+      "Column({",
+      "    width: \"100%\",",
+      "    height: \"100%\",",
+      "    padding: padding(24),",
+      "    margin: margin(0),",
+      "    gap: 24,",
+      "    bgColor: colors.background,",
+      "    gradient: \"linear-gradient(180deg, #f0f4ff 0%, #ffffff 100%)\",",
+      "    borderRadius: 24,",
+      "    justifyContent: \"space-between\",",
+      "    alignItems: \"flex-start\",",
+      "    onScroll: (e) => console.log(e.target.scrollTop),",
+      "    id: \"sidebar\",",
+      "    children: [",
+      "        Header(),",
+      "        Expanded(child: ListView({ data: items, renderItem: (item) => Text({ text: item }) })),",
+      "        Footer()",
+      "    ]",
+      "})"
+    ]
+  },
+  "FletBox widgets Stack.basic": {
+    "prefix": "Stack.basic",
+    "description": "Make a FletBox widgets Stack.basic widget",
+    "body": [
+      "Stack({ children: [Box(), Box()] })"
+    ]
+  },
+  "FletBox widgets Stack.normal": {
+    "prefix": "Stack.normal",
+    "description": "Make a FletBox widgets Stack.normal widget",
+    "body": [
+      "Stack({",
+      "    position: \"relative\",",
+      "    children: [",
+      "        Container({ width: 100, height: 100, bgColor: colors.primary }),",
+      "        Container({ width: 50, height: 50, bgColor: colors.secondary, style: { position: \"absolute\", top: 25, left: 25 } })",
+      "    ]",
+      "})"
+    ]
+  },
+  "FletBox widgets Stack.full": {
+    "prefix": "Stack.full",
+    "description": "Make a FletBox widgets Stack.full widget",
+    "body": [
+      "Stack({",
+      "    width: 300,",
+      "    height: 300,",
+      "    bgColor: colors.surface,",
+      "    borderRadius: 16,",
+      "    elevation: 3,",
+      "    position: \"relative\",",
+      "    overflow: \"hidden\",",
+      "    children: [",
+      "        Image({ src: \"background.jpg\", width: \"100%\", height: \"100%\", fit: \"cover\" }),",
+      "        Container({ position: \"absolute\", bottom: 0, left: 0, right: 0, padding: 16, bgColor: \"rgba(0,0,0,0.5)\", child: Text({ text: \"Caption\", color: \"#fff\" }) }),",
+      "        FloatingActionButton({ icon: \"add\", position: \"bottomRight\", margin: 16 })",
+      "    ]",
+      "})"
+    ]
+  },
+  "FletBox widgets Text.basic": {
+    "prefix": "Text.basic",
+    "description": "Make a FletBox widgets Text.basic widget",
+    "body": [
+      "Text({ text: \"Hello\" })"
+    ]
+  },
+  "FletBox widgets Text.normal": {
+    "prefix": "Text.normal",
+    "description": "Make a FletBox widgets Text.normal widget",
+    "body": [
+      "Text({ text: \"FletBox\", size: 20, weight: \"bold\", color: colors.primary })"
+    ]
+  },
+  "FletBox widgets Text.full": {
+    "prefix": "Text.full",
+    "description": "Make a FletBox widgets Text.full widget",
+    "body": [
+      "Text({",
+      "    text: \"Advanced Typography\",",
+      "    size: 28,",
+      "    weight: \"600\",",
+      "    color: colors.text,",
+      "    align: \"center\",",
+      "    italic: true,",
+      "    decoration: \"underline\",",
+      "    lineHeight: 1.4,",
+      "    letterSpacing: 0.5,",
+      "    styles: [\"bold\", \"italic\"],",
+      "    type: \"h1\",",
+      "    onPress: () => console.log(\"text clicked\"),",
+      "    id: \"title\",",
+      "    className: \"headline\"",
+      "})"
+    ]
+  },
+  "FletBox widgets Button.basic": {
+    "prefix": "Button.basic",
+    "description": "Make a FletBox widgets Button.basic widget",
+    "body": [
+      "Button({ text: \"Click\" })"
+    ]
+  },
+  "FletBox widgets Button.normal": {
+    "prefix": "Button.normal",
+    "description": "Make a FletBox widgets Button.normal widget",
+    "body": [
+      "Button({ text: \"Submit\", variant: \"filled\", onPress: () => submit() })"
+    ]
+  },
+  "FletBox widgets Button.full": {
+    "prefix": "Button.full",
+    "description": "Make a FletBox widgets Button.full widget",
+    "body": [
+      "Button({",
+      "    text: \"Download\",",
+      "    variant: \"outlined\",",
+      "    size: \"large\",",
+      "    fullWidth: true,",
+      "    borderRadius: 32,",
+      "    elevation: 3,",
+      "    bgColor: colors.primary,",
+      "    textColor: \"#ffffff\",",
+      "    iconLeft: \"download\",",
+      "    iconRight: \"arrow_forward\",",
+      "    padding: padding({ horizontal: 24, vertical: 12 }),",
+      "    margin: margin(8),",
+      "    disabled: false,",
+      "    onPress: () => downloadFile(),",
+      "    onLongPress: () => showMenu(),",
+      "    onHover: (hover) => console.log(hover),",
+      "    id: \"download-btn\"",
+      "})"
+    ]
+  },
+  "FletBox widgets Icon.basic": {
+    "prefix": "Icon.basic",
+    "description": "Make a FletBox widgets Icon.basic widget",
+    "body": [
+      "Icon({ name: \"star\" })"
+    ]
+  },
+  "FletBox widgets Icon.normal": {
+    "prefix": "Icon.normal",
+    "description": "Make a FletBox widgets Icon.normal widget",
+    "body": [
+      "Icon({ name: \"favorite\", size: 32, color: colors.danger })"
+    ]
+  },
+  "FletBox widgets Icon.full": {
+    "prefix": "Icon.full",
+    "description": "Make a FletBox widgets Icon.full widget",
+    "body": [
+      "Icon({",
+      "    name: \"settings\",",
+      "    size: 28,",
+      "    color: colors.textSecondary,",
+      "    onPress: () => openSettings(),",
+      "    className: \"icon-spin\",",
+      "    style: { transition: \"transform 0.2s\" },",
+      "    id: \"settings-icon\"",
+      "})"
+    ]
+  },
+  "FletBox widgets Image.basic": {
+    "prefix": "Image.basic",
+    "description": "Make a FletBox widgets Image.basic widget",
+    "body": [
+      "Image({ src: \"photo.jpg\" })"
+    ]
+  },
+  "FletBox widgets Image.normal": {
+    "prefix": "Image.normal",
+    "description": "Make a FletBox widgets Image.normal widget",
+    "body": [
+      "Image({ src: \"avatar.png\", width: 100, height: 100, fit: \"cover\", borderRadius: 50 })"
+    ]
+  },
+  "FletBox widgets Image.full": {
+    "prefix": "Image.full",
+    "description": "Make a FletBox widgets Image.full widget",
+    "body": [
+      "Image({",
+      "    src: \"https://example.com/large.jpg\",",
+      "    alt: \"Description\",",
+      "    width: \"100%\",",
+      "    height: 300,",
+      "    fit: \"contain\",",
+      "    borderRadius: 16,",
+      "    elevation: 2,",
+      "    onLoad: () => console.log(\"loaded\"),",
+      "    onError: () => console.log(\"error\"),",
+      "    onPress: () => openGallery(),",
+      "    id: \"hero-image\"",
+      "})"
+    ]
+  },
+  "FletBox widgets Avatar.basic": {
+    "prefix": "Avatar.basic",
+    "description": "Make a FletBox widgets Avatar.basic widget",
+    "body": [
+      "Avatar({ name: \"User\" })"
+    ]
+  },
+  "FletBox widgets Avatar.normal": {
+    "prefix": "Avatar.normal",
+    "description": "Make a FletBox widgets Avatar.normal widget",
+    "body": [
+      "Avatar({ src: \"profile.jpg\", size: 48, shape: \"circle\" })"
+    ]
+  },
+  "FletBox widgets Avatar.full": {
+    "prefix": "Avatar.full",
+    "description": "Make a FletBox widgets Avatar.full widget",
+    "body": [
+      "Avatar({",
+      "    name: \"John Doe\",",
+      "    size: 64,",
+      "    bgColor: colors.secondary,",
+      "    textColor: \"#fff\",",
+      "    shape: \"rounded\",",
+      "    online: true,",
+      "    badge: \"3\",",
+      "    badgeColor: colors.danger,",
+      "    onPress: () => goToProfile(),",
+      "    id: \"user-avatar\"",
+      "})"
+    ]
+  },
+  "FletBox widgets Card.basic": {
+    "prefix": "Card.basic",
+    "description": "Make a FletBox widgets Card.basic widget",
+    "body": [
+      "Card({ child: Text(\"Card content\") })"
+    ]
+  },
+  "FletBox widgets Card.normal": {
+    "prefix": "Card.normal",
+    "description": "Make a FletBox widgets Card.normal widget",
+    "body": [
+      "Card({ elevation: 2, padding: 16, child: Text({ text: \"Card title\", weight: \"bold\" }) })"
+    ]
+  },
+  "FletBox widgets Card.full": {
+    "prefix": "Card.full",
+    "description": "Make a FletBox widgets Card.full widget",
+    "body": [
+      "Card({",
+      "    width: 320,",
+      "    padding: 0,",
+      "    bgColor: colors.surface,",
+      "    borderRadius: 20,",
+      "    elevation: 4,",
+      "    shadow: shadow(0, 6, 12, 0, \"rgba(0,0,0,0.1)\"),",
+      "    onPress: () => console.log(\"card clicked\"),",
+      "    child: Column({",
+      "        children: [",
+      "            Image({ src: \"cover.jpg\", height: 180, fit: \"cover\", borderRadiusTop: 20 }),",
+      "            Container({ padding: 16, child: Text({ text: \"Title\", size: 18, weight: \"bold\" }) }),",
+      "            Container({ padding: 16, child: Text({ text: \"Description\", color: colors.textSecondary }) })",
+      "        ]",
+      "    })",
+      "})"
+    ]
+  },
+  "FletBox widgets Input.basic": {
+    "prefix": "Input.basic",
+    "description": "Make a FletBox widgets Input.basic widget",
+    "body": [
+      "Input({ placeholder: \"Enter text\" })"
+    ]
+  },
+  "FletBox widgets Input.normal": {
+    "prefix": "Input.normal",
+    "description": "Make a FletBox widgets Input.normal widget",
+    "body": [
+      "Input({ label: \"Email\", value: email, onChange: setEmail, validation: \"email\" })"
+    ]
+  },
+  "FletBox widgets Input.full": {
+    "prefix": "Input.full",
+    "description": "Make a FletBox widgets Input.full widget",
+    "body": [
+      "Input({",
+      "    type: \"text\",",
+      "    value: username,",
+      "    placeholder: \"Username\",",
+      "    label: \"User name\",",
+      "    error: usernameError,",
+      "    disabled: false,",
+      "    readonly: false,",
+      "    required: true,",
+      "    size: \"large\",",
+      "    variant: \"outlined\",",
+      "    fullWidth: true,",
+      "    borderRadius: 24,",
+      "    validation: \"alphanumeric\",",
+      "    maxLength: 20,",
+      "    iconLeft: \"person\",",
+      "    iconRight: \"check_circle\",",
+      "    clearable: true,",
+      "    passwordToggle: true,",
+      "    showValidationMessage: true,",
+      "    showValidationIcon: true,",
+      "    onChange: (val) => setUsername(val),",
+      "    onValidated: (isValid, msg) => console.log(isValid, msg),",
+      "    onEnter: () => submitForm(),",
+      "    id: \"username-input\"",
+      "})"
+    ]
+  },
+  "FletBox widgets Dropdown.basic": {
+    "prefix": "Dropdown.basic",
+    "description": "Make a FletBox widgets Dropdown.basic widget",
+    "body": [
+      "Dropdown({ options: [\"Option 1\", \"Option 2\"] })"
+    ]
+  },
+  "FletBox widgets Dropdown.normal": {
+    "prefix": "Dropdown.normal",
+    "description": "Make a FletBox widgets Dropdown.normal widget",
+    "body": [
+      "Dropdown({ options: [{ label: \"Home\", value: \"home\" }], value: selected, onChange: setSelected })"
+    ]
+  },
+  "FletBox widgets Dropdown.full": {
+    "prefix": "Dropdown.full",
+    "description": "Make a FletBox widgets Dropdown.full widget",
+    "body": [
+      "Dropdown({",
+      "    options: [",
+      "        { label: \"Active\", value: \"active\", icon: \"check_circle\" },",
+      "        { label: \"Inactive\", value: \"inactive\", icon: \"cancel\" }",
+      "    ],",
+      "    value: status,",
+      "    placeholder: \"Select status\",",
+      "    label: \"Status\",",
+      "    disabled: false,",
+      "    error: statusError,",
+      "    variant: \"outlined\",",
+      "    size: \"medium\",",
+      "    borderRadius: 8,",
+      "    color: colors.primary,",
+      "    bgColor: colors.surface,",
+      "    textColor: colors.text,",
+      "    optionHoverColor: colors.gray100,",
+      "    clearable: true,",
+      "    width: 250,",
+      "    portal: true,",
+      "    onChange: (val) => setStatus(val),",
+      "    id: \"status-dropdown\"",
+      "})"
+    ]
+  },
+  "FletBox widgets Slider.basic": {
+    "prefix": "Slider.basic",
+    "description": "Make a FletBox widgets Slider.basic widget",
+    "body": [
+      "Slider({ value: 50 })"
+    ]
+  },
+  "FletBox widgets Slider.normal": {
+    "prefix": "Slider.normal",
+    "description": "Make a FletBox widgets Slider.normal widget",
+    "body": [
+      "Slider({ value: volume, min: 0, max: 100, onChange: setVolume })"
+    ]
+  },
+  "FletBox widgets Slider.full": {
+    "prefix": "Slider.full",
+    "description": "Make a FletBox widgets Slider.full widget",
+    "body": [
+      "Slider({",
+      "    value: 75,",
+      "    min: 0,",
+      "    max: 100,",
+      "    step: 5,",
+      "    disabled: false,",
+      "    width: 300,",
+      "    height: 6,",
+      "    thumbSize: 24,",
+      "    color: colors.primary,",
+      "    trackColor: colors.border,",
+      "    orientation: \"horizontal\",",
+      "    inverted: false,",
+      "    showValue: true,",
+      "    valuePrefix: \"$\",",
+      "    valueSuffix: \" USD\",",
+      "    showMarks: true,",
+      "    marks: [{ value: 0, label: \"0\" }, { value: 50, label: \"50\" }, { value: 100, label: \"100\" }],",
+      "    striped: true,",
+      "    animatedStripes: true,",
+      "    glow: true,",
+      "    onChange: (val) => updatePrice(val),",
+      "    onChangeEnd: (val) => savePrice(val),",
+      "    id: \"price-slider\"",
+      "})"
+    ]
+  },
+  "FletBox widgets Checkbox.basic": {
+    "prefix": "Checkbox.basic",
+    "description": "Make a FletBox widgets Checkbox.basic widget",
+    "body": [
+      "Checkbox({})"
+    ]
+  },
+  "FletBox widgets Checkbox.normal": {
+    "prefix": "Checkbox.normal",
+    "description": "Make a FletBox widgets Checkbox.normal widget",
+    "body": [
+      "Checkbox({ checked: agreed, onCheck: setAgreed, label: \"I agree\" })"
+    ]
+  },
+  "FletBox widgets Checkbox.full": {
+    "prefix": "Checkbox.full",
+    "description": "Make a FletBox widgets Checkbox.full widget",
+    "body": [
+      "Checkbox({",
+      "    checked: isActive,",
+      "    onCheck: (val) => setIsActive(val),",
+      "    disabled: false,",
+      "    size: 24,",
+      "    activeColor: colors.success,",
+      "    label: \"Activate feature\",",
+      "    id: \"feature-checkbox\"",
+      "})"
+    ]
+  },
+  "FletBox widgets Radio.basic": {
+    "prefix": "Radio.basic",
+    "description": "Make a FletBox widgets Radio.basic widget",
+    "body": [
+      "Radio({})"
+    ]
+  },
+  "FletBox widgets Radio.normal": {
+    "prefix": "Radio.normal",
+    "description": "Make a FletBox widgets Radio.normal widget",
+    "body": [
+      "Radio({ selected: option === \"a\", onSelect: () => setOption(\"a\"), label: \"Option A\" })"
+    ]
+  },
+  "FletBox widgets Radio.full": {
+    "prefix": "Radio.full",
+    "description": "Make a FletBox widgets Radio.full widget",
+    "body": [
+      "Radio({",
+      "    selected: paymentMethod === \"card\",",
+      "    onSelect: () => setPaymentMethod(\"card\"),",
+      "    disabled: false,",
+      "    size: 22,",
+      "    activeColor: colors.primary,",
+      "    label: \"Credit Card\",",
+      "    name: \"payment-group\"",
+      "})"
+    ]
+  },
+  "FletBox widgets Switch.basic": {
+    "prefix": "Switch.basic",
+    "description": "Make a FletBox widgets Switch.basic widget",
+    "body": [
+      "Switch({})"
+    ]
+  },
+  "FletBox widgets Switch.normal": {
+    "prefix": "Switch.normal",
+    "description": "Make a FletBox widgets Switch.normal widget",
+    "body": [
+      "Switch({ value: isEnabled, onToggle: setIsEnabled, label: \"Notifications\" })"
+    ]
+  },
+  "FletBox widgets Switch.full": {
+    "prefix": "Switch.full",
+    "description": "Make a FletBox widgets Switch.full widget",
+    "body": [
+      "Switch({",
+      "    value: darkMode,",
+      "    onToggle: (val) => setDarkMode(val),",
+      "    disabled: false,",
+      "    size: \"large\",",
+      "    activeColor: colors.primary,",
+      "    label: \"Dark theme\",",
+      "    id: \"theme-switch\"",
+      "})"
+    ]
+  },
+  "FletBox widgets Rating.basic": {
+    "prefix": "Rating.basic",
+    "description": "Make a FletBox widgets Rating.basic widget",
+    "body": [
+      "Rating({ value: 3 })"
+    ]
+  },
+  "FletBox widgets Rating.normal": {
+    "prefix": "Rating.normal",
+    "description": "Make a FletBox widgets Rating.normal widget",
+    "body": [
+      "Rating({ value: rating, max: 5, onChange: setRating, showValue: true })"
+    ]
+  },
+  "FletBox widgets Rating.full": {
+    "prefix": "Rating.full",
+    "description": "Make a FletBox widgets Rating.full widget",
+    "body": [
+      "Rating({",
+      "    value: 4.5,",
+      "    max: 5,",
+      "    size: 32,",
+      "    allowHalf: true,",
+      "    activeColor: colors.warning,",
+      "    inactiveColor: colors.border,",
+      "    showValue: true,",
+      "    valueColor: colors.text,",
+      "    valueSize: 16,",
+      "    readOnly: false,",
+      "    gap: 4,",
+      "    iconActive: \"star\",",
+      "    iconInactive: \"star_border\",",
+      "    iconHalf: \"star_half\",",
+      "    onChange: (val) => updateRating(val),",
+      "    id: \"product-rating\"",
+      "})"
+    ]
+  },
+  "FletBox widgets Modal.basic": {
+    "prefix": "Modal.basic",
+    "description": "Make a FletBox widgets Modal.basic widget",
+    "body": [
+      "Modal({ content: Text(\"Modal content\") })"
+    ]
+  },
+  "FletBox widgets Modal.normal": {
+    "prefix": "Modal.normal",
+    "description": "Make a FletBox widgets Modal.normal widget",
+    "body": [
+      "Modal({",
+      "    title: \"Confirmation\",",
+      "    content: Text(\"Are you sure?\"),",
+      "    actions: [Button({ text: \"OK\", onPress: () => modal.close() })]",
+      "})"
+    ]
+  },
+  "FletBox widgets Modal.full": {
+    "prefix": "Modal.full",
+    "description": "Make a FletBox widgets Modal.full widget",
+    "body": [
+      "Modal({",
+      "    title: \"Settings\",",
+      "    content: Column({ children: [Input({ placeholder: \"Name\" }), Slider({})] }),",
+      "    actions: [Button({ text: \"Save\", onPress: save }), Button({ text: \"Cancel\", variant: \"outlined\", onPress: close })],",
+      "    closeOnOverlayClick: false,",
+      "    closeOnEsc: true,",
+      "    width: 500,",
+      "    maxWidth: \"90%\",",
+      "    maxHeight: \"80vh\",",
+      "    backgroundColor: colors.surface,",
+      "    borderRadius: 24,",
+      "    elevation: 5,",
+      "    padding: 24,",
+      "    showCloseButton: true,",
+      "    onOpen: () => console.log(\"opened\"),",
+      "    onClose: () => console.log(\"closed\"),",
+      "    contentElevation: 1,",
+      "    headerBgColor: colors.primary,",
+      "    headerTextColor: \"#fff\"",
+      "})"
+    ]
+  },
+  "FletBox widgets BottomSheet.basic": {
+    "prefix": "BottomSheet.basic",
+    "description": "Make a FletBox widgets BottomSheet.basic widget",
+    "body": [
+      "BottomSheet({ content: Text(\"Sheet content\") })"
+    ]
+  },
+  "FletBox widgets BottomSheet.normal": {
+    "prefix": "BottomSheet.normal",
+    "description": "Make a FletBox widgets BottomSheet.normal widget",
+    "body": [
+      "BottomSheet({ title: \"Options\", content: Column({ children: [Button({ text: \"Option 1\" })] }) })"
+    ]
+  },
+  "FletBox widgets BottomSheet.full": {
+    "prefix": "BottomSheet.full",
+    "description": "Make a FletBox widgets BottomSheet.full widget",
+    "body": [
+      "BottomSheet({",
+      "    title: \"Select action\",",
+      "    content: ListView({ data: [\"Edit\", \"Delete\", \"Share\"], renderItem: (item) => ListTile({ title: item }) }),",
+      "    actions: [Button({ text: \"Cancel\", onPress: () => sheet.close() })],",
+      "    height: 400,",
+      "    maxHeight: \"70%\",",
+      "    showDragHandle: true,",
+      "    closeOnOverlayClick: true,",
+      "    closeOnDragDown: true,",
+      "    showCloseButton: true,",
+      "    backgroundColor: colors.surface,",
+      "    borderRadius: 28,",
+      "    overlayColor: \"rgba(0,0,0,0.6)\",",
+      "    dragHandleColor: colors.border,",
+      "    headerPadding: \"16px 20px 8px\",",
+      "    contentPadding: \"0 16px\",",
+      "    actionPadding: \"12px 16px\",",
+      "    onOpen: () => fetchOptions(),",
+      "    onClose: () => reset()",
+      "})"
+    ]
+  },
+  "FletBox widgets AlertDialog.basic": {
+    "prefix": "AlertDialog.basic",
+    "description": "Make a FletBox widgets AlertDialog.basic widget",
+    "body": [
+      "AlertDialog({ title: \"Alert\", message: \"Something happened\" })"
+    ]
+  },
+  "FletBox widgets AlertDialog.normal": {
+    "prefix": "AlertDialog.normal",
+    "description": "Make a FletBox widgets AlertDialog.normal widget",
+    "body": [
+      "AlertDialog({ title: \"Delete?\", message: \"Are you sure?\", onConfirm: deleteItem })"
+    ]
+  },
+  "FletBox widgets AlertDialog.full": {
+    "prefix": "AlertDialog.full",
+    "description": "Make a FletBox widgets AlertDialog.full widget",
+    "body": [
+      "AlertDialog({",
+      "    title: \"Confirm deletion\",",
+      "    message: \"This action cannot be undone.\",",
+      "    confirmText: \"Delete\",",
+      "    cancelText: \"Keep\",",
+      "    onConfirm: () => deletePermanently(),",
+      "    onCancel: () => console.log(\"cancelled\"),",
+      "    variant: \"danger\",",
+      "    showCancel: true,",
+      "    width: 360,",
+      "    borderRadius: 28,",
+      "    onClose: () => cleanup()",
+      "})"
+    ]
+  },
+  "FletBox widgets SnackBar.basic": {
+    "prefix": "SnackBar.basic",
+    "description": "Make a FletBox widgets SnackBar.basic widget",
+    "body": [
+      "SnackBar({ message: \"Hello\" })"
+    ]
+  },
+  "FletBox widgets SnackBar.normal": {
+    "prefix": "SnackBar.normal",
+    "description": "Make a FletBox widgets SnackBar.normal widget",
+    "body": [
+      "SnackBar({ message: \"Item saved\", type: \"success\", duration: 2000 })"
+    ]
+  },
+  "FletBox widgets SnackBar.full": {
+    "prefix": "SnackBar.full",
+    "description": "Make a FletBox widgets SnackBar.full widget",
+    "body": [
+      "SnackBar({",
+      "    message: \"Network error\",",
+      "    action: { label: \"Retry\", onPress: () => retry() },",
+      "    duration: 5000,",
+      "    type: \"error\",",
+      "    position: \"top\",",
+      "    backgroundColor: \"#ff4444\",",
+      "    textColor: \"#fff\",",
+      "    actionColor: \"#ffcc00\",",
+      "    dismissible: true,",
+      "    borderRadius: 12,",
+      "    padding: \"14px 20px\",",
+      "    margin: 20,",
+      "    elevation: 4,",
+      "    onShow: () => analytics.log(\"snackbar_shown\"),",
+      "    onClose: () => console.log(\"closed\")",
+      "})"
+    ]
+  },
+  "FletBox widgets Tooltip.basic": {
+    "prefix": "Tooltip.basic",
+    "description": "Make a FletBox widgets Tooltip.basic widget",
+    "body": [
+      "Tooltip({ text: \"Help\", child: Icon({ name: \"help\" }) })"
+    ]
+  },
+  "FletBox widgets Tooltip.normal": {
+    "prefix": "Tooltip.normal",
+    "description": "Make a FletBox widgets Tooltip.normal widget",
+    "body": [
+      "Tooltip({ text: \"Save document\", position: \"top\", child: Button({ icon: \"save\" }) })"
+    ]
+  },
+  "FletBox widgets Tooltip.full": {
+    "prefix": "Tooltip.full",
+    "description": "Make a FletBox widgets Tooltip.full widget",
+    "body": [
+      "Tooltip({",
+      "    text: \"Advanced settings\",",
+      "    child: Icon({ name: \"settings\", size: 28 }),",
+      "    position: \"right\",",
+      "    delay: 500,",
+      "    bgColor: colors.gray800,",
+      "    textColor: \"#fff\",",
+      "    fontSize: 12,",
+      "    padding: \"8px 12px\",",
+      "    borderRadius: 8,",
+      "    offset: 12,",
+      "    showArrow: true,",
+      "    maxWidth: 200,",
+      "    textAlign: \"center\",",
+      "    animationDuration: 200,",
+      "    arrowSize: 6,",
+      "    shadow: \"0 2px 8px rgba(0,0,0,0.2)\",",
+      "    disabled: false",
+      "})"
+    ]
+  },
+  "FletBox widgets Scaffold.basic": {
+    "prefix": "Scaffold.basic",
+    "description": "Make a FletBox widgets Scaffold.basic widget",
+    "body": [
+      "Scaffold({ body: Text(\"Hello\") })"
+    ]
+  },
+  "FletBox widgets Scaffold.normal": {
+    "prefix": "Scaffold.normal",
+    "description": "Make a FletBox widgets Scaffold.normal widget",
+    "body": [
+      "Scaffold({ appBar: AppBar({ title: \"Home\" }), body: HomeScreen(), drawer: DrawerMenu() })"
+    ]
+  },
+  "FletBox widgets Scaffold.full": {
+    "prefix": "Scaffold.full",
+    "description": "Make a FletBox widgets Scaffold.full widget",
+    "body": [
+      "Scaffold({",
+      "    appBar: AppBar({ title: \"Dashboard\", actions: [Icon({ name: \"search\" }), Icon({ name: \"more_vert\" })] }),",
+      "    body: HomeScreen(),",
+      "    bottomBar: BottomNavigation({ items: [{ icon: \"home\", label: \"Home\", route: \"/\" }, { icon: \"person\", label: \"Profile\", route: \"/profile\" }] }),",
+      "    drawer: Drawer({ header: Text(\"Menu\"), body: [DrawerItem({ label: \"Home\", route: \"/\" }), DrawerItem({ label: \"Settings\", route: \"/settings\" })] }),",
+      "    fab: FloatingActionButton({ icon: \"add\", onPress: () => addItem() }),",
+      "    leftNavBar: CollapsibleSideBar({ children: NavMenu() }),",
+      "    rightNavBar: null,",
+      "    routes: { \"/\": HomeScreen, \"/profile\": ProfileScreen, \"/settings\": SettingsScreen },",
+      "    backgroundColor: colors.background,",
+      "    closeDrawerOnNavigate: false",
+      "})"
+    ]
+  },
+  "FletBox widgets AppBar.basic": {
+    "prefix": "AppBar.basic",
+    "description": "Make a FletBox widgets AppBar.basic widget",
+    "body": [
+      "AppBar({ title: \"Title\" })"
+    ]
+  },
+  "FletBox widgets AppBar.normal": {
+    "prefix": "AppBar.normal",
+    "description": "Make a FletBox widgets AppBar.normal widget",
+    "body": [
+      "AppBar({ title: \"Settings\", showBackButton: true, onBackPress: () => goBack() })"
+    ]
+  },
+  "FletBox widgets AppBar.full": {
+    "prefix": "AppBar.full",
+    "description": "Make a FletBox widgets AppBar.full widget",
+    "body": [
+      "AppBar({",
+      "    title: \"Profile\",",
+      "    leading: Icon({ name: \"menu\", onPress: () => openDrawer() }),",
+      "    actions: [Icon({ name: \"search\" }), Icon({ name: \"notifications\" }), Avatar({ size: 32, name: \"User\" })],",
+      "    backgroundColor: colors.primary,",
+      "    gradient: \"linear-gradient(90deg, #6366f1, #8b5cf6)\",",
+      "    titleColor: \"#fff\",",
+      "    elevation: 4,",
+      "    centerTitle: true,",
+      "    showBackButton: true,",
+      "    backButtonRoute: \"/home\",",
+      "    onBackPress: () => customBack(),",
+      "    sticky: true,",
+      "    hideOnScroll: true,",
+      "    scrollThreshold: 50,",
+      "    padding: { horizontal: 16, vertical: 8 },",
+      "    borderRadius: 0",
+      "})"
+    ]
+  },
+  "FletBox widgets Drawer.basic": {
+    "prefix": "Drawer.basic",
+    "description": "Make a FletBox widgets Drawer.basic widget",
+    "body": [
+      "Drawer({ header: Text(\"Menu\"), body: [DrawerItem({ label: \"Home\" })] })"
+    ]
+  },
+  "FletBox widgets Drawer.normal": {
+    "prefix": "Drawer.normal",
+    "description": "Make a FletBox widgets Drawer.normal widget",
+    "body": [
+      "Drawer({ header: Avatar({ name: \"User\" }), body: [DrawerItem({ label: \"Home\", route: \"/\" }), DrawerItem({ label: \"About\", route: \"/about\" })] })"
+    ]
+  },
+  "FletBox widgets Drawer.full": {
+    "prefix": "Drawer.full",
+    "description": "Make a FletBox widgets Drawer.full widget",
+    "body": [
+      "Drawer({",
+      "    header: Column({ children: [Avatar({ size: 80, name: \"John Doe\" }), Text({ text: \"john@example.com\" })] }),",
+      "    body: [",
+      "        DrawerItem({ icon: \"home\", label: \"Home\", route: \"/\", selectedColor: colors.primary }),",
+      "        DrawerItem({ icon: \"settings\", label: \"Settings\", route: \"/settings\" }),",
+      "        DrawerItem({ icon: \"logout\", label: \"Logout\", onPress: () => logout() })",
+      "    ],",
+      "    footer: Text({ text: \"v1.0.0\", size: 12, color: colors.textSecondary }),",
+      "    position: \"left\",",
+      "    width: 300,",
+      "    onClose: () => console.log(\"closed\"),",
+      "    onOpen: () => console.log(\"opened\"),",
+      "    blur: true,",
+      "    blurIntensity: 8,",
+      "    bgColor: colors.surface,",
+      "    elevation: 8,",
+      "    closeOnOverlayClick: true,",
+      "    closeOnEsc: true,",
+      "    borderRadius: 28,",
+      "    margin: 16",
+      "})"
+    ]
+  },
+  "FletBox widgets BottomNavigation.basic": {
+    "prefix": "BottomNavigation.basic",
+    "description": "Make a FletBox widgets BottomNavigation.basic widget",
+    "body": [
+      "BottomNavigation({ items: [{ icon: \"home\" }, { icon: \"person\" }] })"
+    ]
+  },
+  "FletBox widgets BottomNavigation.normal": {
+    "prefix": "BottomNavigation.normal",
+    "description": "Make a FletBox widgets BottomNavigation.normal widget",
+    "body": [
+      "BottomNavigation({ items: [{ icon: \"home\", label: \"Home\", route: \"/\" }, { icon: \"search\", label: \"Search\", route: \"/search\" }], useRouter: true })"
+    ]
+  },
+  "FletBox widgets BottomNavigation.full": {
+    "prefix": "BottomNavigation.full",
+    "description": "Make a FletBox widgets BottomNavigation.full widget",
+    "body": [
+      "BottomNavigation({",
+      "    items: [",
+      "        { icon: \"home\", label: \"Home\", route: \"/\", onPress: () => analytics.track(\"home\") },",
+      "        { icon: \"favorite\", label: \"Favorites\", route: \"/favorites\", badge: 3 },",
+      "        { icon: \"person\", label: \"Profile\", route: \"/profile\" }",
+      "    ],",
+      "    currentIndex: 0,",
+      "    onTabChange: (index) => console.log(\"tab\", index),",
+      "    backgroundColor: colors.surface,",
+      "    selectedColor: colors.primary,",
+      "    unselectedColor: colors.textSecondary,",
+      "    showLabels: true,",
+      "    iconSize: 24,",
+      "    height: 65,",
+      "    elevation: 8,",
+      "    useRouter: true",
+      "})"
+    ]
+  },
+  "FletBox widgets Tabs.basic": {
+    "prefix": "Tabs.basic",
+    "description": "Make a FletBox widgets Tabs.basic widget",
+    "body": [
+      "Tabs({ tabs: [\"Tab1\", \"Tab2\"], children: [Text(\"Content1\"), Text(\"Content2\")] })"
+    ]
+  },
+  "FletBox widgets Tabs.normal": {
+    "prefix": "Tabs.normal",
+    "description": "Make a FletBox widgets Tabs.normal widget",
+    "body": [
+      "Tabs({ tabs: [{ label: \"Details\", icon: \"info\" }, { label: \"Reviews\", icon: \"comment\" }], children: [DetailsTab(), ReviewsTab()], activeIndex: 0, onChange: setTab })"
+    ]
+  },
+  "FletBox widgets Tabs.full": {
+    "prefix": "Tabs.full",
+    "description": "Make a FletBox widgets Tabs.full widget",
+    "body": [
+      "Tabs({",
+      "    tabs: [\"Overview\", \"Technical\", \"Support\"],",
+      "    children: [OverviewTab(), TechTab(), SupportTab()],",
+      "    activeIndex: currentTab,",
+      "    onChange: (idx) => setCurrentTab(idx),",
+      "    variant: \"slider\",",
+      "    size: \"large\",",
+      "    color: colors.primary,",
+      "    textColor: colors.text,",
+      "    activeTextColor: \"#fff\",",
+      "    bgColor: colors.gray100,",
+      "    buttonColor: colors.primary,",
+      "    fullWidth: true,",
+      "    showDivider: true,",
+      "    dividerColor: colors.border,",
+      "    showIcon: true,",
+      "    iconPosition: \"top\",",
+      "    iconSize: 20,",
+      "    badges: [5, 0, 12],",
+      "    alignment: \"center\"",
+      "})"
+    ]
+  },
+  "FletBox widgets CollapsibleSideBar.basic": {
+    "prefix": "CollapsibleSideBar.basic",
+    "description": "Make a FletBox widgets CollapsibleSideBar.basic widget",
+    "body": [
+      "CollapsibleSideBar({ children: Text(\"Menu\") })"
+    ]
+  },
+  "FletBox widgets CollapsibleSideBar.normal": {
+    "prefix": "CollapsibleSideBar.normal",
+    "description": "Make a FletBox widgets CollapsibleSideBar.normal widget",
+    "body": [
+      "CollapsibleSideBar({ expanded: true, children: Column({ children: [DrawerItem({ label: \"Home\" }), DrawerItem({ label: \"Settings\" })] }) })"
+    ]
+  },
+  "FletBox widgets CollapsibleSideBar.full": {
+    "prefix": "CollapsibleSideBar.full",
+    "description": "Make a FletBox widgets CollapsibleSideBar.full widget",
+    "body": [
+      "CollapsibleSideBar({",
+      "    expanded: isSidebarOpen,",
+      "    widthExpanded: 280,",
+      "    widthCollapsed: 70,",
+      "    iconSize: 28,",
+      "    onToggle: (exp) => setIsSidebarOpen(exp),",
+      "    bgColor: colors.surface,",
+      "    borderRight: \"1px solid #e2e8f0\",",
+      "    showTooltip: true,",
+      "    tooltipDelay: 300,",
+      "    children: Column({ gap: 16, children: [Logo(), NavItems(), Footer()] })",
+      "})"
+    ]
+  },
+  "FletBox widgets DrawerItem.basic": {
+    "prefix": "DrawerItem.basic",
+    "description": "Make a FletBox widgets DrawerItem.basic widget",
+    "body": [
+      "DrawerItem({ label: \"Home\" })"
+    ]
+  },
+  "FletBox widgets DrawerItem.normal": {
+    "prefix": "DrawerItem.normal",
+    "description": "Make a FletBox widgets DrawerItem.normal widget",
+    "body": [
+      "DrawerItem({ icon: \"home\", label: \"Home\", route: \"/home\", onPress: () => console.log(\"navigate\") })"
+    ]
+  },
+  "FletBox widgets DrawerItem.full": {
+    "prefix": "DrawerItem.full",
+    "description": "Make a FletBox widgets DrawerItem.full widget",
+    "body": [
+      "DrawerItem({",
+      "    icon: \"settings\",",
+      "    label: \"Preferences\",",
+      "    route: \"/settings\",",
+      "    onPress: () => openSettings(),",
+      "    onSelect: () => console.log(\"selected\"),",
+      "    trailingIcon: \"chevron_right\",",
+      "    hintColor: colors.gray100,",
+      "    selectedColor: colors.primary,",
+      "    unselectedColor: colors.text,",
+      "    iconColor: colors.primary,",
+      "    trailingIconColor: colors.textSecondary,",
+      "    closeOnPress: true,",
+      "    disableTransform: false",
+      "})"
+    ]
+  },
+  "FletBox widgets Router.init": {
+    "prefix": "Router.init",
+    "description": "Make a FletBox widgets Router.init widget",
+    "body": [
+      "initRouter({ \"/\": HomeScreen, \"/user/:id\": UserScreen })"
+    ]
+  },
+  "FletBox widgets Router.goTo": {
+    "prefix": "Router.goTo",
+    "description": "Make a FletBox widgets Router.goTo widget",
+    "body": [
+      "goTo(\"/user/123\", { from: \"home\" })"
+    ]
+  },
+  "FletBox widgets Router.goBack": {
+    "prefix": "Router.goBack",
+    "description": "Make a FletBox widgets Router.goBack widget",
+    "body": [
+      "goBack()"
+    ]
+  },
+  "FletBox widgets Router.useParams": {
+    "prefix": "Router.useParams",
+    "description": "Make a FletBox widgets Router.useParams widget",
+    "body": [
+      "const { id } = useParams()"
+    ]
+  },
+  "FletBox widgets Router.useQueryParams": {
+    "prefix": "Router.useQueryParams",
+    "description": "Make a FletBox widgets Router.useQueryParams widget",
+    "body": [
+      "const { page } = useQueryParams()"
+    ]
+  },
+  "FletBox widgets ListView.basic": {
+    "prefix": "ListView.basic",
+    "description": "Make a FletBox widgets ListView.basic widget",
+    "body": [
+      "ListView({ data: [\"A\", \"B\"], renderItem: (item) => Text({ text: item }) })"
+    ]
+  },
+  "FletBox widgets ListView.normal": {
+    "prefix": "ListView.normal",
+    "description": "Make a FletBox widgets ListView.normal widget",
+    "body": [
+      "ListView({ data: users, renderItem: (user) => ListTile({ title: user.name }), itemSize: 70 })"
+    ]
+  },
+  "FletBox widgets ListView.full": {
+    "prefix": "ListView.full",
+    "description": "Make a FletBox widgets ListView.full widget",
+    "body": [
+      "ListView({",
+      "    data: products,",
+      "    renderItem: (item, idx) => Card({ child: Text({ text: item.name }) }),",
+      "    height: 500,",
+      "    width: \"100%\",",
+      "    itemSize: 120,",
+      "    gap: 8,",
+      "    orientation: \"vertical\",",
+      "    onEndReached: () => loadMore(),",
+      "    onEndReachedThreshold: 0.3,",
+      "    onRefresh: (done) => refreshData(done),",
+      "    refreshing: isLoading,",
+      "    ListHeaderComponent: () => Text(\"Top Products\"),",
+      "    ListFooterComponent: () => (hasMore ? ProgressBar({ indeterminate: true }) : null),",
+      "    ListEmptyComponent: () => Text(\"No products\"),",
+      "    showsScrollIndicator: true,",
+      "    bufferSize: 10,",
+      "    expand: true",
+      "})"
+    ]
+  },
+  "FletBox widgets GridView.basic": {
+    "prefix": "GridView.basic",
+    "description": "Make a FletBox widgets GridView.basic widget",
+    "body": [
+      "GridView({ data: [\"A\", \"B\"], renderItem: (item) => Text({ text: item }), columns: 2 })"
+    ]
+  },
+  "FletBox widgets GridView.normal": {
+    "prefix": "GridView.normal",
+    "description": "Make a FletBox widgets GridView.normal widget",
+    "body": [
+      "GridView({ data: images, renderItem: (img) => Image({ src: img }), columns: 3, spacing: 8 })"
+    ]
+  },
+  "FletBox widgets GridView.full": {
+    "prefix": "GridView.full",
+    "description": "Make a FletBox widgets GridView.full widget",
+    "body": [
+      "GridView({",
+      "    data: gallery,",
+      "    renderItem: (item) => Card({ child: Image({ src: item.url, fit: \"cover\" }) }),",
+      "    columns: 4,",
+      "    spacing: 12,",
+      "    itemHeight: 180,",
+      "    onEndReached: () => fetchMore(),",
+      "    onRefresh: (done) => refresh(done),",
+      "    ListHeaderComponent: () => Text(\"Gallery\")",
+      "})"
+    ]
+  },
+  "FletBox widgets DataTable.basic": {
+    "prefix": "DataTable.basic",
+    "description": "Make a FletBox widgets DataTable.basic widget",
+    "body": [
+      "DataTable({ columns: [\"Name\", \"Age\"], rows: [{ Name: \"John\", Age: 30 }] })"
+    ]
+  },
+  "FletBox widgets DataTable.normal": {
+    "prefix": "DataTable.normal",
+    "description": "Make a FletBox widgets DataTable.normal widget",
+    "body": [
+      "DataTable({ columns: [{ key: \"id\", label: \"ID\" }, { key: \"name\", label: \"Name\" }], rows: users, onRowClick: (row) => console.log(row) })"
+    ]
+  },
+  "FletBox widgets DataTable.full": {
+    "prefix": "DataTable.full",
+    "description": "Make a FletBox widgets DataTable.full widget",
+    "body": [
+      "DataTable({",
+      "    columns: [",
+      "        { key: \"id\", label: \"#\", align: \"center\" },",
+      "        { key: \"name\", label: \"Name\", format: (val) => val.toUpperCase() },",
+      "        { key: \"status\", label: \"Status\", align: \"center\" }",
+      "    ],",
+      "    rows: userList,",
+      "    striped: true,",
+      "    hoverable: true,",
+      "    bordered: true,",
+      "    onRowClick: (row, idx) => selectUser(row),",
+      "    headerBgColor: colors.gray100,",
+      "    headerTextColor: colors.text,",
+      "    headerFontWeight: \"bold\",",
+      "    headerFontSize: 14,",
+      "    rowBgColor: \"transparent\",",
+      "    rowTextColor: colors.text,",
+      "    rowFontSize: 13,",
+      "    stripedRowBgColor: colors.gray50,",
+      "    hoverRowBgColor: `${colors.primary}10`,",
+      "    borderColor: colors.border,",
+      "    borderWidth: 1,",
+      "    cellPadding: \"8px 12px\",",
+      "    headerCellPadding: \"12px\"",
+      "})"
+    ]
+  },
+  "FletBox widgets Chart.basic": {
+    "prefix": "Chart.basic",
+    "description": "Make a FletBox widgets Chart.basic widget",
+    "body": [
+      "Chart({ type: \"line\", data: [10, 20, 30] })"
+    ]
+  },
+  "FletBox widgets Chart.normal": {
+    "prefix": "Chart.normal",
+    "description": "Make a FletBox widgets Chart.normal widget",
+    "body": [
+      "Chart({ type: \"bar\", data: sales, labels: [\"Jan\", \"Feb\", \"Mar\"], barColor: colors.primary })"
+    ]
+  },
+  "FletBox widgets Chart.full": {
+    "prefix": "Chart.full",
+    "description": "Make a FletBox widgets Chart.full widget",
+    "body": [
+      "Chart({",
+      "    type: \"area\",",
+      "    data: [5, 15, 25, 20, 30, 45],",
+      "    labels: [\"Mon\", \"Tue\", \"Wed\", \"Thu\", \"Fri\", \"Sat\"],",
+      "    width: \"100%\",",
+      "    height: 300,",
+      "    bgColor: colors.surface,",
+      "    padding: { top: 20, right: 40, bottom: 40, left: 50 },",
+      "    lineColor: colors.primary,",
+      "    areaColor: `${colors.primary}40`,",
+      "    smooth: true,",
+      "    areaGradient: true,",
+      "    areaGradientColors: [\"#6366f1\", \"transparent\"],",
+      "    axisColor: colors.border,",
+      "    textColor: colors.textSecondary,",
+      "    yAxisColor: colors.primary,",
+      "    showGrid: true,",
+      "    showLabels: true,",
+      "    showValues: false,",
+      "    borderRadius: 12",
+      "})"
+    ]
+  },
+  "FletBox widgets QRCode.basic": {
+    "prefix": "QRCode.basic",
+    "description": "Make a FletBox widgets QRCode.basic widget",
+    "body": [
+      "QRCode({ value: \"https://flet-box.dev\" })"
+    ]
+  },
+  "FletBox widgets QRCode.normal": {
+    "prefix": "QRCode.normal",
+    "description": "Make a FletBox widgets QRCode.normal widget",
+    "body": [
+      "QRCode({ value: userId, size: 200, fgColor: \"#000\", bgColor: \"#fff\" })"
+    ]
+  },
+  "FletBox widgets QRCode.full": {
+    "prefix": "QRCode.full",
+    "description": "Make a FletBox widgets QRCode.full widget",
+    "body": [
+      "QRCode({",
+      "    value: JSON.stringify({ id: 123, token: \"abc\" }),",
+      "    size: 300,",
+      "    bgColor: \"#ffffff\",",
+      "    fgColor: \"#1a1a2e\",",
+      "    errorCorrection: \"H\",",
+      "    margin: 8,",
+      "    onPress: () => console.log(\"qr clicked\")",
+      "})"
+    ]
+  },
+  "FletBox widgets CodeViewer.basic": {
+    "prefix": "CodeViewer.basic",
+    "description": "Make a FletBox widgets CodeViewer.basic widget",
+    "body": [
+      "CodeViewer({ code: \"console.log('hello')\" })"
+    ]
+  },
+  "FletBox widgets CodeViewer.normal": {
+    "prefix": "CodeViewer.normal",
+    "description": "Make a FletBox widgets CodeViewer.normal widget",
+    "body": [
+      "CodeViewer({ code: jsCode, title: \"app.js\", showLineNumbers: true })"
+    ]
+  },
+  "FletBox widgets CodeViewer.full": {
+    "prefix": "CodeViewer.full",
+    "description": "Make a FletBox widgets CodeViewer.full widget",
+    "body": [
+      "CodeViewer({",
+      "    code: `function hello() { return \"world\"; }`,",
+      "    title: \"example.js\",",
+      "    maxHeight: 400,",
+      "    fontSize: 12,",
+      "    backgroundColor: colors.gray100,",
+      "    padding: 16,",
+      "    borderRadius: 12,",
+      "    showHeader: true,",
+      "    showLineNumbers: true,",
+      "    startingLineNumber: 1,",
+      "    lineNumberWidth: 40,",
+      "    lineNumberColor: colors.secondary",
+      "})"
+    ]
+  },
+  "FletBox widgets Video.basic": {
+    "prefix": "Video.basic",
+    "description": "Make a FletBox widgets Video.basic widget",
+    "body": [
+      "Video({ src: \"video.mp4\" })"
+    ]
+  },
+  "FletBox widgets Video.normal": {
+    "prefix": "Video.normal",
+    "description": "Make a FletBox widgets Video.normal widget",
+    "body": [
+      "Video({ src: \"https://example.com/movie.mp4\", controls: true, autoplay: false, width: \"100%\", height: 360 })"
+    ]
+  },
+  "FletBox widgets Video.full": {
+    "prefix": "Video.full",
+    "description": "Make a FletBox widgets Video.full widget",
+    "body": [
+      "Video({",
+      "    src: \"https://example.com/stream.m3u8\",",
+      "    width: \"100%\",",
+      "    height: \"auto\",",
+      "    autoplay: true,",
+      "    controls: true,",
+      "    loop: false,",
+      "    muted: false,",
+      "    poster: \"thumbnail.jpg\",",
+      "    onPlay: () => console.log(\"play\"),",
+      "    onPause: () => console.log(\"pause\"),",
+      "    onEnd: () => nextVideo(),",
+      "    onTimeUpdate: (sec, dur, percent) => updateProgress(percent),",
+      "    ref: (video) => playerRef = video",
+      "})"
+    ]
+  },
+  "FletBox widgets Audio.basic": {
+    "prefix": "Audio.basic",
+    "description": "Make a FletBox widgets Audio.basic widget",
+    "body": [
+      "Audio({ src: \"song.mp3\" })"
+    ]
+  },
+  "FletBox widgets Audio.normal": {
+    "prefix": "Audio.normal",
+    "description": "Make a FletBox widgets Audio.normal widget",
+    "body": [
+      "Audio({ src: \"https://example.com/audio.mp3\", controls: true, volume: 0.8 })"
+    ]
+  },
+  "FletBox widgets Audio.full": {
+    "prefix": "Audio.full",
+    "description": "Make a FletBox widgets Audio.full widget",
+    "body": [
+      "Audio({",
+      "    src: \"podcast.mp3\",",
+      "    autoplay: false,",
+      "    controls: true,",
+      "    loop: false,",
+      "    muted: false,",
+      "    volume: 0.9,",
+      "    onPlay: () => setIsPlaying(true),",
+      "    onPause: () => setIsPlaying(false),",
+      "    onEnd: () => nextEpisode(),",
+      "    onTimeUpdate: (current, duration, percent) => updateProgress(percent),",
+      "    onProgress: (percent) => console.log(percent),",
+      "    onLoad: (duration) => setDuration(duration),",
+      "    ref: (audio) => audioRef = audio",
+      "})"
+    ]
+  },
+  "FletBox widgets Carousel.basic": {
+    "prefix": "Carousel.basic",
+    "description": "Make a FletBox widgets Carousel.basic widget",
+    "body": [
+      "Carousel({ items: [Image({ src: \"1.jpg\" }), Image({ src: \"2.jpg\" })] })"
+    ]
+  },
+  "FletBox widgets Carousel.normal": {
+    "prefix": "Carousel.normal",
+    "description": "Make a FletBox widgets Carousel.normal widget",
+    "body": [
+      "Carousel({ items: slides, autoPlay: true, interval: 4000, height: 250, showDots: true })"
+    ]
+  },
+  "FletBox widgets Carousel.full": {
+    "prefix": "Carousel.full",
+    "description": "Make a FletBox widgets Carousel.full widget",
+    "body": [
+      "Carousel({",
+      "    items: [",
+      "        { src: \"slide1.jpg\", caption: \"First\" },",
+      "        { src: \"slide2.jpg\", caption: \"Second\" }",
+      "    ],",
+      "    autoPlay: true,",
+      "    interval: 5000,",
+      "    showArrows: true,",
+      "    showDots: true,",
+      "    infinite: true,",
+      "    height: 400,",
+      "    width: \"100%\",",
+      "    borderRadius: 16,",
+      "    dotColor: colors.gray400,",
+      "    dotActiveColor: colors.primary,",
+      "    dotSize: 8,",
+      "    dotActiveSize: 24,",
+      "    buttonBgColor: \"rgba(0,0,0,0.5)\",",
+      "    buttonIconColor: \"#fff\",",
+      "    buttonSize: 40,",
+      "    buttonIconSize: 24,",
+      "    onIndexChange: (idx) => setActiveSlide(idx)",
+      "})"
+    ]
+  },
+  "FletBox widgets AnimatedBox.basic": {
+    "prefix": "AnimatedBox.basic",
+    "description": "Make a FletBox widgets AnimatedBox.basic widget",
+    "body": [
+      "AnimatedBox({ animations: [{ effect: \"scale\", from: 1, to: 1.2 }], child: Text(\"Animate\") })"
+    ]
+  },
+  "FletBox widgets AnimatedBox.normal": {
+    "prefix": "AnimatedBox.normal",
+    "description": "Make a FletBox widgets AnimatedBox.normal widget",
+    "body": [
+      "AnimatedBox({ animations: [{ effect: \"opacity\", from: 0, to: 1, duration: 500 }], child: Card({ child: Text(\"Fade in\") }) })"
+    ]
+  },
+  "FletBox widgets AnimatedBox.full": {
+    "prefix": "AnimatedBox.full",
+    "description": "Make a FletBox widgets AnimatedBox.full widget",
+    "body": [
+      "AnimatedBox({",
+      "    animations: [",
+      "        { effect: \"scale\", from: 0.8, to: 1, duration: 400 },",
+      "        { effect: \"rotate\", from: -10, to: 0, duration: 400 },",
+      "        { effect: \"backgroundColor\", from: \"#ff0000\", to: \"#00ff00\", duration: 800, reverse: true, loop: true }",
+      "    ],",
+      "    timing: \"ease-out\",",
+      "    delay: \"0.2s\",",
+      "    fillMode: \"forwards\",",
+      "    child: Button({ text: \"Wobbly Button\" })",
+      "})"
+    ]
+  },
+  "FletBox widgets AnimatedText.basic": {
+    "prefix": "AnimatedText.basic",
+    "description": "Make a FletBox widgets AnimatedText.basic widget",
+    "body": [
+      "AnimatedText({ child: Text({ text: \"Hello\" }), animations: [{ effect: \"scale\", from: 1, to: 1.5 }] })"
+    ]
+  },
+  "FletBox widgets AnimatedText.normal": {
+    "prefix": "AnimatedText.normal",
+    "description": "Make a FletBox widgets AnimatedText.normal widget",
+    "body": [
+      "AnimatedText({ child: Text({ text: \"Welcome\", size: 24 }), animations: [{ effect: \"translateY\", from: 20, to: 0, duration: 300 }], delayBetween: 0.05 })"
+    ]
+  },
+  "FletBox widgets AnimatedText.full": {
+    "prefix": "AnimatedText.full",
+    "description": "Make a FletBox widgets AnimatedText.full widget",
+    "body": [
+      "AnimatedText({",
+      "    child: Text({ text: \"FletBox\", size: 48, weight: \"bold\", color: colors.primary }),",
+      "    animations: [",
+      "        { effect: \"opacity\", from: 0, to: 1, duration: 200 },",
+      "        { effect: \"rotateY\", from: 90, to: 0, duration: 600 }",
+      "    ],",
+      "    sameTime: false,",
+      "    delayBetween: 0.08,",
+      "    orientation: \"row\"",
+      "})"
+    ]
+  },
+  "FletBox widgets MatrixRain.basic": {
+    "prefix": "MatrixRain.basic",
+    "description": "Make a FletBox widgets MatrixRain.basic widget",
+    "body": [
+      "MatrixRain()"
+    ]
+  },
+  "FletBox widgets MatrixRain.normal": {
+    "prefix": "MatrixRain.normal",
+    "description": "Make a FletBox widgets MatrixRain.normal widget",
+    "body": [
+      "MatrixRain({ chars: \"01\", fontSize: 20, speed: 0.8 })"
+    ]
+  },
+  "FletBox widgets MatrixRain.full": {
+    "prefix": "MatrixRain.full",
+    "description": "Make a FletBox widgets MatrixRain.full widget",
+    "body": [
+      "MatrixRain({",
+      "    chars: \"\u30a2\u30a4\u30a6\u30a8\u30aa\u30ab\u30ad\u30af\u30b1\u30b3\",",
+      "    fontSize: 24,",
+      "    speed: 1.2,",
+      "    fadeAmount: 0.03,",
+      "    resetProbability: 0.98,",
+      "    useDynamicColor: true,",
+      "    position: \"fixed\",",
+      "    zIndex: 0",
+      "})"
+    ]
+  },
+  "FletBox widgets ParallaxBox.basic": {
+    "prefix": "ParallaxBox.basic",
+    "description": "Make a FletBox widgets ParallaxBox.basic widget",
+    "body": [
+      "ParallaxBox({ child: Image({ src: \"bg.jpg\" }) })"
+    ]
+  },
+  "FletBox widgets ParallaxBox.normal": {
+    "prefix": "ParallaxBox.normal",
+    "description": "Make a FletBox widgets ParallaxBox.normal widget",
+    "body": [
+      "ParallaxBox({ child: Card({ child: Text(\"Scroll me\") }), type: \"scroll\", speed: 0.3 })"
+    ]
+  },
+  "FletBox widgets ParallaxBox.full": {
+    "prefix": "ParallaxBox.full",
+    "description": "Make a FletBox widgets ParallaxBox.full widget",
+    "body": [
+      "ParallaxBox({",
+      "    child: Column({ children: [Image({ src: \"hero.jpg\", height: 300 }), Text({ text: \"Content\" })] }),",
+      "    type: \"mouse\",",
+      "    speed: 0.6,",
+      "    direction: \"both\",",
+      "    maxOffset: 80,",
+      "    reverse: false,",
+      "    disabled: false,",
+      "    onParallaxMove: ({ x, y }) => console.log(x, y),",
+      "    duration: 400,",
+      "    easing: \"cubic-bezier(0.2, 0.9, 0.4, 1.1)\"",
+      "})"
+    ]
+  },
+  "FletBox widgets animate.fadeOut": {
+    "prefix": "animate.fadeOut",
+    "description": "Make a FletBox widgets animate.fadeOut widget",
+    "body": [
+      "fadeOut(widget, 300)"
+    ]
+  },
+  "FletBox widgets animate.fadeIn": {
+    "prefix": "animate.fadeIn",
+    "description": "Make a FletBox widgets animate.fadeIn widget",
+    "body": [
+      "fadeIn(widget, 300)"
+    ]
+  },
+  "FletBox widgets animate.pulse": {
+    "prefix": "animate.pulse",
+    "description": "Make a FletBox widgets animate.pulse widget",
+    "body": [
+      "pulse(widget, 500)"
+    ]
+  },
+  "FletBox widgets animate.custom": {
+    "prefix": "animate.custom",
+    "description": "Make a FletBox widgets animate.custom widget",
+    "body": [
+      "animate(widget, \"width\", 100, 200, 500, \"easeOut\")"
+    ]
+  },
+  "FletBox widgets useState": {
+    "prefix": "useState",
+    "description": "Make a FletBox widgets useState widget",
+    "body": [
+      "const [count, setCount] = useState(\"counter\", 0)"
+    ]
+  },
+  "FletBox widgets httpGet": {
+    "prefix": "httpGet",
+    "description": "Make a FletBox widgets httpGet widget",
+    "body": [
+      "const data = await httpGet(\"/api/users\")"
+    ]
+  },
+  "FletBox widgets httpPost": {
+    "prefix": "httpPost",
+    "description": "Make a FletBox widgets httpPost widget",
+    "body": [
+      "const res = await httpPost(\"/api/users\", { body: { name: \"John\" } })"
+    ]
+  },
+  "FletBox widgets saveData": {
+    "prefix": "saveData",
+    "description": "Make a FletBox widgets saveData widget",
+    "body": [
+      "saveData(\"theme\", \"dark\")"
+    ]
+  },
+  "FletBox widgets getData": {
+    "prefix": "getData",
+    "description": "Make a FletBox widgets getData widget",
+    "body": [
+      "const theme = getData(\"theme\")"
+    ]
+  },
+  "FletBox widgets saveSession": {
+    "prefix": "saveSession",
+    "description": "Make a FletBox widgets saveSession widget",
+    "body": [
+      "saveSession(\"token\", \"abc123\")"
+    ]
+  },
+  "FletBox widgets saveRam": {
+    "prefix": "saveRam",
+    "description": "Make a FletBox widgets saveRam widget",
+    "body": [
+      "saveRam(\"cart\", items)"
+    ]
+  },
+  "FletBox widgets colors": {
+    "prefix": "colors",
+    "description": "Make a FletBox widgets colors widget",
+    "body": [
+      "colors.primary"
+    ]
+  },
+  "FletBox widgets setTheme": {
+    "prefix": "setTheme",
+    "description": "Make a FletBox widgets setTheme widget",
+    "body": [
+      "setTheme(\"dark\")"
+    ]
+  },
+  "FletBox widgets toggleTheme": {
+    "prefix": "toggleTheme",
+    "description": "Make a FletBox widgets toggleTheme widget",
+    "body": [
+      "toggleTheme()"
+    ]
+  },
+  "FletBox widgets random.name": {
+    "prefix": "random.name",
+    "description": "Make a FletBox widgets random.name widget",
+    "body": [
+      "random.fullName()"
+    ]
+  },
+  "FletBox widgets random.email": {
+    "prefix": "random.email",
+    "description": "Make a FletBox widgets random.email widget",
+    "body": [
+      "random.email()"
+    ]
+  },
+  "FletBox widgets delay": {
+    "prefix": "delay",
+    "description": "Make a FletBox widgets delay widget",
+    "body": [
+      "await delay(1000)"
+    ]
+  },
+  "FletBox widgets clipboard.copy": {
+    "prefix": "clipboard.copy",
+    "description": "Make a FletBox widgets clipboard.copy widget",
+    "body": [
+      "clipboard.copy(\"text\")"
+    ]
+  },
+  "FletBox widgets dimensions": {
+    "prefix": "dimensions",
+    "description": "Make a FletBox widgets dimensions widget",
+    "body": [
+      "dimensions.width"
+    ]
+  },
+  "FletBox widgets device.isMobile": {
+    "prefix": "device.isMobile",
+    "description": "Make a FletBox widgets device.isMobile widget",
+    "body": [
+      "device.isMobile()"
+    ]
+  },
+  "FletBox widgets toREM": {
+    "prefix": "toREM",
+    "description": "Make a FletBox widgets toREM widget",
+    "body": [
+      "toREM(16)"
+    ]
+  },
+  "FletBox widgets padding": {
+    "prefix": "padding",
+    "description": "Make a FletBox widgets padding widget",
+    "body": [
+      "padding({ horizontal: 20, vertical: 10 })"
+    ]
+  },
+  "FletBox widgets margin": {
+    "prefix": "margin",
+    "description": "Make a FletBox widgets margin widget",
+    "body": [
+      "margin({ top: 8, bottom: 8 })"
+    ]
+  },
+  "FletBox widgets border": {
+    "prefix": "border",
+    "description": "Make a FletBox widgets border widget",
+    "body": [
+      "border(1, \"solid\", \"#ccc\")"
+    ]
+  },
+  "FletBox widgets shadow": {
+    "prefix": "shadow",
+    "description": "Make a FletBox widgets shadow widget",
+    "body": [
+      "shadow(0, 2, 4, 0, \"rgba(0,0,0,0.1)\")"
+    ]
+  },
+  "FletBox widgets rgba": {
+    "prefix": "rgba",
+    "description": "Make a FletBox widgets rgba widget",
+    "body": [
+      "rgba(99, 102, 241, 0.8)"
+    ]
+  },
+  "FletBox widgets gradient": {
+    "prefix": "gradient",
+    "description": "Make a FletBox widgets gradient widget",
+    "body": [
+      "gradient(\"linear\", [\"red\", \"blue\"], 90)"
+    ]
+  },
+  "FletBox widgets mapList": {
+    "prefix": "mapList",
+    "description": "Make a FletBox widgets mapList widget",
+    "body": [
+      "mapList(products, (p, i) => Text({ text: p.name }))"
+    ]
+  },
+  "FletBox widgets uuid": {
+    "prefix": "uuid",
+    "description": "Make a FletBox widgets uuid widget",
+    "body": [
+      "const id = uuid()"
+    ]
+  },
+  "FletBox widgets ref": {
+    "prefix": "ref",
+    "description": "Make a FletBox widgets ref widget",
+    "body": [
+      "const inputRef = ref()"
+    ]
+  },
+  "FletBox widgets Accordion.basic": {
+    "prefix": "Accordion.basic",
+    "description": "Make a FletBox widgets Accordion.basic widget",
+    "body": [
+      "Accordion({ title: \"Section\", children: Text(\"Content\") })"
+    ]
+  },
+  "FletBox widgets Accordion.normal": {
+    "prefix": "Accordion.normal",
+    "description": "Make a FletBox widgets Accordion.normal widget",
+    "body": [
+      "Accordion({ title: \"Details\", children: Text(\"Hidden info\"), expanded: false, onToggle: (exp) => console.log(exp) })"
+    ]
+  },
+  "FletBox widgets Accordion.full": {
+    "prefix": "Accordion.full",
+    "description": "Make a FletBox widgets Accordion.full widget",
+    "body": [
+      "Accordion({",
+      "    title: \"Advanced settings\",",
+      "    children: Column({ children: [Input({ placeholder: \"API Key\" }), Slider({})] }),",
+      "    expanded: true,",
+      "    onToggle: (exp) => setExpanded(exp),",
+      "    variant: \"contained\",",
+      "    borderRadius: 16,",
+      "    bgColor: colors.surface,",
+      "    expandedColor: colors.primary,",
+      "    titleColor: colors.text,",
+      "    titleSize: 16,",
+      "    titleWeight: \"600\",",
+      "    titlePadding: \"16px 20px\",",
+      "    contentPadding: \"20px\",",
+      "    iconCollapsed: \"chevron_right\",",
+      "    iconExpanded: \"expand_more\",",
+      "    iconColor: colors.textSecondary,",
+      "    iconSize: 24,",
+      "    divider: true,",
+      "    disabled: false,",
+      "    animate: true,",
+      "    animationDuration: 400,",
+      "    elevation: 2",
+      "})"
+    ]
+  },
+  "FletBox widgets Stepper.basic": {
+    "prefix": "Stepper.basic",
+    "description": "Make a FletBox widgets Stepper.basic widget",
+    "body": [
+      "Stepper({ steps: [{ label: \"Step 1\", content: Text(\"Content\") }] })"
+    ]
+  },
+  "FletBox widgets Stepper.normal": {
+    "prefix": "Stepper.normal",
+    "description": "Make a FletBox widgets Stepper.normal widget",
+    "body": [
+      "Stepper({ steps: [{ label: \"Info\", content: InfoForm() }, { label: \"Confirm\", content: ConfirmForm() }], activeStep: 0, onStepChange: setStep })"
+    ]
+  },
+  "FletBox widgets Stepper.full": {
+    "prefix": "Stepper.full",
+    "description": "Make a FletBox widgets Stepper.full widget",
+    "body": [
+      "Stepper({",
+      "    steps: [",
+      "        { label: \"Personal\", content: PersonalForm(), icon: \"person\" },",
+      "        { label: \"Payment\", content: PaymentForm(), icon: \"credit_card\" },",
+      "        { label: \"Done\", content: SuccessMessage(), icon: \"check_circle\" }",
+      "    ],",
+      "    activeStep: step,",
+      "    onStepChange: (idx) => setStep(idx),",
+      "    orientation: \"horizontal\",",
+      "    variant: \"circles\",",
+      "    showLabels: true,",
+      "    showNavigation: true,",
+      "    nextLabel: \"Continue\",",
+      "    backLabel: \"Back\",",
+      "    finishLabel: \"Submit\",",
+      "    onFinish: () => submitForm(),",
+      "    bgColor: colors.surface,",
+      "    borderRadius: 24,",
+      "    border: border(1, \"solid\", colors.border),",
+      "    padding: 24,",
+      "    width: \"100%\"",
+      "})"
+    ]
+  },
+  "FletBox widgets Pagination.basic": {
+    "prefix": "Pagination.basic",
+    "description": "Make a FletBox widgets Pagination.basic widget",
+    "body": [
+      "Pagination({ totalItems: 100, onPageChange: (page) => loadPage(page) })"
+    ]
+  },
+  "FletBox widgets Pagination.normal": {
+    "prefix": "Pagination.normal",
+    "description": "Make a FletBox widgets Pagination.normal widget",
+    "body": [
+      "Pagination({ totalItems: 500, pageSize: 20, currentPage: 1, onPageChange: setPage, showTotal: true })"
+    ]
+  },
+  "FletBox widgets Pagination.full": {
+    "prefix": "Pagination.full",
+    "description": "Make a FletBox widgets Pagination.full widget",
+    "body": [
+      "Pagination({",
+      "    totalItems: 1000,",
+      "    pageSize: 25,",
+      "    currentPage: current,",
+      "    onPageChange: (page) => fetchPage(page),",
+      "    showFirstLast: true,",
+      "    showPrevNext: true,",
+      "    maxButtons: 7,",
+      "    variant: \"outlined\",",
+      "    color: colors.primary,",
+      "    size: \"medium\",",
+      "    disabled: false,",
+      "    showTotal: true,",
+      "    label: \"Page\"",
+      "})"
+    ]
+  },
+  "FletBox widgets TreeView.basic": {
+    "prefix": "TreeView.basic",
+    "description": "Make a FletBox widgets TreeView.basic widget",
+    "body": [
+      "TreeView({ nodes: [{ id: \"1\", label: \"Root\" }] })"
+    ]
+  },
+  "FletBox widgets TreeView.normal": {
+    "prefix": "TreeView.normal",
+    "description": "Make a FletBox widgets TreeView.normal widget",
+    "body": [
+      "TreeView({ nodes: treeData, onSelect: (node) => console.log(node), selectable: true })"
+    ]
+  },
+  "FletBox widgets TreeView.full": {
+    "prefix": "TreeView.full",
+    "description": "Make a FletBox widgets TreeView.full widget",
+    "body": [
+      "TreeView({",
+      "    nodes: [",
+      "        { id: \"1\", label: \"Documents\", icon: \"folder\", children: [",
+      "            { id: \"2\", label: \"resume.pdf\", icon: \"description\" },",
+      "            { id: \"3\", label: \"photo.jpg\", icon: \"image\" }",
+      "        ]},",
+      "        { id: \"4\", label: \"Downloads\", badge: 3, children: [] }",
+      "    ],",
+      "    onSelect: (node) => openFile(node),",
+      "    onToggle: (nodeId, expanded) => console.log(nodeId, expanded),",
+      "    expandedNodes: [\"1\"],",
+      "    indent: 24,",
+      "    showIcons: true,",
+      "    folderIcon: \"folder\",",
+      "    folderOpenIcon: \"folder_open\",",
+      "    fileIcon: \"insert_drive_file\",",
+      "    expandIcon: \"chevron_right\",",
+      "    collapseIcon: \"expand_more\",",
+      "    defaultExpanded: false,",
+      "    selectable: true,",
+      "    selectedNodeId: selected,",
+      "    bgColor: \"transparent\",",
+      "    hoverBgColor: colors.gray100,",
+      "    selectedBgColor: `${colors.primary}20`,",
+      "    textColor: colors.text,",
+      "    selectedTextColor: colors.primary,",
+      "    iconColor: colors.textSecondary,",
+      "    folderIconColor: colors.warning,",
+      "    nodePadding: \"8px 12px\",",
+      "    nodeGap: 8,",
+      "    borderRadius: 8,",
+      "    fontSize: 14,",
+      "    iconSize: 20",
+      "})"
+    ]
+  },
+  "FletBox widgets Skeleton.basic": {
+    "prefix": "Skeleton.basic",
+    "description": "Make a FletBox widgets Skeleton.basic widget",
+    "body": [
+      "Skeleton({})"
+    ]
+  },
+  "FletBox widgets Skeleton.normal": {
+    "prefix": "Skeleton.normal",
+    "description": "Make a FletBox widgets Skeleton.normal widget",
+    "body": [
+      "Skeleton({ variant: \"card\", count: 3, gap: 16 })"
+    ]
+  },
+  "FletBox widgets Skeleton.full": {
+    "prefix": "Skeleton.full",
+    "description": "Make a FletBox widgets Skeleton.full widget",
+    "body": [
+      "Skeleton({",
+      "    variant: \"listTile\",",
+      "    width: \"100%\",",
+      "    height: null,",
+      "    borderRadius: 12,",
+      "    animation: \"wave\",",
+      "    count: 5,",
+      "    gap: 12,",
+      "    bgColor: colors.gray200,",
+      "    highlightColor: colors.gray100,",
+      "    shimmerColor: colors.gray300,",
+      "    pulseDuration: \"1.2s\",",
+      "    waveDuration: \"1.8s\"",
+      "})"
+    ]
+  },
+  "FletBox widgets ProgressBar.basic": {
+    "prefix": "ProgressBar.basic",
+    "description": "Make a FletBox widgets ProgressBar.basic widget",
+    "body": [
+      "ProgressBar({ value: 50 })"
+    ]
+  },
+  "FletBox widgets ProgressBar.normal": {
+    "prefix": "ProgressBar.normal",
+    "description": "Make a FletBox widgets ProgressBar.normal widget",
+    "body": [
+      "ProgressBar({ value: progress, max: 100, height: 8, color: colors.primary, showValue: true })"
+    ]
+  },
+  "FletBox widgets ProgressBar.full": {
+    "prefix": "ProgressBar.full",
+    "description": "Make a FletBox widgets ProgressBar.full widget",
+    "body": [
+      "ProgressBar({",
+      "    value: 65,",
+      "    max: 100,",
+      "    height: 12,",
+      "    width: \"100%\",",
+      "    color: colors.success,",
+      "    backgroundColor: colors.border,",
+      "    borderRadius: 6,",
+      "    label: \"Uploading\",",
+      "    showValue: true,",
+      "    valuePosition: \"right\",",
+      "    indeterminate: false,",
+      "    striped: true,",
+      "    animatedStripes: true",
+      "})"
+    ]
+  },
+  "FletBox widgets CircularBar.basic": {
+    "prefix": "CircularBar.basic",
+    "description": "Make a FletBox widgets CircularBar.basic widget",
+    "body": [
+      "CircularBar({ value: 75 })"
+    ]
+  },
+  "FletBox widgets CircularBar.normal": {
+    "prefix": "CircularBar.normal",
+    "description": "Make a FletBox widgets CircularBar.normal widget",
+    "body": [
+      "CircularBar({ value: 85, size: 120, strokeWidth: 10, color: colors.primary, showValue: true })"
+    ]
+  },
+  "FletBox widgets CircularBar.full": {
+    "prefix": "CircularBar.full",
+    "description": "Make a FletBox widgets CircularBar.full widget",
+    "body": [
+      "CircularBar({",
+      "    value: 68,",
+      "    max: 100,",
+      "    size: 180,",
+      "    strokeWidth: 14,",
+      "    color: colors.primary,",
+      "    backgroundColor: colors.border,",
+      "    showValue: true,",
+      "    valueColor: colors.text,",
+      "    valueSize: 28,",
+      "    label: \"Completion\",",
+      "    labelColor: colors.textSecondary,",
+      "    labelSize: 12,",
+      "    lineCap: \"round\",",
+      "    animate: true,",
+      "    animationDuration: 1500,",
+      "    onComplete: () => console.log(\"done\"),",
+      "    valueFormat: \"percent\",",
+      "    valueSuffix: \"%\",",
+      "    gradient: [\"#6366f1\", \"#8b5cf6\"],",
+      "    shadowBlur: 6,",
+      "    shadowColor: \"rgba(0,0,0,0.2)\",",
+      "    glow: true,",
+      "    glowColor: colors.primary,",
+      "    markers: [{ value: 25, color: \"red\", size: 6, label: \"Q1\" }, { value: 75, color: \"green\", size: 6, label: \"Q3\" }],",
+      "    innerStrokeWidth: 4,",
+      "    innerColor: colors.gray300,",
+      "    onClick: ({ percent }) => alert(`${percent}%`),",
+      "    subtitle: \"of target\",",
+      "    subtitleColor: colors.textSecondary,",
+      "    subtitleSize: 10,",
+      "    tooltip: \"68% completed\"",
+      "})"
+    ]
+  },
+  "FletBox widgets Divider.basic": {
+    "prefix": "Divider.basic",
+    "description": "Make a FletBox widgets Divider.basic widget",
+    "body": [
+      "Divider()"
+    ]
+  },
+  "FletBox widgets Divider.normal": {
+    "prefix": "Divider.normal",
+    "description": "Make a FletBox widgets Divider.normal widget",
+    "body": [
+      "Divider({ margin: 16, thickness: 1, color: colors.border })"
+    ]
+  },
+  "FletBox widgets Divider.full": {
+    "prefix": "Divider.full",
+    "description": "Make a FletBox widgets Divider.full widget",
+    "body": [
+      "Divider({ orientation: \"horizontal\", thickness: 2, margin: { top: 8, bottom: 8 }, color: \"#e2e8f0\", style: { opacity: 0.8 } })"
+    ]
+  },
+  "FletBox widgets Chip.basic": {
+    "prefix": "Chip.basic",
+    "description": "Make a FletBox widgets Chip.basic widget",
+    "body": [
+      "Chip({ label: \"Tag\" })"
+    ]
+  },
+  "FletBox widgets Chip.normal": {
+    "prefix": "Chip.normal",
+    "description": "Make a FletBox widgets Chip.normal widget",
+    "body": [
+      "Chip({ label: \"React\", icon: \"star\", onDelete: () => removeTag() })"
+    ]
+  },
+  "FletBox widgets Chip.full": {
+    "prefix": "Chip.full",
+    "description": "Make a FletBox widgets Chip.full widget",
+    "body": [
+      "Chip({",
+      "    label: \"FletBox\",",
+      "    icon: \"rocket_launch\",",
+      "    onPress: () => filterBy(\"fletbox\"),",
+      "    onDelete: () => removeFilter(),",
+      "    variant: \"outlined\",",
+      "    color: colors.primary,",
+      "    textColor: colors.primary,",
+      "    borderColor: colors.primary,",
+      "    size: \"medium\",",
+      "    borderRadius: 32,",
+      "    elevation: 1,",
+      "    gap: 6",
+      "})"
+    ]
+  },
+  "FletBox widgets Markdown.basic": {
+    "prefix": "Markdown.basic",
+    "description": "Make a FletBox widgets Markdown.basic widget",
+    "body": [
+      "Markdown({ text: \"# Hello\" })"
+    ]
+  },
+  "FletBox widgets Markdown.normal": {
+    "prefix": "Markdown.normal",
+    "description": "Make a FletBox widgets Markdown.normal widget",
+    "body": [
+      "Markdown({ text: mdSource, fontSize: 14, linkColor: colors.primary })"
+    ]
+  },
+  "FletBox widgets Markdown.full": {
+    "prefix": "Markdown.full",
+    "description": "Make a FletBox widgets Markdown.full widget",
+    "body": [
+      "Markdown({",
+      "    text: `",
+      "# Main title",
+      "## Subtitle",
+      "This is **bold** and *italic* text.",
+      "- List item 1",
+      "- List item 2",
+      "[Link](https://example.com)",
+      "\\`inline code\\`",
+      "\\`\\`\\`js",
+      "console.log(\"code block\");",
+      "\\`\\`\\`",
+      "    `,",
+      "    fontSize: 15,",
+      "    fontFamily: \"system-ui\",",
+      "    lineHeight: 1.6,",
+      "    color: colors.text,",
+      "    linkColor: colors.primary,",
+      "    linkHoverColor: colors.secondary,",
+      "    linkUnderline: true,",
+      "    codeBgColor: colors.gray100,",
+      "    codeColor: colors.danger,",
+      "    codeFontSize: 12,",
+      "    preBgColor: colors.gray100,",
+      "    preBorderRadius: 8,",
+      "    blockquoteBorderColor: colors.primary,",
+      "    headingColor: colors.text,",
+      "    allowDangerousHtml: false",
+      "})"
+    ]
+  },
+  "FletBox widgets Inspector.basic": {
+    "prefix": "Inspector.basic",
+    "description": "Make a FletBox widgets Inspector.basic widget",
+    "body": [
+      "Inspector(widget)"
+    ]
+  },
+  "FletBox widgets Inspector.normal": {
+    "prefix": "Inspector.normal",
+    "description": "Make a FletBox widgets Inspector.normal widget",
+    "body": [
+      "printWidgetCode(myComponent)"
+    ]
+  },
+  "FletBox widgets Inspector.full": {
+    "prefix": "Inspector.full",
+    "description": "Make a FletBox widgets Inspector.full widget",
+    "body": [
+      "inspectWidget(container) ; // logs to console"
+    ]
+  },
+  "FletBox widgets InstallButton.basic": {
+    "prefix": "InstallButton.basic",
+    "description": "Make a FletBox widgets InstallButton.basic widget",
+    "body": [
+      "InstallButton()"
+    ]
+  },
+  "FletBox widgets InstallButton.normal": {
+    "prefix": "InstallButton.normal",
+    "description": "Make a FletBox widgets InstallButton.normal widget",
+    "body": [
+      "InstallButton({ text: \"\ud83d\udcf2 Get App\", variant: \"filled\", onInstalled: () => trackInstall() })"
+    ]
+  },
+  "FletBox widgets InstallButton.full": {
+    "prefix": "InstallButton.full",
+    "description": "Make a FletBox widgets InstallButton.full widget",
+    "body": [
+      "InstallButton({",
+      "    text: \"Install FletBox App\",",
+      "    variant: \"filled\",",
+      "    size: \"large\",",
+      "    borderRadius: 32,",
+      "    padding: \"12px 24px\",",
+      "    bottom: 24,",
+      "    onInstalled: () => showSnackBar(\"Installed!\"),",
+      "    onClick: () => analytics.track(\"install_click\")",
+      "})"
+    ]
+  },
+  "FletBox widgets Expanded.basic": {
+    "prefix": "Expanded.basic",
+    "description": "Make a FletBox widgets Expanded.basic widget",
+    "body": [
+      "Expanded({ child: Text(\"Expand me\") })"
+    ]
+  },
+  "FletBox widgets Expanded.normal": {
+    "prefix": "Expanded.normal",
+    "description": "Make a FletBox widgets Expanded.normal widget",
+    "body": [
+      "Expanded({ child: Container({ bgColor: colors.primary, height: 200 }) })"
+    ]
+  },
+  "FletBox widgets Expanded.full": {
+    "prefix": "Expanded.full",
+    "description": "Make a FletBox widgets Expanded.full widget",
+    "body": [
+      "Expanded({ flex: 1, child: ListView(...) })"
+    ]
+  }
+}
