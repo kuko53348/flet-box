@@ -100,13 +100,19 @@ export const Dropdown = (props) => {
   const displayIcon = selectedOption ? getIcon(selectedOption) : null;
 
   const leftContent = [];
-  if (displayIcon) leftContent.push(Text({ text: displayIcon, size: 16 }));
+  if (displayIcon) {
+    leftContent.push(
+      Text({ text: displayIcon, size: 16, style: { flexShrink: 0 } }),
+    );
+  }
   leftContent.push(
     Text({
       text: displayText || currentPlaceholder,
       size: currentSize.fontSize,
       color: displayText ? currentTextColor : colors.textSecondary,
-      style: { flex: 1 },
+      // minWidth 0 + overflow hidden: un nombre of entidad largo can recorta with
+      // puntos suspensivos in vez of empujar the flecha fuera del selector.
+      style: { flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
     }),
   );
 
@@ -158,10 +164,24 @@ export const Dropdown = (props) => {
       Row({
         alignItems: "center",
         gap: 8,
-        style: { flex: 1 },
+        // minWidth: 0 for that un texto largo ENCOJA and no empuje al icono: sin
+        // él, the span no can bajar of su ancho of contenido and the
+        // expand_more can sale del selector.
+        style: { flex: 1, minWidth: 0 },
         children: leftContent,
       }),
-      Row({ alignItems: "center", gap: 4, children: rightContent }),
+      // the Row of the derecha TIENE that medir lo that su contenido. Row() trae
+      // width "100%" by defecto, and with eso este bloque can apropiaba of casi
+      // todo the ancho del selector: as no lleva justifyContent, the glifo
+      // quedaba anclado a su borde izquierdo, pegado al texto, in vez of
+      // apartado a the derecha. flexShrink 0 evita además that can apriete when
+      // the texto is largo.
+      Row({
+        alignItems: "center",
+        gap: 4,
+        style: { width: "auto", flexShrink: 0 },
+        children: rightContent,
+      }),
     ],
   });
 

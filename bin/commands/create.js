@@ -20,6 +20,15 @@ import { c, banner, gradient } from "../utils/colors.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const capacitorAppId = (projectName) => {
+  const segments = projectName
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean)
+    .map((segment) => (/^[a-z]/.test(segment) ? segment : `app${segment}`));
+  return `com.fletbox.${segments.join(".") || "app"}`;
+};
+
 /**
  * Parses the raw CLI arguments passed after the project name to determine
  * which template was requested and whether an explicit name was given.
@@ -88,6 +97,7 @@ export const createProject = async (projectName, rawArgs = []) => {
     process.exit(1);
   }
 
+  const appId = capacitorAppId(finalName);
   const projectPath = path.join(process.cwd(), finalName);
   if (fs.existsSync(projectPath)) {
     console.error(c("red", `❌ Folder "${finalName}" already exists`));
@@ -98,7 +108,13 @@ export const createProject = async (projectName, rawArgs = []) => {
 
   // Build the list of directories to create.
   // All templates share a common base; non-blank templates add screens/components.
-  const commonDirs = ["src", "src/assets/fonts", "src/database"];
+  const commonDirs = [
+    "assets",
+    "scripts",
+    "src",
+    "src/assets/fonts",
+    "src/database",
+  ];
   const extraDirs =
     template === "blank" ? [] : ["src/screens", "src/components"];
   if (template === "sidebar" || template === "adaptive") {
@@ -112,7 +128,10 @@ export const createProject = async (projectName, rawArgs = []) => {
   }
 
   // Write files shared by every template.
-  createFile(path.join(projectPath, "index.html"), templates.indexHtml());
+  createFile(
+    path.join(projectPath, "index.html"),
+    templates.indexHtml(finalName),
+  );
   createFile(
     path.join(projectPath, "package.json"),
     templates.packageJson(finalName),
@@ -120,14 +139,29 @@ export const createProject = async (projectName, rawArgs = []) => {
   createFile(path.join(projectPath, ".gitignore"), templates.gitignore());
   createFile(
     path.join(projectPath, "README.md"),
-    templates.readme(finalName, template),
+    templates.readme(finalName, template, appId),
   );
   createFile(path.join(projectPath, "run.sh"), templates.runSh());
   createFile(
     path.join(projectPath, "service-worker.js"),
     templates.serviceWorkerJs(),
   );
-  createFile(path.join(projectPath, "manifest.json"), templates.manifest());
+  createFile(
+    path.join(projectPath, "manifest.json"),
+    templates.manifest(finalName),
+  );
+  createFile(
+    path.join(projectPath, "capacitor.config.json"),
+    templates.capacitorConfig(finalName, appId),
+  );
+  createFile(
+    path.join(projectPath, "scripts/sync-android-icons.mjs"),
+    templates.syncAndroidIconsScript(),
+  );
+  createFile(
+    path.join(projectPath, "scripts/sync-ios-assets.mjs"),
+    templates.syncIOSAssetsScript(),
+  );
   createFile(
     path.join(projectPath, "src/database/themes.js"),
     templates.themesJs(),
@@ -146,6 +180,26 @@ export const createProject = async (projectName, rawArgs = []) => {
     if (fs.existsSync(woff))
       copyFile(woff, path.join(destFontsDir, "MaterialIcons-Regular.woff2"));
   }
+
+  const sourceAssetsDir = path.join(sourcePackageDir, "src/assets");
+  const appAssetsDir = path.join(projectPath, "src/assets");
+  for (const icon of [
+    "icon-192.png",
+    "icon-192-maskable.png",
+    "icon-512.png",
+    "icon-512-maskable.png",
+  ]) {
+    const source = path.join(sourceAssetsDir, icon);
+    if (!fs.existsSync(source)) {
+      throw new Error(`Required Flet-Box app icon is missing: ${source}`);
+    }
+    copyFile(source, path.join(appAssetsDir, icon));
+  }
+  const sourceLogo = path.join(sourceAssetsDir, "icon-1024-maskable.png");
+  if (!fs.existsSync(sourceLogo)) {
+    throw new Error(`Required Capacitor logo is missing: ${sourceLogo}`);
+  }
+  copyFile(sourceLogo, path.join(projectPath, "assets/logo.png"));
 
   // Generate screens and components according to the chosen template.
   if (template === "blank") {
@@ -246,5 +300,17 @@ export const createProject = async (projectName, rawArgs = []) => {
   console.log(`  ${c("brightCyan", "cd")} ${finalName}`);
   console.log(`  ${c("brightCyan", "npm install")}`);
   console.log(`  ${c("brightCyan", "npm run dev")}\n`);
-  console.log(`${c("gray", `📱 Template: ${template}`)}\n`);
+  console.log(`${c("gray", `📱 Template: ${template}`)}`);
+  console.log(
+    c(
+      "gray",
+      "Android: npm run android:init && npm run android:sync && npm run android:open\n",
+    ),
+  );
+  console.log(
+    c(
+      "gray",
+      "iOS:     npm install && flet-box build ios   (macOS + Xcode + CocoaPods)\n",
+    ),
+  );
 };

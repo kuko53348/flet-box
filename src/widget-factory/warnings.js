@@ -1,7 +1,7 @@
 // core/warnings.js
 // FletBox Warning System – Elegant, minimal, helpful.
 
-// 🚀 Gate de entorno: desactiva warnings en producción
+// 🚀 Gate of entorno: desactiva warnings in producción
 const IS_DEV = typeof FLETBOX_DEV !== 'undefined' ? FLETBOX_DEV : true;
 
 const suggestionCache = new Map();

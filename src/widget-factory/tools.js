@@ -98,7 +98,7 @@ const toCSSValue = (key, value) => {
  * @returns {HTMLElement} The element (for chaining).
  */
 export function setStyles(el, prop, value) {
-  // Validate element
+  // Validateste element
   if (!el || !el.style) return el;
 
   // Case 1: string (prop + value)

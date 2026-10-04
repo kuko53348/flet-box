@@ -14,7 +14,7 @@
  * @returns {HTMLElement} The newly created DOM element with `_events` initialised.
  */
 export const createWidget = (tag, props) => {
-  // Validate that tag is a string; fall back to 'div' when it is not.
+  // Validateste that tag is a string; fall back to 'div' when it is not.
   let finalTag = tag;
   if (typeof finalTag !== "string") {
     console.warn("⚠️ createWidget: tag is not a string, using 'div'", finalTag);

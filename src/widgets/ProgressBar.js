@@ -26,7 +26,7 @@ export const ProgressBar = (props) => {
     borderRadius !== undefined ? borderRadius : height / 2;
   const isColumn = valuePosition === "top" || valuePosition === "bottom";
 
-  // Create fill bar
+  // Createste fill bar
   const fill = WidgetFactory({
     width: indeterminate ? "100%" : `${percentage}%`,
     height: "100%",

@@ -85,7 +85,7 @@ export function SnackBar(options) {
   const finalText = customText || preset.text;
   const finalAction = customAction || preset.action;
 
-  // Create main container
+  // Createste main container
   const snackbar = WidgetFactory({
     tag: "div",
     position: "fixed",

@@ -249,9 +249,15 @@ A typical generated project looks like this:
 my-app/
 ├── index.html
 ├── package.json
+├── capacitor.config.json
 ├── manifest.json
 ├── service-worker.js
 ├── run.sh
+├── assets/
+│   └── logo.png
+├── scripts/
+│   ├── sync-android-icons.mjs
+│   └── sync-ios-assets.mjs
 └── src/
     ├── app.js
     ├── assets/
@@ -297,6 +303,91 @@ cd dist
 ./run.sh
 ```
 
+## Create an Android app
+
+Projects created with `flet-box create` include a Capacitor configuration,
+valid PWA icon files, and Android build scripts. After creating the app, use:
+
+```bash
+cd my-app
+npm install
+flet-box build android
+```
+
+The first run initializes Capacitor's Android project automatically. Every run
+builds and synchronizes the web app, generates Android launcher icons from
+`assets/logo.png`, and compiles a debug APK at
+`android/app/build/outputs/apk/debug/app-debug.apk`. If project npm dependencies
+are missing, the command runs `npm install` before building and prints the
+absolute APK path when complete. Replace `assets/logo.png` with a 1024×1024 app
+logo before building. Android builds require Node.js 20.9 or newer, Java, and
+the Android SDK; the command checks for Java and the SDK but does not install
+system-wide tools such as Android Studio or the JDK.
+
+To open the native project in Android Studio, run `npm run android:open`.
+
+## Create an iOS app
+
+Generated projects include Capacitor's iOS platform, scripts, and a script that
+paints the native icon and launch screen from `assets/logo.png`. Install the
+full Xcode app (the Command Line Tools alone cannot build iOS apps), an iOS
+simulator runtime, and CocoaPods, then run:
+
+```bash
+cd my-app
+npm install
+flet-box build ios
+```
+
+The first run initializes the iOS project. Every run then builds and
+synchronizes the web app, regenerates the app icon, launch images and launch
+screen background from `assets/logo.png`, and compiles the simulator app. The
+command prints its absolute path, normally
+`ios/build/Build/Products/Debug-iphonesimulator/App.app`, and the app installs
+on a running simulator with:
+
+```bash
+xcrun simctl install booted <path printed by the command>
+```
+
+Missing project npm dependencies are installed automatically. The command
+verifies the toolchain before touching the project and reports the exact fix
+when something is missing, including the case where `xcode-select -p` still
+points at `/Library/Developer/CommandLineTools`. It does not install Xcode,
+CocoaPods, or simulator runtimes.
+
+### Archive for real devices
+
+```bash
+flet-box build ios --archive
+```
+
+This builds `ios/build/App.xcarchive` for the `iphoneos` SDK in Release
+configuration with code signing disabled. The archive is unsigned, so signing
+happens in Xcode: open it with Product → Archive, select your team, then export
+the IPA, or use `xcodebuild -exportArchive` with an `ExportOptions.plist`.
+
+### iOS native assets
+
+`scripts/sync-ios-assets.mjs` runs as part of `npm run ios:sync`, and can be run
+on its own with `npm run ios:icons`. It reads the icon and launch slots from
+`ios/App/App/Assets.xcassets/*/Contents.json` instead of hardcoding sizes, so a
+Capacitor template with different slots keeps working. It:
+
+- rewrites every app icon slot from `assets/logo.png`, flattened onto the brand
+  color because iOS rejects icons that carry an alpha channel;
+- rewrites the launch images as a brand-colored canvas with the logo centered,
+  keeping the dimensions the template ships;
+- replaces the launch storyboard background with the same brand color, since
+  the launch image is laid out inside the safe area and the notch strip and
+  home indicator would otherwise flash white;
+- sets `UIStatusBarStyle` to light content and turns off
+  `UIViewControllerBasedStatusBarAppearance`, which otherwise makes the plist
+  status bar style ignored.
+
+The script is idempotent: running it twice leaves identical files. The brand
+color `#1a1a2e` is defined at the top of the script.
+
 ## Command reference
 
 | Command | What it does |
@@ -313,6 +404,9 @@ cd dist
 | `flet-box run` | Starts the static development server. |
 | `flet-box run-spa` | Starts the SPA server with hot reload. |
 | `flet-box build` | Creates a production bundle. |
+| `flet-box build android` | Builds the Android debug APK. |
+| `flet-box build ios` | Builds an iOS Simulator app (macOS and Xcode required). |
+| `flet-box build ios --archive` | Builds an unsigned device archive to sign in Xcode. |
 | `flet-box pkg` | Opens the package manager. |
 | `flet-box --version` | Shows the CLI version. |
 | `flet-box --help` | Shows the command list. |

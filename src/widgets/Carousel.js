@@ -182,7 +182,7 @@ export const Carousel = (props) => {
   });
   trackRef = track;
 
-  // Create slides
+  // Createste slides
   items.forEach((item) => {
     const slide = WidgetFactory({
       width: `${100 / items.length}%`,

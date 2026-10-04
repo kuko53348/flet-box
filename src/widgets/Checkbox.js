@@ -27,7 +27,7 @@ export const Checkbox = (props) => {
     }
   };
 
-  // Create checkmark
+  // Createste checkmark
   const checkMark = WidgetFactory({
     tag: "span",
     textContent: "✓",
@@ -38,7 +38,7 @@ export const Checkbox = (props) => {
   });
   checkMarkRef = checkMark;
 
-  // Create main checkbox container
+  // Createste main checkbox container
   const checkbox = WidgetFactory({
     width: size,
     height: size,

@@ -59,7 +59,7 @@ export const Stepper = (props) => {
       stepsContainer.removeChild(stepsContainer.firstChild);
     }
 
-    // Calculate if we need to wrap or scroll
+    // Calculatesteste if we need to wrap or scroll
     const stepWidth = 80;
     const totalSteps = steps.length;
     const availableWidth = stepsContainer.parentElement?.offsetWidth || 800;

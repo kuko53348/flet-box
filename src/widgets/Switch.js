@@ -36,7 +36,7 @@ export const Switch = (props) => {
     }
   };
 
-  // Create knob
+  // Createste knob
   const knob = WidgetFactory({
     width: sz.knob,
     height: sz.knob,
@@ -50,7 +50,7 @@ export const Switch = (props) => {
   });
   knobRef = knob;
 
-  // Create main switch container
+  // Createste main switch container
   const switchContainer = WidgetFactory({
     width: sz.width,
     height: sz.height,

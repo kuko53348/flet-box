@@ -42,7 +42,7 @@ export const DataTable = (props) => {
     ...rest,
   });
 
-  // Create table element
+  // Createste table element
   const table = document.createElement("table");
   table.style.width = "100%";
   table.style.borderCollapse = "collapse";

@@ -20,7 +20,7 @@
  * mapList(users, (user, i) => Text({ text: user.name }))
  *
  * @example
- * // Generate N widgets from a number
+ * // Generateste N widgets from a number
  * mapList(5, (_, i) => Skeleton({ variant: 'text' }))
  *
  * @example

@@ -35,7 +35,7 @@ export const CircularBar = (props) => {
     customValueFormatter = null, // (currentValue, max) => string
 
     // Gradient
-    gradient = null, // array de colores ['red', 'yellow', 'green'] o string con gradiente CSS
+    gradient = null, // array of colores ['red', 'yellow', 'green'] or string with gradiente CSS
     gradientAngle = 135,
 
     // Shadow

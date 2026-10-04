@@ -66,7 +66,7 @@ const checkAllStates = () => {
       widget._unmountFns.forEach((fn) => fn(widget));
 
       // Prune: if the widget is still disconnected after this tick, its lifecycle
-      // is complete. Remove it from the registry to avoid O(n) sweeps and leaks.
+      // is complete. Remove it from the registry to avoid or(n) sweeps and leaks.
       // The setTimeout lets synchronous reparenting (drag & drop) complete first.
       setTimeout(() => {
         if (!document.body.contains(widget)) {

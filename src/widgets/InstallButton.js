@@ -51,7 +51,7 @@ export const InstallButton = (props) => {
     }
   };
 
-  // Create button using the flet-box Button component
+  // Createste button using the flet-box Button component
   button = Button({
     text: text,
     variant: variant,

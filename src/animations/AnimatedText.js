@@ -76,7 +76,7 @@ export const AnimatedText = ({
       delay: `${baseDelay}s`,
     }));
 
-    // Create a new Text widget for this single character, inheriting all original
+    // Createste a new Text widget for this single character, inheriting all original
     // text props (font, color, size, etc.) but rendering only the one letter.
     const letterWidget = Text({
       ...originalProps,

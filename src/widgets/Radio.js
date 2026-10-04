@@ -28,7 +28,7 @@ export const Radio = (props) => {
     }
   };
 
-  // Create dot
+  // Createste dot
   const dot = WidgetFactory({
     width: size / 2,
     height: size / 2,
@@ -38,7 +38,7 @@ export const Radio = (props) => {
   });
   dotRef = dot;
 
-  // Create main radio container
+  // Createste main radio container
   const radio = WidgetFactory({
     width: size,
     height: size,

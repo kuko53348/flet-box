@@ -52,7 +52,7 @@ export const Divider = (props = {}) => {
   // If margin is a string, use it directly (overrides everything)
   const useMarginString = typeof margin === "string";
 
-  // Create widget
+  // Createste widget
   const widget = WidgetFactory({
     tag: "div",
     backgroundColor: color,

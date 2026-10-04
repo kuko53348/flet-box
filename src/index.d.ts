@@ -1,5 +1,5 @@
 // index.d.ts - FletBox Type Declarations
-// Versión completa con todos los widgets, animaciones, servicios y utilidades
+// Versión completa with todos the widgets, animaciones, servicios and utilidades
 
 declare module 'flet-box' {
   // =========================================================================
@@ -12,7 +12,7 @@ declare module 'flet-box' {
   type Margin = number | string;
 
   // =========================================================================
-  // Props comunes (heredadas por todos los widgets)
+  // Props comunes (heredadas by todos the widgets)
   // =========================================================================
   interface CommonProps {
     width?: Size;
@@ -38,7 +38,7 @@ declare module 'flet-box' {
   }
 
   // =========================================================================
-  // useState Hook (persistente con RamStore)
+  // useState Hook (persistente with RamStore)
   // =========================================================================
   export function useState<T>(
     key: string,
@@ -585,7 +585,7 @@ declare module 'flet-box' {
   };
 
   // =========================================================================
-  // Alert dialogs y feedback
+  // Alert dialogs and feedback
   // =========================================================================
   interface SnackBarOptions {
     message: string;

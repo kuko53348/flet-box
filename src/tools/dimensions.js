@@ -19,7 +19,7 @@
 let windowWidth = window.innerWidth;
 let windowHeight = window.innerHeight;
 
-// Live named exports — ES-module live bindings: importers of { width, height }
+// Live named exports — is-module live bindings: importers of { width, height }
 // always read the current value, kept in sync on resize.
 export let width = windowWidth;
 export let height = windowHeight;

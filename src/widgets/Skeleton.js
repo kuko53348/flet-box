@@ -209,7 +209,7 @@ export const Skeleton = (props) => {
     });
   };
 
-  // Create multiple items container using WidgetFactory
+  // Createste multiple items container using WidgetFactory
   const container = WidgetFactory({
     tag: "div",
     display: "flex",

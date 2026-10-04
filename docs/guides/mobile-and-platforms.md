@@ -97,6 +97,18 @@ Use a stable package id. Changing it later can create a different application in
 
 ## Android
 
+Projects created with `flet-box create` already include Capacitor's Android
+configuration and commands for adding the platform, building the web assets,
+and generating launcher icons from `assets/logo.png`. See the [CLI Android
+workflow](../cli/README.md#create-an-android-app).
+
+To build a debug APK from one of these generated projects, run
+`flet-box build android`. It initializes the Android platform on first use,
+synchronizes the web assets and launcher icons, and compiles the APK.
+It installs missing npm project dependencies and prints the absolute APK path.
+Android Studio, Java, and the Android SDK remain system prerequisites and must
+be installed separately.
+
 ### Add Android to the project
 
 ```bash
@@ -185,6 +197,33 @@ android/app/build/outputs/bundle/release/app-release.aab
 ```
 
 ## iOS
+
+Projects created with `flet-box create` include Capacitor's iOS platform and
+scripts. On macOS, install the full Xcode app, an iOS simulator runtime, and
+CocoaPods (`sudo gem install cocoapods` and `pod setup`). Then run
+`flet-box build ios` to initialize the platform on first use, synchronize the
+web assets, regenerate the app icon, launch images and launch screen from
+`assets/logo.png`, and build an iOS Simulator `.app`. The command prints the
+absolute app path, normally
+`ios/build/Build/Products/Debug-iphonesimulator/App.app`, which installs with
+`xcrun simctl install booted <path>`.
+
+For real devices, `flet-box build ios --archive` writes
+`ios/build/App.xcarchive` for the `iphoneos` SDK. The archive is unsigned: open
+it in Xcode with a signing team to export an IPA.
+
+The Command Line Tools are not enough. `xcodebuild` is only a stub there and
+there is no simulator runtime, so the build command refuses to start and prints
+the `xcode-select -s /Applications/Xcode.app/Contents/Developer` fix instead of
+failing later inside Xcode. CocoaPods is checked too, because Capacitor links
+its native layer with Pods.
+
+### Capacitor origin
+
+Both platforms serve the app from a local HTTPS origin
+(`https://localhost`), configured with `androidScheme` and `iosScheme` in
+`capacitor.config.json`. A remote API has to allow that origin in its CORS
+configuration.
 
 ### Add iOS to the project
 

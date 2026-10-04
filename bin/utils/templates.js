@@ -1,20 +1,22 @@
 // bin/utils/templates.js
 
-export const indexHtml = () => `<!DOCTYPE html>
+export const indexHtml = (appName = "FletBox App") => `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <link rel="stylesheet" href="./src/assets/fonts/icons.css">
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" href="./src/assets/icon-192.png" sizes="192x192" type="image/png">
 
-    <title>FletBox - UI Framework</title>
-    <meta name="description" content="FletBox: UI framework with powerful animations, gradients, and declarative components. Fast, lightweight, and easy to use.">
+    <title>${appName}</title>
+    <meta name="description" content="${appName} built with Flet-Box.">
     <meta name="keywords" content="fletbox, framework, ui, javascript, animations, gradients">
     <meta name="author" content="Your name">
 
-    <meta property="og:title" content="FletBox - UI Framework">
-    <meta property="og:description" content="UI framework with powerful animations and gradients">
+    <meta property="og:title" content="${appName}">
+    <meta property="og:description" content="${appName} built with Flet-Box.">
     <meta property="og:type" content="website">
 
     <meta name="theme-color" content="#1a1a2e">
@@ -23,7 +25,6 @@ export const indexHtml = () => `<!DOCTYPE html>
         * { -webkit-text-size-adjust: 100%; }
         body { margin: 0; padding: 0; font-family: system-ui, sans-serif}
     </style>
-</head>
     <script type="importmap">
         {
             "imports": {
@@ -620,94 +621,355 @@ self.addEventListener('fetch', event => {
 `;
 
 export const packageJson = (name) => `{
-  "name": "${name}",
+  "name": ${JSON.stringify(name)},
   "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "bash run.sh",
-    "build": "bash createBundle.sh",
-    "start": "npm run dev"
+    "build": "flet-box createBundle www",
+    "start": "npm run dev",
+    "android:init": "npm run build && cap add android",
+    "android:sync": "npm run build && cap sync android && npm run android:icons",
+    "android:icons": "node scripts/sync-android-icons.mjs",
+    "android:open": "cap open android",
+    "android:run": "cap run android",
+    "ios:init": "npm run build && cap add ios",
+    "ios:sync": "npm run build && cap sync ios && npm run ios:icons",
+    "ios:icons": "node scripts/sync-ios-assets.mjs",
+    "ios:open": "cap open ios",
+    "ios:run": "cap run ios"
   },
   "dependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/ios": "^7.0.0",
     "flet-box": "^1.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.0.0",
+    "sharp": "^0.35.5"
+  },
+  "engines": {
+    "node": ">=20.9.0"
   }
 }`;
 
-export const manifest = () => `{
-  "name": "FletBox - UI Framework",
-  "short_name": "FletBox",
-  "description": "UI framework with powerful animations and gradients",
+export const capacitorConfig = (appName, appId) => `${JSON.stringify(
+  {
+    appId,
+    appName,
+    webDir: "www",
+    backgroundColor: "#1a1a2e",
+    server: { androidScheme: "https", iosScheme: "https" },
+  },
+  null,
+  2,
+)}
+`;
+
+export const syncAndroidIconsScript = () => `import { mkdir, readFile, writeFile } from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import sharp from "sharp";
+
+const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const androidRes = path.join(projectRoot, "android", "app", "src", "main", "res");
+const logoPath = path.join(projectRoot, "assets", "logo.png");
+const backgroundPath = path.join(androidRes, "values", "ic_launcher_background.xml");
+
+for (const requiredPath of [logoPath, backgroundPath]) {
+  try {
+    await readFile(requiredPath);
+  } catch {
+    throw new Error(
+      \`Missing \${requiredPath}. Run npm run android:init before generating Android icons.\`,
+    );
+  }
+}
+
+const logo = await readFile(logoPath);
+const densities = [
+  ["mdpi", 48],
+  ["hdpi", 72],
+  ["xhdpi", 96],
+  ["xxhdpi", 144],
+  ["xxxhdpi", 192],
+];
+const background = { r: 26, g: 26, b: 46 };
+
+for (const [density, size] of densities) {
+  const directory = path.join(androidRes, \`mipmap-\${density}\`);
+  await mkdir(directory, { recursive: true });
+  const icon = await sharp(logo)
+    .resize(size, size, { fit: "contain" })
+    .flatten({ background })
+    .png()
+    .toBuffer();
+  const foregroundLayer = await sharp(logo)
+    .resize(Math.round(size * 0.66), Math.round(size * 0.66), { fit: "contain" })
+    .png()
+    .toBuffer();
+  const foreground = await sharp({
+    create: {
+      width: size,
+      height: size,
+      channels: 4,
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    },
+  })
+    .composite([{ input: foregroundLayer, gravity: "centre" }])
+    .png()
+    .toBuffer();
+
+  await Promise.all([
+    writeFile(path.join(directory, "ic_launcher.png"), icon),
+    writeFile(path.join(directory, "ic_launcher_round.png"), icon),
+    writeFile(path.join(directory, "ic_launcher_foreground.png"), foreground),
+  ]);
+}
+
+const xml = await readFile(backgroundPath, "utf8");
+const backgroundColor = /(<color name="ic_launcher_background">)#(?:[A-Fa-f0-9]{6}|[A-Fa-f0-9]{8})(<[/]color>)/;
+if (!backgroundColor.test(xml)) {
+  throw new Error(\`Invalid adaptive icon background resource: \${backgroundPath}\`);
+}
+await writeFile(backgroundPath, xml.replace(backgroundColor, "$1#1a1a2e$2"));
+
+console.log("Android launcher icons generated from assets/logo.png.");
+`;
+
+export const syncIOSAssetsScript = () => `import { access, readFile, writeFile } from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import sharp from "sharp";
+
+const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const nativeAppDir = path.join(projectRoot, "ios", "App", "App");
+const appIconSet = path.join(nativeAppDir, "Assets.xcassets", "AppIcon.appiconset");
+const splashSet = path.join(nativeAppDir, "Assets.xcassets", "Splash.imageset");
+const infoPlistPath = path.join(nativeAppDir, "Info.plist");
+const launchScreenPath = path.join(nativeAppDir, "Base.lproj", "LaunchScreen.storyboard");
+const logoPath = path.join(projectRoot, "assets", "logo.png");
+
+// Brand background, the same #1a1a2e as theme-color in index.html and manifest.json.
+const background = { r: 26, g: 26, b: 46 };
+const backgroundComponent = (value) => Number((value / 255).toFixed(6));
+
+const requireExists = async (target) => {
+  try {
+    await access(target);
+  } catch {
+    throw new Error(
+      "Missing " + target + ". Run \`npm run ios:init\` before generating iOS assets.",
+    );
+  }
+};
+
+for (const target of [logoPath, appIconSet, splashSet, infoPlistPath, launchScreenPath]) {
+  await requireExists(target);
+}
+
+const logo = await readFile(logoPath);
+const logoMetadata = await sharp(logo).metadata();
+if ((logoMetadata.width ?? 0) < 512 || (logoMetadata.height ?? 0) < 512) {
+  throw new Error(
+    "assets/logo.png must be at least 512x512 pixels, found " +
+      logoMetadata.width +
+      "x" +
+      logoMetadata.height +
+      ".",
+  );
+}
+
+const readContents = async (directory) =>
+  JSON.parse(await readFile(path.join(directory, "Contents.json"), "utf8"));
+
+// APP ICON
+// The Capacitor template ships one universal 1024x1024 slot. Slot names and
+// sizes come from Contents.json instead of being hardcoded, so a template with
+// several slots keeps working. iOS rejects icons with an alpha channel, hence
+// the flatten onto the brand color.
+const iconContents = await readContents(appIconSet);
+const iconSlots = iconContents.images.filter((image) => image.filename);
+if (iconSlots.length === 0) {
+  throw new Error("No icon slots found in " + path.join(appIconSet, "Contents.json"));
+}
+
+const slotPixels = (image) => {
+  const base = Number(image.size ? image.size.split("x")[0] : 0);
+  if (!base) return 1024;
+  const scale = image.scale === "3x" ? 3 : image.scale === "2x" ? 2 : 1;
+  return Math.round(base * scale);
+};
+
+for (const slot of iconSlots) {
+  const size = slotPixels(slot);
+  const icon = await sharp(logo)
+    .resize(size, size, { fit: "contain" })
+    .flatten({ background })
+    .png()
+    .toBuffer();
+  await writeFile(path.join(appIconSet, slot.filename), icon);
+}
+
+// LAUNCH IMAGES
+// LaunchScreen.storyboard stretches the "Splash" image with scaleAspectFill, so
+// a square brand image covers every screen. Each file keeps the dimensions the
+// template ships with, which the asset catalog scales per device.
+const splashContents = await readContents(splashSet);
+const splashSlots = splashContents.images.filter((image) => image.filename);
+
+for (const slot of splashSlots) {
+  const target = path.join(splashSet, slot.filename);
+  const metadata = await sharp(target).metadata();
+  const side = metadata.width && metadata.width === metadata.height ? metadata.width : 2732;
+  const badge = await sharp(logo)
+    .resize(Math.round(side * 0.3), Math.round(side * 0.3), { fit: "contain" })
+    .png()
+    .toBuffer();
+  const splash = await sharp({
+    create: {
+      width: side,
+      height: side,
+      channels: 4,
+      background,
+    },
+  })
+    .composite([{ input: badge, gravity: "centre" }])
+    .removeAlpha()
+    .png()
+    .toBuffer();
+  await writeFile(target, splash);
+}
+
+// LAUNCH SCREEN BACKGROUND
+// The splash image is laid out inside the safe area, so the notch strip and the
+// home indicator keep the storyboard background color. Left as
+// systemBackgroundColor it flashes white over the dark launch image.
+const storyboard = await readFile(launchScreenPath, "utf8");
+const brandedColor =
+  '<color key="backgroundColor" red="' +
+  backgroundComponent(background.r) +
+  '" green="' +
+  backgroundComponent(background.g) +
+  '" blue="' +
+  backgroundComponent(background.b) +
+  '" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>';
+const systemColor = '<color key="backgroundColor" systemColor="systemBackgroundColor"/>';
+const brandedStoryboard = storyboard.split(systemColor).join(brandedColor);
+if (brandedStoryboard !== storyboard) {
+  await writeFile(launchScreenPath, brandedStoryboard);
+}
+
+// STATUS BAR
+// FletBox apps paint a dark app bar, and the template Info.plist leaves
+// UIViewControllerBasedStatusBarAppearance enabled, which makes the plist status
+// bar style ignored. Disable it so the light content style actually applies.
+const setPlistValue = (xml, key, value) => {
+  const openTag = "<key>" + key + "</key>";
+  const valueTag = value.startsWith("<") ? value : "<string>" + value + "</string>";
+  const keyStart = xml.indexOf(openTag);
+  if (keyStart !== -1) {
+    // The value follows on the next indented line, so jump to its first tag.
+    const valueStart = xml.indexOf("<", keyStart + openTag.length);
+    if (xml.startsWith("<string>", valueStart)) {
+      const valueEnd = xml.indexOf("</string>", valueStart) + "</string>".length;
+      return xml.slice(0, valueStart) + valueTag + xml.slice(valueEnd);
+    }
+    if (xml.startsWith("<true", valueStart) || xml.startsWith("<false", valueStart)) {
+      const valueEnd = xml.indexOf("/>", valueStart) + 2;
+      return xml.slice(0, valueStart) + valueTag + xml.slice(valueEnd);
+    }
+  }
+  const closing = xml.lastIndexOf("</dict>");
+  return (
+    xml.slice(0, closing) +
+    "\\t" + openTag + "\\n\\t" + valueTag + "\\n" +
+    xml.slice(closing)
+  );
+};
+
+const plist = await readFile(infoPlistPath, "utf8");
+const brandedPlist = setPlistValue(
+  setPlistValue(plist, "UIStatusBarStyle", "UIStatusBarStyleLightContent"),
+  "UIViewControllerBasedStatusBarAppearance",
+  "<false />",
+);
+if (brandedPlist !== plist) {
+  await writeFile(infoPlistPath, brandedPlist);
+}
+
+console.log(
+  "iOS app icon, launch images and launch screen generated from assets/logo.png " +
+    "(" + iconSlots.length + " icon slot(s), " + splashSlots.length + " launch image(s)).",
+);`;
+
+export const manifest = (appName = "FletBox App") => `{
+  "name": ${JSON.stringify(appName)},
+  "short_name": ${JSON.stringify(appName.slice(0, 12))},
+  "description": ${JSON.stringify(`${appName} built with Flet-Box`)},
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "display_override": ["window-controls-overlay"],
   "theme_color": "#1a1a2e",
   "background_color": "#1a1a2e",
   "orientation": "any",
-  "handle_links": "preferred",
   "icons": [
     {
-      "src": "/src/assets/icon-192.png",
+      "src": "./src/assets/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/src/assets/icon-192-maskable.png",
+      "src": "./src/assets/icon-192-maskable.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/src/assets/icon-512.png",
+      "src": "./src/assets/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/src/assets/icon-512-maskable.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "/src/assets/icon-1024.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/src/assets/icon-1024-maskable.png",
+      "src": "./src/assets/icon-512-maskable.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
     }
   ],
-  "handle_links": "preferred",
   "launch_handler": {
     "client_mode": "focus-existing"
   },
-  "protocol_handlers": [
-    {
-      "protocol": "web+fletbox",
-      "url": "/?handler=%s"
-    }
-  ],
-  "edge_side_panel": {
-    "preferred_width": 400
-  }
+  "handle_links": "preferred"
 }
 `;
 
 export const gitignore = () => `node_modules/
 dist/
+www/
+ios/build/
+ios/App/Pods/
+ios/App/App/public/
+ios/capacitor-cordova-ios-plugins/
+android/.gradle/
+android/.idea/
+android/build/
+android/app/build/
+android/local.properties
+android/capacitor-cordova-android-plugins/
 package-lock.json
 .DS_Store
 *.log
 `;
 
-export const readme = (name) => `# ${name}
+export const readme = (name, _template, appId) => `# ${name}
 
 FletBox app with 3 screens: Root, Home and About, plus Drawer menu.
+The generated Capacitor configuration uses package id \`${appId}\`.
 
 ## Quick Start
 
@@ -716,12 +978,73 @@ npm install
 npm run dev
 \`\`\`
 
+## Android
+
+This project is preconfigured for Capacitor. Install Node.js 20.9 or newer,
+Android Studio, and the Android SDK. Then create the native Android project:
+
+\`\`\`bash
+npm install
+flet-box build android
+\`\`\`
+
+The command initializes Android on first use, builds and synchronizes the web
+app, generates launcher icons from \`assets/logo.png\`, and compiles a debug APK
+at \`android/app/build/outputs/apk/debug/app-debug.apk\`. It installs missing
+project npm dependencies and prints the absolute APK path when finished.
+Android Studio, Java, and the Android SDK must already be installed. Replace
+that image with your app logo before distributing. To open the native project
+in Android Studio, run \`npm run android:open\`. For a signed release, use
+**Build → Generate Signed Bundle / APK** in Android Studio. The PWA manifest
+icons are in \`src/assets/\`.
+
+## iOS
+
+This project is preconfigured for Capacitor iOS. On macOS, install the full
+Xcode app, its iOS simulator runtime, and CocoaPods
+(\`sudo gem install cocoapods\` then \`pod setup\`). Node.js 20.9 or newer is
+required. Then build the simulator app:
+
+\`\`\`bash
+npm install
+flet-box build ios
+\`\`\`
+
+The command initializes iOS on first use, builds and synchronizes the web app,
+generates the app icon, launch images and launch screen background from
+\`assets/logo.png\`, and compiles
+\`ios/build/Build/Products/Debug-iphonesimulator/App.app\`. It prints the
+absolute path when finished. Install it on a running simulator with
+\`xcrun simctl install booted <path>\`.
+
+For a real device or the App Store, build the unsigned archive and sign it with
+your Apple team:
+
+\`\`\`bash
+flet-box build ios --archive
+\`\`\`
+
+That writes \`ios/build/App.xcarchive\`. Open it in Xcode (Product → Archive) with
+a signing team selected to export an IPA. To open the native project directly,
+run \`npm run ios:open\`.
+
+Replace \`assets/logo.png\` with a 1024×1024 logo before distributing; the icon,
+the launch images and the launch background are all generated from it. The
+launch background is the app brand color \`#1a1a2e\`, which lives in
+\`scripts/sync-ios-assets.mjs\`.
+
+Capacitor uses a local HTTPS origin (\`https://localhost\`) in the Android and
+iOS WebViews. If the app calls a remote API, allow that origin in the API's
+CORS configuration and use HTTPS for the remote service.
+
 ## Features
 
 - Welcome screen with rocket icon
 - Dashboard screen with welcome message
 - About screen with framework info
 - Drawer menu for navigation
+- PWA icons and Capacitor Android launcher/splash assets
+- Capacitor iOS project, icon and launch screen assets
 - Dark/Light theme support
 
 ## Project Structure

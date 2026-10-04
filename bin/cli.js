@@ -15,6 +15,8 @@ import path from "path";
 import { createProject } from "./commands/create.js";
 import { packageManager } from "./commands/package.js";
 import { createBundle } from "./commands/createBundle.js";
+import { buildAndroid } from "./commands/buildAndroid.js";
+import { buildIOS } from "./commands/buildIOS.js";
 import { runDevServer } from "./commands/runServer.js";
 import { createScreen } from "./commands/createScreen.js";
 import { createComponent } from "./commands/createComponent.js";
@@ -64,6 +66,9 @@ ${cmd("screen <name|num>", "Create screen(s) (1-10)")}
 ${cmd("component <name|num>", "Create component(s) (1-10)")}
 ${cmd("createBundle [dir]", "Unified production bundle")}
 ${cmd("   └─ [dir]", "target folder (default www)")}
+${cmd("build android", "Build Android debug APK")}
+${cmd("build ios", "Build iOS Simulator app (macOS + Xcode)")}
+${cmd("build ios --archive", "Build unsigned device archive (.xcarchive)")}
 ${cmd("run", "Static file server")}
 ${cmd("run --hot", "Dev server with hot reload")}
 ${cmd("run-spa", "SPA + hot reload")}
@@ -80,6 +85,9 @@ ${opt("--dry-run | --list", "kill-server: just list, do not kill")}
 
 ${section("✨", "EXAMPLES")}
   ${c("gray", "flet-box create my-app --adaptive")}
+  ${c("gray", "flet-box build android        # create a debug APK")}
+  ${c("gray", "flet-box build ios            # create an iOS Simulator app")}
+  ${c("gray", "flet-box build ios --archive  # create an .xcarchive to sign in Xcode")}
   ${c("gray", "cd my-app && flet-box run-spa")}
   ${c("gray", "flet-box run-bundle            # build & preview production")}
   ${c("gray", "flet-box kill-server 8000      # kill the parasite server")}
@@ -229,8 +237,17 @@ async function main() {
 
       case "createBundle":
       case "bundle":
-      case "build":
         await createBundle(args[1]);
+        break;
+
+      case "build":
+        if (args[1] === "android") {
+          buildAndroid();
+        } else if (args[1] === "ios") {
+          buildIOS(args.slice(2));
+        } else {
+          await createBundle(args[1]);
+        }
         break;
 
       case "pkg":
