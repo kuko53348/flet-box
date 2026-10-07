@@ -12,6 +12,8 @@ export const Dropdown = (props) => {
     options = [],
     value = null,
     onChange,
+    /** @deprecated Use onPress instead */
+    onPress: onPressProp,
     placeholder = "Select...",
     disabled = false,
     label,
@@ -28,6 +30,9 @@ export const Dropdown = (props) => {
     portal = true,
     ...rest
   } = props;
+
+  // onPress is the canonical callback name; onChange is kept as a deprecated alias
+  const effectiveOnChange = onPressProp || onChange;
 
   // Internal state
   let isOpen = false;
@@ -126,7 +131,7 @@ export const Dropdown = (props) => {
         e.stopPropagation();
         if (!currentDisabled) {
           selectedValue = null;
-          if (onChange) onChange(null);
+          if (effectiveOnChange) effectiveOnChange(null);
           updateDisplay();
           closeMenu();
         }
@@ -327,7 +332,7 @@ export const Dropdown = (props) => {
         e.stopPropagation();
         if (!currentDisabled) {
           selectedValue = optValue;
-          if (onChange) onChange(optValue);
+          if (effectiveOnChange) effectiveOnChange(optValue);
           updateDisplay();
           closeMenu();
         }
@@ -379,7 +384,7 @@ export const Dropdown = (props) => {
     if (newProps.value !== undefined && newProps.value !== selectedValue) {
       selectedValue = newProps.value;
       needsDisplayUpdate = true;
-      if (onChange) onChange(selectedValue);
+      if (effectiveOnChange) effectiveOnChange(selectedValue);
     }
     if (newProps.disabled !== undefined) {
       currentDisabled = newProps.disabled;

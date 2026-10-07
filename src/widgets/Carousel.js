@@ -15,6 +15,7 @@ export const Carousel = (props) => {
     width = "100%",
     borderRadius = 12,
     onIndexChange,
+    onPress,
 
     // Dot customization
     dotColor = colors.gray300,
@@ -85,7 +86,8 @@ export const Carousel = (props) => {
     setTimeout(() => {
       isTransitioning = false;
     }, 350);
-    if (onIndexChange) onIndexChange(currentIndex);
+    const cb = onIndexChange || onPress;
+    if (cb) cb(currentIndex);
   };
 
   const prev = () => {
@@ -108,7 +110,8 @@ export const Carousel = (props) => {
     setTimeout(() => {
       isTransitioning = false;
     }, 350);
-    if (onIndexChange) onIndexChange(currentIndex);
+    const cb = onIndexChange || onPress;
+    if (cb) cb(currentIndex);
   };
 
   const goTo = (index) => {
@@ -121,7 +124,8 @@ export const Carousel = (props) => {
     setTimeout(() => {
       isTransitioning = false;
     }, 350);
-    if (onIndexChange) onIndexChange(currentIndex);
+    const cb = onIndexChange || onPress;
+    if (cb) cb(currentIndex);
   };
 
   const startAutoPlay = () => {

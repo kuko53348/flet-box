@@ -6,10 +6,15 @@ export const Switch = (props) => {
   const {
     value = false,
     onToggle,
+    onPress: onPressProp,
     disabled = false,
     size = "medium",
     ...rest
   } = props;
+
+  /** @deprecated Use onPress instead */
+  // onToggle kept as alias for backward compatibility
+  const onPress = onPressProp || onToggle;
 
   // Sizes
   const sizes = {
@@ -75,7 +80,7 @@ export const Switch = (props) => {
       const newValue = !internalValue;
       internalValue = newValue;
       updateUI(newValue);
-      if (onToggle) onToggle(newValue);
+      if (onPress) onPress(newValue);
     };
   }
 

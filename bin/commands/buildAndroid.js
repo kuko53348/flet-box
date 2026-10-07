@@ -134,7 +134,7 @@ export const buildAndroid = () => {
   console.log(
     c(
       "green",
-      `\n✅ Android APK created successfully.\n📍 APK path: ${path.resolve(apkPath)}`,
+      `\n✅ Android APK created successfully.\n📍 APK path: adb install "${path.resolve(apkPath)}"`,
     ),
   );
 };

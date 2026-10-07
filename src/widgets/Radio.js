@@ -6,11 +6,16 @@ export const Radio = (props) => {
   const {
     selected = false,
     onSelect,
+    onPress: onPressProp,
     disabled = false,
     size = 20,
     name,
     ...rest
   } = props;
+
+  /** @deprecated Use onPress instead */
+  // onSelect kept as alias for backward compatibility
+  const onPress = onPressProp || onSelect;
 
   let internalSelected = selected;
   let radioRef = null;
@@ -77,7 +82,7 @@ export const Radio = (props) => {
         });
       }
 
-      if (onSelect) onSelect(true);
+      if (onPress) onPress(true);
     };
 
     // Hover effect
@@ -99,7 +104,7 @@ export const Radio = (props) => {
     if (!disabled && !internalSelected) {
       internalSelected = true;
       updateUI(true);
-      if (onSelect) onSelect(true);
+      if (onPress) onPress(true);
     }
   };
 
@@ -107,7 +112,7 @@ export const Radio = (props) => {
     if (!disabled && internalSelected) {
       internalSelected = false;
       updateUI(false);
-      if (onSelect) onSelect(false);
+      if (onPress) onPress(false);
     }
   };
 

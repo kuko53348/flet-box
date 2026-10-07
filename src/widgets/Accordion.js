@@ -51,6 +51,7 @@ export const Accordion = (props) => {
     children,
     expanded = false,
     onToggle,
+    onPress,
     variant = "contained", // 'contained', 'outlined', 'ghost'
     borderRadius = 8,
     // Colors
@@ -274,7 +275,8 @@ export const Accordion = (props) => {
         setHeight("auto", true);
         contentWrapper.style.overflow = "visible";
         isAnimating = false;
-        if (triggerCallback && onToggle) onToggle(true);
+        const expandCb = onToggle || onPress;
+        if (triggerCallback && expandCb) expandCb(true);
         updateUI();
       }, currentAnimationDuration);
     }, 10);

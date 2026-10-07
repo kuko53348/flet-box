@@ -10,6 +10,7 @@ export const Rating = (props) => {
     value = 0,
     max = 5,
     onChange,
+    onPress,
     readOnly = false,
     size = 20,
     activeColor: propActiveColor,
@@ -71,7 +72,8 @@ export const Rating = (props) => {
     if (clamped === currentValue) return;
     currentValue = clamped;
     updateStars();
-    if (onChange) onChange(currentValue);
+    const cb = onChange || onPress;
+    if (cb) cb(currentValue);
   };
 
   // Temporary preview (hover or touchmove)

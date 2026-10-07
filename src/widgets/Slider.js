@@ -51,10 +51,15 @@ export const Slider = (props) => {
     glow = false,
     // Events
     onChanged,
+    /** @deprecated Use onPress instead */
+    onPress: onPressProp,
     onChangeEnd,
     // Rest
     ...rest
   } = props;
+
+  // onPress is the canonical callback name; onChanged is kept as a deprecated alias
+  const effectiveOnChange = onPressProp || onChanged;
 
   // Internal state
   let currentValue = Math.min(Math.max(value, min), max);
@@ -352,7 +357,7 @@ export const Slider = (props) => {
     if (clamped === currentValue) return;
     currentValue = clamped;
     updateUI();
-    if (triggerChange && onChanged) onChanged(currentValue);
+    if (triggerChange && effectiveOnChange) effectiveOnChange(currentValue);
     if (triggerEnd && onChangeEnd) onChangeEnd(currentValue);
   }
 
@@ -461,7 +466,7 @@ export const Slider = (props) => {
     }
     if (needsUpdate) {
       updateUI();
-      if (onChanged) onChanged(currentValue);
+      if (effectiveOnChange) effectiveOnChange(currentValue);
     }
   };
 

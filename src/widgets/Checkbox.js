@@ -6,10 +6,15 @@ export const Checkbox = (props) => {
   const {
     checked = false,
     onCheck,
+    onPress: onPressProp,
     disabled = false,
     size = 20,
     ...rest
   } = props;
+
+  /** @deprecated Use onPress instead */
+  // onCheck kept as alias for backward compatibility
+  const onPress = onPressProp || onCheck;
 
   let internalChecked = checked;
   let checkboxRef = null;
@@ -63,7 +68,7 @@ export const Checkbox = (props) => {
       const newChecked = !internalChecked;
       internalChecked = newChecked;
       updateUI(newChecked);
-      if (onCheck) onCheck(newChecked);
+      if (onPress) onPress(newChecked);
     };
 
     // Hover effect
@@ -85,7 +90,7 @@ export const Checkbox = (props) => {
     if (internalChecked !== newChecked) {
       internalChecked = newChecked;
       updateUI(newChecked);
-      if (triggerCallback && onCheck) onCheck(newChecked);
+      if (triggerCallback && onPress) onPress(newChecked);
     }
   };
 
