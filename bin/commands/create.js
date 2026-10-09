@@ -109,6 +109,7 @@ export const createProject = async (projectName, rawArgs = []) => {
   // Build the list of directories to create.
   // All templates share a common base; non-blank templates add screens/components.
   const commonDirs = [
+    ".github/workflows",
     "assets",
     "scripts",
     "src",
@@ -137,6 +138,10 @@ export const createProject = async (projectName, rawArgs = []) => {
     templates.packageJson(finalName),
   );
   createFile(path.join(projectPath, ".gitignore"), templates.gitignore());
+  createFile(
+    path.join(projectPath, ".github/workflows/build.yml"),
+    templates.githubWorkflow(finalName, appId),
+  );
   createFile(
     path.join(projectPath, "README.md"),
     templates.readme(finalName, template, appId),
@@ -311,6 +316,13 @@ export const createProject = async (projectName, rawArgs = []) => {
     c(
       "gray",
       "iOS:     npm install && flet-box build ios   (macOS + Xcode + CocoaPods)\n",
+    ),
+  );
+  console.log(
+    c(
+      "gray",
+      "CI:      .github/workflows/build.yml builds web + Android + iOS on every push.\n" +
+        "         Enable GitHub Pages (Settings → Pages → Source: GitHub Actions) for the web preview.\n",
     ),
   );
 };

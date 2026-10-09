@@ -948,6 +948,172 @@ export const manifest = (appName = "FletBox App") => `{
 }
 `;
 
+// GitHub Actions workflow that builds web + Android + iOS in ONE run.
+// Placed at .github/workflows/ (the only location GitHub reads), NOT inside www/.
+// NOTE: every GitHub `${{ }}` expression is escaped as `\${{ }}` because this is
+// a JS template literal — an unescaped `${` would be parsed as interpolation.
+export const githubWorkflow = (appName = "FletBox App", appId = "com.fletbox.app") => {
+  const slug = appName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40) || "fletbox-app";
+  return `name: Build ${appName}
+
+# One push (or manual trigger) fans out into three parallel jobs:
+#   web     -> bundles the PWA and deploys it to GitHub Pages for a live preview
+#   android -> compiles a debug APK and uploads it as an artifact
+#   ios     -> compiles a simulator .app and uploads it as an artifact
+# All three run at the same time on separate runners.
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+# Cancel superseded runs on the same branch to save Actions minutes.
+concurrency:
+  group: \${{ github.workflow }}-\${{ github.ref }}
+  cancel-in-progress: true
+
+# The generated app depends on the public \`flet-box\` npm package. If you are
+# developing against a local copy, publish it (or vendor it) before these jobs
+# can \`npm install\` it. package-lock.json is gitignored, so we use npm install.
+
+jobs:
+  # ---------- WEB: bundle + GitHub Pages preview ----------
+  web:
+    name: Web (Pages)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: \${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Bundle web app (flet-box createBundle www)
+        run: npm run build
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: www
+
+      # Deploy only on the default branch, not on pull requests.
+      # Enable Pages first: Settings -> Pages -> Source = "GitHub Actions".
+      - name: Deploy to GitHub Pages
+        id: deployment
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/deploy-pages@v4
+
+  # ---------- ANDROID: debug APK ----------
+  android:
+    name: Android (APK)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # ubuntu runners ship the Android SDK; this step accepts licences and
+      # installs any packages the Capacitor Gradle build asks for.
+      - uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Bundle web app
+        run: npm run build
+
+      - name: Add Android platform
+        run: npx cap add android
+
+      - name: Sync web assets to Android
+        run: npx cap sync android
+
+      - name: Build debug APK
+        run: |
+          cd android
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${slug}-android-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+
+  # ---------- iOS: simulator build ----------
+  ios:
+    name: iOS (simulator)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Bundle web app
+        run: npm run build
+
+      - name: Add iOS platform
+        run: npx cap add ios
+
+      - name: Sync web assets to iOS
+        run: npx cap sync ios
+
+      - name: Install CocoaPods
+        run: |
+          cd ios/App
+          pod install --repo-update
+
+      # Signed device/App Store builds need your Apple certificates; CI here
+      # builds an unsigned simulator app so no secrets are required.
+      - name: Build for simulator
+        run: |
+          cd ios/App
+          xcodebuild \\
+            -workspace App.xcworkspace \\
+            -scheme App \\
+            -configuration Debug \\
+            -sdk iphonesimulator \\
+            -destination 'generic/platform=iOS Simulator' \\
+            -derivedDataPath build \\
+            CODE_SIGNING_ALLOWED=NO \\
+            build
+
+      - name: Upload .app
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${slug}-ios-simulator
+          path: ios/App/build/Build/Products/Debug-iphonesimulator/App.app
+          if-no-files-found: error
+`;
+};
+
 export const gitignore = () => `node_modules/
 dist/
 www/
