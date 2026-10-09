@@ -1,4 +1,7 @@
-// widgets/BottomSheet.js - Fixed version (with stopPropagation)
+/**
+ * @file BottomSheet.js
+ * @description Bottom sheet controller returned to callers (`open`/`close`/`toggle`/`destroy`).
+ */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 import { Row } from "./Row.js";

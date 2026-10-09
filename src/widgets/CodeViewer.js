@@ -1,11 +1,14 @@
-// widgets/CodeViewer.js
+/**
+ * @file CodeViewer.js
+ * @description Read-only code block with line numbers and syntax highlighting.
+ */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 import { generateHighlightedHtml } from "../utils/syntaxHighlight.js";
 
 export const CodeViewer = (props) => {
   const {
-    code,
+code = "",
     title,
     maxHeight = 400,
     fontSize = 12,
@@ -40,10 +43,8 @@ export const CodeViewer = (props) => {
         for (let i = 0; i < lines.length; i++) {
           const numberDiv = WidgetFactory({
             tag: "div",
-            style: {
-              padding: `0 ${padding / 2}px 0 ${padding}px`,
-              whiteSpace: "pre",
-            },
+            padding: `0 ${padding / 2}px 0 ${padding}px`,
+            whiteSpace: "pre",
             textContent: String(startingLineNumber + i),
           });
           lineNumbersColRef.appendChild(numberDiv);
@@ -56,7 +57,8 @@ export const CodeViewer = (props) => {
         for (let i = 0; i < lines.length; i++) {
           const lineDiv = WidgetFactory({
             tag: "div",
-            style: { whiteSpace: "pre", minHeight: "1.5em" },
+            whiteSpace: "pre",
+            minHeight: "1.5em",
           });
           lineDiv.innerHTML = highlightedLines[i] || "&nbsp;";
           codeColRef.appendChild(lineDiv);
@@ -72,12 +74,10 @@ export const CodeViewer = (props) => {
 
   const container = WidgetFactory({
     tag: "div",
-    style: {
-      width: "100%",
-      display: "flex",
-      flexDirection: "column",
-      ...rest.style,
-    },
+    widgetName: "CodeViewer",
+    width: "100%",
+    display: "flex",
+    flexDirection: "column",
     ...rest,
   });
 
@@ -85,14 +85,12 @@ export const CodeViewer = (props) => {
   if (currentTitle && showHeader) {
     headerRef = WidgetFactory({
       tag: "div",
-      style: {
-        padding: "8px 12px",
-        backgroundColor: colors.primary,
-        borderRadius: `${borderRadius}px ${borderRadius}px 0 0`,
-        color: "#fff",
-        fontSize: "14px",
-        fontWeight: "bold",
-      },
+      padding: "8px 12px",
+      backgroundColor: colors.primary,
+      borderRadius: `${borderRadius}px ${borderRadius}px 0 0`,
+      color: "#fff",
+      fontSize: "14px",
+      fontWeight: "bold",
       textContent: currentTitle,
     });
     container.appendChild(headerRef);
@@ -101,58 +99,50 @@ export const CodeViewer = (props) => {
   // Scroll wrapper
   scrollWrapperRef = WidgetFactory({
     tag: "div",
-    style: {
-      backgroundColor,
-      borderRadius: currentTitle
-        ? `0 0 ${borderRadius}px ${borderRadius}px`
-        : `${borderRadius}px`,
-      overflow: "auto",
-      maxHeight: typeof maxHeight === "number" ? `${maxHeight}px` : maxHeight,
-      overflowX: "auto",
-      overflowY: "auto",
-    },
+    backgroundColor,
+    borderRadius: currentTitle
+      ? `0 0 ${borderRadius}px ${borderRadius}px`
+      : `${borderRadius}px`,
+    overflow: "auto",
+    maxHeight: typeof maxHeight === "number" ? `${maxHeight}px` : maxHeight,
+    overflowX: "auto",
+    overflowY: "auto",
   });
 
   // Build content according to showLineNumbers
   if (showLineNumbers) {
     const flexContainer = WidgetFactory({
       tag: "div",
-      style: {
-        display: "flex",
-        flexDirection: "row",
-        minWidth: "100%",
-        width: "fit-content",
-      },
+      display: "flex",
+      flexDirection: "row",
+      minWidth: "100%",
+      width: "fit-content",
     });
 
     lineNumbersColRef = WidgetFactory({
       tag: "div",
-      style: {
-        backgroundColor,
-        borderRight: `1px solid ${colors.border}`,
-        padding: `${padding}px 0`,
-        fontFamily: "monospace",
-        fontSize: typeof fontSize === "number" ? `${fontSize}px` : fontSize,
-        lineHeight: "1.5",
-        textAlign: "right",
-        color: lineNumberColor,
-        userSelect: "none",
-        width: `${lineNumberWidth}px`,
-        flexShrink: 0,
-      },
+      backgroundColor,
+      borderRight: `1px solid ${colors.border}`,
+      padding: `${padding}px 0`,
+      fontFamily: "monospace",
+      fontSize: typeof fontSize === "number" ? `${fontSize}px` : fontSize,
+      lineHeight: "1.5",
+      textAlign: "right",
+      color: lineNumberColor,
+      userSelect: "none",
+      width: `${lineNumberWidth}px`,
+      flexShrink: 0,
     });
 
     codeColRef = WidgetFactory({
       tag: "div",
-      style: {
-        padding: `${padding}px`,
-        fontFamily: "monospace",
-        fontSize: typeof fontSize === "number" ? `${fontSize}px` : fontSize,
-        lineHeight: "1.5",
-        whiteSpace: "pre",
-        flex: 1,
-        overflowX: "visible",
-      },
+      padding: `${padding}px`,
+      fontFamily: "monospace",
+      fontSize: typeof fontSize === "number" ? `${fontSize}px` : fontSize,
+      lineHeight: "1.5",
+      whiteSpace: "pre",
+      flex: 1,
+      overflowX: "visible",
     });
 
     flexContainer.appendChild(lineNumbersColRef);
@@ -165,21 +155,17 @@ export const CodeViewer = (props) => {
     };
     codeColRef.addEventListener("scroll", syncScroll);
 
-    const originalCleanup = scrollWrapperRef._cleanup;
-    scrollWrapperRef._cleanup = () => {
-      if (originalCleanup) originalCleanup();
+    scrollWrapperRef.onUnmount(() => {
       codeColRef.removeEventListener("scroll", syncScroll);
-    };
+    });
   } else {
     codeWrapperRef = WidgetFactory({
       tag: "div",
-      style: {
-        padding: typeof padding === "number" ? `${padding}px` : padding,
-        fontFamily: "monospace",
-        fontSize: typeof fontSize === "number" ? `${fontSize}px` : fontSize,
-        whiteSpace: "pre",
-        lineHeight: "1.5",
-      },
+      padding: typeof padding === "number" ? `${padding}px` : padding,
+      fontFamily: "monospace",
+      fontSize: typeof fontSize === "number" ? `${fontSize}px` : fontSize,
+      whiteSpace: "pre",
+      lineHeight: "1.5",
     });
     scrollWrapperRef.appendChild(codeWrapperRef);
   }
@@ -194,10 +180,8 @@ export const CodeViewer = (props) => {
     for (let i = 0; i < lines.length; i++) {
       const numberDiv = WidgetFactory({
         tag: "div",
-        style: {
-          padding: `0 ${padding / 2}px 0 ${padding}px`,
-          whiteSpace: "pre",
-        },
+        padding: `0 ${padding / 2}px 0 ${padding}px`,
+        whiteSpace: "pre",
         textContent: String(startingLineNumber + i),
       });
       lineNumbersColRef.appendChild(numberDiv);
@@ -206,7 +190,8 @@ export const CodeViewer = (props) => {
     for (let i = 0; i < lines.length; i++) {
       const lineDiv = WidgetFactory({
         tag: "div",
-        style: { whiteSpace: "pre", minHeight: "1.5em" },
+        whiteSpace: "pre",
+        minHeight: "1.5em",
       });
       lineDiv.innerHTML = highlightedLines[i] || "&nbsp;";
       codeColRef.appendChild(lineDiv);

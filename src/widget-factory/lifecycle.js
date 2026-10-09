@@ -63,7 +63,15 @@ const checkAllStates = () => {
       widget._mountFns.forEach((fn) => fn(widget));
     } else if (!isConnected && widget._mounted) {
       widget._mounted = false;
-      widget._unmountFns.forEach((fn) => fn(widget));
+      // Fired but NOT drained: a quick reparent (drag & drop) re-attaches the
+      // widget before the prune timeout, and the disposers must still be there
+      // for the next disconnect. Because `_cleanup` drains the same array, a
+      // disposer can run from both paths — they must be idempotent.
+      widget._unmountFns.forEach((fn) => {
+        try {
+          fn(widget);
+        } catch (_) {}
+      });
 
       // Prune: if the widget is still disconnected after this tick, its lifecycle
       // is complete. Remove it from the registry to avoid or(n) sweeps and leaks.
@@ -152,16 +160,31 @@ export const addLifecycle = (widget) => {
   queueMicrotask(checkAllStates);
 
   /**
-   * Removes the widget from the lifecycle registry and stops the observer if
-   * the registry becomes empty. Clears all mount and unmount callbacks.
+   * Removes the widget from the lifecycle registry, stops the observer if the
+   * registry becomes empty, and releases the widget's resources.
+   *
+   * Any pending `onUnmount` callbacks are drained (the array is swapped out
+   * *before* running them, so the guard also covers a concurrent global-observer
+   * fire) and executed exactly once. This makes `onUnmount` the single hook that
+   * runs on every teardown path: DOM disconnect (global observer), tree rebuild
+   * (`runApp.teardownTree`) and direct `_cleanup()` calls (Scaffold observer).
+   *
+   * Disposers registered through `onUnmount` MUST be idempotent — they can be
+   * triggered by either path, though never twice in practice thanks to the drain.
    *
    * @returns {void}
    */
   widget._cleanup = () => {
+    const unmountFns = widget._unmountFns;
+    widget._unmountFns = [];
     registeredWidgets.delete(widget);
     stopObserverIfIdle();
     widget._mountFns = [];
-    widget._unmountFns = [];
+    unmountFns.forEach((fn) => {
+      try {
+        fn(widget);
+      } catch (_) {}
+    });
   };
 
   return widget;

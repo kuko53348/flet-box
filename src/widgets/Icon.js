@@ -1,4 +1,7 @@
-// widgets/Icon.js (fixed)
+/**
+ * @file Icon.js
+ * @description Material icon glyph rendered as a `<span class="material-icons">`.
+ */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 
@@ -14,6 +17,7 @@ export const Icon = (props) => {
 
   return WidgetFactory({
     tag: "span",
+    widgetName: "Icon",
     className: "material-icons",
     text: iconName, // ✅ CHANGED: text instead of textContent
     fontSize: typeof size === "number" ? `${size}px` : size,

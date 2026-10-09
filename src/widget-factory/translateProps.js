@@ -821,7 +821,9 @@ export const ALL_PROPS = [
   { prop: "ref", domProp: "ref", type: "special" },
   { prop: "child", domProp: "child", type: "special" },
   { prop: "children", domProp: "children", type: "special" },
-  { prop: "style", domProp: "style", type: "special" },
+  // NOTE: there is intentionally no `style` prop. FletBox uses flat, aliased
+  // CSS props (backgroundColor, padding, flexDirection, ...). Passing
+  // `style: {...}` is rejected with a warning by processProps.
 
   // ==================== ADDITIONAL SPECIALS (shorthands) ====================
   {

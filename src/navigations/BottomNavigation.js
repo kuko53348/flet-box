@@ -118,9 +118,6 @@ export const BottomNavigation = (props) => {
     padding: finalPadding,
     boxShadow: boxShadow,
     flexShrink: 0,
-    style: {
-      ...rest.style,
-    },
     ...rest,
   });
 

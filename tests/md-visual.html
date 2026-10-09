@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Markdown visual check</title>
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        margin: 0;
+        background: #ffffff;
+      }
+      #host {
+        width: 100%;
+        margin: 0 auto;
+        padding: 24px;
+        background: #ffffff;
+        box-sizing: border-box;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="host"></div>
+    <script type="module">
+      import { Markdown } from "../src/index.js";
+
+      const sample = [
+        "# Markdown render check",
+        "",
+        "A paragraph with `inlineCode` and a longer `const x = 42;` span, plus **bold** and *italic*.",
+        "",
+        "## Fenced code",
+        "",
+        "```javascript",
+        'import { Column, Text } from "flet-box";',
+        "",
+        "const greet = (name) => {",
+        "  // a comment",
+        '  return `Hello ${name}!`;',
+        "};",
+        "",
+        "console.log(greet('world'));",
+        "const veryLongLine = someFunction(argumentOne, argumentTwo, argumentThree, argumentFour, argumentFive, argumentSix, argumentSeven);",
+        "```",
+        "",
+        "## Table",
+        "",
+        "| Prop | Type | Default |",
+        "| --- | --- | --- |",
+        "| `width` | Size | - |",
+        "| `padding` | Padding | 16 |",
+        "",
+        "> A blockquote with `code` inside it.",
+        "",
+        "- item one with `code`",
+        "- item two",
+      ].join("\n");
+
+      const host = document.getElementById("host");
+      const md = Markdown({
+        text: sample,
+        padding: "24px 32px",
+        lineHeight: 1.85,
+        fontSize: 14,
+      });
+      host.appendChild(md);
+      window.__MD = md;
+    </script>
+  </body>
+</html>

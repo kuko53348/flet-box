@@ -1,4 +1,7 @@
-// widgets/Card.js - Clean version
+/**
+ * @file Card.js
+ * @description Elevated surface card with optional border, padding and radius.
+ */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 import { border } from "../tools/index.js";
@@ -17,6 +20,7 @@ export const Card = (props = {}) => {
   } = props;
 
   return WidgetFactory({
+    widgetName: "Card",
     backgroundColor: bgColor,
     borderRadius: borderRadius,
     padding: padding,

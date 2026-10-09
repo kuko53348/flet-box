@@ -11,7 +11,7 @@
   "scripts": {
     "dev": "node bin/cli.js run --hot",
     "build": "node bin/cli.js createBundle",
-    "test": "echo \"No tests yet\"",
+    "test": "node scripts/check-widgets.mjs",
     "prepublishOnly": "npm run build"
   },
   "keywords": [

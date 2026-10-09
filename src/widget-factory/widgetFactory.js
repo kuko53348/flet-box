@@ -46,6 +46,27 @@ export function WidgetFactory(tag, customProps = {}) {
     finalTag = "div";
   }
 
+  // ------------------------------------------------------------
+  // Reserved prop: `widgetName`
+  // ------------------------------------------------------------
+  // Labels the widget with its real FletBox name (e.g. "QRCode", "Button")
+  // instead of the capitalized HTML tag. Consumed by Inspector, navigation
+  // helpers and warnings; it never reaches the DOM. When omitted it falls
+  // back to the capitalized tag, so bare factory calls keep working.
+  //
+  // NOTE: the key is `widgetName`, not `name`, because `name` is a legitimate
+  // public prop of Icon/Avatar (Icon({ name: "add" })).
+  let explicitName = null;
+  if (finalProps && typeof finalProps === "object" && "widgetName" in finalProps) {
+    if (typeof finalProps.widgetName === "string" && finalProps.widgetName) {
+      explicitName = finalProps.widgetName;
+    }
+    finalProps = { ...finalProps };
+    delete finalProps.widgetName;
+  }
+  const widgetName =
+    explicitName || finalTag.charAt(0).toUpperCase() + finalTag.slice(1);
+
   // ============================================================
   // 2. NORMALIZE child/children IN INITIAL PROPS
   // ============================================================
@@ -61,7 +82,7 @@ export function WidgetFactory(tag, customProps = {}) {
   // 3. CREATE BASE WIDGET
   // ============================================================
   const widget = createWidget(finalTag, {});
-  widget._widgetName = finalTag.charAt(0).toUpperCase() + finalTag.slice(1);
+  widget._widgetName = widgetName;
   widget._updating = false;
   widget._events = [];
 
@@ -73,7 +94,7 @@ export function WidgetFactory(tag, customProps = {}) {
   // ============================================================
   // 4. APPLY INITIAL PROPS
   // ============================================================
-  const initialProps = processProps(finalProps, finalTag);
+  const initialProps = processProps(finalProps, finalTag, widgetName);
   assignProps(widget, initialProps);
   stackPosition(widget, finalProps);
 
@@ -117,6 +138,13 @@ export function WidgetFactory(tag, customProps = {}) {
     try {
       // Normalize: never allow child AND children simultaneously
       const normalized = { ...newProps };
+      // Reserved: `widgetName` labels the widget for Inspector and must never
+      // persist in props. It may re-label the widget on update, nothing more.
+      if ("widgetName" in normalized) {
+        const nextName = normalized.widgetName;
+        if (typeof nextName === "string" && nextName) widget._widgetName = nextName;
+        delete normalized.widgetName;
+      }
       const hasChild = "child" in normalized;
       const hasChildren = "children" in normalized;
 
@@ -130,7 +158,7 @@ export function WidgetFactory(tag, customProps = {}) {
       const merged = { ...widget._originalProps, ...normalized };
       widget._originalProps = merged;
 
-      const processed = processProps(merged, finalTag);
+      const processed = processProps(merged, finalTag, widgetName);
       assignProps(widget, processed);
       stackPosition(widget, merged);
 

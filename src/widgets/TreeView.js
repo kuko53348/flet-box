@@ -1,4 +1,7 @@
-// widgets/TreeView.js
+/**
+ * @file TreeView.js
+ * @description Expandable tree with recursive node rendering.
+ */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 
@@ -7,6 +10,8 @@ export const TreeView = (props) => {
     nodes = [],
     onSelect,
     onToggle,
+    /** @deprecated Use onPress instead */
+    onPress: onPressProp,
     expandedNodes = [],
     indent = 20,
     showIcons = true,
@@ -116,9 +121,10 @@ export const TreeView = (props) => {
     if (selectable) {
       nodeRow.addEventListener("click", (e) => {
         e.stopPropagation();
-        if (onSelect) {
+        const selectCb = onSelect || onPressProp;
+        if (selectCb) {
           currentSelectedId = node.id;
-          onSelect(node);
+          selectCb(node);
           rerender();
         }
       });
@@ -263,6 +269,7 @@ export const TreeView = (props) => {
   // Main container using WidgetFactory
   const container = WidgetFactory({
     tag: "div",
+    widgetName: "TreeView",
     width: "100%",
     overflow: "auto",
     ...rest,
@@ -336,7 +343,8 @@ export const TreeView = (props) => {
   container.setSelected = (nodeId) => {
     currentSelectedId = nodeId;
     rerender();
-    if (onSelect) {
+    const selectCb = onSelect || onPressProp;
+    if (selectCb) {
       const findNode = (nodeList, targetId) => {
         for (const node of nodeList) {
           if (node.id === targetId) return node;
@@ -348,7 +356,7 @@ export const TreeView = (props) => {
         return null;
       };
       const node = findNode(nodes, nodeId);
-      if (node) onSelect(node);
+      if (node) selectCb(node);
     }
   };
 

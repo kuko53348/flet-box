@@ -112,7 +112,6 @@ export const Tabs = (props) => {
     width: "100%",
     display: "flex",
     flexDirection: "column",
-    style: { ...rest.style },
     ...rest,
   });
 
@@ -202,7 +201,7 @@ export const Tabs = (props) => {
       whiteSpace: "nowrap",
       // Subtract the slider's internal padding so buttons don't overflow it.
       minHeight: sz.h - (variant === "slider" ? 8 : 0),
-      style: { zIndex: 2 },
+      zIndex: 2,
       // Accessibility: expose as a tab role with aria-selected.
       role: "tab",
       tabIndex: 0,
@@ -250,7 +249,7 @@ export const Tabs = (props) => {
       backgroundColor: buttonColor,
       borderRadius: 20,
       transition: "transform 0.3s ease, width 0.3s ease",
-      style: { zIndex: 1 },
+      zIndex: 1,
     });
     tabsWrapper.appendChild(sliderIndicator);
   }

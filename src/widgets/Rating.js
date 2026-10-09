@@ -1,4 +1,7 @@
-// widgets/Rating.js - Definitive version (mouse + touch + swipe)
+/**
+ * @file Rating.js
+ * @description Star rating supporting mouse, touch and swipe interactions.
+ */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { Row } from "./Row.js";
 import { Text } from "./Text.js";
@@ -108,7 +111,7 @@ export const Rating = (props) => {
       cursor: readOnly ? "default" : "pointer",
       transition: "transform 0.1s ease",
       child: icon,
-      style: { padding: "4px" }, // larger touch area
+      padding: "4px", // larger touch area
     });
 
     starIcons.push(icon);
@@ -221,6 +224,7 @@ export const Rating = (props) => {
   }
 
   const ratingContainer = WidgetFactory({
+    widgetName: "Rating",
     display: "inline-flex",
     alignItems: "center",
     gap: gap * 2,
@@ -237,11 +241,9 @@ export const Rating = (props) => {
     });
   }
 
-  const originalCleanup = ratingContainer._cleanup;
-  ratingContainer._cleanup = () => {
+  ratingContainer.onUnmount(() => {
     if (unsubscribeTheme) unsubscribeTheme();
-    if (originalCleanup) originalCleanup();
-  };
+  });
 
   ratingContainer.setValue = setValue;
   ratingContainer.getValue = () => currentValue;

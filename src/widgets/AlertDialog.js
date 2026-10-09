@@ -79,7 +79,7 @@ export const AlertDialog = (props) => {
   // Centered column: icon → title → message
   const content = Column({
     alignItems: "center",
-    style: { textAlign: "center" },
+    textAlign: "center",
     children: [
       icon,
       Text({

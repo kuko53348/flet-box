@@ -123,7 +123,6 @@ export const Scaffold = (props) => {
     backgroundColor: backgroundColor,
     position: "relative",
     overflow: "hidden",
-    ...rest.style,
     ...rest,
   });
 

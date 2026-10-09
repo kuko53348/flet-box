@@ -1,4 +1,7 @@
-// widgets/DraggBox.js
+/**
+ * @file DraggBox.js
+ * @description Draggable wrapper that exposes drag events for drag-and-drop.
+ */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 
@@ -28,6 +31,7 @@ export const DraggBox = (props) => {
 
   const wrapper = WidgetFactory({
     tag: "div",
+    widgetName: "DraggBox",
     display: "inline-block",
     cursor: disabled ? "default" : "grab",
     userSelect: "none",

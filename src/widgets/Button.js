@@ -1,6 +1,8 @@
-// widgets/Button.js
-import { WidgetFactory } from "../widget-factory/index.js";
-import { colors } from "../utils/themes.js";
+/**
+ * @file Button.js
+ * @description Button with size presets, variants, icons and gradient support.
+ */
+import { WidgetFactory } from "../widget-factory/index.js";import { colors } from "../utils/themes.js";
 import { Text } from "./Text.js";
 import { Icon } from "./Icon.js";
 
@@ -207,6 +209,7 @@ export const Button = (props) => {
 
   const buttonProps = {
     tag: "button",
+    widgetName: "Button",
     display: "inline-flex",
     flexDirection,
     alignItems: "center",

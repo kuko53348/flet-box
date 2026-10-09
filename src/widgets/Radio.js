@@ -1,4 +1,7 @@
-// widgets/Radio.js
+/**
+ * @file Radio.js
+ * @description Radio input with controlled/uncontrolled selection state.
+ */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 
@@ -45,6 +48,7 @@ export const Radio = (props) => {
 
   // Createste main radio container
   const radio = WidgetFactory({
+    widgetName: "Radio",
     width: size,
     height: size,
     border: `2px solid ${disabled ? colors.border : internalSelected ? colors.primary : colors.border}`,

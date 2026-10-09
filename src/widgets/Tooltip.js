@@ -1,4 +1,7 @@
-// widgets/Tooltip.js - Fixed (using text instead of textContent)
+/**
+ * @file Tooltip.js
+ * @description Hover/focus tooltip rendered as a fixed-position portal on `document.body`.
+ */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 
@@ -50,6 +53,7 @@ export const Tooltip = (props) => {
 
     // ✅ FIXED: use "text" instead of "textContent"
     const content = WidgetFactory({
+      widgetName: "Tooltip",
       backgroundColor: bgColor,
       borderRadius:
         typeof borderRadius === "number" ? `${borderRadius}px` : borderRadius,
@@ -226,8 +230,7 @@ export const Tooltip = (props) => {
   wrappedChild.addEventListener("focus", showTooltip);
   wrappedChild.addEventListener("blur", hideTooltip);
 
-  const originalCleanup = wrappedChild._cleanup;
-  wrappedChild._cleanup = () => {
+  wrappedChild.onUnmount(() => {
     if (timeoutId) clearTimeout(timeoutId);
     if (tooltipElement && tooltipElement.parentNode) {
       tooltipElement.parentNode.removeChild(tooltipElement);
@@ -239,8 +242,7 @@ export const Tooltip = (props) => {
     wrappedChild.removeEventListener("mouseleave", hideTooltip);
     wrappedChild.removeEventListener("focus", showTooltip);
     wrappedChild.removeEventListener("blur", hideTooltip);
-    if (originalCleanup) originalCleanup();
-  };
+  });
 
   wrappedChild.showTooltip = showTooltip;
   wrappedChild.hideTooltip = hideTooltip;

@@ -1,4 +1,8 @@
-// widgets/Markdown.js
+/**
+ * @file Markdown.js
+ * @description Markdown renderer with per-instance scoped styles and one shared
+ * sanitizer for both initial render and `updateContent`.
+ */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 import { generateHighlightedHtml } from "../utils/syntaxHighlight.js";
@@ -18,6 +22,34 @@ const escapeCode = (text) =>
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+
+/** Monotonic counter giving each Markdown instance its own CSS scope class. */
+let markdownScopeUid = 0;
+
+/**
+ * Sanitizes Markdown-rendered HTML. Strips `<script>` elements, then walks real
+ * tags to remove inline event handlers and `javascript:` URLs. It deliberately
+ * avoids a global regex over the raw text so code samples containing
+ * `onerror=` or `= await` survive untouched. This is NOT a full XSS defense:
+ * for untrusted input use a proper sanitizer.
+ *
+ * @param {string} html - Raw HTML produced by `parseMarkdown`.
+ * @returns {string} The sanitized HTML.
+ */
+const sanitizeMarkdown = (html) => {
+  const withoutScripts = html.replace(
+    /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+    "",
+  );
+  return withoutScripts.replace(/<[^<>]+>/g, (tag) =>
+    tag
+      .replace(/\son[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, "")
+      .replace(
+        /\s(href|src|xlink:href|formaction|action)\s*=\s*(?:"javascript:[^"]*"|'javascript:[^']*'|javascript:[^\s>]+)/gi,
+        ' $1="#"',
+      ),
+  );
+};
 
 // ─── Syntax highlighting ────────────────────────────────────────────────────
 //
@@ -198,11 +230,47 @@ const highlightLine = (line, lang) => {
 };
 
 /**
+ * Copies text using the Clipboard API, falling back to a temporary textarea and
+ * `document.execCommand('copy')` for older or non-secure environments.
+ *
+ * @param {string} text - Text to copy.
+ * @param {() => void} onDone - Called once the copy succeeds.
+ */
+const copyTextToClipboard = (text, onDone) => {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(onDone).catch(() => {
+      legacyCopy(text);
+      onDone();
+    });
+    return;
+  }
+  legacyCopy(text);
+  onDone();
+};
+
+/** Legacy clipboard path: select a throwaway textarea and execCommand('copy'). */
+const legacyCopy = (text) => {
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.setAttribute("readonly", "");
+  ta.style.position = "fixed";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  try {
+    document.execCommand("copy");
+  } finally {
+    document.body.removeChild(ta);
+  }
+};
+
+/**
  * Renders a fenced code block as a `<div class="md-code-block">` containing
  * a copy button and a `<pre><code>` with syntax-highlighted lines.
  *
- * The copy button uses the Clipboard API when available and falls back to
- * `document.execCommand('copy')` for older environments.
+ * The copy button carries no inline handler: the default sanitizer strips
+ * `on*=` attributes, so the click is wired by a delegated listener on the
+ * content node after mount (see the Markdown body).
  *
  * @param {{ lang: string, code: string }} block
  * @returns {string} HTML fragment.
@@ -228,25 +296,7 @@ const renderFencedBlock = (block) => {
     `<div class="md-code-block">` +
     `<div class="md-code-header">` +
     label +
-    `<button class="md-copy-btn" onclick="` +
-    // Inline handler: grab the sibling textarea, copy, toggle label.
-    `(function(btn){` +
-    `var raw=btn.closest('.md-code-block').querySelector('.md-raw-src').value;` +
-    `var prev=btn.textContent;` +
-    `if(navigator.clipboard){` +
-    `navigator.clipboard.writeText(raw).then(function(){` +
-    `btn.textContent='✓ Copied';` +
-    `setTimeout(function(){btn.textContent=prev;},1500);` +
-    `});` +
-    `}else{` +
-    `var ta=document.createElement('textarea');` +
-    `ta.value=raw;document.body.appendChild(ta);ta.select();` +
-    `document.execCommand('copy');document.body.removeChild(ta);` +
-    `btn.textContent='✓ Copied';` +
-    `setTimeout(function(){btn.textContent=prev;},1500);` +
-    `}` +
-    `})(this)` +
-    `">Copy</button>` +
+    `<button type="button" class="md-copy-btn">Copy</button>` +
     `</div>` +
     `<textarea class="md-raw-src" readonly aria-hidden="true" tabindex="-1">${safeRaw}</textarea>` +
     `<pre><code${cls}>${highlighted}</code></pre>` +
@@ -732,9 +782,10 @@ export const Markdown = (props) => {
     codeBgColor = colors.gray100,
     codeColor = colors.danger,
     codeFontSize = 12,
-    codeFontFamily = 'monospace, "Courier New", Courier',
+    codeFontFamily =
+      'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace',
     codeBorderRadius = 4,
-    codePadding = "0.1em 0.1em",
+    codePadding = "0.2em 0.45em",
 
     // Fenced code block styling
     preBgColor = colors.gray100,
@@ -783,12 +834,17 @@ export const Markdown = (props) => {
   // Resolve the markdown source from any of the supported prop aliases
   const markdownText = text || source || content || children || "";
 
+  // Per-instance CSS scope: `.markdown-content` was shared by every instance,
+  // so the last mounted widget's style props leaked into all the others.
+  const scope = `markdown-scope-${++markdownScopeUid}`;
+
   // Parse Markdown to raw HTML
   const rawHtml = parseMarkdown(markdownText);
 
   // Outer container
   const container = WidgetFactory({
     tag: "div",
+    widgetName: "Markdown",
     fontFamily: fontFamily,
     fontSize: typeof fontSize === "number" ? `${fontSize}px` : fontSize,
     lineHeight: lineHeight,
@@ -805,48 +861,41 @@ export const Markdown = (props) => {
   // Inner div that receives the parsed HTML
   const contentDiv = WidgetFactory({
     tag: "div",
-    className: "markdown-content",
+    className: `${scope} markdown-content`,
   });
 
-  if (allowDangerousHtml) {
-    contentDiv.innerHTML = rawHtml;
-  } else {
-    // Basic sanitization: drop <script> elements, then strip inline event
-    // handlers and javascript: URLs.
-    //
-    // Both attribute rewrites walk real tags one at a time instead of matching
-    // bare text. Code blocks are HTML-escaped before they reach this point, so an
-    // `onerror=` or `javascript:` that belongs to a code sample has no raw `<` to
-    // anchor to and is left as literal text. A global `/on\w+\s*=/` would instead
-    // chew through samples — it turned `response = await` into `resp = await`.
-    //
-    // This is NOT a full XSS defense — for untrusted input use a proper sanitizer.
-    const withoutScripts = rawHtml.replace(
-      /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
-      "",
-    );
-    const sanitized = withoutScripts.replace(/<[^<>]+>/g, (tag) =>
-      tag
-        .replace(/\son[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, "")
-        .replace(
-          /\s(href|src|xlink:href|formaction|action)\s*=\s*(?:"javascript:[^"]*"|'javascript:[^']*'|javascript:[^\s>]+)/gi,
-          ' $1="#"',
-        ),
-    );
-    contentDiv.innerHTML = sanitized;
-  }
+  // Sanitize by default; `allowDangerousHtml` bypasses it for trusted sources.
+  contentDiv.innerHTML = allowDangerousHtml
+    ? rawHtml
+    : sanitizeMarkdown(rawHtml);
 
-  // Inject (or replace) the global stylesheet scoped to `.markdown-content`.
-  // We always replace so that the LAST mounted instance's style props win —
-  // the previous guard (`if (!querySelector)`) froze the styles on the first
-  // instance and silently ignored every subsequent one's customisations.
-  let style = document.querySelector("#markdown-styles");
-  if (!style) {
-    style = document.createElement("style");
-    style.id = "markdown-styles";
-    document.head.appendChild(style);
-  }
-  style.textContent = `
+  // Delegated copy handler. The button cannot carry an inline onclick because
+  // the sanitizer strips on*= attributes, and a per-button listener would not
+  // survive updateContent(); delegation on the persistent content node does.
+  contentDiv.addEventListener("click", (event) => {
+    const btn = event.target.closest?.(".md-copy-btn");
+    if (!btn) return;
+    const src = btn.closest(".md-code-block")?.querySelector(".md-raw-src");
+    const raw = src ? src.value : "";
+    const previous = btn.textContent;
+    copyTextToClipboard(raw, () => {
+      btn.textContent = "✓ Copied";
+      setTimeout(() => {
+        btn.textContent = previous;
+      }, 1500);
+    });
+  });
+
+  // Per-instance stylesheet. The tag lives inside the container so it is removed
+  // with the widget on unmount — no unscoped tag in `document.head`, no leak.
+  const styleText = `
+            /* Containment: the rendered content must never contribute its
+               intrinsic (min-content) width to flex/grid ancestors, or a long
+               code line would stretch the whole layout past the viewport. */
+            .markdown-content {
+                min-width: 0;
+                max-width: 100%;
+            }
             .markdown-content h1, 
             .markdown-content h2, 
             .markdown-content h3,
@@ -1010,8 +1059,11 @@ export const Markdown = (props) => {
                 position: relative;
                 margin-left: 0;
                 margin-right: 0;
+                /* Fill the reading column; min-width:0 stops the code's
+                   intrinsic width from stretching flex/grid ancestors. */
                 width: 100%;
                 max-width: 100%;
+                min-width: 0;
                 box-sizing: border-box;
                 border-radius: ${typeof preBorderRadius === "number" ? `${preBorderRadius}px` : preBorderRadius};
                 overflow: hidden;
@@ -1076,6 +1128,8 @@ export const Markdown = (props) => {
                 border-radius: 0;
                 overflow-x: auto;
                 width: 100%;
+                max-width: 100%;
+                min-width: 0;
                 box-sizing: border-box;
                 /* Reset any inherited line-height from ancestor containers
                    before the explicit value on <code> takes over. */
@@ -1094,7 +1148,12 @@ export const Markdown = (props) => {
                 line-height: 1.5;
                 display: block;
                 box-sizing: border-box;
-                width: 100%;
+                /* Grow to the longest line so the <pre> scrolls horizontally;
+                   min-width:100% keeps short blocks filling the box. Wrapping
+                   the code hid content and read as "broken" on mobile. */
+                min-width: 100%;
+                width: max-content;
+                white-space: pre;
             }
 
             /* Line spacing inside code blocks. <code> uses white-space:pre so
@@ -1115,8 +1174,28 @@ export const Markdown = (props) => {
             .markdown-content th {
                 background-color: ${colors.gray100};
             }
-        `;
+        `.replaceAll(".markdown-content", "." + scope);
 
+  // Component styles, scoped per instance. They ride an adopted stylesheet so
+  // they never become DOM children of the wrapper (which must hold exactly one
+  // `.markdown-content` child) and are dropped when the widget unmounts.
+  if (typeof CSSStyleSheet === "function") {
+    const sheet = new CSSStyleSheet();
+    sheet.replaceSync(styleText);
+    document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
+    container.onUnmount(() => {
+      document.adoptedStyleSheets = document.adoptedStyleSheets.filter(
+        (s) => s !== sheet,
+      );
+    });
+  } else {
+    // Legacy fallback for engines without adopted stylesheets: keep the tag
+    // inside the container so it is removed with the widget on unmount.
+    const styleFallback = document.createElement("style");
+    styleFallback.setAttribute("data-widget", "Markdown");
+    styleFallback.textContent = styleText;
+    container.appendChild(styleFallback);
+  }
   container.appendChild(contentDiv);
 
   // ========== PUBLIC METHODS ==========
@@ -1134,23 +1213,9 @@ export const Markdown = (props) => {
    */
   container.updateContent = (newText) => {
     const newHtml = parseMarkdown(newText);
-    if (allowDangerousHtml) {
-      contentDiv.innerHTML = newHtml;
-    } else {
-      const withoutScripts = newHtml.replace(
-        /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
-        "",
-      );
-      const sanitized = withoutScripts.replace(/<[^<>]+>/g, (tag) =>
-        tag
-          .replace(/\son[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, "")
-          .replace(
-            /\s(href|src|xlink:href|formaction|action)\s*=\s*(?:"javascript:[^"]*"|'javascript:[^']*'|javascript:[^\s>]+)/gi,
-            ' $1="#"',
-          ),
-      );
-      contentDiv.innerHTML = sanitized;
-    }
+    contentDiv.innerHTML = allowDangerousHtml
+      ? newHtml
+      : sanitizeMarkdown(newHtml);
   };
 
   /**

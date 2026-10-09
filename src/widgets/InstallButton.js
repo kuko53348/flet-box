@@ -1,4 +1,7 @@
-// widgets/InstallButton.js
+/**
+ * @file InstallButton.js
+ * @description PWA install prompt button; hidden unless install is available.
+ */
 import { Button } from "./Button.js";
 import { colors } from "../utils/themes.js";
 
@@ -26,7 +29,6 @@ export const InstallButton = (props) => {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
       if (outcome === "accepted") {
-        console.log("App installed");
         if (onInstalled) onInstalled();
         hideButton();
       }
@@ -53,6 +55,7 @@ export const InstallButton = (props) => {
 
   // Createste button using the flet-box Button component
   button = Button({
+    widgetName: "InstallButton",
     text: text,
     variant: variant,
     size: size,
@@ -60,18 +63,15 @@ export const InstallButton = (props) => {
     color: color,
     borderRadius: borderRadius,
     padding: padding,
-    style: {
-      position: "fixed",
-      bottom: `${bottom}px`,
-      left: "50%",
-      transform: "translateX(-50%)",
-      zIndex: 10000,
-      opacity: "0",
-      visibility: "hidden",
-      display: "none",
-      boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
-      ...rest.style,
-    },
+    position: "fixed",
+    bottom: `${bottom}px`,
+    left: "50%",
+    transform: "translateX(-50%)",
+    zIndex: 10000,
+    opacity: "0",
+    visibility: "hidden",
+    display: "none",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
     onPress: handleClick,
     ...rest,
   });
@@ -102,11 +102,7 @@ export const InstallButton = (props) => {
     if (button && button.remove) button.remove();
   };
 
-  const originalCleanup = button._cleanup;
-  button._cleanup = () => {
-    cleanup();
-    if (originalCleanup) originalCleanup();
-  };
+  button.onUnmount(cleanup);
 
   return button;
 };

@@ -1,6 +1,10 @@
-// widgets/Skeleton.js
+/**
+ * @file Skeleton.js
+ * @description Loading placeholder (pulse/wave) using globally injected keyframes.
+ */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
+import { injectKeyframes } from "../utils/styleInjector.js";
 
 export const Skeleton = (props) => {
   const {
@@ -212,6 +216,7 @@ export const Skeleton = (props) => {
   // Createste multiple items container using WidgetFactory
   const container = WidgetFactory({
     tag: "div",
+    widgetName: "Skeleton",
     display: "flex",
     flexDirection: "column",
     gap: typeof gap === "number" ? `${gap}px` : gap,
@@ -222,23 +227,15 @@ export const Skeleton = (props) => {
     container.appendChild(buildVariant());
   }
 
-  // Add keyframe animations if not already added
-  if (!document.querySelector("#skeleton-styles")) {
-    const style = document.createElement("style");
-    style.id = "skeleton-styles";
-    style.textContent = `
-            @keyframes skeleton-pulse {
-                0% { opacity: 1; }
-                50% { opacity: 0.5; }
-                100% { opacity: 1; }
-            }
-            @keyframes skeleton-wave {
-                0% { background-position: 200% 0; }
-                100% { background-position: -200% 0; }
-            }
-        `;
-    document.head.appendChild(style);
-  }
+  injectKeyframes(
+    "skeleton-pulse",
+    "0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; }",
+    "skeleton-styles",
+  );
+  injectKeyframes(
+    "skeleton-wave",
+    "0% { background-position: 200% 0; } 100% { background-position: -200% 0; }",
+  );
 
   return container;
 };

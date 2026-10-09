@@ -1,4 +1,7 @@
-// widgets/SnackBar.js - Definitive version with theme colors
+/**
+ * @file SnackBar.js
+ * @description Transient toast controller returned to callers (`show`/`close`).
+ */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { border } from "../tools/index.js";
 import { colors } from "../utils/themes.js";

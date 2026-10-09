@@ -1,4 +1,7 @@
-// widgets/Checkbox.js
+/**
+ * @file Checkbox.js
+ * @description Checkbox input with controlled/uncontrolled state.
+ */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 
@@ -45,6 +48,7 @@ export const Checkbox = (props) => {
 
   // Createste main checkbox container
   const checkbox = WidgetFactory({
+    widgetName: "Checkbox",
     width: size,
     height: size,
     border: `2px solid ${disabled ? colors.border : internalChecked ? colors.primary : colors.border}`,

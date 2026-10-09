@@ -80,19 +80,16 @@ export const CollapsibleSideBar = ({
   const container = WidgetFactory({
     tag: "div",
     id,
-    style: {
-      width:
-        typeof currentWidth === "number" ? `${currentWidth}px` : currentWidth,
-      height: "100%",
-      display: "flex",
-      flexDirection: "column",
-      backgroundColor: bgColor,
-      borderRight: borderRight,
-      transition: "width 0.3s ease",
-      overflow: "hidden",
-      flexShrink: 0,
-      ...rest.style,
-    },
+    width:
+      typeof currentWidth === "number" ? `${currentWidth}px` : currentWidth,
+    height: "100%",
+    display: "flex",
+    flexDirection: "column",
+    backgroundColor: bgColor,
+    borderRight: borderRight,
+    transition: "width 0.3s ease",
+    overflow: "hidden",
+    flexShrink: 0,
     ...rest,
   });
 

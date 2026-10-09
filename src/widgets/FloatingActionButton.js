@@ -1,4 +1,7 @@
-// widgets/FloatingActionButton.js (or navigations/FloatingActionButton.js)
+/**
+ * @file FloatingActionButton.js
+ * @description Circular floating action button anchored to a corner.
+ */
 /**
  * FloatingActionButton Component
  * @module widgets/FloatingActionButton
@@ -51,23 +54,21 @@ export const FloatingActionButton = (props) => {
   }
 
   const button = Container({
-    style: {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: 8,
-      width: extended ? "auto" : size,
-      height: size,
-      borderRadius: extended ? 24 : "50%",
-      backgroundColor: backgroundColor,
-      color: foregroundColor,
-      cursor: disabled ? "not-allowed" : "pointer",
-      opacity: disabled ? 0.6 : 1,
-      boxShadow: `0 ${elevation / 2}px ${elevation}px rgba(0,0,0,0.3)`,
-      transition: "all 0.2s ease",
-      padding: extended ? "0 20px" : 0,
-      ...rest.style,
-    },
+    widgetName: "FloatingActionButton",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    width: extended ? "auto" : size,
+    height: size,
+    borderRadius: extended ? "24px" : "50%",
+    backgroundColor: backgroundColor,
+    color: foregroundColor,
+    cursor: disabled ? "not-allowed" : "pointer",
+    opacity: disabled ? 0.6 : 1,
+    boxShadow: `0 ${elevation / 2}px ${elevation}px rgba(0,0,0,0.3)`,
+    transition: "all 0.2s ease",
+    padding: extended ? "0 20px" : 0,
     child: extended
       ? Row({ alignItems: "center", gap: 8, children })
       : children[0],

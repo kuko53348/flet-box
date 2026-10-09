@@ -1,4 +1,7 @@
-// widgets/Pagination.js
+/**
+ * @file Pagination.js
+ * @description Page-number control built from Buttons inside a Row.
+ */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { Row } from "./Row.js";
 import { Button } from "./Button.js";
@@ -60,7 +63,7 @@ export const Pagination = (props) => {
   };
   const sz = sizes[size] || sizes.medium;
 
-  const buttonStyle = {
+  const buttonBase = {
     minWidth: `${sz.buttonSize}px`,
     height: `${sz.buttonSize}px`,
     padding: "0",
@@ -77,7 +80,7 @@ export const Pagination = (props) => {
       bgColor: isActive ? color : "transparent",
       color: buttonColor,
       size: size,
-      style: buttonStyle,
+      ...buttonBase,
       onPress: () => handlePageChange(page),
       disabled: disabled || isActive,
     });
@@ -92,7 +95,7 @@ export const Pagination = (props) => {
       }),
       variant: variant,
       size: size,
-      style: buttonStyle,
+      ...buttonBase,
       onPress: onClick,
       disabled: disabled || isDisabled,
       disableNativeEffects: true,
@@ -101,6 +104,7 @@ export const Pagination = (props) => {
 
   // Main container using Row (already a widget)
   const container = Row({
+    widgetName: "Pagination",
     alignItems: "center",
     gap: sz.gap,
     justifyContent: "center",

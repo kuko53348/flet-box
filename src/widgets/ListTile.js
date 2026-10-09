@@ -1,4 +1,7 @@
-// widgets/ListTile.js
+/**
+ * @file ListTile.js
+ * @description List row with leading/trailing content and optional divider.
+ */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { Row } from "./Row.js";
 import { Column } from "./Column.js";
@@ -78,7 +81,7 @@ export const ListTile = (props) => {
         text: title,
         size: 16,
         weight: selected ? "600" : "500",
-        color: selected ? colors.primary : colors.primary,
+        color: selected ? colors.primary : colors.text,
         ...titleProps,
       }),
     );
@@ -138,6 +141,7 @@ export const ListTile = (props) => {
   // Main tile element
   const tile = WidgetFactory({
     tag: "div",
+    widgetName: "ListTile",
     backgroundColor: selected ? selectedBgColor : bgColor,
     borderRadius: borderRadius,
     cursor: isInteractive ? "pointer" : "default",
@@ -186,11 +190,9 @@ export const ListTile = (props) => {
   }
 
   // Cleanup — unsubscribe from the theme system when the tile is unmounted
-  const originalCleanup = tile._cleanup;
-  tile._cleanup = () => {
+  tile.onUnmount(() => {
     if (unsubscribeTheme) unsubscribeTheme();
-    if (originalCleanup) originalCleanup();
-  };
+  });
 
   // When a divider is requested, wrap the tile in a column and append a separator line
   if (divider) {
@@ -209,11 +211,9 @@ export const ListTile = (props) => {
     });
 
     // Propagate cleanup to the outer container as well
-    const originalContainerCleanup = container._cleanup;
-    container._cleanup = () => {
+    container.onUnmount(() => {
       if (unsubscribeTheme) unsubscribeTheme();
-      if (originalContainerCleanup) originalContainerCleanup();
-    };
+    });
 
     return container;
   }

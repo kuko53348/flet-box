@@ -147,6 +147,32 @@ async function run() {
   eq("update reemplaza children", up.childNodes.length, 1);
   eq("update children texto", up.textContent, "x");
 
+  // ---------- 12. Reserved widgetName prop ----------
+  // `widgetName` labels the widget for Inspector/debug tooling and must never
+  // touch the DOM. It defaults to the capitalized tag when omitted.
+  eq("widgetName explícito → _widgetName", WidgetFactory({ tag: "div", widgetName: "QRCode" })._widgetName, "QRCode");
+  eq("sin widgetName → tag capitalizado", WidgetFactory({ tag: "span" })._widgetName, "Span");
+  const named = WidgetFactory({ tag: "div", widgetName: "Chart", padding: 4 });
+  eq("widgetName NO llega al DOM (sin atributo)", named.hasAttribute("name"), false);
+  eq("widgetName NO contamina estilos", named.style.padding, "0.25rem");
+  named.update({ widgetName: "Otro" });
+  eq("widgetName sobrevive a update sin ensuciar props", named.getProps().widgetName, undefined);
+  // `name` NO es reservada: es prop pública de Icon/Avatar.
+  eq("prop name intacta", WidgetFactory({ tag: "div", name: "add" }).getAttribute("name"), "add");
+
+  // ---------- 13. onUnmount se dispara desde _cleanup directo ----------
+  // Scaffold llama `_cleanup` sin pasar por el observer global; el disposer debe
+  // correr igualmente (una sola vez) y de forma idempotente.
+  const cw = WidgetFactory({ tag: "div" });
+  let disposals = 0;
+  cw.onUnmount(() => disposals++);
+  mount(cw);
+  await tick();
+  cw._cleanup();
+  cw._cleanup();
+  eq("onUnmount se dispara vía _cleanup (idempotente)", disposals, 1);
+  cw.remove();
+
   // ---------- Render ----------
   const summary = document.getElementById("summary");
   const out = document.getElementById("out");

@@ -1,4 +1,6 @@
 // src/widgets/index.js
+export { AdSense } from "./AdSense.js";
+export { AdMob } from "./AdMob.js";
 export { Container } from "./Container.js";
 export { Row } from "./Row.js";
 export { Column } from "./Column.js";

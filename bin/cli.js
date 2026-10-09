@@ -22,6 +22,7 @@ import { createScreen } from "./commands/createScreen.js";
 import { createComponent } from "./commands/createComponent.js";
 import { killServer } from "./commands/killServer.js";
 import { runBundle } from "./commands/runBundle.js";
+import { runCloudflareDemo } from "./commands/runCloudflare.js";
 import { c, gradient, section, banner, divider, width, setupCtrlC } from "./utils/colors.js";
 
 const require = createRequire(import.meta.url);
@@ -72,6 +73,8 @@ ${cmd("build ios --archive", "Build unsigned device archive (.xcarchive)")}
 ${cmd("run", "Static file server")}
 ${cmd("run --hot", "Dev server with hot reload")}
 ${cmd("run-spa", "SPA + hot reload")}
+${cmd("cloudflare", "Serve demo on a public Cloudflare HTTPS tunnel")}
+${cmd("   └─ alias", "cf | demo | tunnel")}
 ${cmd("run-bundle [dir]", "Build & serve the bundle (single app.js)")}
 ${cmd("pkg", "Open the package manager")}
 ${cmd("kill-server [port]", "Kill servers on a port")}
@@ -90,6 +93,7 @@ ${section("✨", "EXAMPLES")}
   ${c("gray", "flet-box build ios --archive  # create an .xcarchive to sign in Xcode")}
   ${c("gray", "cd my-app && flet-box run-spa")}
   ${c("gray", "flet-box run-bundle            # build & preview production")}
+  ${c("gray", "flet-box cloudflare            # public HTTPS demo link in console")}
   ${c("gray", "flet-box kill-server 8000      # kill the parasite server")}
 
 ${divider("", "#3730a3")}
@@ -309,6 +313,17 @@ async function main() {
           hotReload: true,
           port: flags.port,
           askPort: !flags.portExplicit,
+          logRequests: flags.logRequests,
+        });
+        break;
+
+      case "cloudflare":
+      case "cf":
+      case "demo":
+      case "tunnel":
+        ensureProject();
+        await runCloudflareDemo({
+          port: flags.port,
           logRequests: flags.logRequests,
         });
         break;

@@ -240,7 +240,6 @@ export const ParallaxBox = (props = {}) => {
     tag: "div",
     position: "relative",
     overflow: "hidden",
-    style: rest.style || {},
     ...rest,
   });
 
@@ -249,11 +248,9 @@ export const ParallaxBox = (props = {}) => {
   // Inner wrapper that receives CSS transforms; will-change enables GPU compositing
   const animatedWrapper = WidgetFactory({
     tag: "div",
-    style: {
-      willChange: "transform",
-      transition: `transform ${duration}ms ${easing}`,
-      transform: "translateX(0) translateY(0)",
-    },
+    willChange: "transform",
+    transition: `transform ${duration}ms ${easing}`,
+    transform: "translateX(0) translateY(0)",
   });
 
   // Append child content to the animated wrapper

@@ -1,4 +1,7 @@
-// widgets/CircularChart.js
+/**
+ * @file CircularChart.js
+ * @description Pie/donut chart drawn on canvas with legend support.
+ */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 
@@ -450,20 +453,18 @@ export const CircularChart = (props) => {
   const initWidget = () => {
     container = WidgetFactory({
       tag: "div",
-      style: {
-        display: isFixedSize ? "inline-block" : "block",
-        width: isFixedSize ? `${canvasWidth}px` : "100%",
-        height: isFixedSize ? `${canvasHeight}px` : "auto",
-        position: "relative",
-        overflow: "hidden",
-        borderRadius:
-          typeof borderRadius === "number" ? `${borderRadius}px` : borderRadius,
-        border:
-          borderWidth > 0 && borderColor
-            ? `${borderWidth}px solid ${borderColor}`
-            : "none",
-        ...rest.style,
-      },
+      widgetName: "CircularChart",
+      display: isFixedSize ? "inline-block" : "block",
+      width: isFixedSize ? `${canvasWidth}px` : "100%",
+      height: isFixedSize ? `${canvasHeight}px` : "auto",
+      position: "relative",
+      overflow: "hidden",
+      borderRadius:
+        typeof borderRadius === "number" ? `${borderRadius}px` : borderRadius,
+      border:
+        borderWidth > 0 && borderColor
+          ? `${borderWidth}px solid ${borderColor}`
+          : "none",
       ...rest,
     });
 
@@ -529,8 +530,7 @@ export const CircularChart = (props) => {
   container.redraw = redraw;
   container.setCornerRadius = setCornerRadius;
 
-  const originalCleanup = container._cleanup;
-  container._cleanup = () => {
+  container.onUnmount(() => {
     if (animationId) cancelAnimationFrame(animationId);
     if (resizeObserver) resizeObserver?.disconnect();
     else window.removeEventListener("resize", resizeCanvas);
@@ -541,8 +541,7 @@ export const CircularChart = (props) => {
     }
     if (container && container.parentNode)
       container.parentNode.removeChild(container);
-    if (originalCleanup) originalCleanup();
-  };
+  });
 
   return container;
 };

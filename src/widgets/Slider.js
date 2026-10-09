@@ -1,25 +1,25 @@
-// widgets/Slider.js - Corrected and complete version
+/**
+ * @file Slider.js
+ * @description Range slider with drag/track input, custom `update` compositor and
+ * idempotent `onUnmount` cleanup.
+ */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
+import { composeUpdate } from "../utils/composeUpdate.js";
+import { injectKeyframes } from "../utils/styleInjector.js";
 
-// Inject keyframes only once
-const injectedKeyframes = new Set();
-const injectKeyframes = (name, css) => {
-  if (injectedKeyframes.has(name)) return;
-  const style = document.createElement("style");
-  style.textContent = `@keyframes ${name} { ${css} }`;
-  document.head.appendChild(style);
-  injectedKeyframes.add(name);
-};
-
-injectKeyframes(
-  "slider-stripes",
-  `0% { background-position: 0 0; } 100% { background-position: 20px 0; }`,
-);
-injectKeyframes(
-  "slider-glow",
-  `0% { filter: brightness(1); } 50% { filter: brightness(1.2); box-shadow: 0 0 8px currentColor; } 100% { filter: brightness(1); }`,
-);
+/**
+ * Props owned by the Slider's closure state. Routed to the widget's `update`
+ * and never to the factory's (see `composeUpdate`).
+ */
+const SLIDER_PROP_KEYS = [
+  "value", "min", "max", "step", "disabled",
+  "width", "height", "thumbSize",
+  "color", "trackColor", "thumbColor", "orientation", "inverted",
+  "showValue", "valuePrefix", "valueSuffix", "showMarks", "marks",
+  "striped", "animatedStripes", "stripeColor", "glow",
+  "onChanged", "onPress", "onChangeEnd",
+];
 
 export const Slider = (props) => {
   let {
@@ -77,9 +77,19 @@ export const Slider = (props) => {
     typeof trackSizePx === "number" ? `${trackSizePx}px` : trackSizePx;
   let thumbSizeNum = typeof thumbSize === "number" ? thumbSize : 20;
 
+  injectKeyframes(
+    "slider-stripes",
+    "0% { background-position: 0 0; } 100% { background-position: 20px 0; }",
+  );
+  injectKeyframes(
+    "slider-glow",
+    "0% { filter: brightness(1); } 50% { filter: brightness(1.2); box-shadow: 0 0 8px currentColor; } 100% { filter: brightness(1); }",
+  );
+
   // Main container
   const container = WidgetFactory({
     tag: "div",
+    widgetName: "Slider",
     width: isHorizontal ? width : "auto",
     height: !isHorizontal ? width : "auto",
     opacity: disabled ? 0.5 : 1,
@@ -489,7 +499,7 @@ export const Slider = (props) => {
 
   container.setValue = (v) => setValue(v, true, false);
   container.getValue = () => currentValue;
-  container.update = update;
+  composeUpdate(container, SLIDER_PROP_KEYS, update);
 
   // ---------- Cleanup ----------
   const cleanup = () => {
@@ -507,8 +517,7 @@ export const Slider = (props) => {
     document.removeEventListener("touchmove", onMove);
     document.removeEventListener("touchend", onEnd);
   };
-  if (container.onUnmount) container.onUnmount(cleanup);
-  else container._cleanup = cleanup;
+  container.onUnmount(cleanup);
 
   // Initialize position
   setTimeout(() => updateThumbPosition(), 0);

@@ -1,4 +1,7 @@
-// widgets/Column.js - Clean version
+/**
+ * @file Column.js
+ * @description Vertical flex layout container (default `flex-direction: column`).
+ */
 import { WidgetFactory } from "../widget-factory/index.js";
 
 export const Column = (props = {}) => {
@@ -13,6 +16,7 @@ export const Column = (props = {}) => {
 
   return WidgetFactory({
     tag: "div",
+    widgetName: "Column",
     display: display,
     flexDirection: flexDirection,
     width: width,

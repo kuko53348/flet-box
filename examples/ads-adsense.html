@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FletBox · Google AdSense</title>
+    <style>
+      body { margin: 0; background: #f8fafc; color: #0f172a; }
+      #app { max-width: 720px; margin: 0 auto; padding: 24px; box-sizing: border-box; }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <script type="module">
+      import { AdSense, Column, Text } from "../src/index.js";
+
+      // Unidad real de tu cuenta AdSense: "matched content" (autorelaxed).
+      // Google solo la llena en un dominio con estado "Ready" en AdSense → Sitios.
+      const AD_CLIENT = "ca-pub-3380659231587676";
+      const AD_SLOT = "2762138471";
+      const AD_FORMAT = "autorelaxed";
+
+      const status = Text({
+        text: "solicitando anuncio…",
+        color: "#f59e0b",
+        fontSize: 13,
+      });
+
+      // El widget hace todo: crea el <ins class="adsbygoogle">, inyecta
+      // adsbygoogle.js UNA sola vez (compartido entre slots) y hace el push.
+      // Los formatos autorelaxed/fluid se auto-dimensionan: no reservan altura.
+      const banner = AdSense({
+        client: AD_CLIENT,
+        slot: AD_SLOT,
+        format: AD_FORMAT,
+        responsive: false,
+        onLoad: (el) => console.log("anuncio solicitado", el),
+        onError: (error) => console.warn("AdSense no disponible:", error.message),
+      });
+
+      document.getElementById("app").appendChild(
+        Column({
+          gap: 16,
+          alignItems: "center",
+          children: [
+            Text({ text: "Demo FletBox · Google AdSense", fontSize: 22, fontWeight: 700 }),
+            Text({
+              text: "Slot real (autorelaxed) — si el dominio está aprobado, Google lo llena con anuncios relacionados.",
+              color: "#475569",
+              textAlign: "center",
+            }),
+            banner,
+            status,
+            Text({
+              text: `Dominio actual: ${location.hostname}. ¿Está en "Ready" en AdSense → Sitios? Si no, verás "unfilled".`,
+              color: "#94a3b8",
+              fontSize: 13,
+              textAlign: "center",
+            }),
+            Text({ text: "— contenido de la página bajo el anuncio —", color: "#94a3b8", fontSize: 13 }),
+          ],
+        }),
+      );
+
+      // Reporta en vivo qué decidió Google: filled / unfilled / sin estado.
+      const updateStatus = () => {
+        const el = banner.getElement();
+        const raw = (el.getAttribute("data-ad-status") || "").toLowerCase();
+        if (raw === "filled") {
+          status.text = "Estado: filled — anuncio mostrado ✔";
+          status.color = "#16a34a";
+        } else if (raw === "unfilled") {
+          status.text = "Estado: unfilled — Google no sirvió anuncio (dominio no aprobado o sin inventario).";
+          status.color = "#dc2626";
+        } else {
+          status.text = "solicitando anuncio…";
+          status.color = "#f59e0b";
+        }
+      };
+      // El <ins> se crea bajo demanda, así que observamos el contenedor de forma
+      // profunda: cuando Google escribe data-ad-status sobre el <ins>, lo vemos.
+      const observer = new MutationObserver(updateStatus);
+      observer.observe(banner, { attributes: true, subtree: true });
+      updateStatus();
+
+      // Tras cambiar de ruta en una SPA, vuelve a pedir un anuncio:
+      // banner.refresh();
+    </script>
+  </body>
+</html>

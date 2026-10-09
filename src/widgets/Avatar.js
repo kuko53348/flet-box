@@ -103,6 +103,7 @@ export const Avatar = (props) => {
   }
 
   const avatar = WidgetFactory({
+    widgetName: "Avatar",
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",

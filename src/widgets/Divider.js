@@ -1,4 +1,7 @@
-// widgets/Divider.js - Optimized version
+/**
+ * @file Divider.js
+ * @description Horizontal/vertical rule with configurable thickness and margins.
+ */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 
@@ -55,6 +58,7 @@ export const Divider = (props = {}) => {
   // Createste widget
   const widget = WidgetFactory({
     tag: "div",
+    widgetName: "Divider",
     backgroundColor: color,
     flexShrink: flexShrink,
     ...rest,

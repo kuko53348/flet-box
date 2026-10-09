@@ -1,4 +1,7 @@
-// widgets/Input.js - COMPLETE AND FUNCTIONAL VERSION
+/**
+ * @file Input.js
+ * @description Text input with label, validation and controlled/uncontrolled value.
+ */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 import { Icon } from "./Icon.js";
@@ -285,6 +288,7 @@ export const Input = (props) => {
   // --- Main container — uses WidgetFactory so it inherits layout helpers ---
   container = WidgetFactory({
     tag: "div",
+    widgetName: "Input",
     display: "inline-flex",
     flexDirection: "column",
     gap: 4,

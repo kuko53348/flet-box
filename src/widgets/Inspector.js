@@ -69,31 +69,43 @@ const stringifyValue = (value, indent = 0) => {
 /**
  * Resolves the display name of a widget element.
  *
- * Priority order:
- * 1. `_widgetName` — explicitly set by the widget factory (most reliable)
- * 2. Class / tag-based heuristics as a fallback for elements created without the factory
+ * Names come from the underlying HTML tag (documented behavior): `span` →
+ * `Span()`, `div` → `Div()`, `button` → `Button()`, … `_widgetName` is used
+ * only as a fallback for tags without a mapping so the output reads like real
+ * DOM.
  *
  * @param {HTMLElement} widget - The DOM node whose name to resolve.
- * @returns {string} The widget name (e.g. "Button", "Row", "Container").
+ * @returns {string} The widget name (e.g. "Button", "Span", "Div").
  */
+const TAG_NAMES = {
+  SPAN: "Span",
+  DIV: "Div",
+  BUTTON: "Button",
+  INPUT: "Input",
+  TEXTAREA: "Textarea",
+  IMG: "Image",
+  CANVAS: "Canvas",
+  VIDEO: "Video",
+  AUDIO: "Audio",
+  SELECT: "Select",
+  TABLE: "Table",
+  TH: "Th",
+  TD: "Td",
+  TR: "Tr",
+  UL: "Ul",
+  OL: "Ol",
+  LI: "Li",
+  A: "A",
+  CODE: "Code",
+  PRE: "Pre",
+  HEADER: "Header",
+  FOOTER: "Footer",
+};
+
 const getWidgetName = (widget) => {
-  // _widgetName is stamped onto every element created through WidgetFactory
+  const tag = (widget.tagName || "").toUpperCase();
+  if (TAG_NAMES[tag]) return TAG_NAMES[tag];
   if (widget._widgetName) return widget._widgetName;
-
-  // Fallback heuristics for raw DOM elements
-  if (widget.classList?.contains("material-icons")) return "Icon";
-  if (widget.tagName === "BUTTON") return "Button";
-  if (widget.tagName === "INPUT") return "Input";
-  if (widget.tagName === "IMG") return "Image";
-  if (widget.tagName === "SPAN") return "Text";
-  if (widget.tagName === "DIV") {
-    if (widget.style.display === "flex") {
-      if (widget.style.flexDirection === "row") return "Row";
-      if (widget.style.flexDirection === "column") return "Column";
-    }
-    return "Container";
-  }
-
   return widget.tagName?.toLowerCase() || "unknown";
 };
 

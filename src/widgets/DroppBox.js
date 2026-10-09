@@ -1,4 +1,7 @@
-// widgets/DroppBox.js
+/**
+ * @file DroppBox.js
+ * @description Drop target for drag-and-drop, highlights while dragging over.
+ */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 
@@ -50,6 +53,7 @@ export const DroppBox = (props) => {
   // ✅ FIXED: Use WidgetFactory correctly (without tag)
   const wrapper = WidgetFactory({
     tag: "div",
+    widgetName: "DroppBox",
     position: "relative",
     transition: `all ${transitionDuration} ${transitionTiming}`,
     backgroundColor: bgColor,

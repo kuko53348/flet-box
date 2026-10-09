@@ -171,7 +171,7 @@ export const AppBar = (props) => {
     marginBottom: finalMarginBottom,
     marginLeft: finalMarginLeft,
     marginRight: finalMarginRight,
-    paddingTop: finalPaddingTop,
+    paddingTop: `calc(${finalPaddingTop}px + env(safe-area-inset-top, 0px))`,
     paddingBottom: finalPaddingBottom,
     paddingLeft: finalPaddingLeft,
     paddingRight: finalPaddingRight,
@@ -181,7 +181,6 @@ export const AppBar = (props) => {
     top: sticky ? 0 : "auto",
     zIndex: sticky ? 100 : "auto",
     transition: "transform 0.3s ease, opacity 0.3s ease",
-    ...rest.style,
     ...backgroundStyle,
     ...rest,
   });

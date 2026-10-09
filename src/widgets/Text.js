@@ -1,4 +1,8 @@
-// widgets/Text.js (fixed)
+/**
+ * @file Text.js
+ * @description Text rendering with heading types and inline styles
+ * (bold/italic/underline/strikethrough/code), built on a single factory root.
+ */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 
@@ -68,6 +72,7 @@ export const Text = (props) => {
   // ✅ Instead of 'textContent', use 'text' (which is in translateProps)
   let element = WidgetFactory({
     tag: baseTag,
+    widgetName: "Text",
     text: textContent, // ✅ CHANGED: text instead of textContent
     ...cssStyles,
     ...rest,

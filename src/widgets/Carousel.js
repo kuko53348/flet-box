@@ -1,4 +1,7 @@
-// widgets/Carousel.js
+/**
+ * @file Carousel.js
+ * @description Swipeable carousel of slides with navigation controls.
+ */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { Icon } from "./Icon.js";
 import { colors } from "../utils/themes.js";
@@ -168,6 +171,7 @@ export const Carousel = (props) => {
 
   // Main container
   const container = WidgetFactory({
+    widgetName: "Carousel",
     position: "relative",
     width: typeof width === "number" ? `${width}px` : width,
     height: typeof height === "number" ? `${height}px` : height,
@@ -287,11 +291,9 @@ export const Carousel = (props) => {
   container.getCurrentIndex = () => currentIndex;
 
   // Cleanup
-  const originalCleanup = container._cleanup;
-  container._cleanup = () => {
+  container.onUnmount(() => {
     stopAutoPlay();
-    if (originalCleanup) originalCleanup();
-  };
+  });
 
   return container;
 };

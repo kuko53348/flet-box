@@ -1,4 +1,7 @@
-// widgets/CircularBar.js - Extended features without breaking existing ones
+/**
+ * @file CircularBar.js
+ * @description Circular/radial progress bar drawn on canvas.
+ */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 
@@ -306,12 +309,10 @@ export const CircularBar = (props) => {
   const initWidget = () => {
     container = WidgetFactory({
       tag: "div",
-      style: {
-        display: isFixedSize ? "inline-block" : "block",
-        width: isFixedSize ? `${fixedSize}px` : "100%",
-        height: isFixedSize ? `${fixedSize}px` : "auto",
-        ...rest.style,
-      },
+      widgetName: "CircularBar",
+      display: isFixedSize ? "inline-block" : "block",
+      width: isFixedSize ? `${fixedSize}px` : "100%",
+      height: isFixedSize ? `${fixedSize}px` : "auto",
       ...rest,
     });
     canvas = document.createElement("canvas");
@@ -333,13 +334,11 @@ export const CircularBar = (props) => {
 
   initWidget();
 
-  const originalCleanup = container._cleanup;
-  container._cleanup = () => {
+  container.onUnmount(() => {
     if (animationId) cancelAnimationFrame(animationId);
     if (resizeObserver) resizeObserver?.disconnect();
     else window.removeEventListener("resize", resizeCanvas);
-    if (originalCleanup) originalCleanup();
-  };
+  });
 
   container.updateValue = (newValue, newMax = null) => {
     if (newMax !== null) max = newMax;

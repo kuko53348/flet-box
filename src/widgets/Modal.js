@@ -1,7 +1,11 @@
-// widgets/Modal.js - With improved default colors
+/**
+ * @file Modal.js
+ * @description Modal dialog instance with `open`/`close`/`updateContent`.
+ */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { transition } from "../tools/index.js";
 import { colors } from "../utils/themes.js";
+import { injectKeyframes } from "../utils/styleInjector.js";
 import { Container } from "./Container.js";
 import { Column } from "./Column.js";
 import { Row } from "./Row.js";
@@ -474,12 +478,10 @@ export const Modal = (props = {}) => {
           }),
         });
 
-        if (!document.querySelector("#modal-spinner-style")) {
-          const style = document.createElement("style");
-          style.id = "modal-spinner-style";
-          style.textContent = `@keyframes modal-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`;
-          document.head.appendChild(style);
-        }
+        injectKeyframes(
+          "modal-spin",
+          "0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); }",
+        );
 
         instance.updateContent(loadingEl);
       } else {

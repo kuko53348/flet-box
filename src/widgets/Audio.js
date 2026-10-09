@@ -53,6 +53,7 @@ export const Audio = (props) => {
 
   const audio = WidgetFactory({
     tag: "audio",
+    widgetName: "Audio",
     src: src,
     ...rest,
   });
@@ -184,12 +185,10 @@ export const Audio = (props) => {
     }, 2000);
   }
 
-  // Extend _cleanup to also cancel the polling interval
-  const originalCleanup = audio._cleanup;
-  audio._cleanup = () => {
+  // Cancel the duration polling interval when the widget unmounts
+  audio.onUnmount(() => {
     if (durationPoll) clearInterval(durationPoll);
-    if (originalCleanup) originalCleanup();
-  };
+  });
 
   // ========== PUBLIC PLAYBACK API ==========
 

@@ -1,4 +1,7 @@
-// widgets/Switch.js (iOS style)
+/**
+ * @file Switch.js
+ * @description iOS-style toggle switch with controlled/uncontrolled state.
+ */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 
@@ -57,6 +60,7 @@ export const Switch = (props) => {
 
   // Createste main switch container
   const switchContainer = WidgetFactory({
+    widgetName: "Switch",
     width: sz.width,
     height: sz.height,
     backgroundColor: internalValue ? colors.success : colors.gray300,

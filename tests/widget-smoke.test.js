@@ -33,6 +33,14 @@ const fixtures = {
   Badge: () => ({ count: 1, child: W.Text({ text: "b" }) }),
   Divider: () => ({}),
   Accordion: () => ({ title: "a", child: W.Text({ text: "x" }) }),
+  AdSense: () => ({}),
+  AdMob: () => ({
+    plugin: {
+      initialize: () => Promise.resolve(),
+      showBanner: () => Promise.resolve(),
+      removeBanner: () => Promise.resolve(),
+    },
+  }),
   Input: () => ({}),
   Radio: () => ({ name: "r", value: "1" }),
   Switch: () => ({}),

@@ -12,9 +12,11 @@ import { toREM } from "./remTool.js"; // Centralized REM conversion utility
  *
  * @param {Object} props - Raw props object
  * @param {string} tag - HTML tag of the widget (e.g., 'div', 'span', 'input')
+ * @param {string} [widgetName] - Real FletBox widget name (e.g., 'QRCode'),
+ *   used only to produce readable warnings. Falls back to the capitalized tag.
  * @returns {{ style: Object, events: Object, attributes: Object, textContent: *, special: Object }}
  */
-export const processProps = (props, tag = "div") => {
+export const processProps = (props, tag = "div", widgetName = null) => {
   const style = {};
   const events = {};
   const attributes = {};
@@ -22,13 +24,23 @@ export const processProps = (props, tag = "div") => {
   let textContent = null;
 
   // Derive widget name from tag (e.g., 'div' → 'Div', 'span' → 'Span')
-  const widgetName = tag.charAt(0).toUpperCase() + tag.slice(1);
+  const name = widgetName || tag.charAt(0).toUpperCase() + tag.slice(1);
 
   for (const [key, value] of Object.entries(props)) {
     if (value === undefined || value === null) continue;
 
+    // `style` is deliberately NOT part of the API: FletBox uses flat, aliased
+    // CSS props. Fail loudly instead of silently ignoring the object.
+    if (key === "style") {
+      console.warn(
+        `⚠️ [${name}] The \`style\` prop is not supported. Pass CSS props flat ` +
+          `(e.g. backgroundColor, padding, flexDirection).`,
+      );
+      continue;
+    }
+
     // Pass widget name context for better warnings
-    const def = getPropDefinition(key, { widgetName });
+    const def = getPropDefinition(key, { widgetName: name });
 
     if (def) {
       switch (def.type) {

@@ -8,10 +8,25 @@
 
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
+import { composeUpdate } from "../utils/composeUpdate.js";
 import { Container } from "./Container.js";
 import { Row } from "./Row.js";
 import { Text } from "./Text.js";
 import { Icon } from "./Icon.js";
+
+/**
+ * Props owned by the Accordion's own closure state. They are routed to the
+ * widget's `update` and never to the factory's (see `composeUpdate`).
+ */
+const ACCORDION_PROP_KEYS = [
+  "title", "children", "expanded", "onToggle", "onPress", "variant",
+  "borderRadius", "bgColor", "titleColor", "expandedColor",
+  "border", "borderColor", "borderWidth",
+  "titleSize", "titleWeight", "titlePadding", "contentPadding",
+  "iconCollapsed", "iconExpanded", "iconColor", "iconSize",
+  "divider", "dividerColor", "disabled", "animate", "animationDuration",
+  "elevation",
+];
 
 /**
  * Creates an Accordion widget — a collapsible section with an animated title bar.
@@ -20,7 +35,8 @@ import { Icon } from "./Icon.js";
  * @param {string} props.title - The text displayed in the title bar.
  * @param {HTMLElement|HTMLElement[]} props.children - Content rendered inside the expanded panel.
  * @param {boolean} [props.expanded=false] - Whether the accordion starts in the expanded state.
- * @param {Function} [props.onToggle] - Callback fired when the expanded state changes. Receives `(isExpanded: boolean)`.
+ * @param {Function} [props.onPress] - Callback fired when the expanded state changes. Receives `(isExpanded: boolean)`.
+ * @param {Function} [props.onToggle] - @deprecated Use `onPress` instead. Kept as alias for backward compatibility.
  * @param {'contained'|'outlined'|'ghost'} [props.variant='contained'] - Visual style variant.
  * @param {number} [props.borderRadius=8] - Corner radius in pixels.
  * @param {string} [props.bgColor=colors.surface] - Background color of the container (used in 'contained' variant).
@@ -307,7 +323,8 @@ export const Accordion = (props) => {
         contentWrapper.style.overflow = "";
         contentInner.style.display = "";
         isAnimating = false;
-        if (triggerCallback && onToggle) onToggle(false);
+        const collapseCb = onToggle || onPress;
+        if (triggerCallback && collapseCb) collapseCb(false);
         updateUI();
       }, currentAnimationDuration);
     }, 10);
@@ -353,10 +370,9 @@ export const Accordion = (props) => {
   // ========== WIDGET CONSTRUCTION ==========
 
   const container = Container({
-    style: {
-      width: "100%",
-      overflow: "hidden",
-    },
+    widgetName: "Accordion",
+    width: "100%",
+    overflow: "hidden",
     ...rest,
   });
 
@@ -366,7 +382,7 @@ export const Accordion = (props) => {
     size: currentTitleSize,
     weight: currentTitleWeight,
     color: isExpanded ? currentExpandedColor : currentTitleColor,
-    style: { flex: 1 },
+    flex: 1,
   });
 
   // Chevron/expand icon
@@ -374,11 +390,9 @@ export const Accordion = (props) => {
     name: isExpanded ? currentIconExpanded : currentIconCollapsed,
     size: currentIconSize,
     color: currentIconColor,
-    style: {
-      transition: animate
-        ? `transform ${currentAnimationDuration}ms ease`
-        : "none",
-    },
+    transition: animate
+      ? `transform ${currentAnimationDuration}ms ease`
+      : "none",
   });
 
   // Clickable title bar that contains the text and icon
@@ -386,15 +400,13 @@ export const Accordion = (props) => {
     alignItems: "center",
     justifyContent: "space-between",
     gap: 8,
-    style: {
-      padding: currentTitlePadding,
-      cursor: currentDisabled ? "not-allowed" : "pointer",
-      opacity: currentDisabled ? 0.5 : 1,
-      backgroundColor:
-        isExpanded && currentVariant === "contained"
-          ? `${currentExpandedColor}10`
-          : "transparent",
-    },
+    padding: currentTitlePadding,
+    cursor: currentDisabled ? "not-allowed" : "pointer",
+    opacity: currentDisabled ? 0.5 : 1,
+    backgroundColor:
+      isExpanded && currentVariant === "contained"
+        ? `${currentExpandedColor}10`
+        : "transparent",
     children: [titleElement, iconElement],
   });
 
@@ -411,13 +423,11 @@ export const Accordion = (props) => {
 
   // Inner container holds the actual slot content; not animated directly
   contentInner = Container({
-    style: {
-      padding: currentContentPadding,
-      borderTop:
-        currentDivider && isExpanded
-          ? `1px solid ${currentDividerColor}`
-          : "none",
-    },
+    padding: currentContentPadding,
+    borderTop:
+      currentDivider && isExpanded
+        ? `1px solid ${currentDividerColor}`
+        : "none",
     children: currentChildren,
   });
 
@@ -533,23 +543,18 @@ export const Accordion = (props) => {
   });
   container.setExpanded = setExpanded;
   container.toggle = toggle;
-  container.update = update;
+  composeUpdate(container, ACCORDION_PROP_KEYS, update);
 
   // ========== CLEANUP ==========
 
   /**
    * Disconnects the ResizeObserver and propagates cleanup to child widgets.
-   * Attached automatically to the container's `_cleanup` hook.
+   * Registered through `onUnmount` so it runs on every teardown path.
    */
-  const cleanup = () => {
+  container.onUnmount(() => {
     if (resizeObserver) resizeObserver.disconnect();
     if (contentWrapper && contentWrapper._cleanup) contentWrapper._cleanup();
-  };
-  const originalCleanup = container._cleanup;
-  container._cleanup = () => {
-    cleanup();
-    if (originalCleanup) originalCleanup();
-  };
+  });
 
   return container;
 };

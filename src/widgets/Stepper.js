@@ -1,4 +1,7 @@
-// widgets/Stepper.js
+/**
+ * @file Stepper.js
+ * @description Multi-step progress indicator with a horizontally scrollable track.
+ */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { Container } from "./Container.js";
 import { Row } from "./Row.js";
@@ -238,6 +241,7 @@ export const Stepper = (props) => {
   }
 
   const container = WidgetFactory({
+    widgetName: "Stepper",
     ...style,
     ...rest,
   });

@@ -1,4 +1,7 @@
-// widgets/Video.js
+/**
+ * @file Video.js
+ * @description `<video>` wrapper; media attributes are set as element properties.
+ */
 import { WidgetFactory } from "../widget-factory/index.js";
 
 export const Video = (props) => {
@@ -17,6 +20,7 @@ export const Video = (props) => {
 
   const video = WidgetFactory({
     tag: "video",
+    widgetName: "Video",
     src: src,
     width: width,
     height: height,

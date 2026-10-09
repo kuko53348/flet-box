@@ -1,4 +1,7 @@
-// widgets/DataTable.js
+/**
+ * @file DataTable.js
+ * @description Table renderer with configurable columns and rows.
+ */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 
@@ -37,6 +40,7 @@ export const DataTable = (props) => {
 
   // Main container with WidgetFactory
   const container = WidgetFactory({
+    widgetName: "DataTable",
     width: "100%",
     overflowX: "auto",
     ...rest,

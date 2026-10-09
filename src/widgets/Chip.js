@@ -90,7 +90,7 @@ export const Chip = (props) => {
       name: "close",
       size: size - 2,
       color: txtColor,
-      style: { cursor: "pointer" },
+      cursor: "pointer",
       onclick: (e) => {
         e.stopPropagation();
         onDelete();
@@ -114,11 +114,11 @@ export const Chip = (props) => {
         ? `0 ${elevation}px ${elevation * 2}px rgba(0,0,0,0.1)`
         : "none",
     children: children,
-    ...rest,
   });
 
   // Outer wrapper element enables the onclick without styling conflicts
   const chip = WidgetFactory({
+    widgetName: "Chip",
     display: "inline-block",
     cursor: onPress ? "pointer" : "default",
     transition: "all 0.2s ease",

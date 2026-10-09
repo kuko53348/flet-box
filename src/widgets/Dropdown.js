@@ -1,11 +1,26 @@
-// widgets/Dropdown.js - With unified textColor, borderRadius and bgColor
+/**
+ * @file Dropdown.js
+ * @description Select dropdown with portal menu, unified textColor/borderRadius/bgColor.
+ */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
+import { composeUpdate } from "../utils/composeUpdate.js";
 import { Container } from "./Container.js";
 import { Row } from "./Row.js";
 import { Column } from "./Column.js";
 import { Text } from "./Text.js";
 import { Icon } from "./Icon.js";
+
+/**
+ * Props owned by the Dropdown's closure state. Routed to the widget's `update`
+ * and never to the factory's (see `composeUpdate`).
+ */
+const DROPDOWN_PROP_KEYS = [
+  "options", "value", "onChange", "onPress", "placeholder", "disabled",
+  "label", "error", "variant", "size", "borderRadius",
+  "color", "bgColor", "textColor", "optionHoverColor", "clearable",
+  "width", "portal",
+];
 
 export const Dropdown = (props) => {
   const {
@@ -86,7 +101,7 @@ export const Dropdown = (props) => {
         text: displayText || currentPlaceholder,
         size: currentSize.fontSize,
         color: displayText ? currentTextColor : colors.textSecondary,
-        style: { flex: 1 },
+        flex: 1,
       }),
     );
 
@@ -107,7 +122,7 @@ export const Dropdown = (props) => {
   const leftContent = [];
   if (displayIcon) {
     leftContent.push(
-      Text({ text: displayIcon, size: 16, style: { flexShrink: 0 } }),
+      Text({ text: displayIcon, size: 16, flexShrink: 0 }),
     );
   }
   leftContent.push(
@@ -115,9 +130,13 @@ export const Dropdown = (props) => {
       text: displayText || currentPlaceholder,
       size: currentSize.fontSize,
       color: displayText ? currentTextColor : colors.textSecondary,
-      // minWidth 0 + overflow hidden: un nombre of entidad largo can recorta with
-      // puntos suspensivos in vez of empujar the flecha fuera del selector.
-      style: { flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
+      // minWidth 0 + overflow hidden: un nombre de entidad largo se recorta con
+      // puntos suspensivos en vez de empujar la flecha fuera del selector.
+      flex: 1,
+      minWidth: 0,
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+      whiteSpace: "nowrap",
     }),
   );
 
@@ -126,7 +145,7 @@ export const Dropdown = (props) => {
     const clearIcon = Icon({
       name: "close",
       size: 16,
-      style: { cursor: "pointer" },
+      cursor: "pointer",
       onclick: (e) => {
         e.stopPropagation();
         if (!currentDisabled) {
@@ -143,48 +162,48 @@ export const Dropdown = (props) => {
   const arrowIcon = Icon({
     name: "expand_more",
     size: 20,
-    style: { transition: "transform 0.2s" },
+    transition: "transform 0.2s",
   });
   rightContent.push(arrowIcon);
 
   const selector = Row({
     alignItems: "center",
     justifyContent: "space-between",
-    style: {
-      width: "100%",
-      padding: currentSize.padding,
-      backgroundColor:
-        currentVariant === "filled" ? `${currentBgColor}CC` : "transparent",
-      border:
-        currentVariant === "outlined"
-          ? `1px solid ${currentError ? colors.danger : colors.border}`
-          : "none",
-      borderRadius: `${currentBorderRadius}px`,
-      cursor: currentDisabled ? "not-allowed" : "pointer",
-      opacity: currentDisabled ? 0.5 : 1,
-      boxSizing: "border-box",
-      color: currentTextColor, // inherit text color
-    },
+    width: "100%",
+    padding: currentSize.padding,
+    backgroundColor:
+      currentVariant === "filled" ? `${currentBgColor}CC` : "transparent",
+    border:
+      currentVariant === "outlined"
+        ? `1px solid ${currentError ? colors.danger : colors.border}`
+        : "none",
+    borderRadius: `${currentBorderRadius}px`,
+    cursor: currentDisabled ? "not-allowed" : "pointer",
+    opacity: currentDisabled ? 0.5 : 1,
+    boxSizing: "border-box",
+    color: currentTextColor, // inherit text color
     children: [
       Row({
         alignItems: "center",
         gap: 8,
-        // minWidth: 0 for that un texto largo ENCOJA and no empuje al icono: sin
-        // él, the span no can bajar of su ancho of contenido and the
-        // expand_more can sale del selector.
-        style: { flex: 1, minWidth: 0 },
+        // minWidth: 0 para que un texto largo ENCOJA y no empuje al icono: sin
+        // él, el span no puede bajar de su ancho de contenido y el
+        // expand_more sale del selector.
+        flex: 1,
+        minWidth: 0,
         children: leftContent,
       }),
-      // the Row of the derecha TIENE that medir lo that su contenido. Row() trae
-      // width "100%" by defecto, and with eso este bloque can apropiaba of casi
-      // todo the ancho del selector: as no lleva justifyContent, the glifo
-      // quedaba anclado a su borde izquierdo, pegado al texto, in vez of
-      // apartado a the derecha. flexShrink 0 evita además that can apriete when
-      // the texto is largo.
+      // El Row de la derecha TIENE que medir lo que su contenido. Row() trae
+      // width "100%" por defecto, y con eso este bloque se apropiaba de casi
+      // todo el ancho del selector: al no llevar justifyContent, el glifo
+      // quedaba anclado a su borde izquierdo, pegado al texto, en vez de
+      // apartado a la derecha. flexShrink 0 evita además que se apriete cuando
+      // el texto es largo.
       Row({
         alignItems: "center",
         gap: 4,
-        style: { width: "auto", flexShrink: 0 },
+        width: "auto",
+        flexShrink: 0,
         children: rightContent,
       }),
     ],
@@ -192,7 +211,9 @@ export const Dropdown = (props) => {
 
   // Main container
   const container = Container({
-    style: { position: "relative", width: width },
+    widgetName: "Dropdown",
+    position: "relative",
+    width: width,
     ...rest,
   });
 
@@ -263,18 +284,16 @@ export const Dropdown = (props) => {
     isOpen = true;
 
     menuElement = Column({
-      style: {
-        zIndex: 10000,
-        border: `1px solid ${colors.border}`,
-        backgroundColor: currentBgColor,
-        borderRadius: `${currentBorderRadius}px`, // same borderRadius
-        boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-        maxHeight: "250px",
-        overflowY: "auto",
-        margin: 0,
-        padding: 0,
-        color: currentTextColor, // inherit textColor
-      },
+      zIndex: 10000,
+      border: `1px solid ${colors.border}`,
+      backgroundColor: currentBgColor,
+      borderRadius: `${currentBorderRadius}px`, // same borderRadius
+      boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+      maxHeight: "250px",
+      overflowY: "auto",
+      margin: 0,
+      padding: 0,
+      color: currentTextColor, // inherit textColor
     });
 
     currentOptions.forEach((opt) => {
@@ -292,25 +311,23 @@ export const Dropdown = (props) => {
         Text({
           text: optLabel,
           size: currentSize.fontSize,
-          style: { flex: 1 },
+          flex: 1,
           color: currentTextColor,
         }),
       );
 
       const optionItem = Row({
-        style: {
-          padding: "10px 16px",
-          cursor: "pointer",
-          backgroundColor: isSelected ? currentColor + "15" : "transparent",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: "8px",
-        },
+        padding: "10px 16px",
+        cursor: "pointer",
+        backgroundColor: isSelected ? currentColor + "15" : "transparent",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: "8px",
         children: [
           Row({
             alignItems: "center",
             gap: 8,
-            style: { flex: 1 },
+            flex: 1,
             children: leftOption,
           }),
           isSelected
@@ -476,16 +493,11 @@ export const Dropdown = (props) => {
   });
   container.open = openMenu;
   container.close = closeMenu;
-  container.update = update;
+  composeUpdate(container, DROPDOWN_PROP_KEYS, update);
 
-  const cleanup = () => {
+  container.onUnmount(() => {
     closeMenu();
-  };
-  const originalCleanup = container._cleanup;
-  container._cleanup = () => {
-    cleanup();
-    if (originalCleanup) originalCleanup();
-  };
+  });
 
   return container;
 };

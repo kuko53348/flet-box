@@ -1,5 +1,5 @@
 // index.d.ts - FletBox Type Declarations
-// Versión completa with todos the widgets, animaciones, servicios and utilidades
+// Versión completa con todos los widgets, animaciones, servicios y utilidades
 
 declare module 'flet-box' {
   // =========================================================================
@@ -32,7 +32,6 @@ declare module 'flet-box' {
     onClick?: (widget: Widget) => void;
     id?: string;
     className?: string;
-    style?: Partial<CSSStyleDeclaration>;
     ref?: (widget: Widget) => void;
     disableTransform?: boolean;
   }
@@ -376,6 +375,58 @@ declare module 'flet-box' {
     gap?: number;
   }
   export function Chip(props: ChipProps): Widget;
+
+  interface AdSenseProps extends CommonProps {
+    client?: string;
+    slot?: string;
+    format?: string;
+    responsive?: boolean;
+    test?: boolean;
+    width?: Size;
+    height?: Size;
+    placeholder?: boolean;
+    label?: string;
+    bgColor?: Color;
+    color?: Color;
+    borderColor?: Color;
+    onLoad?: (widget: Widget) => void;
+    onError?: (error: Error, widget: Widget) => void;
+    children?: Widget[];
+  }
+  export function AdSense(props: AdSenseProps): Widget & {
+    refresh(): Widget;
+    load(): void;
+    getElement(): Widget;
+  };
+
+  interface AdMobProps extends CommonProps {
+    adId?: string;
+    isTesting?: boolean;
+    position?: 'top' | 'bottom';
+    size?: string;
+    margin?: number;
+    interstitialId?: string;
+    rewardedId?: string;
+    autoShow?: boolean;
+    width?: Size;
+    height?: Size;
+    placeholder?: boolean;
+    label?: string;
+    bgColor?: Color;
+    color?: Color;
+    borderColor?: Color;
+    plugin?: object;
+    onLoaded?: (widget: Widget) => void;
+    onFailed?: (error: Error, widget: Widget) => void;
+    onDismissed?: () => void;
+  }
+  export function AdMob(props: AdMobProps): Widget & {
+    show(): Promise<unknown>;
+    hide(): Promise<unknown>;
+    showInterstitial(): Promise<unknown>;
+    showRewarded(): Promise<unknown>;
+    getPlugin(): object | null;
+  };
 
   interface BadgeProps extends CommonProps {
     value: string | number;
@@ -1460,6 +1511,49 @@ declare module 'flet-box' {
   }
   export function CircularBar(props: CircularBarProps): Widget & {
     updateValue(newValue: number, newMax?: number): void;
+  };
+
+  interface CircularChartSlice {
+    value: number;
+    label?: string;
+    color?: Color;
+  }
+
+  interface CircularChartProps extends CommonProps {
+    data?: CircularChartSlice[];
+    size?: number;
+    strokeWidth?: number;
+    innerRadius?: number;
+    rounded?: boolean;
+    cornerRadius?: number;
+    startAngle?: number;
+    endAngle?: number;
+    animate?: boolean;
+    animationDuration?: number;
+    onComplete?: () => void;
+    centerContent?: string | Widget | null;
+    showLabels?: boolean;
+    labelSize?: number;
+    labelColor?: Color;
+    onClick?: (slice: CircularChartSlice, index: number) => void;
+    onHover?: (slice: CircularChartSlice | null, index: number) => void;
+    defaultColors?: Color[];
+    ref?: (canvas: HTMLCanvasElement) => void;
+    shadowBlur?: number;
+    shadowColor?: string;
+    glow?: boolean;
+    glowColor?: string;
+    semiCircle?: 'top' | 'bottom' | 'left' | 'right' | null;
+    borderRadius?: number;
+    borderColor?: Color;
+    borderWidth?: number;
+    sliceBorderWidth?: number;
+    sliceBorderColor?: Color;
+  }
+  export function CircularChart(props: CircularChartProps): Widget & {
+    updateData(data: CircularChartSlice[], animate?: boolean): void;
+    redraw(): void;
+    setCornerRadius(radius: number): void;
   };
 
   interface MarkdownProps extends CommonProps {

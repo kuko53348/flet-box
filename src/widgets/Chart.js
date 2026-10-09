@@ -521,6 +521,7 @@ export const Chart = (props) => {
   // ========== DOM CONSTRUCTION ==========
 
   const container = WidgetFactory({
+    widgetName: "Chart",
     width: typeof width === "number" ? `${width}px` : width,
     height: typeof height === "number" ? `${height}px` : height,
     backgroundColor: bgColor,
@@ -535,11 +536,9 @@ export const Chart = (props) => {
   // Inner scrollable layer — only relevant for candlestick overflow
   const scrollContainer = WidgetFactory({
     tag: "div",
-    style: {
-      flex: 1,
-      overflow: isCandle && useFixedWidth ? "auto" : "hidden",
-      position: "relative",
-    },
+    flex: 1,
+    overflow: isCandle && useFixedWidth ? "auto" : "hidden",
+    position: "relative",
   });
   scrollContainerRef = scrollContainer;
 
@@ -616,8 +615,7 @@ export const Chart = (props) => {
   container.redraw = drawWithOverflow;
 
   // Cleanup: remove all listeners, observers, and timers
-  const originalCleanup = container._cleanup;
-  container._cleanup = () => {
+  container.onUnmount(() => {
     if (drawTimeout) clearTimeout(drawTimeout);
     if (windowResizeTimeout) clearTimeout(windowResizeTimeout);
     if (initialDrawTimeout) clearTimeout(initialDrawTimeout);
@@ -626,8 +624,7 @@ export const Chart = (props) => {
     if (isCandle) {
       scrollContainer.removeEventListener("scroll", handleScroll);
     }
-    if (originalCleanup) originalCleanup();
-  };
+  });
 
   return container;
 };

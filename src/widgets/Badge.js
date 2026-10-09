@@ -101,6 +101,7 @@ export const Badge = (props) => {
 
   // The badge pill element itself
   const badgeElement = WidgetFactory({
+    widgetName: "Badge",
     position: "absolute",
     top: pos.top,
     right: pos.right,
@@ -151,17 +152,14 @@ export const Badge = (props) => {
   const badgeStack = Stack({
     position: "relative",
     display: "inline-block",
-    style: { position: "relative", display: "inline-block" },
     children: [validChild, badgeElement],
     ...rest,
   });
 
   // Unsubscribe from theme updates when the component is removed from the DOM
-  const originalCleanup = badgeStack._cleanup;
-  badgeStack._cleanup = () => {
+  badgeStack.onUnmount(() => {
     if (unsubscribeTheme) unsubscribeTheme();
-    if (originalCleanup) originalCleanup();
-  };
+  });
 
   /**
    * Updates the displayed badge value without re-rendering the component.

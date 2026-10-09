@@ -1,5 +1,9 @@
-// src/widgets/ListView.js
+/**
+ * @file ListView.js
+ * @description Virtualized list/grid with scroll RAF throttling and pull-to-refresh.
+ */
 import { WidgetFactory } from "../widget-factory/index.js";
+import { injectKeyframes } from "../utils/styleInjector.js";
 
 /**
  * @typedef {Object} ListViewProps
@@ -81,6 +85,7 @@ export const ListView = (props) => {
   // Outer element — owns the overall dimensions
   const element = WidgetFactory({
     tag: "div",
+    widgetName: "ListView",
     width: width,
     height: height,
     display: "flex",
@@ -339,7 +344,7 @@ export const ListView = (props) => {
     spinner.style.border = "2px solid #e0e0e0";
     spinner.style.borderTop = "2px solid #007aff";
     spinner.style.borderRadius = "50%";
-    spinner.style.animation = "spin 0.8s linear infinite";
+    spinner.style.animation = "flet-spin 0.8s linear infinite";
     refreshIndicator.appendChild(spinner);
     scrollContainer.insertBefore(refreshIndicator, scrollContainer.firstChild);
 
@@ -481,12 +486,10 @@ export const ListView = (props) => {
     if (onRefresh) setupPullToRefresh();
 
     // Inject the spinner keyframes once, globally, so pull-to-refresh has its animation
-    if (!document.querySelector("#listview-spinner-style")) {
-      const style = document.createElement("style");
-      style.id = "listview-spinner-style";
-      style.textContent = `@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`;
-      document.head.appendChild(style);
-    }
+    injectKeyframes(
+      "flet-spin",
+      "0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); }",
+    );
   });
 
   element.onUnmount(() => {
