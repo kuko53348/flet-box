@@ -1,117 +1,23 @@
-# Widgets: the FletBox book
+# Widgets documentation
 
-This directory is a book. Read it in order to go from your first widget to complete, data-rich compositions. Every page links to the next one, so you can follow it like a tutorial, or jump straight to a widget from the index below.
+This directory teaches FletBox from the first widget to complete compositions.
 
-If you have never used FletBox, begin with [Start here](START_HERE.md). Then follow the reading path.
+If you are new to FletBox, start with [Start here](START_HERE.md). Each widget page then includes simple explanations, the full prop list, and copy-paste examples.
 
-## How to read this book
+Start with [Start here](START_HERE.md) before choosing a widget.
+For complete pages and application structures, read [Build your first FletBox app](../guides/app-templates.md).
 
-- Chapters go from **basic to advanced**. Read them top to bottom the first time.
-- At the end of every widget page there is a **Continue reading** block with the previous page, the next page, and a link back to this index.
-- Each page has the same shape: an overview, when to use it, a prop table, and copy-paste examples.
-- Related widgets at the bottom of each page are clickable, so you can branch off whenever you are curious.
+To create projects from the terminal, read [FletBox CLI](../cli/README.md).
 
-Related guides: [Build your first FletBox app](../guides/app-templates.md) · [Routing with FletBox](../guides/router.md) · [FletBox CLI](../cli/README.md).
-
-The book covers **layout and input widgets first, then the app shell**: Chapter 8 shows how to compose `Scaffold`, `AppBar`, `Drawer`, `BottomNavigation`, `Tabs`, and side bars into a full screen, and how they talk to the [router](../guides/router.md).
-
-Shared reference: every widget also accepts the [common props](COMMON_PROPS.md) — layout, spacing, color, typography, borders, events, aliases, and the number-to-pixel rule. Read it once and you will recognize those props everywhere.
-
-## The reading path
-
-### Chapter 1 · First steps: the core mental model
-
-1. [Text](Text.md) — write words, titles, and paragraphs
-2. [Container](Container.md) — a styled box for grouping and layout
-3. [Row](Row.md) — place children left to right
-4. [Column](Column.md) — place children top to bottom
-5. [Stack](Stack.md) — layer children on top of each other
-6. [Icon](Icon.md) — show a symbolic icon
-7. [Image](Image.md) — display a picture
-
-### Chapter 2 · Interaction basics
-
-8. [Button](Button.md) — a pressable action
-9. [Input](Input.md) — let the user type text
-10. [Checkbox](Checkbox.md) — a toggleable yes/no box
-11. [Radio](Radio.md) — choose one option from a set
-12. [Switch](Switch.md) — an on/off toggle
-13. [Slider](Slider.md) — pick a value along a range
-14. [Dropdown](Dropdown.md) — choose from a collapsible list
-15. [Rating](Rating.md) — show or collect a star rating
-
-### Chapter 3 · Layout, cards and lists
-
-16. [Card](Card.md) — a content container with elevation
-17. [Divider](Divider.md) — a separating line
-18. [ListTile](ListTile.md) — a single row in a list
-19. [ListView](ListView.md) — a scrollable list of items
-20. [GridView](GridView.md) — a responsive grid of items
-21. [Avatar](Avatar.md) — a small circular user image
-22. [Badge](Badge.md) — a numeric or status marker
-23. [Chip](Chip.md) — a compact tag or selectable token
-
-### Chapter 4 · Feedback and overlays
-
-24. [AlertDialog](AlertDialog.md) — a blocking confirmation dialog
-25. [Modal](Modal.md) — a custom overlay window
-26. [BottomSheet](BottomSheet.md) — a panel that slides up from the bottom
-27. [SnackBar](SnackBar.md) — a transient message bar
-28. [Tooltip](Tooltip.md) — a hint shown on hover
-29. [ProgressBar](ProgressBar.md) — a linear progress indicator
-30. [CircularBar](CircularBar.md) — a circular progress indicator
-31. [Skeleton](Skeleton.md) — a loading placeholder
-32. [FloatingActionButton](FloatingActionButton.md) — a primary floating action
-33. [Pagination](Pagination.md) — page navigation controls
-
-### Chapter 5 · Navigation and flows
-
-34. [Stepper](Stepper.md) — a guided multi-step flow
-35. [Accordion](Accordion.md) — collapsible sections
-36. [TreeView](TreeView.md) — hierarchical expandable nodes
-37. [Carousel](Carousel.md) — a rotating slideshow
-38. [InstallButton](InstallButton.md) — a PWA install-prompt button
-
-### Chapter 6 · Data and rich content
-
-39. [DataTable](DataTable.md) — a structured data table
-40. [Chart](Chart.md) — a data chart
-41. [CircularChart](CircularChart.md) — a circular or donut chart
-42. [Markdown](Markdown.md) — render markdown content
-43. [CodeViewer](CodeViewer.md) — display formatted code
-44. [QRCode](QRCode.md) — generate a QR code
-45. [Inspector](Inspector.md) — a dev tool to inspect widgets
-
-### Chapter 7 · Media and drag & drop
-
-46. [Audio](Audio.md) — play audio
-47. [Video](Video.md) — play video
-48. [DraggBox](DraggBox.md) — a draggable box
-49. [DroppBox](DroppBox.md) — a drop target
-
-### Chapter 8 · App navigation
-
-Build the shell of a real application and wire it to the router.
-
-50. [Scaffold](Scaffold.md) — the app shell: app bar, body, drawer, side bars
-51. [AdaptiveScaffold](AdaptiveScaffold.md) — the same shell, adapted to phone and desktop
-52. [AppBar](AppBar.md) — a top bar for titles, actions, and back navigation
-53. [Drawer](Drawer.md) — a panel that slides in from the side
-54. [DrawerItem](DrawerItem.md) — a router-aware row for a drawer or side bar
-55. [BottomNavigation](BottomNavigation.md) — a bottom tab bar synced with the router
-56. [Tabs](Tabs.md) — switch panes inside a screen
-57. [CollapsibleSideBar](CollapsibleSideBar.md) — a side panel that collapses to icons
-
-## Alphabetical index
+## Widget index
 
 - [Accordion](Accordion.md)
-- [AdaptiveScaffold](AdaptiveScaffold.md)
+- [AdMob](AdMob.md)
+- [AdSense](AdSense.md)
 - [AlertDialog](AlertDialog.md)
-- [AppBar](AppBar.md)
 - [Audio](Audio.md)
 - [Avatar](Avatar.md)
 - [Badge](Badge.md)
-- [BottomNavigation](BottomNavigation.md)
 - [BottomSheet](BottomSheet.md)
 - [Button](Button.md)
 - [Card](Card.md)
@@ -127,8 +33,6 @@ Build the shell of a real application and wire it to the router.
 - [DataTable](DataTable.md)
 - [Divider](Divider.md)
 - [DraggBox](DraggBox.md)
-- [Drawer](Drawer.md)
-- [DrawerItem](DrawerItem.md)
 - [Dropdown](Dropdown.md)
 - [DroppBox](DroppBox.md)
 - [FloatingActionButton](FloatingActionButton.md)
@@ -148,14 +52,12 @@ Build the shell of a real application and wire it to the router.
 - [Radio](Radio.md)
 - [Rating](Rating.md)
 - [Row](Row.md)
-- [Scaffold](Scaffold.md)
 - [Skeleton](Skeleton.md)
 - [Slider](Slider.md)
 - [SnackBar](SnackBar.md)
 - [Stack](Stack.md)
 - [Stepper](Stepper.md)
 - [Switch](Switch.md)
-- [Tabs](Tabs.md)
 - [Text](Text.md)
 - [Tooltip](Tooltip.md)
 - [TreeView](TreeView.md)

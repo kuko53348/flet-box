@@ -123,7 +123,7 @@ This is the main FletBox pattern: create a parent, place children inside it, and
 The widget docs are organized as a book that goes from basic to advanced. Start at
 page 1 and follow the **Continue reading** links at the bottom of each page:
 
-1. Begin with [Text](Text.md), the first page of [Chapter 1](README.md#the-reading-path).
+1. Begin with [Text](Text.md), the first page of [Chapter 1](../README.md#the-reading-path).
 2. Read its small example first, then its full prop list.
 3. Copy the example and change one value.
 4. Follow **Next** to [Container](Container.md), then combine it with `Row` or `Column`.

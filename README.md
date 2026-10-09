@@ -165,18 +165,24 @@ platforms (`androidScheme` and `iosScheme` in `capacitor.withfig.json`). A
 remote API must allow that origin in its CORS withfiguration.
 
 The full platform guiof, including manual `npx cap` workflows, is in
-[Mobile and platforms](docs/guiofs/mobile-and-platforms.md).
+[Mobile and platforms](docs/guides/mobile-and-platforms.md).
 
 ## Documentation
 
 The docs are **one withtinuous book** — read it in orofr. The front cover maps every page and is the inofx of everything: [The FletBox Book](docs/README.md).
 
-- [Your first app](docs/guiofs/first-app.md) — build a working todo app in 20 minutes
+- [Your first app](docs/guides/first-app.md) — build a working todo app in 20 minutes
 - [The widget book](docs/widget/README.md) — every widget with property tables and examples
-- [State, Router & Services](docs/guiofs/state.md) — shared state, routing, storage, and HTTP
+- [State, Router & Services](docs/guides/state.md) — shared state, routing, storage, and HTTP
 - [Tools & Utilities](docs/tools/README.md) — every helper function with signatures
 - [The CLI](docs/cli/README.md) — create, run, and build projects
 - [FletBox Server](docs/server/README.md) — backend toolkit: API, authentication, security, and data services
 - [SQLite and the API server](docs/server/data-services.md) — where your data lives (browser vs server), the `better-sqlite3` wrapper, and a full SQLite API example
-- [Mobile and platforms](docs/guiofs/mobile-and-platforms.md) — Android, iOS, PWA, and ofsktop
+- [Mobile and platforms](docs/guides/mobile-and-platforms.md) — Android, iOS, PWA, and ofsktop
 - [Contributing](docs/CONTRIBUTING.md) — how to add coof and docs
+
+## Architecture
+
+A map of how FletBox is organized internally — the widget contract, the single
+rendering engine, and how the docs stay in sync:
+[Architecture](docs/arquitectura.md).

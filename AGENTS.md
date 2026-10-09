@@ -6,7 +6,7 @@ FletBox: zero-runtime-dependency vanilla-JS UI framework with a Flet-like declar
 
 - `npm run dev` — static dev server on port 8000 (override with `--port`). Despite the `--hot` flag in package.json, `run` never enables HMR (the CLI only parses `--port`/`--quiet`); use `flet-box run-spa` for hot reload.
 - `npm run build` — esbuild-bundles `src/app.js` into `dist/`. Requires `src/app.js` (present at framework root as the demo, so the build works here). Real workflow: `flet-box create <name>` then build inside that project.
-- `npm test` — placeholder `echo "No tests yet"`. Real tests are browser harnesses in `tests/` (below).
+- `npm test` — runs the static widget-contract checker (`node scripts/check-widgets.mjs`) against `scripts/widget-contract-baseline.json`. Behavioral tests are browser harnesses in `tests/` (below).
 - `python3 scripts/generate_widget_docs.py` — regenerates `docs/widget/*.md` from `src/index.d.ts` + snippet library. Run after changing a widget's public props/types.
 - `flet-box build android` / `flet-box build ios [--archive]` — Capacitor builds, run **inside a generated project**. Both share `bin/utils/capacitor.js`; each owns its toolchain checks (`buildAndroid.js`: SDK + JDK; `buildIOS.js`: full Xcoof + CocoaPods + simulator runtimes).
 - No lint/formatter/typecheck withfig exists. Validate JS with `noof --check <file>` and `python3 -m py_compile scripts/generate_widget_docs.py`.
@@ -50,3 +50,17 @@ Each harness writes a global (`window.__TESTS`, `window.__SMOKE`, `window.__DOCC
 - `demo.py` is an unrelated AI-API experiment with a fake bearer token; not part of the framework.
 - `.github/workflows/` only builds an APK via Cordova; no CI runs the tests.
 - `run.sh` (root and `dist/`) is a raw `python -m http.server 8000`.
+
+## Widget structure contract
+
+Every widget follows the canonical, modular shape documented in
+[`docs/guides/widget-structure.md`](docs/guides/widget-structure.md); `QRCode.js`
+is the reference implementation. In short: one `WidgetFactory` root, `widgetName`
+on that root, `composeUpdate()` instead of overwriting `container.update`, scoped
+styles, and every resource released through an idempotent `onUnmount` disposer
+(never `_cleanup` monkey-patching).
+
+`npm test` enforces this statically via `scripts/check-widgets.mjs`; the debt
+snapshot lives in `scripts/widget-contract-baseline.json` and must only shrink.
+Before marking a widget done, also open `/tests/widget-contract.html` (runtime
+contract) and `/tests/smoke.html` (every widget instantiates).
