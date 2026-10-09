@@ -1203,6 +1203,37 @@ Capacitor uses a local HTTPS origin (\`https://localhost\`) in the Android and
 iOS WebViews. If the app calls a remote API, allow that origin in the API's
 CORS configuration and use HTTPS for the remote service.
 
+## Continuous Integration (GitHub Actions)
+
+Every project ships with \`.github/workflows/build.yml\`. Once the repo is on
+GitHub, each push to \`main\` (or a manual **Run workflow**) fans out into three
+parallel jobs:
+
+- **web** — bundles the app into \`www/\` and deploys it to **GitHub Pages** so you
+  can view it in a browser.
+- **android** — compiles a debug **APK** and uploads it as a run artifact.
+- **ios** — compiles an unsigned **simulator .app** and uploads it as an artifact.
+
+### Run it on the web (one-time setup)
+
+1. Push this project to a GitHub repository.
+2. Open **Settings → Pages** in that repo.
+3. Set **Source** to **GitHub Actions** (not "Deploy from a branch").
+4. Push to \`main\`, or open the **Actions** tab and click **Run workflow**.
+
+The site goes live at \`https://<your-user>.github.io/<repo-name>/\`. That is a
+sub-path, so \`index.html\` uses relative asset paths and works without changes.
+
+### Download the mobile artifacts
+
+Open the workflow run in the **Actions** tab; the Android APK and the iOS
+\`.app\` are listed under **Artifacts** at the bottom of the run summary.
+
+> The workflow installs dependencies with \`npm install\`, which resolves the
+> \`flet-box\` package from npm. If you develop against a local copy of the
+> framework, publish it first — or add a step that checks out the framework and
+> runs \`npm pkg set dependencies.flet-box=file:<path>\` before \`npm install\`.
+
 ## Features
 
 - Welcome screen with rocket icon
