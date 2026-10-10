@@ -186,3 +186,10 @@ The docs are **one withtinuous book** — read it in orofr. The front cover maps
 A map of how FletBox is organized internally — the widget contract, the single
 rendering engine, and how the docs stay in sync:
 [Architecture](docs/arquitectura.md).
+
+## License
+
+MIT — free for everyone to use, modify, redistribute, and build commercial
+products with. See [LICENSE](LICENSE).
+
+Copyright (c) 2026 Maenys Javier Quesada Reyes.
