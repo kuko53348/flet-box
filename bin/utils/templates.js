@@ -21,6 +21,25 @@ export const indexHtml = (appName = "FletBox App") => `<!DOCTYPE html>
 
     <meta name="theme-color" content="#1a1a2e">
 
+    <!-- ============================================================
+         GOOGLE ADSENSE (optional — disabled by default)
+
+         To monetize this app:
+           1. Get approved at https://www.google.com/adsense (you need a
+              live domain with your own content first).
+           2. Replace ca-pub-XXXXXXXXXXXXXXXX below with your publisher ID.
+           3. Activate it: delete this whole comment block but KEEP the
+              <script> tag below (remove the "<!--" and "-->" and these
+              instructions), so only the live <script> remains in <head>.
+           4. Place an <ins class="adsbygoogle"> unit where you want the ad,
+              or use the flet-box AdSense widget (see docs/widget/AdSense.md).
+
+         NOTE: ads only work on an approved domain, not on localhost.
+
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
+            crossorigin="anonymous"></script>
+    ============================================================ -->
+
     <style>
         * { -webkit-text-size-adjust: 100%; }
         body { margin: 0; padding: 0; font-family: system-ui, sans-serif}
@@ -206,6 +225,20 @@ export default RootScreen;
 export const homeScreenJs = () => `// screens/HomeScreen.js
 import { Container, Column, Text, Button, Icon, colors, goTo } from 'flet-box';
 
+// ========== GOOGLE ADMOB (optional — disabled by default) ==========
+// AdMob shows native ads in Android/iOS builds. To enable it:
+//   1. Install the Capacitor plugin:
+//        npm install @capacitor-community/admob
+//   2. Add your real AdMob App ID to the native projects (see the README
+//      "Ads (AdSense & AdMob)" section for the Android/iOS manifest keys),
+//      then run: npm run android:sync && npm run ios:sync
+//   3. Uncomment the AdMob import and the <AdMob .../> widget below.
+// While developing, keep isTesting: true so you serve Google's sample ads
+// (never click your own live ads — AdMob can ban the account).
+//
+// import { AdMob } from 'flet-box';
+// =====================================================================
+
 export const HomeScreen = () => {
     return Container({
         flex: 1,
@@ -273,6 +306,15 @@ export const HomeScreen = () => {
                         })
                     ]
                 })
+
+                // ===== ADMOB BANNER (optional — uncomment to enable) =====
+                // Uses Google's sample unit id while isTesting is true.
+                // Replace adId with your own banner unit id before going live.
+                // AdMob({
+                //     position: 'bottom',
+                //     isTesting: true,
+                //     // adId: 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX',
+                // })
             ]
         })
     });
@@ -1233,6 +1275,57 @@ Open the workflow run in the **Actions** tab; the Android APK and the iOS
 > \`flet-box\` package from npm. If you develop against a local copy of the
 > framework, publish it first — or add a step that checks out the framework and
 > runs \`npm pkg set dependencies.flet-box=file:<path>\` before \`npm install\`.
+
+## Ads (AdSense & AdMob) — optional
+
+Both ad integrations ship **disabled by default**, ready to switch on. Replace
+every \`ca-pub-XXXXXXXXXXXXXXXX\` / \`ca-app-pub-XXXXXXXXXXXXXXXX\` placeholder
+with your own IDs from the AdSense/AdMob console. While developing keep test
+mode on and never click your own live ads — AdMob can ban the account.
+
+### AdSense (web)
+
+\`index.html\` has a commented-out AdSense \`<script>\` in the \`<head>\`. To
+enable: get an approved domain at https://www.google.com/adsense, put your
+publisher ID in the script, and delete the surrounding \`<!--\` / \`-->\` so the
+tag goes live. Ads only render on an approved domain, not on localhost. You can
+also drop the \`AdSense\` widget into any screen (see
+\`node_modules/flet-box/docs/widget/AdSense.md\`).
+
+### AdMob (Android / iOS)
+
+1. Install the Capacitor plugin:
+
+   \`\`\`bash
+   npm install @capacitor-community/admob
+   \`\`\`
+
+2. Add your AdMob **App ID** to the native projects.
+
+   Android — \`android/app/src/main/AndroidManifest.xml\`, inside \`<application>\`:
+
+   \`\`\`xml
+   <meta-data
+       android:name="com.google.android.gms.ads.APPLICATION_ID"
+       android:value="ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY"/>
+   \`\`\`
+
+   iOS — \`ios/App/App/Info.plist\`, inside the top-level \`<dict>\`:
+
+   \`\`\`xml
+   <key>GADApplicationIdentifier</key>
+   <string>ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY</string>
+   \`\`\`
+
+3. Sync and rebuild:
+
+   \`\`\`bash
+   npm run android:sync && npm run ios:sync
+   \`\`\`
+
+4. Uncomment the \`AdMob\` import and the \`AdMob({...})\` widget in
+   \`src/screens/HomeScreen.js\` (they are marked with ADMOB comments). Full
+   props in \`node_modules/flet-box/docs/widget/AdMob.md\`.
 
 ## Features
 
