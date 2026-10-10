@@ -1,35 +1,36 @@
-# FletBox
+<div align="center">
+
+<img src="src/assets/logo.png" alt="FletBox" width="110" />
+
+<h1>FletBox</h1>
+
+<b>A zero-dependency, vanilla-JS UI framework with a Flutter/Flet-like declarative API.</b><br>
+Real DOM · No Virtual DOM · Web, PWA, Android &amp; iOS from one codebase.
+
+<br>
+
+<a href="https://github.com/sponsors/kuko53348"><img src="https://img.shields.io/badge/%E2%9D%A4%20Sponsor-FletBox-ff69b4?style=for-the-badge&logo=githubsponsors" alt="Sponsor FletBox"></a>
+
+<br><br>
+
+<a href="https://github.com/kuko53348/flet-box/blob/HEAD/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square" alt="License: MIT"></a>
+<a href="https://www.npmjs.com/package/flet-box"><img src="https://img.shields.io/npm/v/flet-box.svg?style=flat-square&logo=npm" alt="npm version"></a>
+<img src="https://img.shields.io/badge/dependencies-0-brightgreen?style=flat-square" alt="Zero dependencies">
+<img src="https://img.shields.io/badge/platforms-web%20%7C%20PWA%20%7C%20android%20%7C%20ios-007acc?style=flat-square" alt="Platforms">
+<a href="https://github.com/kuko53348/flet-box"><img src="https://img.shields.io/github/stars/kuko53348/flet-box?style=social" alt="GitHub stars"></a>
+
+<br><br>
+
+<a href="#quick-start">Quick start</a> •
+<a href="#documentation">Documentation</a> •
+<a href="#support--sponsorship">❤️ Sponsor</a> •
+<a href="https://github.com/sponsors/kuko53348">Become a sponsor</a>
+
+</div>
+
+---
 
 FletBox is a lightweight UI framework for building web interfaces with vanilla JavaScript. It offers a declarative, Flet-inspired API — with no external runtime dependencies and no Virtual DOM.
-
-## Features
-
-- Declarative, widget-based UI
-- Zero runtime dependencies; ESM only, Node >= 18
-- Real DOM — no Virtual DOM
-- Reactive state with `useState`
-- Router for SPAs
-- Local storage and HTTP services
-- Theme, PWA, and production builds
-- Android and iOS builds from the CLI (APK, simulator `.app`, `.xcarchive`)
-- Utility API for layout, text, color, animation, and more
-
-## Installation
-
-```bash
-brew install node                 # macOS/Linux: ensure Node >= 18
-
-git clone https://github.com/kuko53348/flet-box.git
-cd flet-box
-npm link                          # link the flet-box CLI globally
-
-flet-box create appName           # scaffold your first app
-cd appName
-npm link flet-box
-
-flet-box run-spa                  # run as SPA with hot reload
-flet-box run-bundle               # or run the bundled app
-```
 
 ## Quick start
 
@@ -54,6 +55,35 @@ const App = () => {
 
 runApp(App);
 ```
+
+## Installation
+
+```bash
+brew install node                 # macOS/Linux: ensure Node >= 18
+
+git clone https://github.com/kuko53348/flet-box.git
+cd flet-box
+npm link                          # link the flet-box CLI globally
+
+flet-box create appName           # scaffold your first app
+cd appName
+npm link flet-box
+
+flet-box run-spa                  # run as SPA with hot reload
+flet-box run-bundle               # or run the bundled app
+```
+
+## Features
+
+- Declarative, widget-based UI
+- Zero runtime dependencies; ESM only, Node >= 18
+- Real DOM — no Virtual DOM
+- Reactive state with `useState`
+- Router for SPAs
+- Local storage and HTTP services
+- Theme, PWA, and production builds
+- Android and iOS builds from the CLI (APK, simulator `.app`, `.xcarchive`)
+- Utility API for layout, text, color, animation, and more
 
 ## Commands
 
@@ -84,85 +114,10 @@ npm link flet-box              # or: npm install ../path/to/flet-box
 npm install                    # Capacitor CLI, sharp, platform package
 ```
 
-The build commands install missing npm dependencies themselves, but
-`flet-box` has to be resolvable first, otherwise `npm install` looks for it in
-the registry.
-
-### Android
-
-Requires Node.js >= 20.9, a JDK, and the Android SDK — Android Studio installs
-both.
-
-```bash
-flet-box build android
-```
-
-The first run initializes the platform with `cap add android`. Every run builds
-the web app, synchronizes it into the native project, regenerates the launcher
-icons from `assets/logo.png`, and compiles a debug APK:
-
-```text
-android/app/build/outputs/apk/debug/app-debug.apk
-```
-
-Release builds are signed outside the CLI: **Build → Generate Signed Bundle /
-APK** in Android Studio, or `./gradlew assembleRelease` for an APK and
-`./gradlew bundleRelease` for an App Bundle. `npm run android:open` opens the
-project in Android Studio.
-
-### iOS
-
-Requires macOS, the **full** Xcode app (the Command Line Tools cannot build iOS
-apps), an iOS simulator runtime, and CocoaPods:
-
-```bash
-sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
-sudo gem install cocoapods && pod setup
-```
-
-Then:
-
-```bash
-flet-box build ios
-```
-
-The first run initializes the platform with `cap add ios`. Every run builds the
-web app, synchronizes it, regenerates the app icon, launch images and launch
-screen from `assets/logo.png`, and compiles for the simulator:
-
-```text
-ios/build/Build/Products/Debug-iphonesimulator/App.app
-```
-
-Install it on a running simulator with:
-
-```bash
-xcrun simctl install booted <path printed by the command>
-```
-
-For a real device or the App Store, build the archive and sign it in Xcode:
-
-```bash
-flet-box build ios --archive     # ios/build/App.xcarchive, unsigned
-```
-
-Open the archive with **Product → Archive**, select your Apple signing team,
-and export the IPA, or use `xcodebuild -exportArchive` with an
-`ExportOptions.plist`. `npm run ios:open` opens the project in Xcode.
-
-### Assets
-
-Both platforms read the icon from `assets/logo.png`. Use 1024×1024: the iOS
-script rejects anything below 512×512, and Android simply upscales whatever it
-gets. Android ends up with adaptive launcher icons per density; iOS gets the
-AppIcon, the launch images and the launch screen background (`#1a1a2e`). Replace
-the file and rebuild — no manual asset editing is needed.
-
-### Remote API
-
-Capacitor serves the bundled app from the `https://localhost` origin on both
-platforms (`androidScheme` and `iosScheme` in `capacitor.config.json`). A
-remote API must allow that origin in its CORS configuration.
+- **Android** needs Node.js >= 20.9, a JDK, and the Android SDK (Android Studio installs both). Run `flet-box build android` for a debug APK, then sign releases in Android Studio or with `./gradlew assembleRelease` / `bundleRelease`.
+- **iOS** needs macOS, the **full** Xcode app (not the Command Line Tools), an iOS simulator runtime, and CocoaPods. Run `flet-box build ios` for the simulator, or `flet-box build ios --archive` to sign for a device or the App Store in Xcode.
+- Both platforms read the icon from `assets/logo.png` — use 1024×1024 and just rebuild. Icons, launch images, and the launch screen are regenerated automatically.
+- Capacitor serves the app from `https://localhost`, so a remote API must allow that origin in its CORS config.
 
 The full platform guide, including manual `npx cap` workflows, is in
 [Mobile and platforms](docs/guides/mobile-and-platforms.md).
@@ -189,20 +144,70 @@ rendering engine, and how the docs stay in sync:
 
 ## Support & sponsorship
 
-FletBox is MIT-licensed and free forever. If it saves you time and you want to
-help keep it going, you can support the project in any of these ways:
+<div align="center">
 
-- **GitHub Sponsors** (recurring or one-time, supports the framework directly):
-  [github.com/sponsors/kuko53348](https://github.com/sponsors/kuko53348)
-- **Crypto donation** (Polygon / MATIC-POL) to the maintainer:
+<a href="https://github.com/sponsors/kuko53348">
+  <img src="https://img.shields.io/badge/%E2%9D%A4%20Become_a_Sponsor-Support_FletBox-ff69b4?style=for-the-badge&logo=githubsponsors" alt="Become a Sponsor">
+</a>
+
+<br><br>
+
+**FletBox is MIT-licensed and free forever — for individuals and companies alike.**
+
+It has **zero dependencies** and it stays that way because people like you chip in.
+One developer, a whole framework, and no corporate budget behind it.
+
+### ► [Sponsor FletBox on GitHub](https://github.com/sponsors/kuko53348) ◄
+
+</div>
+
+### Where your sponsorship goes
+
+| | Your money funds |
+|---|---|
+| 🧩 | **New widgets & components** — the library grows with every release |
+| 📖 | **Documentation & examples** — the full FletBox Book, guides, and tutorials |
+| 🧪 | **Testing & stability** — the browser harnesses and contract checks that keep the core reliable |
+| 📱 | **Mobile toolchain** — Android & iOS builds, Capacitor integration, PWA |
+| ⏱️ | **Time** — what turns "nights and weekends" into sustained work |
+
+### Sponsor tiers
+
+| Tier | Perks |
+|------|-------|
+| ☕ **$3 / mo** — Coffee | My thanks + the good karma of keeping open source free |
+| 🚀 **$10 / mo** — Supporter | Shout-out in the Sponsors wall + priority on issue replies |
+| 🏢 **$50 / mo** — Backer | Your name/logo in this README & docs + feature-request voting |
+| 💎 **Custom** — Partner | Logo + link, priority support, and a say in the roadmap — [email me](mailto:kuko53348@gmail.com) |
+
+> One-time contributions are welcome too — pick any amount on the
+> [sponsorship page](https://github.com/sponsors/kuko53348).
+
+### Other ways to support
+
+- 💳 **Crypto donation** (Polygon / MATIC-POL) directly to the maintainer:
   `0x6d437bB66af8d2c44670eA18F059BE1417Dcd7bA`
-- **Personal / commercial support, consulting or priority help:** email
+- 💼 **Commercial support, consulting, or priority help:**
   [kuko53348@gmail.com](mailto:kuko53348@gmail.com)
+- ⭐ **Star the repo** and tell a colleague — visibility is free and it helps enormously
 
-Living in Cuba makes traditional payment platforms like Mastercard hard to
-access, so crypto support is especially helpful. Every contribution — a sponsor
-tier, a donation, or simply starring the repo and spreading the word — keeps
-FletBox growing.
+<sub>Living in Cuba makes traditional payment platforms like Mastercard hard to access, so crypto support is especially valuable. Every contribution — a sponsor tier, a donation, a star, or spreading the word — keeps FletBox growing. Thank you. 🙏</sub>
+
+### ❤️ Our sponsors
+
+<!-- Add sponsor logos/links here as they come in. Example:
+<a href="https://github.com/their-username"><img src="https://github.com/their-username.png" width="60" height="60" alt="@their-username"></a>
+-->
+
+<div align="center">
+
+_This space is empty — **be the first!**_
+
+<a href="https://github.com/sponsors/kuko53348">
+  <img src="https://img.shields.io/badge/Your_name_here-Sponsor_FletBox-ff69b4?style=for-the-badge" alt="Your name here">
+</a>
+
+</div>
 
 ## License
 
