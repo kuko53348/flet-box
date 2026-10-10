@@ -1,248 +1,164 @@
 # CircularChart
 
-## Overview
-`CircularChart` is a ready-to-use building block. Think of it like a LEGO piece: give it some props, place it inside another widget, and FletBox creates the browser element for you.
+A pie or donut chart drawn on canvas with per-slice value, label, and color. It supports rounded slices, semi-circles, center content, and entry animation.
 
-You do not need to write HTML or manually change the DOM to use this widget. You call the widget as a JavaScript function and pass an object between `{` and `}`.
+## When to use it
 
-## Learn it in one minute
+Use it to show part-to-whole breakdowns such as traffic sources, spending, or task status distribution.
 
-1. Import the widget from `flet-box`.
-2. Call it with `WidgetName({ ... })`.
-3. Add props to describe its content, size, color, spacing, and behavior.
-4. Put it inside `Container`, `Row`, `Column`, or another widget.
+## Quick start
 
 ```javascript
-import { Column, Container, Text } from "flet-box";
+import { CircularChart } from "flet-box";
 
-const welcomeCard = Container({
-    padding: 20,
-    margin: 16,
-    bgColor: "#ffffff",
-    borderRadius: 12,
-    child: Column({
-        gap: 8,
-        children: [
-            Text({ text: "My first FletBox screen", size: 24, weight: "bold" }),
-            Text({ text: "Widgets are small building blocks. Put them inside each other to build a screen." }),
-        ],
-    }),
+const chart = CircularChart({
+  data: [
+    { value: 60, label: "Direct", color: "#2563eb" },
+    { value: 40, label: "Referral", color: "#10b981" },
+  ],
 });
 ```
 
-## When to use
-Use `CircularChart` when you need this kind of interface element. Start with the smallest example, then add one prop at a time. You can copy the example, change the text or color, and see the result immediately.
+> The prop table is generated from `src/index.d.ts`; the examples use only documented props.
 
-## Common props
+## Props
 
-- `children` / `child`: content rendered inside the widget.
-- `id`: DOM id for the element.
-- `className`: CSS class names applied to the element.
-- `ref`: callback that receives the underlying DOM node.
-- `onClick` / event handlers: native browser event callbacks.
-- `disabled`: disables interaction when supported.
+| Prop | Type | Description |
+| --- | --- | --- |
+| `data` | `CircularChartSlice[]` | Array of values or `{ label, value }` slices. |
+| `size` | `number` | Overall size preset or pixel value, depending on the widget. |
+| `strokeWidth` | `number` | Thickness of the circular stroke. |
+| `innerRadius` | `number` | Radius of the empty center of a donut. |
+| `rounded` | `boolean` | The `rounded` value for the widget. |
+| `cornerRadius` | `number` | Corner radius for the corner. |
+| `startAngle` | `number` | Starting angle of the arc, in degrees. |
+| `endAngle` | `number` | Ending angle of the arc, in degrees. |
+| `animate` | `boolean` | The `animate` value for the widget. |
+| `animationDuration` | `number` | Duration for the animation, in milliseconds. |
+| `onComplete` | `() => void` | Event handler for the `onComplete` event. |
+| `centerContent` | `string \| Widget \| null` | Widget rendered in the center of the circle. |
+| `showLabels` | `boolean` | Shows chart labels. |
+| `labelSize` | `number` | Size of the label. |
+| `labelColor` | `Color` | Color used for the label. |
+| `onClick` | `(slice: CircularChartSlice, index: number) => void` | Callback fired when the widget is clicked. Alias: `onPress`. |
+| `onHover` | `(slice: CircularChartSlice \| null, index: number) => void` | Event handler for the `onHover` event. |
+| `defaultColors` | `Color[]` | The `defaultColors` value for the widget. |
+| `ref` | `(canvas: HTMLCanvasElement) => void` | Callback that receives the underlying DOM node. |
+| `shadowBlur` | `number` | The `shadowBlur` value for the widget. |
+| `shadowColor` | `string` | Color used for the shadow. |
+| `glow` | `boolean` | Adds a glow around the widget. |
+| `glowColor` | `string` | Color of the glow. |
+| `semiCircle` | `'top' \| 'bottom' \| 'left' \| 'right' \| null` | The `semiCircle` value for the widget. |
+| `borderRadius` | `number` | Rounds the corners of the widget. |
+| `borderColor` | `Color` | Color used for the border. |
+| `borderWidth` | `number` | Width of the border. |
+| `sliceBorderWidth` | `number` | Border width for the slice. |
+| `sliceBorderColor` | `Color` | Border color for the slice. |
 
-## Full prop list
+### Common props
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `width` | `Size` | - | Property used by the CircularChart component. |
-| `height` | `Size` | - | Property used by the CircularChart component. |
-| `size` | `number` | - | Component size or preset. |
-| `padding` | `Padding` | - | Internal spacing around the component. |
-| `margin` | `Margin` | - | External spacing around the component. |
-| `bgColor` | `Color` | - | Background color applied to the element. |
-| `color` | `Color` | - | Color value or theme token. |
-| `borderRadius` | `number \| string` | - | Property used by the CircularChart component. |
-| `elevation` | `number` | - | Property used by the CircularChart component. |
-| `shadow` | `string` | - | Property used by the CircularChart component. |
-| `opacity` | `number` | - | Property used by the CircularChart component. |
-| `visible` | `boolean` | false | Property used by the CircularChart component. |
-| `disabled` | `boolean` | false | Disables interaction and shows the non-interactive state. |
-| `onPress` | `(widget: Widget) => void` | - | Callback fired when the widget is pressed. |
-| `onClick` | `(widget: Widget) => void` | - | Property used by the CircularChart component. |
-| `id` | `string` | - | Property used by the CircularChart component. |
-| `className` | `string` | - | Property used by the CircularChart component. |
-| `ref` | `(widget: Widget) => void` | - | Property used by the CircularChart component. |
-| `disableTransform` | `boolean` | - | Property used by the CircularChart component. |
-| `data` | `CircularChartSlice[]` | [] | Collection of items used to render content. |
-| `strokeWidth` | `number` | - | Property used by the CircularChart component. |
-| `innerRadius` | `number` | - | Property used by the CircularChart component. |
-| `rounded` | `boolean` | - | Property used by the CircularChart component. |
-| `cornerRadius` | `number` | - | Property used by the CircularChart component. |
-| `startAngle` | `number` | - | Property used by the CircularChart component. |
-| `endAngle` | `number` | - | Property used by the CircularChart component. |
-| `animate` | `boolean` | false | Property used by the CircularChart component. |
-| `animationDuration` | `number` | - | Property used by the CircularChart component. |
-| `onComplete` | `() => void` | - | Property used by the CircularChart component. |
-| `centerContent` | `string \| Widget \| null` | - | Property used by the CircularChart component. |
-| `showLabels` | `boolean` | false | Property used by the CircularChart component. |
-| `labelSize` | `number` | - | Property used by the CircularChart component. |
-| `labelColor` | `Color` | - | Property used by the CircularChart component. |
-| `onHover` | `(slice: CircularChartSlice \| null, index: number) => void` | - | Property used by the CircularChart component. |
-| `defaultColors` | `Color[]` | - | Property used by the CircularChart component. |
-| `shadowBlur` | `number` | - | Property used by the CircularChart component. |
-| `shadowColor` | `string` | - | Property used by the CircularChart component. |
-| `glow` | `boolean` | false | Property used by the CircularChart component. |
-| `glowColor` | `string` | - | Property used by the CircularChart component. |
-| `semiCircle` | `'top' \| 'bottom' \| 'left' \| 'right' \| null` | - | Property used by the CircularChart component. |
-| `borderColor` | `Color` | - | Property used by the CircularChart component. |
-| `borderWidth` | `number` | - | Property used by the CircularChart component. |
-| `sliceBorderWidth` | `number` | - | Property used by the CircularChart component. |
-| `sliceBorderColor` | `Color` | - | Property used by the CircularChart component. |
+Every widget also accepts these shared props — see [common props](COMMON_PROPS.md) for the full rules and aliases.
 
-## How props work
+| Prop | Type | Description |
+| --- | --- | --- |
+| `width` | `Size` | Width of the widget. A number is pixels; a string uses any CSS unit. |
+| `height` | `Size` | Height of the widget. A number is pixels; a string uses any CSS unit. |
+| `size` | `number` | Overall size preset or pixel value, depending on the widget. |
+| `padding` | `Padding` | Space inside the widget, between its content and its border. |
+| `margin` | `Margin` | Space outside the widget, between it and its neighbors. |
+| `bgColor` | `Color` | Background color. Alias: `backgroundColor`. |
+| `color` | `Color` | Foreground color, usually the text or icon color. |
+| `borderRadius` | `number \| string` | Rounds the corners of the widget. |
+| `elevation` | `number` | Shadow depth. Higher values lift the widget off the page. |
+| `shadow` | `string` | Raw CSS `box-shadow` value, for a custom shadow. |
+| `opacity` | `number` | Opacity from 0 (invisible) to 1 (fully opaque). |
+| `visible` | `boolean` | Whether the widget is rendered and visible. |
+| `disabled` | `boolean` | Disables interaction and shows the non-interactive state. |
+| `onPress` | `(widget: Widget) => void` | Callback fired when the widget is pressed. Alias: `onClick`. |
+| `onClick` | `(widget: Widget) => void` | Callback fired when the widget is clicked. Alias: `onPress`. |
+| `id` | `string` | DOM `id` for the rendered element. |
+| `className` | `string` | CSS class names applied to the rendered element. |
+| `ref` | `(widget: Widget) => void` | Callback that receives the underlying DOM node. |
+| `disableTransform` | `boolean` | Disables the default press/scale transform animation. |
 
-A prop is simply an instruction inside the object passed to the widget. The name tells FletBox what to change, and the value tells it how to change it.
+## Examples
+
+### Everyday
 
 ```javascript
-CircularChart({
-    padding: 16,              // space inside the widget
-    margin: "8px 0",         // space outside the widget
-    bgColor: "#eff6ff",      // background color
-    width: "100%",           // CSS size or a number of pixels
-    children: [],             // widgets placed inside it
-    onPress: () => {         // what to do after a press
-        console.log("Hello");
-    },
+import { CircularChart } from "flet-box";
+
+const chart = CircularChart({
+  data: [
+    { value: 60, label: "Direct", color: "#2563eb" },
+    { value: 25, label: "Search", color: "#f59e0b" },
+    { value: 15, label: "Social", color: "#ef4444" },
+  ],
+  size: 200,
+  strokeWidth: 24,
+  showLabels: true,
 });
 ```
 
-You do not need to use every prop. Begin with the required props, then add optional props only when you need them.
-
-## Example usage
+### Full
 
 ```javascript
-import { CircularChart, Text } from "flet-box";
+import { CircularChart } from "flet-box";
 
-const example = CircularChart({
-  data: [],
-  child: Text({ text: "Example" })
+const chart = CircularChart({
+  data: [
+    { value: 42, label: "Desktop", color: "#2563eb" },
+    { value: 33, label: "Mobile", color: "#10b981" },
+    { value: 25, label: "Tablet", color: "#f59e0b" },
+  ],
+  size: 240,
+  strokeWidth: 28,
+  innerRadius: 70,
+  cornerRadius: 6,
+  startAngle: -Math.PI / 2,
+  animate: true,
+  animationDuration: 800,
+  showLabels: true,
+  labelSize: 13,
+  centerContent: "Traffic",
+  sliceBorderWidth: 2,
+  sliceBorderColor: "#ffffff",
+  onHover: (slice, index) => console.log(slice?.label, index),
+  onClick: (slice, index) => console.log(slice.label, index),
+  onComplete: () => console.log("drawn"),
 });
 ```
 
-## Examples from the FletBox snippet library
+## Tips
 
-The examples below come from the FletBox snippet library. The prop table is based on `src/index.d.ts`. When an example and the type declaration use different names, prefer the type declaration and verify the implementation.
-
-## Basic example
-
-The smallest useful version. Start here if this widget is new to you.
-
-```javascript
-CircularChart({ data: [25, 35, 40] })
-```
-
-## Everyday example
-
-A practical version with the props most applications usually need.
-
-```javascript
-CircularChart({
-    data: [25, 35, 40],
-    size: 180,
-    colors: ["#2563eb", "#16a34a", "#f59e0b"],
-})
-```
-
-## Full example
-
-A larger example showing advanced styling, layout, events, and customization.
-
-```javascript
-CircularChart({
-    data: [
-        { label: "Completed", value: 60 },
-        { label: "Pending", value: 25 },
-        { label: "Blocked", value: 15 },
-    ],
-    size: 240,
-    showLabels: true,
-    colors: [colors.success, colors.warning, colors.danger],
-})
-```
-
-
-## Common layout and styling examples
-
-The following example shows how common FletBox props work together. Numeric spacing values are interpreted as pixels, while strings can use CSS units and shorthand values.
-
-```javascript
-import { Button, Column, Container, Row, Text } from "flet-box";
-
-const panel = Container({
-    width: "100%",          // number values are pixels; strings accept CSS units
-    padding: 24,            // 24px on every side
-    margin: "16px auto",   // CSS shorthand: vertical and horizontal spacing
-    bgColor: "#f8fafc",    // background color
-    borderRadius: 12,
-    elevation: 2,
-    gap: 12,
-    child: Column({
-        children: [
-            Text({ text: "Account settings", size: 24, weight: "bold" }),
-            Row({
-                gap: 8,
-                justifyContent: "space-between",
-                children: [
-                    Text({ text: "Update your profile" }),
-                    Button({
-                        text: "Save",
-                        bgColor: "#2563eb",
-                        color: "#ffffff",
-                        onPress: () => console.log("saved"),
-                    }),
-                ],
-            }),
-        ],
-    }),
-});
-```
-
-### Common prop quick reference
-
-- `padding: 24` adds `24px` inside the widget on all sides.
-- `padding: "8px 16px"` uses CSS shorthand for vertical and horizontal spacing.
-- `margin: "16px auto"` adds outside spacing and can center a fixed-width element.
-- `bgColor: "#f8fafc"` sets the background color. Color tokens and CSS colors can be used.
-- `color: "#111827"` sets the foreground or text color when supported.
-- `width: 320` means `320px`; `width: "100%"` uses a CSS percentage.
-- `children` is an array of widgets; `child` is useful when a component accepts one child.
-- `gap: 12` controls the space between children in layout widgets.
-- `onPress` and `onClick` receive event callbacks for interactive behavior.
-
-## Beginner tips
-
-- Change one value at a time so you can see what each prop does.
-- Use `Text` to check that your layout is in the place you expect.
-- Use `Container` for a box, `Row` for items side by side, and `Column` for items one below another.
-- Use `padding` when content needs breathing room inside a box.
-- Use `margin` when you need space between this widget and its neighbors.
-- Use `bgColor` to make the boundaries of a box easy to see while learning.
-- If a prop is optional, leaving it out lets FletBox use its default behavior.
-
-## Common mistakes
-
-- Do not put plain text where a widget is expected unless the widget explicitly accepts strings.
-- Use `children: [ ... ]` for several child widgets and `child: widget` for one child when the widget supports both.
-- Check spelling carefully: `onPress`, `onClick`, and `onChange` are different events.
-- If a helper such as `padding()` or `margin()` is not available in your import list, use a number or CSS string first.
-
-## Behavior notes
-- Integrates cleanly with FletBox runtime semantics and DOM rendering.
-- Can be nested inside layout widgets and combined with other components.
-- Uses the same direct prop and event conventions as the rest of the framework.
-- Keeps the API simple and readable for composing interfaces fast.
+- Each slice is { value, label, color }; omit color to take colors from defaultColors
+- in order.
+- Set innerRadius for a donut, or widen strokeWidth relative to size to make a ring.
+- semiCircle: "top" renders a half gauge and adjusts the canvas aspect to match.
 
 ## Accessibility
-- Prefer clear labels and readable text for interactive controls.
-- Respect the `disabled` state and keyboard behavior when available.
-- Keep state changes understandable for screen readers and assistive technology.
+
+- Canvas slices are not read by screen readers; mirror the same data in text or a
+- table legend beside the chart.
+
+## Behavior
+
+- centerContent accepts a string or a widget rendered in the donut hole.
+- onHover receives (slice | null, index) as the pointer moves between slices, and
+- onComplete fires when the entry sweep finishes.
 
 ## Related widgets
-- `Container`
-- `Row`
-- `Column`
-- `Stack`
-- `Text`
-- `Button`
+
+- [CircularBar](CircularBar.md)
+- [Chart](Chart.md)
+- [Card](Card.md)
+
+---
+
+## Continue reading
+
+- **Previous:** [Chart](Chart.md)
+- **Next:** [Markdown](Markdown.md)
+- **Index:** [Widget index](README.md) · [Start here](START_HERE.md)
+
+You are reading **Chapter 6 · Data, rich content & effects** (3 of 13).

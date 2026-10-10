@@ -1,180 +1,103 @@
 # AlertDialog
 
-## Overview
-`AlertDialog` is a ready-to-use building block. Think of it like a LEGO piece: give it some props, place it inside another widget, and FletBox creates the browser element for you.
+A pre-styled confirmation dialog built on Modal, with a variant icon, message and confirm/cancel buttons.
 
-You do not need to write HTML or manually change the DOM to use this widget. You call the widget as a JavaScript function and pass an object between `{` and `}`.
+## When to use it
 
-## Learn it in one minute
+Use AlertDialog when you need an explicit confirm or cancel decision from the user.
 
-1. Import the widget from `flet-box`.
-2. Call it with `WidgetName({ ... })`.
-3. Add props to describe its content, size, color, spacing, and behavior.
-4. Put it inside `Container`, `Row`, `Column`, or another widget.
+## Quick start
 
 ```javascript
-import { Column, Container, Text } from "flet-box";
+import { AlertDialog } from "flet-box";
 
-const welcomeCard = Container({
-    padding: 20,
-    margin: 16,
-    bgColor: "#ffffff",
-    borderRadius: 12,
-    child: Column({
-        gap: 8,
-        children: [
-            Text({ text: "My first FletBox screen", size: 24, weight: "bold" }),
-            Text({ text: "Widgets are small building blocks. Put them inside each other to build a screen." }),
-        ],
-    }),
+const alert = AlertDialog({
+  title: "Delete file?",
+  message: "This action cannot be undone.",
 });
 ```
 
-## When to use
-Use `AlertDialog` when you need this kind of interface element. Start with the smallest example, then add one prop at a time. You can copy the example, change the text or color, and see the result immediately.
+> The prop table is generated from `src/index.d.ts`; the examples use only documented props.
 
-## Common props
+## Props
 
-- `children` / `child`: content rendered inside the widget.
-- `id`: DOM id for the element.
-- `className`: CSS class names applied to the element.
-- `ref`: callback that receives the underlying DOM node.
-- `onClick` / event handlers: native browser event callbacks.
-- `disabled`: disables interaction when supported.
+| Prop | Type | Description |
+| --- | --- | --- |
+| `title` | `string` | Title text shown in the header. |
+| `message` | `string` | Body text or notification content. |
+| `confirmText` | `string` | Label of the confirm button. |
+| `cancelText` | `string` | Label of the cancel button. |
+| `onConfirm` | `() => void` | Fired when the confirm action is pressed. |
+| `onCancel` | `() => void` | Fired when the cancel action is pressed. |
+| `onClose` | `() => void` | Fired when the overlay closes. |
+| `variant` | `'normal' \| 'danger' \| 'warning' \| 'success'` | Visual variation or style preset. |
+| `showCancel` | `boolean` | Shows the cancel button. |
+| `width` | `number` | Width of the widget. A number is pixels; a string uses any CSS unit. |
+| `borderRadius` | `number` | Rounds the corners of the widget. |
 
-## Full prop list
+## Examples
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `title` | `string` | - | Primary title text for the widget. |
-| `message` | `string` | - | Body text or notification content. |
-| `confirmText` | `string` | - | Property used by the AlertDialog component. |
-| `cancelText` | `string` | - | Property used by the AlertDialog component. |
-| `onConfirm` | `() => void` | - | Property used by the AlertDialog component. |
-| `onCancel` | `() => void` | - | Property used by the AlertDialog component. |
-| `onClose` | `() => void` | - | Callback fired when the widget closes. |
-| `variant` | `'normal' \| 'danger' \| 'warning' \| 'success'` | - | Visual variation or style preset. |
-| `showCancel` | `boolean` | - | Property used by the AlertDialog component. |
-| `width` | `number` | - | Property used by the AlertDialog component. |
-| `borderRadius` | `number` | - | Property used by the AlertDialog component. |
-
-## How props work
-
-A prop is simply an instruction inside the object passed to the widget. The name tells FletBox what to change, and the value tells it how to change it.
+### Everyday
 
 ```javascript
-AlertDialog({
-    padding: 16,              // space inside the widget
-    margin: "8px 0",         // space outside the widget
-    bgColor: "#eff6ff",      // background color
-    width: "100%",           // CSS size or a number of pixels
-    children: [],             // widgets placed inside it
-    onPress: () => {         // what to do after a press
-        console.log("Hello");
-    },
+import { AlertDialog } from "flet-box";
+
+const alert = AlertDialog({
+  title: "Remove item",
+  message: "The item will be moved to trash.",
+  confirmText: "Remove",
+  cancelText: "Keep",
+  onConfirm: () => console.log("removed"),
+  onCancel: () => console.log("kept"),
 });
 ```
 
-You do not need to use every prop. Begin with the required props, then add optional props only when you need them.
-
-## Example usage
+### Full
 
 ```javascript
-import { AlertDialog, Text } from "flet-box";
+import { AlertDialog } from "flet-box";
 
-const example = AlertDialog({
-  title: "Example value",
-  open: true,
-  child: Text({ text: "Example" })
+const alert = AlertDialog({
+  title: "Delete account",
+  message: "All data will be permanently erased.",
+  variant: "danger",
+  confirmText: "Delete",
+  cancelText: "Cancel",
+  showCancel: true,
+  width: 360,
+  borderRadius: 20,
+  onConfirm: () => console.log("confirmed"),
+  onCancel: () => console.log("cancelled"),
+  onClose: () => console.log("closed"),
 });
 ```
 
-## Examples from the FletBox snippet library
+## Tips
 
-The examples below come from the FletBox snippet library. The prop table is based on `src/index.d.ts`. When an example and the type declaration use different names, prefer the type declaration and verify the implementation.
-
-
-
-## Common layout and styling examples
-
-The following example shows how common FletBox props work together. Numeric spacing values are interpreted as pixels, while strings can use CSS units and shorthand values.
-
-```javascript
-import { Button, Column, Container, Row, Text } from "flet-box";
-
-const panel = Container({
-    width: "100%",          // number values are pixels; strings accept CSS units
-    padding: 24,            // 24px on every side
-    margin: "16px auto",   // CSS shorthand: vertical and horizontal spacing
-    bgColor: "#f8fafc",    // background color
-    borderRadius: 12,
-    elevation: 2,
-    gap: 12,
-    child: Column({
-        children: [
-            Text({ text: "Account settings", size: 24, weight: "bold" }),
-            Row({
-                gap: 8,
-                justifyContent: "space-between",
-                children: [
-                    Text({ text: "Update your profile" }),
-                    Button({
-                        text: "Save",
-                        bgColor: "#2563eb",
-                        color: "#ffffff",
-                        onPress: () => console.log("saved"),
-                    }),
-                ],
-            }),
-        ],
-    }),
-});
-```
-
-### Common prop quick reference
-
-- `padding: 24` adds `24px` inside the widget on all sides.
-- `padding: "8px 16px"` uses CSS shorthand for vertical and horizontal spacing.
-- `margin: "16px auto"` adds outside spacing and can center a fixed-width element.
-- `bgColor: "#f8fafc"` sets the background color. Color tokens and CSS colors can be used.
-- `color: "#111827"` sets the foreground or text color when supported.
-- `width: 320` means `320px`; `width: "100%"` uses a CSS percentage.
-- `children` is an array of widgets; `child` is useful when a component accepts one child.
-- `gap: 12` controls the space between children in layout widgets.
-- `onPress` and `onClick` receive event callbacks for interactive behavior.
-
-## Beginner tips
-
-- Change one value at a time so you can see what each prop does.
-- Use `Text` to check that your layout is in the place you expect.
-- Use `Container` for a box, `Row` for items side by side, and `Column` for items one below another.
-- Use `padding` when content needs breathing room inside a box.
-- Use `margin` when you need space between this widget and its neighbors.
-- Use `bgColor` to make the boundaries of a box easy to see while learning.
-- If a prop is optional, leaving it out lets FletBox use its default behavior.
-
-## Common mistakes
-
-- Do not put plain text where a widget is expected unless the widget explicitly accepts strings.
-- Use `children: [ ... ]` for several child widgets and `child: widget` for one child when the widget supports both.
-- Check spelling carefully: `onPress`, `onClick`, and `onChange` are different events.
-- If a helper such as `padding()` or `margin()` is not available in your import list, use a number or CSS string first.
-
-## Behavior notes
-- Integrates cleanly with FletBox runtime semantics and DOM rendering.
-- Can be nested inside layout widgets and combined with other components.
-- Uses the same direct prop and event conventions as the rest of the framework.
-- Keeps the API simple and readable for composing interfaces fast.
+- Pick the variant that matches intent: danger for destructive actions, success for confirmations, warning when the user should pause.
+- Set showCancel: false only for acknowledgements; most confirmations should let the user back out.
 
 ## Accessibility
-- Prefer clear labels and readable text for interactive controls.
-- Respect the `disabled` state and keyboard behavior when available.
-- Keep state changes understandable for screen readers and assistive technology.
+
+- State the consequence in message and name the buttons by action such as Delete and Cancel instead of a generic OK.
+
+## Behavior
+
+- AlertDialog is a preset Modal: it returns { open, close, modal } and must be shown by calling open().
+- onConfirm and onCancel run before the dialog closes; onClose fires for every dismissal, including Escape or overlay click.
 
 ## Related widgets
-- `Container`
-- `Row`
-- `Column`
-- `Stack`
-- `Text`
-- `Button`
+
+- [Modal](Modal.md)
+- [SnackBar](SnackBar.md)
+- [Button](Button.md)
+
+---
+
+## Continue reading
+
+- **Previous:** [Chip](Chip.md)
+- **Next:** [Modal](Modal.md)
+- **Index:** [Widget index](README.md) · [Start here](START_HERE.md)
+
+You are reading **Chapter 4 · Feedback and overlays** (1 of 10).

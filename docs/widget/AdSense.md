@@ -1,150 +1,133 @@
 # AdSense
 
-## Overview
-`AdSense` is a **live Google AdSense display unit for the web**. It loads
-Google's `adsbygoogle.js` SDK and asks it to fill a real ad slot.
+Google AdSense display unit for the web. It renders a reserved ad slot, loads the adsbygoogle SDK once per publisher, and lets Google fill the slot.
 
-Use it in browser apps, PWAs and Capacitor webviews that are allowed to serve
-AdSense. For native Android/iOS banners, use [`AdMob`](AdMob.md) instead (see the
-comparison below).
+## When to use it
 
-## AdSense vs AdMob
+Reach for AdSense when you ship a web, PWA, or webview build and want to monetize a page with a display slot.
 
-| | `AdSense` | `AdMob` |
-| --- | --- | --- |
-| Target | Web / PWA / webview | Native Android & iOS (Capacitor) |
-| SDK | `adsbygoogle.js` (auto-injected) | `@capacitor-community/admob` (native plugin) |
-| Needs a plugin install | No | Yes (`npm i @capacitor-community/admob` + `npx cap sync`) |
-| Works in the browser | Yes | Degrades to a placeholder |
-| Typical unit ids | `ca-pub-…` + numeric slot | `ca-app-pub-…/…` |
-
-Use `AdSense` for web targets and `AdMob` for native Android/iOS targets.
-
-## Learn it in one minute
+## Quick start
 
 ```javascript
 import { AdSense } from "flet-box";
 
-const banner = AdSense({
-    client: "ca-pub-1234567890123456",  // your publisher id
-    slot: "1234567890",                 // the ad unit id
-    format: "auto",
+const ad = AdSense({
+  client: "ca-pub-1234567890123456",
+  slot: "1234567890",
 });
 ```
 
-The widget is inert until **both** `client` and `slot` are set. Once configured
-and mounted, it injects the SDK (a single shared copy for every `AdSense` on the
-page) and pushes the unit to be filled.
+> The prop table is generated from `src/index.d.ts`; the examples use only documented props.
 
-## When to use
-- A public web app or PWA monetised with Google AdSense.
-- A Capacitor webview that is permitted (by Google policy) to show AdSense.
-- You want automatic script injection and slot filling without touching
-  `index.html`.
+## Props
 
-Do **not** use it inside native Android/iOS banner slots — Google policy
-requires `AdMob` there.
-
-## Full prop list
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `client` | `string` | `""` | Publisher id, e.g. `"ca-pub-1234567890123456"`. Required to go live. |
-| `slot` | `string` | `""` | Ad unit id (numeric string). Required to go live. |
-| `format` | `string` | `"auto"` | `data-ad-format`: `auto`, `horizontal`, `rectangle`, `vertical`, `fluid`, `autorelaxed`. |
-| `responsive` | `boolean` | `true` | Emits `data-full-width-responsive="true"` for responsive units. |
-| `test` | `boolean` | `false` | Emits `data-adtest="on"`; Google serves sample test ads from its test pool (ignores domain approval). **Never** ship with `test: true`. |
-| `width` | `Size` | `"100%"` | Slot width. Number = pixels, string = any CSS size. |
-| `height` | `Size` | `280` | Reserved slot height (prevents layout shift). Ignored for the self-sizing formats `autorelaxed` and `fluid`.
-| `placeholder` | `boolean` | `true` | Show a dashed placeholder while unconfigured. |
-| `label` | `string` | `"Advertisement"` | Placeholder text. |
-| `bgColor` | `Color` | - | Slot background color. |
-| `color` | `Color` | `#9ca3af` | Placeholder label color. |
-| `borderColor` | `Color` | `#d1d5db` | Placeholder dashed border color. |
-| `onLoad` | `(widget) => void` | - | Fired after the SDK is ready and the unit pushed. |
-| `onError` | `(error, widget) => void` | - | Fired when the SDK fails to load. |
-| `children` | `Widget[]` | - | Extra host markup placed inside the slot. |
-| plus every [`CommonProps`](../guides/widget-structure.md) prop (`id`, `className`, `ref`, `onClick`, …). |
-
-## Methods
-
-| Method | Returns | Description |
+| Prop | Type | Description |
 | --- | --- | --- |
-| `refresh()` | `Widget` | Requests another ad for the same unit (e.g. after a route change). |
-| `load()` | `void` | Starts (or restarts) the SDK load + fill cycle. |
-| `getElement()` | `Widget` | The `<ins>` unit when live, otherwise the container. |
+| `client` | `string` | AdSense publisher id, such as `ca-pub-...`. |
+| `slot` | `string` | AdSense ad unit slot id. |
+| `format` | `string` | Ad format requested from the ad network. |
+| `responsive` | `boolean` | Lets the ad resize to fit its container. |
+| `test` | `boolean` | The `test` value for the widget. |
+| `width` | `Size` | Width of the widget. A number is pixels; a string uses any CSS unit. |
+| `height` | `Size` | Height of the widget. A number is pixels; a string uses any CSS unit. |
+| `placeholder` | `boolean` | Fallback text shown while the ad is unavailable. |
+| `label` | `string` | Label or caption shown near the control. |
+| `bgColor` | `Color` | Background color. Alias: `backgroundColor`. |
+| `color` | `Color` | Foreground color, usually the text or icon color. |
+| `borderColor` | `Color` | Color used for the border. |
+| `onLoad` | `(widget: Widget) => void` | Fired when the media finishes loading. |
+| `onError` | `(error: Error, widget: Widget) => void` | Fired when the media fails to load. |
+| `children` | `Widget[]` | An array of child widgets. Alias: `child` for a single child. |
 
-## Basic example
+### Common props
 
-```javascript
-AdSense({ client: "ca-pub-1234567890123456", slot: "1234567890" })
-```
+Every widget also accepts these shared props — see [common props](COMMON_PROPS.md) for the full rules and aliases.
 
-## Everyday example
+| Prop | Type | Description |
+| --- | --- | --- |
+| `width` | `Size` | Width of the widget. A number is pixels; a string uses any CSS unit. |
+| `height` | `Size` | Height of the widget. A number is pixels; a string uses any CSS unit. |
+| `size` | `number` | Overall size preset or pixel value, depending on the widget. |
+| `padding` | `Padding` | Space inside the widget, between its content and its border. |
+| `margin` | `Margin` | Space outside the widget, between it and its neighbors. |
+| `bgColor` | `Color` | Background color. Alias: `backgroundColor`. |
+| `color` | `Color` | Foreground color, usually the text or icon color. |
+| `borderRadius` | `number \| string` | Rounds the corners of the widget. |
+| `elevation` | `number` | Shadow depth. Higher values lift the widget off the page. |
+| `shadow` | `string` | Raw CSS `box-shadow` value, for a custom shadow. |
+| `opacity` | `number` | Opacity from 0 (invisible) to 1 (fully opaque). |
+| `visible` | `boolean` | Whether the widget is rendered and visible. |
+| `disabled` | `boolean` | Disables interaction and shows the non-interactive state. |
+| `onPress` | `(widget: Widget) => void` | Callback fired when the widget is pressed. Alias: `onClick`. |
+| `onClick` | `(widget: Widget) => void` | Callback fired when the widget is clicked. Alias: `onPress`. |
+| `id` | `string` | DOM `id` for the rendered element. |
+| `className` | `string` | CSS class names applied to the rendered element. |
+| `ref` | `(widget: Widget) => void` | Callback that receives the underlying DOM node. |
+| `disableTransform` | `boolean` | Disables the default press/scale transform animation. |
 
-```javascript
-AdSense({
-    client: "ca-pub-1234567890123456",
-    slot: "1234567890",
-    format: "auto",
-    responsive: true,
-    height: 280,
-})
-```
+## Examples
 
-## Full example
+### Everyday
 
 ```javascript
 import { AdSense } from "flet-box";
 
-const inFeed = AdSense({
-    client: "ca-pub-1234567890123456",
-    slot: "9876543210",
-    format: "fluid",
-    height: 320,
-    bgColor: "#f8fafc",
-    borderColor: "#e2e8f0",
-    onLoad: (el) => console.log("ad unit pushed", el),
-    onError: (error) => console.warn("AdSense unavailable", error),
+const ad = AdSense({
+  client: "ca-pub-1234567890123456",
+  slot: "1234567890",
+  format: "auto",
+  responsive: true,
+  height: 280,
 });
-
-// Refresh after the SPA changes route.
-inFeed.refresh();
 ```
 
-## How to implement it
+### Full
 
-1. **Get your ids.** In the AdSense dashboard create a display unit. You get a
-   publisher id (`ca-pub-…`) and a slot id (a number).
-2. **Pass them to the widget** as `client` and `slot`. Nothing else is required:
-   FletBox creates the `<ins class="adsbygoogle">` element, injects
-   `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=…`
-   exactly once, and calls `(adsbygoogle = window.adsbygoogle || []).push({})`.
-3. **Reserve space** with `width`/`height` (or `minHeight`) to avoid cumulative
-   layout shift while the ad loads.
-4. **Re-request ads** with `refresh()` when your SPA swaps the page content.
+```javascript
+import { AdSense } from "flet-box";
 
-> Important: Google serves ads only on domains approved in your AdSense account
-> (status "Ready" under **Sites**). Until then `data-ad-status="unfilled"` is
-> expected — the space stays reserved but no ad renders. Never click your own
-> live ads. Note: the legacy `data-adtest="on"` attribute is deprecated (2024)
-> and no longer returns test ads.
+const ad = AdSense({
+  client: "ca-pub-1234567890123456",
+  slot: "1234567890",
+  format: "fluid",
+  responsive: true,
+  width: "100%",
+  height: 320,
+  bgColor: "#f8fafc",
+  borderColor: "#e2e8f0",
+  label: "Sponsored",
+  onLoad: (widget) => console.log("ad ready", widget),
+  onError: (error) => console.warn("AdSense unavailable", error),
+});
+```
 
-## Behavior notes
-- The SDK script is shared and idempotent: ten `AdSense` widgets inject one
-  `<script>`.
-- The widget is inert (`placeholder` only) until `client` **and** `slot` are set.
-- Formats `autorelaxed` (matched content) and `fluid` size themselves: the
-  reserved `height` is dropped and the slot grows with the content Google
-  injects. All other formats reserve `height` to avoid layout shift.
-- The script is intentionally **not** removed on unmount — other slots on the
-  page may still depend on it. Only the widget's own `<ins>` is torn down.
-- `slot`, `client`, `format`, `responsive`, `test`, `label`, `placeholder` and
-  `height` are reactive: update them with `widget.update({ ... })`.
+## Tips
+
+- Both `client` and `slot` are required; until then the widget shows a dashed placeholder and requests no ad.
+- Self-sizing formats such as `fluid` and `autorelaxed` grow with the ad, while fixed formats keep the reserved `height`.
+- Set `test: true` only while developing; it must be off in production.
 
 ## Accessibility
-- Keep the reserved `height` stable so content does not jump for screen readers.
-- Provide a meaningful surrounding heading; ad labels are injected by Google.
+
+- Give the surrounding section a heading so the slot is not the only content a screen reader encounters.
+
+## Behavior
+
+- `onLoad` fires after the SDK is ready and the unit is pushed; `onError` fires if the SDK fails to load.
+- The SDK is injected once per `client` and shared by every AdSense unit on the page; unmounting stops further loads.
 
 ## Related widgets
-- `AdMob` — native Android/iOS counterpart.
+
+- [AdMob](AdMob.md)
+- [Container](Container.md)
+- [Stack](Stack.md)
+
+---
+
+## Continue reading
+
+- **Previous:** [Inspector](Inspector.md)
+- **Next:** [AdMob](AdMob.md)
+- **Index:** [Widget index](README.md) · [Start here](START_HERE.md)
+
+You are reading **Chapter 6 · Data, rich content & effects** (8 of 13).

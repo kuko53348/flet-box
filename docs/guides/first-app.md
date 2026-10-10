@@ -4,11 +4,21 @@ This page is for **absolute beginners**. You do not need to know any trick — y
 
 ## Before you start
 
-Create an empty folder, open it in the terminal, and ask the CLI for a new project:
+FletBox is not published to the npm registry, so first you install the CLI once and link it globally:
 
 ```bash
-npx flet-box create my-app
+git clone https://github.com/kuko53348/flet-box.git
+cd flet-box
+npm link                          # link the flet-box CLI globally
+```
+
+Then create an empty project, link the framework into it, and start the dev server:
+
+```bash
+cd ..
+flet-box create my-app
 cd my-app
+npm link flet-box                 # or: npm install ../path/to/flet-box
 npm run dev
 ```
 

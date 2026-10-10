@@ -1,18 +1,19 @@
-# Icon
+# AnimatedText
 
-Material icon glyph rendered as a span. `name` is required and maps to a Material Icons ligature.
+Splits a Text widget into individual characters and animates each one, optionally staggering the start of every letter for a cascade effect.
 
 ## When to use it
 
-Use Icon for compact actions, status indicators, and decoration next to a label.
+Use it for headline entrances, logo reveals, or any place letter-by-letter motion adds polish.
 
 ## Quick start
 
 ```javascript
-import { Icon } from "flet-box";
+import { AnimatedText, Text } from "flet-box";
 
-const settings = Icon({
-  name: "settings",
+const title = AnimatedText({
+  child: Text({ text: "FletBox" }),
+  animations: [{ effect: "translateY", from: 16, to: 0 }],
 });
 ```
 
@@ -22,10 +23,11 @@ const settings = Icon({
 
 | Prop | Type | Description |
 | --- | --- | --- |
-| `name` | `string` | The `name` value for the widget. |
-| `size` | `number` | Overall size preset or pixel value, depending on the widget. |
-| `color` | `Color` | Foreground color, usually the text or icon color. |
-| `onPress` | `(widget: Widget) => void` | Callback fired when the widget is pressed. Alias: `onClick`. |
+| `child` | `Widget` | A single child widget. Alias: `children` for a list. |
+| `animations` | `AnimationStep[]` | Animations to apply, as a name or an array of names. |
+| `sameTime` | `boolean` | Runs child animations at the same time. |
+| `delayBetween` | `number` | Stagger delay between each child animation. |
+| `orientation` | `'row' \| 'column'` | Orientation of the widget or control. |
 
 ### Common props
 
@@ -58,60 +60,64 @@ Every widget also accepts these shared props — see [common props](COMMON_PROPS
 ### Everyday
 
 ```javascript
-import { Icon } from "flet-box";
+import { AnimatedText, Text } from "flet-box";
 
-const settings = Icon({
-  name: "settings",
-  size: 28,
-  color: "#111827",
+const title = AnimatedText({
+  child: Text({ text: "Hello world" }),
+  animations: [{ effect: "opacity", from: 0, to: 1 }],
+  sameTime: false,
+  delayBetween: 0.08,
 });
 ```
 
 ### Full
 
 ```javascript
-import { Icon } from "flet-box";
+import { AnimatedText, Text } from "flet-box";
 
-const action = Icon({
-  name: "notifications",
-  size: 24,
-  color: "#2563eb",
-  bgColor: "#eff6ff",
-  padding: 8,
-  borderRadius: 999,
-  className: "icon-button",
-  onPress: () => console.log("notifications"),
+const title = AnimatedText({
+  child: Text({ text: "Welcome" }),
+  animations: [
+    { effect: "scale", from: 0.5, to: 1 },
+    { effect: "rotate", from: -8, to: 0 },
+  ],
+  sameTime: true,
+  orientation: "column",
 });
 ```
 
 ## Tips
 
-- `size` defaults to 24 and `color` falls back to the theme's secondary text color.
-- Pass a Material Icons name such as `"settings"` or `"chevron_right"`.
-- Pair an icon with a visible label when it carries meaning, because the glyph alone is not descriptive.
+- child must be a Text widget, because its text is split into single-character
+- widgets that inherit the original props.
+- Set sameTime: false and control delayBetween to create a wave; use sameTime: true
+- for a synchronized pop.
+- orientation: "column" stacks the letters vertically for vertical-word effects.
 
 ## Accessibility
 
-- Do not rely on the glyph to convey meaning on its own; add an adjacent text label for important actions.
+- The animated letters remain ordinary text, so screen readers still read the full
+- word; avoid animating for longer than a moment.
 
 ## Behavior
 
-- The icon renders as an inline-flex span using the Material Icons class, and it is non-selectable by default.
-- Supplying `onPress` makes the icon interactive; `size` accepts a number of pixels or a CSS size string.
+- Spaces are rendered as fixed-width spacers rather than animated characters, keeping
+- word breaks intact.
+- If animations is empty the original child is returned unchanged, so you can branch
+- cheaply.
 
 ## Related widgets
 
-- [Button](Button.md)
+- [AnimatedBox](AnimatedBox.md)
 - [Text](Text.md)
-- [Row](Row.md)
-- [ListTile](ListTile.md)
+- [Container](Container.md)
 
 ---
 
 ## Continue reading
 
-- **Previous:** [Stack](Stack.md)
-- **Next:** [Image](Image.md)
+- **Previous:** [AnimatedBox](AnimatedBox.md)
+- **Next:** [MatrixRain](MatrixRain.md)
 - **Index:** [Widget index](README.md) · [Start here](START_HERE.md)
 
-You are reading **Chapter 1 · First steps: the core mental model** (6 of 7).
+You are reading **Chapter 6 · Data, rich content & effects** (11 of 13).

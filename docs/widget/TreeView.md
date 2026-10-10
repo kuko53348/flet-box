@@ -1,218 +1,176 @@
 # TreeView
 
-## Overview
-`TreeView` is a ready-to-use building block. Think of it like a LEGO piece: give it some props, place it inside another widget, and FletBox creates the browser element for you.
+TreeView renders a collapsible hierarchy from nodes, each with an id, label, optional icon, badge and children. It supports expand/collapse, selection and nested navigation.
 
-You do not need to write HTML or manually change the DOM to use this widget. You call the widget as a JavaScript function and pass an object between `{` and `}`.
+## When to use it
 
-## Learn it in one minute
+Use it for file explorers, category menus or any nested set of items the user drills into.
 
-1. Import the widget from `flet-box`.
-2. Call it with `WidgetName({ ... })`.
-3. Add props to describe its content, size, color, spacing, and behavior.
-4. Put it inside `Container`, `Row`, `Column`, or another widget.
+## Quick start
 
 ```javascript
-import { Column, Container, Text } from "flet-box";
+import { TreeView } from "flet-box";
 
-const welcomeCard = Container({
-    padding: 20,
-    margin: 16,
-    bgColor: "#ffffff",
-    borderRadius: 12,
-    child: Column({
-        gap: 8,
-        children: [
-            Text({ text: "My first FletBox screen", size: 24, weight: "bold" }),
-            Text({ text: "Widgets are small building blocks. Put them inside each other to build a screen." }),
-        ],
-    }),
+const tree = TreeView({
+  nodes: [
+    { id: "src", label: "src" },
+  ],
 });
 ```
 
-## When to use
-Use `TreeView` when you need this kind of interface element. Start with the smallest example, then add one prop at a time. You can copy the example, change the text or color, and see the result immediately.
+> The prop table is generated from `src/index.d.ts`; the examples use only documented props.
 
-## Common props
+## Props
 
-- `children` / `child`: content rendered inside the widget.
-- `id`: DOM id for the element.
-- `className`: CSS class names applied to the element.
-- `ref`: callback that receives the underlying DOM node.
-- `onClick` / event handlers: native browser event callbacks.
-- `disabled`: disables interaction when supported.
+| Prop | Type | Description |
+| --- | --- | --- |
+| `nodes` | `Array<{` | Tree nodes, each with `id`, `label`, and optional `children`. |
+| `id` | `string` | DOM `id` for the rendered element. |
+| `label` | `string` | Label or caption shown near the control. |
+| `icon` | `string` | Name of the icon to render. |
+| `iconColor` | `Color` | Color of the field icons. |
+| `children` | `any[]` | An array of child widgets. Alias: `child` for a single child. |
+| `badge` | `string \| number` | The `badge` value for the widget. |
+| `onSelect` | `(node: any) => void` | Fired when the widget or an option is selected. |
+| `onToggle` | `(nodeId: string, expanded: boolean) => void` | Fired with the new toggled state. |
+| `expandedNodes` | `string[]` | Ids of nodes that start expanded. |
+| `indent` | `number` | Indentation depth used when printing nested structures. |
+| `showIcons` | `boolean` | Controls whether the icons is shown. |
+| `folderIcon` | `string` | Icon for the folder. |
+| `folderOpenIcon` | `string` | Icon for the folder open. |
+| `fileIcon` | `string` | Icon for the file. |
+| `expandIcon` | `string` | Icon for the expand. |
+| `collapseIcon` | `string` | Icon for the collapse. |
+| `defaultExpanded` | `boolean` | Expands top-level nodes by default. |
+| `selectable` | `boolean` | Lets the user select a tree node. |
+| `selectedNodeId` | `string \| null` | Id of the currently selected node. |
+| `bgColor` | `Color` | Background color. Alias: `backgroundColor`. |
+| `hoverBgColor` | `Color` | Background color for the hover. |
+| `selectedBgColor` | `Color` | Background color for the selected. |
+| `textColor` | `Color` | Color of the button label. |
+| `selectedTextColor` | `Color` | Color used for the selected text. |
+| `iconColor` | `Color` | Color of the field icons. |
+| `folderIconColor` | `Color` | Color used for the folder icon. |
+| `borderColor` | `Color` | Color used for the border. |
+| `nodePadding` | `Padding` | Padding for the node. |
+| `nodeGap` | `number` | Space for the node. |
+| `childrenGap` | `number` | Space for the children. |
+| `borderRadius` | `number` | Rounds the corners of the widget. |
+| `fontSize` | `number` | Size of the font. |
+| `iconSize` | `number` | Size of the field icons. |
+| `transitionDuration` | `string` | Duration for the transition, in milliseconds. |
 
-## Full prop list
+### Common props
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `width` | `Size` | - | Property used by the TreeView component. |
-| `height` | `Size` | - | Property used by the TreeView component. |
-| `size` | `number` | - | Component size or preset. |
-| `padding` | `Padding` | - | Internal spacing around the component. |
-| `margin` | `Margin` | - | External spacing around the component. |
-| `bgColor` | `Color` | - | Background color applied to the element. |
-| `color` | `Color` | - | Color value or theme token. |
-| `borderRadius` | `number \| string` | - | Property used by the TreeView component. |
-| `elevation` | `number` | - | Property used by the TreeView component. |
-| `shadow` | `string` | - | Property used by the TreeView component. |
-| `opacity` | `number` | - | Property used by the TreeView component. |
-| `visible` | `boolean` | false | Property used by the TreeView component. |
-| `disabled` | `boolean` | false | Disables interaction and shows the non-interactive state. |
-| `onPress` | `(widget: Widget) => void` | - | Callback fired when the widget is pressed. |
-| `onClick` | `(widget: Widget) => void` | - | Property used by the TreeView component. |
-| `id` | `string` | - | Property used by the TreeView component. |
-| `className` | `string` | - | Property used by the TreeView component. |
-| `ref` | `(widget: Widget) => void` | - | Property used by the TreeView component. |
-| `disableTransform` | `boolean` | - | Property used by the TreeView component. |
-| `nodes` | `Array<{` | - | Property used by the TreeView component. |
-| `label` | `string` | - | Label or caption shown near the control. |
-| `icon` | `string` | - | Property used by the TreeView component. |
-| `iconColor` | `Color` | - | Property used by the TreeView component. |
-| `children` | `any[]` | - | Property used by the TreeView component. |
-| `badge` | `string \| number` | - | Property used by the TreeView component. |
-| `onSelect` | `(node: any) => void` | - | Callback fired when an option is selected. |
-| `onToggle` | `(nodeId: string, expanded: boolean) => void` | - | Property used by the TreeView component. |
-| `expandedNodes` | `string[]` | [] | Property used by the TreeView component. |
-| `indent` | `number` | - | Property used by the TreeView component. |
-| `showIcons` | `boolean` | false | Property used by the TreeView component. |
-| `folderIcon` | `string` | - | Property used by the TreeView component. |
-| `folderOpenIcon` | `string` | - | Property used by the TreeView component. |
-| `fileIcon` | `string` | - | Property used by the TreeView component. |
-| `expandIcon` | `string` | - | Property used by the TreeView component. |
-| `collapseIcon` | `string` | - | Property used by the TreeView component. |
-| `defaultExpanded` | `boolean` | false | Property used by the TreeView component. |
-| `selectable` | `boolean` | false | Property used by the TreeView component. |
-| `selectedNodeId` | `string \| null` | - | Property used by the TreeView component. |
-| `hoverBgColor` | `Color` | - | Property used by the TreeView component. |
-| `selectedBgColor` | `Color` | - | Property used by the TreeView component. |
-| `textColor` | `Color` | - | Property used by the TreeView component. |
-| `selectedTextColor` | `Color` | - | Property used by the TreeView component. |
-| `folderIconColor` | `Color` | - | Property used by the TreeView component. |
-| `borderColor` | `Color` | - | Property used by the TreeView component. |
-| `nodePadding` | `Padding` | - | Property used by the TreeView component. |
-| `nodeGap` | `number` | - | Property used by the TreeView component. |
-| `childrenGap` | `number` | - | Property used by the TreeView component. |
-| `fontSize` | `number` | - | Property used by the TreeView component. |
-| `iconSize` | `number` | - | Property used by the TreeView component. |
-| `transitionDuration` | `string` | - | Property used by the TreeView component. |
+Every widget also accepts these shared props — see [common props](COMMON_PROPS.md) for the full rules and aliases.
 
-## How props work
+| Prop | Type | Description |
+| --- | --- | --- |
+| `width` | `Size` | Width of the widget. A number is pixels; a string uses any CSS unit. |
+| `height` | `Size` | Height of the widget. A number is pixels; a string uses any CSS unit. |
+| `size` | `number` | Overall size preset or pixel value, depending on the widget. |
+| `padding` | `Padding` | Space inside the widget, between its content and its border. |
+| `margin` | `Margin` | Space outside the widget, between it and its neighbors. |
+| `bgColor` | `Color` | Background color. Alias: `backgroundColor`. |
+| `color` | `Color` | Foreground color, usually the text or icon color. |
+| `borderRadius` | `number \| string` | Rounds the corners of the widget. |
+| `elevation` | `number` | Shadow depth. Higher values lift the widget off the page. |
+| `shadow` | `string` | Raw CSS `box-shadow` value, for a custom shadow. |
+| `opacity` | `number` | Opacity from 0 (invisible) to 1 (fully opaque). |
+| `visible` | `boolean` | Whether the widget is rendered and visible. |
+| `disabled` | `boolean` | Disables interaction and shows the non-interactive state. |
+| `onPress` | `(widget: Widget) => void` | Callback fired when the widget is pressed. Alias: `onClick`. |
+| `onClick` | `(widget: Widget) => void` | Callback fired when the widget is clicked. Alias: `onPress`. |
+| `id` | `string` | DOM `id` for the rendered element. |
+| `className` | `string` | CSS class names applied to the rendered element. |
+| `ref` | `(widget: Widget) => void` | Callback that receives the underlying DOM node. |
+| `disableTransform` | `boolean` | Disables the default press/scale transform animation. |
 
-A prop is simply an instruction inside the object passed to the widget. The name tells FletBox what to change, and the value tells it how to change it.
+## Examples
+
+### Everyday
 
 ```javascript
-TreeView({
-    padding: 16,              // space inside the widget
-    margin: "8px 0",         // space outside the widget
-    bgColor: "#eff6ff",      // background color
-    width: "100%",           // CSS size or a number of pixels
-    children: [],             // widgets placed inside it
-    onPress: () => {         // what to do after a press
-        console.log("Hello");
+import { TreeView } from "flet-box";
+
+const tree = TreeView({
+  nodes: [
+    {
+      id: "src",
+      label: "src",
+      children: [
+        { id: "app", label: "app.js" },
+        { id: "router", label: "Router.js" },
+      ],
     },
+  ],
+  showIcons: true,
+  onSelect: (node) => console.log(node.id),
 });
 ```
 
-You do not need to use every prop. Begin with the required props, then add optional props only when you need them.
-
-## Example usage
+### Full
 
 ```javascript
-import { TreeView, Text } from "flet-box";
+import { TreeView } from "flet-box";
 
-const example = TreeView({
-  data: [],
-  child: Text({ text: "Example" })
+const tree = TreeView({
+  nodes: [
+    {
+      id: "src",
+      label: "src",
+      icon: "folder",
+      children: [
+        { id: "app", label: "app.js", icon: "description" },
+        { id: "router", label: "Router.js", badge: 2 },
+      ],
+    },
+  ],
+  expandedNodes: ["src"],
+  defaultExpanded: true,
+  selectable: true,
+  showIcons: true,
+  selectedNodeId: "app",
+  indent: 20,
+  nodeGap: 4,
+  childrenGap: 4,
+  fontSize: 14,
+  transitionDuration: "200ms",
+  hoverBgColor: "#f1f5f9",
+  selectedBgColor: "#dbeafe",
+  onToggle: (nodeId, expanded) => console.log(nodeId, expanded),
+  onSelect: (node) => console.log(node.id),
 });
 ```
 
-## Examples from the FletBox snippet library
+## Tips
 
-The examples below come from the FletBox snippet library. The prop table is based on `src/index.d.ts`. When an example and the type declaration use different names, prefer the type declaration and verify the implementation.
-
-
-
-## Common layout and styling examples
-
-The following example shows how common FletBox props work together. Numeric spacing values are interpreted as pixels, while strings can use CSS units and shorthand values.
-
-```javascript
-import { Button, Column, Container, Row, Text } from "flet-box";
-
-const panel = Container({
-    width: "100%",          // number values are pixels; strings accept CSS units
-    padding: 24,            // 24px on every side
-    margin: "16px auto",   // CSS shorthand: vertical and horizontal spacing
-    bgColor: "#f8fafc",    // background color
-    borderRadius: 12,
-    elevation: 2,
-    gap: 12,
-    child: Column({
-        children: [
-            Text({ text: "Account settings", size: 24, weight: "bold" }),
-            Row({
-                gap: 8,
-                justifyContent: "space-between",
-                children: [
-                    Text({ text: "Update your profile" }),
-                    Button({
-                        text: "Save",
-                        bgColor: "#2563eb",
-                        color: "#ffffff",
-                        onPress: () => console.log("saved"),
-                    }),
-                ],
-            }),
-        ],
-    }),
-});
-```
-
-### Common prop quick reference
-
-- `padding: 24` adds `24px` inside the widget on all sides.
-- `padding: "8px 16px"` uses CSS shorthand for vertical and horizontal spacing.
-- `margin: "16px auto"` adds outside spacing and can center a fixed-width element.
-- `bgColor: "#f8fafc"` sets the background color. Color tokens and CSS colors can be used.
-- `color: "#111827"` sets the foreground or text color when supported.
-- `width: 320` means `320px`; `width: "100%"` uses a CSS percentage.
-- `children` is an array of widgets; `child` is useful when a component accepts one child.
-- `gap: 12` controls the space between children in layout widgets.
-- `onPress` and `onClick` receive event callbacks for interactive behavior.
-
-## Beginner tips
-
-- Change one value at a time so you can see what each prop does.
-- Use `Text` to check that your layout is in the place you expect.
-- Use `Container` for a box, `Row` for items side by side, and `Column` for items one below another.
-- Use `padding` when content needs breathing room inside a box.
-- Use `margin` when you need space between this widget and its neighbors.
-- Use `bgColor` to make the boundaries of a box easy to see while learning.
-- If a prop is optional, leaving it out lets FletBox use its default behavior.
-
-## Common mistakes
-
-- Do not put plain text where a widget is expected unless the widget explicitly accepts strings.
-- Use `children: [ ... ]` for several child widgets and `child: widget` for one child when the widget supports both.
-- Check spelling carefully: `onPress`, `onClick`, and `onChange` are different events.
-- If a helper such as `padding()` or `margin()` is not available in your import list, use a number or CSS string first.
-
-## Behavior notes
-- Integrates cleanly with FletBox runtime semantics and DOM rendering.
-- Can be nested inside layout widgets and combined with other components.
-- Uses the same direct prop and event conventions as the rest of the framework.
-- Keeps the API simple and readable for composing interfaces fast.
+- Give every node a stable unique id; expandedNodes and selectedNodeId reference those ids.
+- Set selectable to false for navigation trees where tapping should only toggle groups.
+- Use defaultExpanded to open first-level groups on first render.
 
 ## Accessibility
-- Prefer clear labels and readable text for interactive controls.
-- Respect the `disabled` state and keyboard behavior when available.
-- Keep state changes understandable for screen readers and assistive technology.
+
+- Expose meaningful label text and do not rely only on icons to describe a node.
+- Keep onSelect behavior predictable so keyboard users understand what activation does.
+
+## Behavior
+
+- Nodes toggle locally and report expansion through onToggle with the nodeId and expanded flag.
+- Selection is reported through onSelect as the node object and can be controlled with selectedNodeId.
 
 ## Related widgets
-- `Container`
-- `Row`
-- `Column`
-- `Stack`
-- `Text`
-- `Button`
+
+- [ListView](ListView.md)
+- [ListTile](ListTile.md)
+- [Accordion](Accordion.md)
+
+---
+
+## Continue reading
+
+- **Previous:** [Accordion](Accordion.md)
+- **Next:** [Carousel](Carousel.md)
+- **Index:** [Widget index](README.md) · [Start here](START_HERE.md)
+
+You are reading **Chapter 5 · Navigation and flows** (3 of 5).

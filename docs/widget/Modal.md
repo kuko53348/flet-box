@@ -1,202 +1,129 @@
 # Modal
 
-## Overview
-`Modal` is a ready-to-use building block. Think of it like a LEGO piece: give it some props, place it inside another widget, and FletBox creates the browser element for you.
+A centered dialog over a dimmed overlay that holds a title, content and a row of actions.
 
-You do not need to write HTML or manually change the DOM to use this widget. You call the widget as a JavaScript function and pass an object between `{` and `}`.
+## When to use it
 
-## Learn it in one minute
+Use Modal when the user must focus on a task or read something without leaving the page.
 
-1. Import the widget from `flet-box`.
-2. Call it with `WidgetName({ ... })`.
-3. Add props to describe its content, size, color, spacing, and behavior.
-4. Put it inside `Container`, `Row`, `Column`, or another widget.
+## Quick start
 
 ```javascript
-import { Column, Container, Text } from "flet-box";
+import { Modal } from "flet-box";
 
-const welcomeCard = Container({
-    padding: 20,
-    margin: 16,
-    bgColor: "#ffffff",
-    borderRadius: 12,
-    child: Column({
-        gap: 8,
-        children: [
-            Text({ text: "My first FletBox screen", size: 24, weight: "bold" }),
-            Text({ text: "Widgets are small building blocks. Put them inside each other to build a screen." }),
-        ],
-    }),
+const dialog = Modal({
+  title: "Welcome",
+  content: "Thanks for signing up.",
 });
 ```
 
-## When to use
-Use `Modal` when you need this kind of interface element. Start with the smallest example, then add one prop at a time. You can copy the example, change the text or color, and see the result immediately.
+> The prop table is generated from `src/index.d.ts`; the examples use only documented props.
 
-## Common props
+## Props
 
-- `children` / `child`: content rendered inside the widget.
-- `id`: DOM id for the element.
-- `className`: CSS class names applied to the element.
-- `ref`: callback that receives the underlying DOM node.
-- `onClick` / event handlers: native browser event callbacks.
-- `disabled`: disables interaction when supported.
+| Prop | Type | Description |
+| --- | --- | --- |
+| `title` | `string` | Title text shown in the header. |
+| `content` | `Widget \| string` | Main content of the overlay. |
+| `actions` | `Widget[]` | Widgets rendered in the overlay footer. |
+| `closeOnOverlayClick` | `boolean` | Closes the overlay when the backdrop is clicked. |
+| `closeOnEsc` | `boolean` | Closes the overlay when Escape is pressed. |
+| `width` | `number \| string` | Width of the widget. A number is pixels; a string uses any CSS unit. |
+| `minWidth` | `number` | Minimum width the widget may shrink to. |
+| `maxWidth` | `number \| string` | Maximum width the widget may grow to. |
+| `maxHeight` | `number \| string` | Maximum height the widget may grow to. |
+| `backgroundColor` | `Color` | Background color. Alias of `bgColor`. |
+| `borderRadius` | `number \| string` | Rounds the corners of the widget. |
+| `border` | `string` | The `border` value for the widget. |
+| `borderColor` | `Color` | Color used for the border. |
+| `borderWidth` | `number` | Width of the border. |
+| `shadow` | `string` | Raw CSS `box-shadow` value, for a custom shadow. |
+| `elevation` | `number` | Shadow depth. Higher values lift the widget off the page. |
+| `padding` | `Padding` | Space inside the widget, between its content and its border. |
+| `contentBgColor` | `Color` | Background color for the content. |
+| `contentElevation` | `number` | Elevation (shadow depth) of the content. |
+| `headerBgColor` | `Color` | Background color of the header row. |
+| `headerTextColor` | `Color` | Text color of the header row. |
+| `headerBorder` | `string \| false` | The `headerBorder` value for the widget. |
+| `headerPadding` | `Padding` | Padding for the header. |
+| `headerElevation` | `number` | Elevation (shadow depth) of the header. |
+| `footerBgColor` | `Color` | Background color for the footer. |
+| `footerBorder` | `string \| false` | The `footerBorder` value for the widget. |
+| `footerPadding` | `Padding` | Padding for the footer. |
+| `footerElevation` | `number` | Elevation (shadow depth) of the footer. |
+| `overlayColor` | `Color` | Color of the dimmed backdrop behind the overlay. |
+| `showCloseButton` | `boolean` | Shows a close button in the header. |
+| `zIndex` | `number` | Index used for the z. |
+| `onOpen` | `() => void` | Fired when the overlay opens. |
+| `onClose` | `() => void` | Fired when the overlay closes. |
 
-## Full prop list
+## Examples
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `title` | `string` | - | Primary title text for the widget. |
-| `content` | `Widget \| string` | - | Markdown or rich content source. |
-| `actions` | `Widget[]` | [] | Property used by the Modal component. |
-| `closeOnOverlayClick` | `boolean` | false | Property used by the Modal component. |
-| `closeOnEsc` | `boolean` | - | Property used by the Modal component. |
-| `width` | `number \| string` | - | Property used by the Modal component. |
-| `minWidth` | `number` | - | Property used by the Modal component. |
-| `maxWidth` | `number \| string` | - | Property used by the Modal component. |
-| `maxHeight` | `number \| string` | - | Property used by the Modal component. |
-| `backgroundColor` | `Color` | - | Property used by the Modal component. |
-| `borderRadius` | `number \| string` | - | Property used by the Modal component. |
-| `border` | `string` | - | Property used by the Modal component. |
-| `borderColor` | `Color` | - | Property used by the Modal component. |
-| `borderWidth` | `number` | - | Property used by the Modal component. |
-| `shadow` | `string` | - | Property used by the Modal component. |
-| `elevation` | `number` | - | Property used by the Modal component. |
-| `padding` | `Padding` | - | Internal spacing around the component. |
-| `contentBgColor` | `Color` | - | Property used by the Modal component. |
-| `contentElevation` | `number` | - | Property used by the Modal component. |
-| `headerBgColor` | `Color` | - | Property used by the Modal component. |
-| `headerTextColor` | `Color` | - | Property used by the Modal component. |
-| `headerBorder` | `string \| false` | - | Property used by the Modal component. |
-| `headerPadding` | `Padding` | - | Property used by the Modal component. |
-| `headerElevation` | `number` | - | Property used by the Modal component. |
-| `footerBgColor` | `Color` | - | Property used by the Modal component. |
-| `footerBorder` | `string \| false` | - | Property used by the Modal component. |
-| `footerPadding` | `Padding` | - | Property used by the Modal component. |
-| `footerElevation` | `number` | - | Property used by the Modal component. |
-| `overlayColor` | `Color` | - | Property used by the Modal component. |
-| `showCloseButton` | `boolean` | false | Property used by the Modal component. |
-| `zIndex` | `number` | - | Property used by the Modal component. |
-| `onOpen` | `() => void` | - | Property used by the Modal component. |
-| `onClose` | `() => void` | - | Callback fired when the widget closes. |
-
-## How props work
-
-A prop is simply an instruction inside the object passed to the widget. The name tells FletBox what to change, and the value tells it how to change it.
+### Everyday
 
 ```javascript
-Modal({
-    padding: 16,              // space inside the widget
-    margin: "8px 0",         // space outside the widget
-    bgColor: "#eff6ff",      // background color
-    width: "100%",           // CSS size or a number of pixels
-    children: [],             // widgets placed inside it
-    onPress: () => {         // what to do after a press
-        console.log("Hello");
-    },
+import { Modal } from "flet-box";
+
+const profile = Modal({
+  title: "Profile",
+  content: "Update your account details.",
+  closeOnOverlayClick: true,
+  onClose: () => console.log("closed"),
 });
 ```
 
-You do not need to use every prop. Begin with the required props, then add optional props only when you need them.
-
-## Example usage
+### Full
 
 ```javascript
-import { Modal, Text } from "flet-box";
+import { Button, Column, Modal, Switch, rgba } from "flet-box";
 
-const example = Modal({
-  title: "Example value",
-  open: true,
-  child: Text({ text: "Example" })
-});
-```
-
-## Examples from the FletBox snippet library
-
-The examples below come from the FletBox snippet library. The prop table is based on `src/index.d.ts`. When an example and the type declaration use different names, prefer the type declaration and verify the implementation.
-
-
-
-## Common layout and styling examples
-
-The following example shows how common FletBox props work together. Numeric spacing values are interpreted as pixels, while strings can use CSS units and shorthand values.
-
-```javascript
-import { Button, Column, Container, Row, Text } from "flet-box";
-
-const panel = Container({
-    width: "100%",          // number values are pixels; strings accept CSS units
-    padding: 24,            // 24px on every side
-    margin: "16px auto",   // CSS shorthand: vertical and horizontal spacing
-    bgColor: "#f8fafc",    // background color
-    borderRadius: 12,
-    elevation: 2,
+const settings = Modal({
+  title: "Settings",
+  content: Column({
     gap: 12,
-    child: Column({
-        children: [
-            Text({ text: "Account settings", size: 24, weight: "bold" }),
-            Row({
-                gap: 8,
-                justifyContent: "space-between",
-                children: [
-                    Text({ text: "Update your profile" }),
-                    Button({
-                        text: "Save",
-                        bgColor: "#2563eb",
-                        color: "#ffffff",
-                        onPress: () => console.log("saved"),
-                    }),
-                ],
-            }),
-        ],
-    }),
+    children: [Switch({ label: "Dark mode" }), Switch({ label: "Compact" })],
+  }),
+  actions: [
+    Button({ text: "Cancel", variant: "text" }),
+    Button({ text: "Save", onPress: () => settings.close() }),
+  ],
+  closeOnOverlayClick: false,
+  closeOnEsc: true,
+  width: 480,
+  borderRadius: 16,
+  elevation: 8,
+  overlayColor: "rgba(15, 23, 42, 0.5)",
+  onOpen: () => console.log("opened"),
+  onClose: () => console.log("closed"),
 });
 ```
 
-### Common prop quick reference
+## Tips
 
-- `padding: 24` adds `24px` inside the widget on all sides.
-- `padding: "8px 16px"` uses CSS shorthand for vertical and horizontal spacing.
-- `margin: "16px auto"` adds outside spacing and can center a fixed-width element.
-- `bgColor: "#f8fafc"` sets the background color. Color tokens and CSS colors can be used.
-- `color: "#111827"` sets the foreground or text color when supported.
-- `width: 320` means `320px`; `width: "100%"` uses a CSS percentage.
-- `children` is an array of widgets; `child` is useful when a component accepts one child.
-- `gap: 12` controls the space between children in layout widgets.
-- `onPress` and `onClick` receive event callbacks for interactive behavior.
-
-## Beginner tips
-
-- Change one value at a time so you can see what each prop does.
-- Use `Text` to check that your layout is in the place you expect.
-- Use `Container` for a box, `Row` for items side by side, and `Column` for items one below another.
-- Use `padding` when content needs breathing room inside a box.
-- Use `margin` when you need space between this widget and its neighbors.
-- Use `bgColor` to make the boundaries of a box easy to see while learning.
-- If a prop is optional, leaving it out lets FletBox use its default behavior.
-
-## Common mistakes
-
-- Do not put plain text where a widget is expected unless the widget explicitly accepts strings.
-- Use `children: [ ... ]` for several child widgets and `child: widget` for one child when the widget supports both.
-- Check spelling carefully: `onPress`, `onClick`, and `onChange` are different events.
-- If a helper such as `padding()` or `margin()` is not available in your import list, use a number or CSS string first.
-
-## Behavior notes
-- Integrates cleanly with FletBox runtime semantics and DOM rendering.
-- Can be nested inside layout widgets and combined with other components.
-- Uses the same direct prop and event conventions as the rest of the framework.
-- Keeps the API simple and readable for composing interfaces fast.
+- Modal manages its own overlay and appends it to document.body; call the returned open() and close() to control visibility.
+- Use closeOnOverlayClick: false for destructive or data-entry dialogs that should not be dismissed by a stray click.
 
 ## Accessibility
-- Prefer clear labels and readable text for interactive controls.
-- Respect the `disabled` state and keyboard behavior when available.
-- Keep state changes understandable for screen readers and assistive technology.
+
+- Modal does not move focus automatically; focus the first control or a close button when it opens.
+
+## Behavior
+
+- Returns a controller with open, close, toggle, destroy and an isOpen getter, plus updateContent, updateTitle and setLoading helpers.
+- onOpen and onClose fire on state changes, and closeOnEsc installs an Escape listener that destroy() removes.
 
 ## Related widgets
-- `Container`
-- `Row`
-- `Column`
-- `Stack`
-- `Text`
-- `Button`
+
+- [BottomSheet](BottomSheet.md)
+- [AlertDialog](AlertDialog.md)
+- [Card](Card.md)
+
+---
+
+## Continue reading
+
+- **Previous:** [AlertDialog](AlertDialog.md)
+- **Next:** [BottomSheet](BottomSheet.md)
+- **Index:** [Widget index](README.md) · [Start here](START_HERE.md)
+
+You are reading **Chapter 4 · Feedback and overlays** (2 of 10).

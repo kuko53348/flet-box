@@ -1,196 +1,130 @@
 # CodeViewer
 
-## Overview
-`CodeViewer` is a ready-to-use building block. Think of it like a LEGO piece: give it some props, place it inside another widget, and FletBox creates the browser element for you.
+CodeViewer shows a read-only code block with an optional header, line numbers and scrolling for long files. It renders the code prop verbatim in a styled monospace container.
 
-You do not need to write HTML or manually change the DOM to use this widget. You call the widget as a JavaScript function and pass an object between `{` and `}`.
+## When to use it
 
-## Learn it in one minute
+Use it to display snippets, config or logs in docs and developer tools without building your own pre/code styling.
 
-1. Import the widget from `flet-box`.
-2. Call it with `WidgetName({ ... })`.
-3. Add props to describe its content, size, color, spacing, and behavior.
-4. Put it inside `Container`, `Row`, `Column`, or another widget.
+## Quick start
 
 ```javascript
-import { Column, Container, Text } from "flet-box";
+import { CodeViewer } from "flet-box";
 
-const welcomeCard = Container({
-    padding: 20,
-    margin: 16,
-    bgColor: "#ffffff",
-    borderRadius: 12,
-    child: Column({
-        gap: 8,
-        children: [
-            Text({ text: "My first FletBox screen", size: 24, weight: "bold" }),
-            Text({ text: "Widgets are small building blocks. Put them inside each other to build a screen." }),
-        ],
-    }),
+const snippet = CodeViewer({
+  code: "const total = price * qty;",
 });
 ```
 
-## When to use
-Use `CodeViewer` when you need this kind of interface element. Start with the smallest example, then add one prop at a time. You can copy the example, change the text or color, and see the result immediately.
+> The prop table is generated from `src/index.d.ts`; the examples use only documented props.
 
-## Common props
+## Props
 
-- `children` / `child`: content rendered inside the widget.
-- `id`: DOM id for the element.
-- `className`: CSS class names applied to the element.
-- `ref`: callback that receives the underlying DOM node.
-- `onClick` / event handlers: native browser event callbacks.
-- `disabled`: disables interaction when supported.
+| Prop | Type | Description |
+| --- | --- | --- |
+| `code` | `string` | Source code to display. |
+| `title` | `string` | Title text shown in the header. |
+| `maxHeight` | `number` | Maximum height the widget may grow to. |
+| `fontSize` | `number` | Size of the font. |
+| `backgroundColor` | `Color` | Background color. Alias of `bgColor`. |
+| `padding` | `Padding` | Space inside the widget, between its content and its border. |
+| `borderRadius` | `number` | Rounds the corners of the widget. |
+| `showHeader` | `boolean` | Shows the code viewer header. |
+| `showLineNumbers` | `boolean` | Shows line numbers in the gutter. |
+| `startingLineNumber` | `number` | The `startingLineNumber` value for the widget. |
+| `lineNumberWidth` | `number` | Width of the line number. |
+| `lineNumberColor` | `Color` | Color used for the line number. |
 
-## Full prop list
+### Common props
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `width` | `Size` | - | Property used by the CodeViewer component. |
-| `height` | `Size` | - | Property used by the CodeViewer component. |
-| `size` | `number` | - | Component size or preset. |
-| `padding` | `Padding` | - | Internal spacing around the component. |
-| `margin` | `Margin` | - | External spacing around the component. |
-| `bgColor` | `Color` | - | Background color applied to the element. |
-| `color` | `Color` | - | Color value or theme token. |
-| `borderRadius` | `number \| string` | - | Property used by the CodeViewer component. |
-| `elevation` | `number` | - | Property used by the CodeViewer component. |
-| `shadow` | `string` | - | Property used by the CodeViewer component. |
-| `opacity` | `number` | - | Property used by the CodeViewer component. |
-| `visible` | `boolean` | false | Property used by the CodeViewer component. |
-| `disabled` | `boolean` | false | Disables interaction and shows the non-interactive state. |
-| `onPress` | `(widget: Widget) => void` | - | Callback fired when the widget is pressed. |
-| `onClick` | `(widget: Widget) => void` | - | Property used by the CodeViewer component. |
-| `id` | `string` | - | Property used by the CodeViewer component. |
-| `className` | `string` | - | Property used by the CodeViewer component. |
-| `ref` | `(widget: Widget) => void` | - | Property used by the CodeViewer component. |
-| `disableTransform` | `boolean` | - | Property used by the CodeViewer component. |
-| `code` | `string` | - | Property used by the CodeViewer component. |
-| `title` | `string` | - | Primary title text for the widget. |
-| `maxHeight` | `number` | - | Property used by the CodeViewer component. |
-| `fontSize` | `number` | - | Property used by the CodeViewer component. |
-| `backgroundColor` | `Color` | - | Property used by the CodeViewer component. |
-| `showHeader` | `boolean` | - | Property used by the CodeViewer component. |
-| `showLineNumbers` | `boolean` | false | Property used by the CodeViewer component. |
-| `startingLineNumber` | `number` | - | Property used by the CodeViewer component. |
-| `lineNumberWidth` | `number` | - | Property used by the CodeViewer component. |
-| `lineNumberColor` | `Color` | - | Property used by the CodeViewer component. |
+Every widget also accepts these shared props — see [common props](COMMON_PROPS.md) for the full rules and aliases.
 
-## How props work
+| Prop | Type | Description |
+| --- | --- | --- |
+| `width` | `Size` | Width of the widget. A number is pixels; a string uses any CSS unit. |
+| `height` | `Size` | Height of the widget. A number is pixels; a string uses any CSS unit. |
+| `size` | `number` | Overall size preset or pixel value, depending on the widget. |
+| `padding` | `Padding` | Space inside the widget, between its content and its border. |
+| `margin` | `Margin` | Space outside the widget, between it and its neighbors. |
+| `bgColor` | `Color` | Background color. Alias: `backgroundColor`. |
+| `color` | `Color` | Foreground color, usually the text or icon color. |
+| `borderRadius` | `number \| string` | Rounds the corners of the widget. |
+| `elevation` | `number` | Shadow depth. Higher values lift the widget off the page. |
+| `shadow` | `string` | Raw CSS `box-shadow` value, for a custom shadow. |
+| `opacity` | `number` | Opacity from 0 (invisible) to 1 (fully opaque). |
+| `visible` | `boolean` | Whether the widget is rendered and visible. |
+| `disabled` | `boolean` | Disables interaction and shows the non-interactive state. |
+| `onPress` | `(widget: Widget) => void` | Callback fired when the widget is pressed. Alias: `onClick`. |
+| `onClick` | `(widget: Widget) => void` | Callback fired when the widget is clicked. Alias: `onPress`. |
+| `id` | `string` | DOM `id` for the rendered element. |
+| `className` | `string` | CSS class names applied to the rendered element. |
+| `ref` | `(widget: Widget) => void` | Callback that receives the underlying DOM node. |
+| `disableTransform` | `boolean` | Disables the default press/scale transform animation. |
 
-A prop is simply an instruction inside the object passed to the widget. The name tells FletBox what to change, and the value tells it how to change it.
+## Examples
+
+### Everyday
 
 ```javascript
-CodeViewer({
-    padding: 16,              // space inside the widget
-    margin: "8px 0",         // space outside the widget
-    bgColor: "#eff6ff",      // background color
-    width: "100%",           // CSS size or a number of pixels
-    children: [],             // widgets placed inside it
-    onPress: () => {         // what to do after a press
-        console.log("Hello");
-    },
+import { CodeViewer } from "flet-box";
+
+const viewer = CodeViewer({
+  code: "function add(a, b) {\n  return a + b;\n}",
+  title: "math.js",
+  showLineNumbers: true,
+  maxHeight: 320,
 });
 ```
 
-You do not need to use every prop. Begin with the required props, then add optional props only when you need them.
-
-## Example usage
+### Full
 
 ```javascript
-import { CodeViewer, Text } from "flet-box";
+import { CodeViewer } from "flet-box";
 
-const example = CodeViewer({
-  child: Text({ text: "Example" })
+const viewer = CodeViewer({
+  code: "export function login(user) {\n  return api.post('/auth', user);\n}",
+  title: "auth.js",
+  showHeader: true,
+  showLineNumbers: true,
+  startingLineNumber: 10,
+  lineNumberWidth: 40,
+  fontSize: 13,
+  maxHeight: 400,
+  borderRadius: 8,
+  backgroundColor: "#0f172a",
+  lineNumberColor: "#64748b",
+  padding: 16,
 });
 ```
 
-## Examples from the FletBox snippet library
+## Tips
 
-The examples below come from the FletBox snippet library. The prop table is based on `src/index.d.ts`. When an example and the type declaration use different names, prefer the type declaration and verify the implementation.
-
-
-
-## Common layout and styling examples
-
-The following example shows how common FletBox props work together. Numeric spacing values are interpreted as pixels, while strings can use CSS units and shorthand values.
-
-```javascript
-import { Button, Column, Container, Row, Text } from "flet-box";
-
-const panel = Container({
-    width: "100%",          // number values are pixels; strings accept CSS units
-    padding: 24,            // 24px on every side
-    margin: "16px auto",   // CSS shorthand: vertical and horizontal spacing
-    bgColor: "#f8fafc",    // background color
-    borderRadius: 12,
-    elevation: 2,
-    gap: 12,
-    child: Column({
-        children: [
-            Text({ text: "Account settings", size: 24, weight: "bold" }),
-            Row({
-                gap: 8,
-                justifyContent: "space-between",
-                children: [
-                    Text({ text: "Update your profile" }),
-                    Button({
-                        text: "Save",
-                        bgColor: "#2563eb",
-                        color: "#ffffff",
-                        onPress: () => console.log("saved"),
-                    }),
-                ],
-            }),
-        ],
-    }),
-});
-```
-
-### Common prop quick reference
-
-- `padding: 24` adds `24px` inside the widget on all sides.
-- `padding: "8px 16px"` uses CSS shorthand for vertical and horizontal spacing.
-- `margin: "16px auto"` adds outside spacing and can center a fixed-width element.
-- `bgColor: "#f8fafc"` sets the background color. Color tokens and CSS colors can be used.
-- `color: "#111827"` sets the foreground or text color when supported.
-- `width: 320` means `320px`; `width: "100%"` uses a CSS percentage.
-- `children` is an array of widgets; `child` is useful when a component accepts one child.
-- `gap: 12` controls the space between children in layout widgets.
-- `onPress` and `onClick` receive event callbacks for interactive behavior.
-
-## Beginner tips
-
-- Change one value at a time so you can see what each prop does.
-- Use `Text` to check that your layout is in the place you expect.
-- Use `Container` for a box, `Row` for items side by side, and `Column` for items one below another.
-- Use `padding` when content needs breathing room inside a box.
-- Use `margin` when you need space between this widget and its neighbors.
-- Use `bgColor` to make the boundaries of a box easy to see while learning.
-- If a prop is optional, leaving it out lets FletBox use its default behavior.
-
-## Common mistakes
-
-- Do not put plain text where a widget is expected unless the widget explicitly accepts strings.
-- Use `children: [ ... ]` for several child widgets and `child: widget` for one child when the widget supports both.
-- Check spelling carefully: `onPress`, `onClick`, and `onChange` are different events.
-- If a helper such as `padding()` or `margin()` is not available in your import list, use a number or CSS string first.
-
-## Behavior notes
-- Integrates cleanly with FletBox runtime semantics and DOM rendering.
-- Can be nested inside layout widgets and combined with other components.
-- Uses the same direct prop and event conventions as the rest of the framework.
-- Keeps the API simple and readable for composing interfaces fast.
+- Pass the full source in code; use showLineNumbers and startingLineNumber to match an excerpt's original numbers.
+- Cap tall blocks with maxHeight so the viewer scrolls instead of pushing the page layout.
+- Set title to label the file or language shown in the header.
 
 ## Accessibility
-- Prefer clear labels and readable text for interactive controls.
-- Respect the `disabled` state and keyboard behavior when available.
-- Keep state changes understandable for screen readers and assistive technology.
+
+- Keep the code text selectable and readable; do not rely on color alone to convey meaning.
+- A descriptive title helps screen-reader users identify the snippet.
+
+## Behavior
+
+- The code is inserted as text content, so HTML in code is displayed rather than executed.
+- Line numbers are derived from code and update when the reactive code prop changes.
 
 ## Related widgets
-- `Container`
-- `Row`
-- `Column`
-- `Stack`
-- `Text`
-- `Button`
+
+- [Markdown](Markdown.md)
+- [Text](Text.md)
+- [Card](Card.md)
+
+---
+
+## Continue reading
+
+- **Previous:** [Markdown](Markdown.md)
+- **Next:** [QRCode](QRCode.md)
+- **Index:** [Widget index](README.md) · [Start here](START_HERE.md)
+
+You are reading **Chapter 6 · Data, rich content & effects** (5 of 13).

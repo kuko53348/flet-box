@@ -1,206 +1,151 @@
 # Chart
 
-## Overview
-`Chart` is a ready-to-use building block. Think of it like a LEGO piece: give it some props, place it inside another widget, and FletBox creates the browser element for you.
+Chart draws bar, line, area or candlestick data onto a canvas, with optional labels, grid and value annotations. Numeric arrays drive bar/line/area while OHLC objects drive candle charts.
 
-You do not need to write HTML or manually change the DOM to use this widget. You call the widget as a JavaScript function and pass an object between `{` and `}`.
+## When to use it
 
-## Learn it in one minute
+Use it to visualize trends and comparisons inline without pulling in a charting library.
 
-1. Import the widget from `flet-box`.
-2. Call it with `WidgetName({ ... })`.
-3. Add props to describe its content, size, color, spacing, and behavior.
-4. Put it inside `Container`, `Row`, `Column`, or another widget.
+## Quick start
 
 ```javascript
-import { Column, Container, Text } from "flet-box";
+import { Chart } from "flet-box";
 
-const welcomeCard = Container({
-    padding: 20,
-    margin: 16,
-    bgColor: "#ffffff",
-    borderRadius: 12,
-    child: Column({
-        gap: 8,
-        children: [
-            Text({ text: "My first FletBox screen", size: 24, weight: "bold" }),
-            Text({ text: "Widgets are small building blocks. Put them inside each other to build a screen." }),
-        ],
-    }),
+const totals = Chart({
+  type: "bar",
+  data: [12, 19, 7, 15],
 });
 ```
 
-## When to use
-Use `Chart` when you need this kind of interface element. Start with the smallest example, then add one prop at a time. You can copy the example, change the text or color, and see the result immediately.
+> The prop table is generated from `src/index.d.ts`; the examples use only documented props.
 
-## Common props
+## Props
 
-- `children` / `child`: content rendered inside the widget.
-- `id`: DOM id for the element.
-- `className`: CSS class names applied to the element.
-- `ref`: callback that receives the underlying DOM node.
-- `onClick` / event handlers: native browser event callbacks.
-- `disabled`: disables interaction when supported.
+| Prop | Type | Description |
+| --- | --- | --- |
+| `type` | `'bar' \| 'line' \| 'area' \| 'candle'` | Kind or mode of the widget. |
+| `data` | `number[] \| Array<{ open: number; high: number; low: number; close: number }>` | Array of values or `{ label, value }` slices. |
+| `labels` | `string[]` | Axis or slice labels for the chart. |
+| `width` | `number \| string` | Width of the widget. A number is pixels; a string uses any CSS unit. |
+| `height` | `number` | Height of the widget. A number is pixels; a string uses any CSS unit. |
+| `bgColor` | `Color` | Background color. Alias: `backgroundColor`. |
+| `padding` | `number \| { top: number; right: number; bottom: number; left: number }` | Space inside the widget, between its content and its border. |
+| `candleWidth` | `number` | Width of each candlestick. |
+| `candleSpacing` | `number` | The `candleSpacing` value for the widget. |
+| `barColor` | `Color` | Color used for the bar. |
+| `lineColor` | `Color` | Color used for the line. |
+| `areaColor` | `Color` | Color used for the area. |
+| `smooth` | `boolean` | Draws a smoothed line instead of straight segments. |
+| `areaGradient` | `boolean` | Fills the area under the line with a gradient. |
+| `areaGradientColors` | `[string, string]` | The `areaGradientColors` value for the widget. |
+| `candleUpColor` | `Color` | Color used for the candle up. |
+| `candleDownColor` | `Color` | Color used for the candle down. |
+| `axisColor` | `Color` | Color used for the axis. |
+| `textColor` | `Color` | Color of the button label. |
+| `yAxisColor` | `Color` | Color used for the y axis. |
+| `showGrid` | `boolean` | Shows the chart grid lines. |
+| `showLabels` | `boolean` | Shows chart labels. |
+| `showValues` | `boolean` | Controls whether the values is shown. |
+| `borderRadius` | `number` | Rounds the corners of the widget. |
 
-## Full prop list
+### Common props
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `width` | `Size` | - | Property used by the Chart component. |
-| `height` | `Size` | - | Property used by the Chart component. |
-| `size` | `number` | - | Component size or preset. |
-| `padding` | `Padding` | - | Internal spacing around the component. |
-| `margin` | `Margin` | - | External spacing around the component. |
-| `bgColor` | `Color` | - | Background color applied to the element. |
-| `color` | `Color` | - | Color value or theme token. |
-| `borderRadius` | `number \| string` | - | Property used by the Chart component. |
-| `elevation` | `number` | - | Property used by the Chart component. |
-| `shadow` | `string` | - | Property used by the Chart component. |
-| `opacity` | `number` | - | Property used by the Chart component. |
-| `visible` | `boolean` | false | Property used by the Chart component. |
-| `disabled` | `boolean` | false | Disables interaction and shows the non-interactive state. |
-| `onPress` | `(widget: Widget) => void` | - | Callback fired when the widget is pressed. |
-| `onClick` | `(widget: Widget) => void` | - | Property used by the Chart component. |
-| `id` | `string` | - | Property used by the Chart component. |
-| `className` | `string` | - | Property used by the Chart component. |
-| `ref` | `(widget: Widget) => void` | - | Property used by the Chart component. |
-| `disableTransform` | `boolean` | - | Property used by the Chart component. |
-| `type` | `'bar' \| 'line' \| 'area' \| 'candle'` | - | Property used by the Chart component. |
-| `data` | `number[] \| Array<{ open: number; high: number; low: number; close: number }>` | [] | Collection of items used to render content. |
-| `labels` | `string[]` | - | Property used by the Chart component. |
-| `candleWidth` | `number` | - | Property used by the Chart component. |
-| `candleSpacing` | `number` | - | Property used by the Chart component. |
-| `barColor` | `Color` | - | Property used by the Chart component. |
-| `lineColor` | `Color` | - | Property used by the Chart component. |
-| `areaColor` | `Color` | - | Property used by the Chart component. |
-| `smooth` | `boolean` | false | Property used by the Chart component. |
-| `areaGradient` | `boolean` | false | Property used by the Chart component. |
-| `areaGradientColors` | `[string, string]` | - | Property used by the Chart component. |
-| `candleUpColor` | `Color` | - | Property used by the Chart component. |
-| `candleDownColor` | `Color` | - | Property used by the Chart component. |
-| `axisColor` | `Color` | - | Property used by the Chart component. |
-| `textColor` | `Color` | - | Property used by the Chart component. |
-| `yAxisColor` | `Color` | - | Property used by the Chart component. |
-| `showGrid` | `boolean` | false | Property used by the Chart component. |
-| `showLabels` | `boolean` | false | Property used by the Chart component. |
-| `showValues` | `boolean` | false | Property used by the Chart component. |
+Every widget also accepts these shared props — see [common props](COMMON_PROPS.md) for the full rules and aliases.
 
-## How props work
+| Prop | Type | Description |
+| --- | --- | --- |
+| `width` | `Size` | Width of the widget. A number is pixels; a string uses any CSS unit. |
+| `height` | `Size` | Height of the widget. A number is pixels; a string uses any CSS unit. |
+| `size` | `number` | Overall size preset or pixel value, depending on the widget. |
+| `padding` | `Padding` | Space inside the widget, between its content and its border. |
+| `margin` | `Margin` | Space outside the widget, between it and its neighbors. |
+| `bgColor` | `Color` | Background color. Alias: `backgroundColor`. |
+| `color` | `Color` | Foreground color, usually the text or icon color. |
+| `borderRadius` | `number \| string` | Rounds the corners of the widget. |
+| `elevation` | `number` | Shadow depth. Higher values lift the widget off the page. |
+| `shadow` | `string` | Raw CSS `box-shadow` value, for a custom shadow. |
+| `opacity` | `number` | Opacity from 0 (invisible) to 1 (fully opaque). |
+| `visible` | `boolean` | Whether the widget is rendered and visible. |
+| `disabled` | `boolean` | Disables interaction and shows the non-interactive state. |
+| `onPress` | `(widget: Widget) => void` | Callback fired when the widget is pressed. Alias: `onClick`. |
+| `onClick` | `(widget: Widget) => void` | Callback fired when the widget is clicked. Alias: `onPress`. |
+| `id` | `string` | DOM `id` for the rendered element. |
+| `className` | `string` | CSS class names applied to the rendered element. |
+| `ref` | `(widget: Widget) => void` | Callback that receives the underlying DOM node. |
+| `disableTransform` | `boolean` | Disables the default press/scale transform animation. |
 
-A prop is simply an instruction inside the object passed to the widget. The name tells FletBox what to change, and the value tells it how to change it.
+## Examples
+
+### Everyday
 
 ```javascript
-Chart({
-    padding: 16,              // space inside the widget
-    margin: "8px 0",         // space outside the widget
-    bgColor: "#eff6ff",      // background color
-    width: "100%",           // CSS size or a number of pixels
-    children: [],             // widgets placed inside it
-    onPress: () => {         // what to do after a press
-        console.log("Hello");
-    },
+import { Chart } from "flet-box";
+
+const revenue = Chart({
+  type: "line",
+  data: [12, 19, 7, 15, 22],
+  labels: ["Jan", "Feb", "Mar", "Apr", "May"],
+  height: 260,
+  showGrid: true,
+  showLabels: true,
 });
 ```
 
-You do not need to use every prop. Begin with the required props, then add optional props only when you need them.
-
-## Example usage
+### Full
 
 ```javascript
-import { Chart, Text } from "flet-box";
+import { Chart } from "flet-box";
 
-const example = Chart({
-  data: [],
-  child: Text({ text: "Example" })
+const trend = Chart({
+  type: "area",
+  data: [8, 14, 10, 21, 18, 26],
+  labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+  width: "100%",
+  height: 320,
+  smooth: true,
+  areaGradient: true,
+  areaGradientColors: ["#3b82f6", "#bfdbfe"],
+  lineColor: "#2563eb",
+  areaColor: "#93c5fd",
+  axisColor: "#94a3b8",
+  textColor: "#475569",
+  showGrid: true,
+  showLabels: true,
+  showValues: true,
+  borderRadius: 12,
+  bgColor: "#ffffff",
+  padding: 16,
 });
 ```
 
-## Examples from the FletBox snippet library
+## Tips
 
-The examples below come from the FletBox snippet library. The prop table is based on `src/index.d.ts`. When an example and the type declaration use different names, prefer the type declaration and verify the implementation.
-
-
-
-## Common layout and styling examples
-
-The following example shows how common FletBox props work together. Numeric spacing values are interpreted as pixels, while strings can use CSS units and shorthand values.
-
-```javascript
-import { Button, Column, Container, Row, Text } from "flet-box";
-
-const panel = Container({
-    width: "100%",          // number values are pixels; strings accept CSS units
-    padding: 24,            // 24px on every side
-    margin: "16px auto",   // CSS shorthand: vertical and horizontal spacing
-    bgColor: "#f8fafc",    // background color
-    borderRadius: 12,
-    elevation: 2,
-    gap: 12,
-    child: Column({
-        children: [
-            Text({ text: "Account settings", size: 24, weight: "bold" }),
-            Row({
-                gap: 8,
-                justifyContent: "space-between",
-                children: [
-                    Text({ text: "Update your profile" }),
-                    Button({
-                        text: "Save",
-                        bgColor: "#2563eb",
-                        color: "#ffffff",
-                        onPress: () => console.log("saved"),
-                    }),
-                ],
-            }),
-        ],
-    }),
-});
-```
-
-### Common prop quick reference
-
-- `padding: 24` adds `24px` inside the widget on all sides.
-- `padding: "8px 16px"` uses CSS shorthand for vertical and horizontal spacing.
-- `margin: "16px auto"` adds outside spacing and can center a fixed-width element.
-- `bgColor: "#f8fafc"` sets the background color. Color tokens and CSS colors can be used.
-- `color: "#111827"` sets the foreground or text color when supported.
-- `width: 320` means `320px`; `width: "100%"` uses a CSS percentage.
-- `children` is an array of widgets; `child` is useful when a component accepts one child.
-- `gap: 12` controls the space between children in layout widgets.
-- `onPress` and `onClick` receive event callbacks for interactive behavior.
-
-## Beginner tips
-
-- Change one value at a time so you can see what each prop does.
-- Use `Text` to check that your layout is in the place you expect.
-- Use `Container` for a box, `Row` for items side by side, and `Column` for items one below another.
-- Use `padding` when content needs breathing room inside a box.
-- Use `margin` when you need space between this widget and its neighbors.
-- Use `bgColor` to make the boundaries of a box easy to see while learning.
-- If a prop is optional, leaving it out lets FletBox use its default behavior.
-
-## Common mistakes
-
-- Do not put plain text where a widget is expected unless the widget explicitly accepts strings.
-- Use `children: [ ... ]` for several child widgets and `child: widget` for one child when the widget supports both.
-- Check spelling carefully: `onPress`, `onClick`, and `onChange` are different events.
-- If a helper such as `padding()` or `margin()` is not available in your import list, use a number or CSS string first.
-
-## Behavior notes
-- Integrates cleanly with FletBox runtime semantics and DOM rendering.
-- Can be nested inside layout widgets and combined with other components.
-- Uses the same direct prop and event conventions as the rest of the framework.
-- Keeps the API simple and readable for composing interfaces fast.
+- Match data to type: pass numbers for bar/line/area and open/high/low/close objects for candle.
+- Provide labels so the x-axis is meaningful to readers.
+- Set an explicit height to reserve space and avoid layout shift while the chart initializes.
 
 ## Accessibility
-- Prefer clear labels and readable text for interactive controls.
-- Respect the `disabled` state and keyboard behavior when available.
-- Keep state changes understandable for screen readers and assistive technology.
+
+- Add a text summary or table of the values near the chart since canvas content is not readable by screen readers.
+- Use sufficient contrast between data, axis and background colors.
+
+## Behavior
+
+- The canvas redraws when data, labels, type or styling props change.
+- Candle charts read open, high, low and close in that order from each data object.
 
 ## Related widgets
-- `Container`
-- `Row`
-- `Column`
-- `Stack`
-- `Text`
-- `Button`
+
+- [CircularChart](CircularChart.md)
+- [CircularBar](CircularBar.md)
+- [Card](Card.md)
+
+---
+
+## Continue reading
+
+- **Previous:** [DataTable](DataTable.md)
+- **Next:** [CircularChart](CircularChart.md)
+- **Index:** [Widget index](README.md) · [Start here](START_HERE.md)
+
+You are reading **Chapter 6 · Data, rich content & effects** (2 of 13).

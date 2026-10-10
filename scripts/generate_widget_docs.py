@@ -1,792 +1,543 @@
+#!/usr/bin/env python3
+"""Generate docs/widget/*.md for FletBox.
+
+Sources of truth:
+  - src/index.d.ts          -> property names and types for the tables
+  - scripts/_docdata/*.py   -> curated prose and examples per widget
+  - scripts/widget_doc_data.py -> reading order, aliases and descriptions
+
+Run from the repository root:  python3 scripts/generate_widget_docs.py
+"""
+
 from __future__ import annotations
 
 import re
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SRC_DIR = ROOT / "src" / "widgets"
-DOCS_DIR = ROOT / "docs" / "widget"
-TYPE_DECLARATIONS = ROOT / "src" / "index.d.ts"
-SNIPPET_SOURCE = Path("/Users/maenysjavierquesadareyes/Desktop/salva_termux/make_snippets/FletBox/FletBox_snippets_creator/FletBox_create_widgets.py")
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-COMMON_PROPS = [
-    ("children", "Node", "-", "Child content rendered inside the widget."),
-    ("id", "String", "-", "DOM id for the element."),
-    ("className", "String", "-", "CSS class names applied to the element."),
-    ("ref", "Function", "-", "Callback receiving the underlying DOM node."),
-    ("onClick", "Function", "-", "Native click event handler."),
-    ("disabled", "Boolean", "false", "Disables interaction when supported."),
+from widget_doc_data import (  # noqa: E402
+    DESC,
+    BOOK,
+    NEXT_AFTER_BOOK,
+    WIDGET_DOCS,
+)
+
+SRC_DIR = ROOT / "src" / "widgets"
+INDEX_JS = ROOT / "src" / "index.js"
+TYPE_DECLARATIONS = ROOT / "src" / "index.d.ts"
+DOCS_DIR = ROOT / "docs" / "widget"
+
+# Chapter 8 pages are hand-written; the book index still links to them.
+NAV_PAGES = [
+    ("Scaffold", "the app shell: app bar, body, drawer, side bars"),
+    ("AdaptiveScaffold", "the same shell, adapted to phone and desktop"),
+    ("AppBar", "a top bar for titles, actions, and back navigation"),
+    ("Drawer", "a panel that slides in from the side"),
+    ("DrawerItem", "a router-aware row for a drawer or side bar"),
+    ("BottomNavigation", "a bottom tab bar synced with the router"),
+    ("Tabs", "switch panes inside a screen"),
+    ("CollapsibleSideBar", "a side panel that collapses to icons"),
 ]
 
-PROPS_BY_WIDGET = {
-    "AdSense": ["client", "slot", "format", "responsive", "width", "height", "placeholder", "label", "bgColor", "color", "borderColor", "onLoad", "onError", "children", "id", "className", "ref", "onClick", "disabled"],
-    "AdMob": ["adId", "isTesting", "position", "size", "margin", "interstitialId", "rewardedId", "autoShow", "width", "height", "placeholder", "label", "bgColor", "color", "borderColor", "plugin", "onLoaded", "onFailed", "onDismissed", "id", "className", "ref", "onClick", "disabled"],
-    "Accordion": ["items", "expandedIndex", "onChange", "children", "id", "className", "ref", "onClick", "disabled"],
-    "AlertDialog": ["open", "title", "message", "actions", "onClose", "children", "id", "className", "ref", "onClick", "disabled"],
-    "Audio": ["src", "controls", "autoplay", "loop", "muted", "children", "id", "className", "ref", "onClick", "disabled"],
-    "Avatar": ["src", "name", "size", "shape", "children", "id", "className", "ref", "onClick", "disabled"],
-    "Badge": ["label", "color", "variant", "dot", "children", "id", "className", "ref", "onClick", "disabled"],
-    "BottomSheet": ["open", "title", "onClose", "maxHeight", "children", "id", "className", "ref", "onClick", "disabled"],
-    "Button": ["text", "variant", "size", "icon", "iconPosition", "onPress", "fullWidth", "bgColor", "color", "disabled"],
-    "Card": ["title", "padding", "elevation", "borderRadius", "children", "id", "className", "ref", "onClick", "disabled"],
-    "Carousel": ["items", "autoPlay", "interval", "showIndicators", "children", "id", "className", "ref", "onClick", "disabled"],
-    "Chart": ["data", "type", "color", "height", "children", "id", "className", "ref", "onClick", "disabled"],
-    "Checkbox": ["checked", "onCheck", "disabled", "size", "children", "id", "className", "ref", "onClick"],
-    "Chip": ["label", "icon", "variant", "color", "onDelete", "children", "id", "className", "ref", "onClick", "disabled"],
-    "CircularBar": ["value", "max", "size", "color", "showValue", "children", "id", "className", "ref", "onClick", "disabled"],
-    "CircularChart": ["data", "size", "colors", "showLabels", "children", "id", "className", "ref", "onClick", "disabled"],
-    "CodeViewer": ["code", "language", "showLineNumbers", "maxHeight", "children", "id", "className", "ref", "onClick", "disabled"],
-    "Column": ["display", "flexDirection", "width", "height", "children", "id", "className", "ref", "onClick", "disabled"],
-    "Container": ["display", "flexDirection", "overflow", "padding", "bgColor", "children", "id", "className", "ref", "onClick", "disabled"],
-    "DataTable": ["columns", "rows", "striped", "hoverable", "children", "id", "className", "ref", "onClick", "disabled"],
-    "Divider": ["orientation", "color", "thickness", "margin", "children", "id", "className", "ref", "onClick", "disabled"],
-    "DraggBox": ["children", "group", "disabled", "onDragStart", "onDragEnd", "id", "className", "ref", "onClick"],
-    "Dropdown": ["options", "value", "onChange", "placeholder", "disabled", "children", "id", "className", "ref", "onClick"],
-    "DroppBox": ["accepts", "onDrop", "disabled", "children", "id", "className", "ref", "onClick"],
-    "FloatingActionButton": ["icon", "onClick", "color", "bottom", "children", "id", "className", "ref", "disabled"],
-    "GridView": ["columns", "itemHeight", "spacing", "data", "children", "id", "className", "ref", "onClick", "disabled"],
-    "Icon": ["name", "size", "color", "children", "id", "className", "ref", "onClick", "disabled"],
-    "Image": ["src", "alt", "width", "height", "fit", "children", "id", "className", "ref", "onClick", "disabled"],
-    "Input": ["value", "placeholder", "type", "onChange", "disabled", "label", "validation", "maxLength", "required", "onInput", "onBlur", "onFocus"],
-    "Inspector": ["target", "title", "expanded", "children", "id", "className", "ref", "onClick", "disabled"],
-    "InstallButton": ["text", "variant", "onInstalled", "children", "id", "className", "ref", "onClick", "disabled"],
-    "ListTile": ["title", "subtitle", "leading", "trailing", "onPress", "children", "id", "className", "ref", "onClick", "disabled"],
-    "ListView": ["data", "itemBuilder", "gap", "wrapItems", "children", "id", "className", "ref", "onClick", "disabled"],
-    "Markdown": ["content", "theme", "maxWidth", "children", "id", "className", "ref", "onClick", "disabled"],
-    "Modal": ["open", "title", "onClose", "closeOnOverlayClick", "children", "id", "className", "ref", "onClick", "disabled"],
-    "Pagination": ["totalItems", "pageSize", "currentPage", "onPageChange", "children", "id", "className", "ref", "onClick", "disabled"],
-    "ProgressBar": ["value", "max", "height", "color", "showValue", "children", "id", "className", "ref", "onClick", "disabled"],
-    "QRCode": ["value", "size", "bgColor", "fgColor", "children", "id", "className", "ref", "onClick", "disabled"],
-    "Radio": ["selected", "onSelect", "disabled", "size", "children", "id", "className", "ref", "onClick"],
-    "Rating": ["value", "max", "onChange", "size", "children", "id", "className", "ref", "onClick", "disabled"],
-    "Row": ["display", "flexDirection", "width", "height", "children", "id", "className", "ref", "onClick", "disabled"],
-    "Skeleton": ["width", "height", "borderRadius", "variant", "children", "id", "className", "ref", "onClick", "disabled"],
-    "Slider": ["value", "min", "max", "onChange", "disabled", "children", "id", "className", "ref", "onClick"],
-    "SnackBar": ["message", "variant", "duration", "open", "children", "id", "className", "ref", "onClick", "disabled"],
-    "Stack": ["position", "top", "left", "center", "children", "id", "className", "ref", "onClick", "disabled"],
-    "Stepper": ["steps", "currentStep", "onChange", "children", "id", "className", "ref", "onClick", "disabled"],
-    "Switch": ["value", "onToggle", "disabled", "size", "children", "id", "className", "ref", "onClick"],
-    "Text": ["text", "value", "size", "color", "weight", "type", "styles", "children", "id", "className", "ref", "onClick", "disabled"],
-    "Tooltip": ["content", "position", "trigger", "children", "id", "className", "ref", "onClick", "disabled"],
-    "TreeView": ["data", "expanded", "onSelect", "children", "id", "className", "ref", "onClick", "disabled"],
-    "Video": ["src", "controls", "autoplay", "loop", "muted", "children", "id", "className", "ref", "onClick", "disabled"],
-}
-
-SPECIAL_EXAMPLES = {
-    "Button": '''import { Button } from "flet-box";
-
-const example = Button({
-  text: "Save",
-  variant: "filled",
-  size: "medium",
-  bgColor: "#2563eb",
-  color: "#ffffff",
-  onPress: () => console.log("saved"),
-  fullWidth: false,
-  disabled: false,
-});''',
-    "Text": '''import { Text } from "flet-box";
-
-const title = Text({
-  text: "Welcome back",
-  type: "h2",
-  size: 28,
-  color: "#111827",
-  weight: "bold",
-});''',
-    "Container": '''import { Container, Text } from "flet-box";
-
-const layout = Container({
-  display: "flex",
-  flexDirection: "column",
-  padding: 16,
-  gap: 12,
-  bgColor: "#f8fafc",
-  child: [
-    Text({ text: "Hello FletBox" }),
-  ],
-});''',
-    "Input": '''import { Input } from "flet-box";
-
-const field = Input({
-  label: "Email",
-  placeholder: "name@example.com",
-  type: "email",
-  value: "",
-  onChange: (value) => console.log(value),
-  validation: "email",
-  required: true,
-});''',
-    "ListView": '''import { ListView, Text } from "flet-box";
-
-const list = ListView({
-  data: ["One", "Two", "Three"],
-  gap: 8,
-  itemBuilder: (item, index) => Text({ text: `${index + 1}. ${item}` }),
-});''',
-}
-
-FALLBACK_SNIPPETS = {
-        "AdSense": {
-                "basic": 'AdSense({ client: "ca-pub-1234567890123456", slot: "1234567890" })',
-                "normal": '''AdSense({
-    client: "ca-pub-1234567890123456",
-    slot: "1234567890",
-    format: "auto",
-    responsive: true,
-    height: 280,
-})''',
-                "full": '''AdSense({
-    client: "ca-pub-1234567890123456",
-    slot: "9876543210",
-    format: "fluid",
-    height: 320,
-    bgColor: "#f8fafc",
-    borderColor: "#e2e8f0",
-    onLoad: (el) => console.log("ad unit pushed", el),
-    onError: (error) => console.warn("AdSense unavailable", error),
-})''',
-        },
-        "AdMob": {
-                "basic": 'AdMob({ adId: "ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY", isTesting: true })',
-                "normal": '''AdMob({
-    adId: "ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY",
-    position: "bottom",
-    size: "ADAPTIVE_BANNER",
-    margin: 8,
-    isTesting: false,
-})''',
-                "full": '''AdMob({
-    adId: "ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY",
-    position: "bottom",
-    size: "ADAPTIVE_BANNER",
-    interstitialId: "ca-app-pub-XXXXXXXXXXXXXXXX/1111111111",
-    rewardedId: "ca-app-pub-XXXXXXXXXXXXXXXX/2222222222",
-    isTesting: true,
-    onLoaded: () => console.log("banner visible"),
-    onFailed: (error) => console.warn("AdMob error", error),
-})''',
-        },
-        "Badge": {
-                "basic": 'Badge({ value: 3, child: Icon({ name: "notifications" }) })',
-                "normal": '''Badge({
-    value: 3,
-    child: Icon({ name: "notifications" }),
-    position: "top-right",
-    bgColor: colors.danger,
-})''',
-                "full": '''Badge({
-    value: 12,
-    child: Icon({ name: "shopping_cart", size: 28 }),
-    position: "top-right",
-    offset: 6,
-    max: 99,
-    showZero: false,
-    borderWidth: 2,
-    borderColor: colors.surface,
-})''',
-        },
-        "CircularChart": {
-                "basic": 'CircularChart({ data: [25, 35, 40] })',
-                "normal": '''CircularChart({
-    data: [25, 35, 40],
-    size: 180,
-    colors: ["#2563eb", "#16a34a", "#f59e0b"],
-})''',
-                "full": '''CircularChart({
-    data: [
-        { label: "Completed", value: 60 },
-        { label: "Pending", value: 25 },
-        { label: "Blocked", value: 15 },
+# Widgets whose props are declared in code rather than an interface.
+SPECIAL_PROPS = {
+    "SnackBar": [
+        ("message", "string"),
+        ("action", "string"),
+        ("onAction", "() => void"),
+        ("duration", "number"),
+        ("type", "'normal' | 'success' | 'error' | 'warning' | 'info'"),
+        ("position", "'bottom' | 'top'"),
+        ("backgroundColor", "Color"),
+        ("textColor", "Color"),
+        ("actionColor", "Color"),
+        ("dismissible", "boolean"),
+        ("borderRadius", "number"),
+        ("padding", "number | string"),
+        ("margin", "number | string"),
+        ("elevation", "number"),
+        ("animationDuration", "number"),
+        ("zIndex", "number"),
+        ("onShow", "() => void"),
+        ("onClose", "() => void"),
     ],
-    size: 240,
-    showLabels: true,
-    colors: [colors.success, colors.warning, colors.danger],
-})''',
-        },
-        "DraggBox": {
-                "basic": 'DraggBox({ child: Text({ text: "Drag me" }) })',
-                "normal": '''DraggBox({
-    child: Card({ child: Text({ text: "Move this card" }) }),
-    group: "cards",
-    data: { id: 1 },
-    onDragEnd: (event, data) => console.log(data),
-})''',
-                "full": '''DraggBox({
-    child: Card({
-        padding: 16,
-        child: Text({ text: "Drag this task to another column" }),
-    }),
-    group: "kanban",
-    data: { id: "task-1", title: "Write documentation" },
-    cloneOnDrag: true,
-    opacity: 0.6,
-    onDragStart: (event, data) => console.log("started", data),
-    onDragEnd: (event, data) => console.log("finished", data),
-})''',
-        },
-        "DroppBox": {
-                "basic": 'DroppBox({ child: Text({ text: "Drop here" }) })',
-                "normal": '''DroppBox({
-    child: Text({ text: "Drop a card here" }),
-    acceptGroups: ["cards"],
-    onDrop: (data) => console.log("dropped", data),
-})''',
-                "full": '''DroppBox({
-    child: Container({
-        padding: 32,
-        borderRadius: 12,
-        child: Text({ text: "Drop files or tasks here" }),
-    }),
-    acceptGroups: ["kanban"],
-    showFeedback: true,
-    activeBgColor: "#eff6ff",
-    activeBorderColor: colors.primary,
-    validBgColor: "#f0fdf4",
-    validBorderColor: colors.success,
-    invalidBgColor: "#fef2f2",
-    invalidBorderColor: colors.danger,
-    onDrop: (data, group, event) => console.log(data, group),
-})''',
-        },
-        "FloatingActionButton": {
-                "basic": 'FloatingActionButton({ icon: "add", onPress: () => console.log("add") })',
-                "normal": '''FloatingActionButton({
-    icon: "add",
-    label: "Create",
-    onPress: () => createItem(),
-    position: "bottomRight",
-})''',
-                "full": '''FloatingActionButton({
-    icon: Icon({ name: "edit" }),
-    label: "New note",
-    extended: true,
-    backgroundColor: colors.primary,
-    foregroundColor: "#ffffff",
-    elevation: 6,
-    margin: 24,
-    position: "bottomRight",
-    onPress: () => openEditor(),
-})''',
-        },
-        "ListTile": {
-                "basic": 'ListTile({ title: "Home" })',
-                "normal": '''ListTile({
-    leading: Icon({ name: "person" }),
-    title: "Jane Doe",
-    subtitle: "jane@example.com",
-    trailing: Icon({ name: "chevron_right" }),
-    onPress: () => openProfile(),
-})''',
-                "full": '''ListTile({
-    leading: Avatar({ name: "JD", size: 44 }),
-    title: "Project documentation",
-    subtitle: "Updated five minutes ago",
-    description: "The complete FletBox guide",
-    trailing: Icon({ name: "more_vert" }),
-    selected: false,
-    divider: true,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    hoverColor: colors.gray100,
-    onPress: () => openProject(),
-})''',
-        },
 }
 
-COMMON_USAGE_EXAMPLE = '''import { Button, Column, Container, Row, Text } from "flet-box";
 
-const panel = Container({
-    width: "100%",          // number values are pixels; strings accept CSS units
-    padding: 24,            // 24px on every side
-    margin: "16px auto",   // CSS shorthand: vertical and horizontal spacing
-    bgColor: "#f8fafc",    // background color
-    borderRadius: 12,
-    elevation: 2,
-    gap: 12,
-    child: Column({
-        children: [
-            Text({ text: "Account settings", size: 24, weight: "bold" }),
-            Row({
-                gap: 8,
-                justifyContent: "space-between",
-                children: [
-                    Text({ text: "Update your profile" }),
-                    Button({
-                        text: "Save",
-                        bgColor: "#2563eb",
-                        color: "#ffffff",
-                        onPress: () => console.log("saved"),
-                    }),
-                ],
-            }),
-        ],
-    }),
-});'''
-
-BEGINNER_EXAMPLE = '''import { Column, Container, Text } from "flet-box";
-
-const welcomeCard = Container({
-    padding: 20,
-    margin: 16,
-    bgColor: "#ffffff",
-    borderRadius: 12,
-    child: Column({
-        gap: 8,
-        children: [
-            Text({ text: "My first FletBox screen", size: 24, weight: "bold" }),
-            Text({ text: "Widgets are small building blocks. Put them inside each other to build a screen." }),
-        ],
-    }),
-});'''
-
-
-def extract_interface_block(source: str, interface_name: str):
-    match = re.search(rf"interface\s+{re.escape(interface_name)}\b[^{{]*\{{", source)
+# --------------------------------------------------------------------------- #
+# src/index.d.ts parsing
+# --------------------------------------------------------------------------- #
+def _interface_block(source: str, name: str) -> tuple[str, str] | None:
+    match = re.search(rf"interface\s+{re.escape(name)}\b([^{{]*)\{{", source)
     if not match:
-        return ""
-
+        return None
     start = match.end()
     depth = 1
     index = start
     while index < len(source) and depth:
-        if source[index] == "{":
+        char = source[index]
+        if char == "{":
             depth += 1
-        elif source[index] == "}":
+        elif char == "}":
             depth -= 1
         index += 1
-    return source[start : index - 1]
+    return match.group(1), source[start : index - 1]
 
 
-def extract_declared_props(widget_name: str):
-    if not TYPE_DECLARATIONS.exists():
-        return []
-
-    source = TYPE_DECLARATIONS.read_text(encoding="utf-8")
-    interface_match = re.search(
-        rf"interface\s+{re.escape(widget_name)}Props\b([^{{]*)\{{", source
-    )
-    block = extract_interface_block(source, f"{widget_name}Props")
-    if not block:
-        return []
-
-    props = []
-    if interface_match and "extends CommonProps" in interface_match.group(1):
-        props.extend(extract_interface_props(source, "CommonProps"))
-    props.extend(extract_interface_props(block))
-    unique_props = []
-    seen = set()
-    for prop in props:
-        if prop[0] != "style" and prop[0] not in seen:
-            seen.add(prop[0])
-            unique_props.append(prop)
-    return unique_props
-
-
-def extract_interface_props(block: str, interface_name: str | None = None):
-    if interface_name is not None:
-        block = extract_interface_block(block, interface_name)
+def _parse_props(block: str) -> list[tuple[str, str]]:
     props = []
     for line in block.splitlines():
         line = line.strip()
         match = re.match(r"([A-Za-z_$][\w$]*)\??\s*:\s*(.+?);?$", line)
-        if match:
+        if match and match.group(1) != "style":
             props.append((match.group(1), match.group(2).rstrip(";")))
     return props
 
 
-def extract_snippet_examples(widget_name: str):
-    """Load the supplied basic/normal/full examples when that source is available."""
-    fallback = FALLBACK_SNIPPETS.get(widget_name, {})
-    if not SNIPPET_SOURCE.exists():
-        return fallback
-
-    source = SNIPPET_SOURCE.read_text(encoding="utf-8")
-    examples = {}
-    for level in ("basic", "normal", "full"):
-        match = re.search(
-            rf"['\"]{re.escape(widget_name)}\.{level}['\"]\s*:\s*('''.*?'''|\"\"\".*?\"\"\"|'(?:\\.|[^'\\])*'|\"(?:\\.|[^\"\\])*\")\s*,?",
-            source,
-            re.DOTALL,
-        )
-        if not match:
-            continue
-        value = match.group(1)
-        if value.startswith("'''") or value.startswith('"""'):
-            value = value[3:-3]
+def extract_props(source: str, name: str) -> list[tuple[str, str]]:
+    result = _interface_block(source, name)
+    if result is None:
+        return []
+    header, block = result
+    own = _parse_props(block)
+    # Merge the parent interface only when it is not CommonProps (common props
+    # are rendered in their own section). Handles `Omit<Parent, 'a' | 'b'>`.
+    target = re.search(r"extends\s+(.+)", header)
+    base = None
+    if target:
+        extends = target.group(1).strip()
+        if extends.startswith("Omit<"):
+            match = re.search(r"Omit<\s*([A-Za-z_$][\w$]*)", extends)
+            if match:
+                base = match.group(1)
         else:
-            value = value[1:-1]
-        examples[level] = value.strip()
-    return {**fallback, **examples}
+            match = re.search(r"[A-Za-z_$][\w$]*", extends)
+            if match:
+                base = match.group(0)
+    if base and base != "CommonProps":
+        inherited = extract_props(source, base)
+        for prop, kind in inherited:
+            if prop not in {p for p, _ in own}:
+                own.insert(0, (prop, kind))
+    return own
 
 
-def normalize_snippet_imports(example: str, widget_name: str):
-    """Make snippets readable as documentation without pretending to add imports."""
-    if not example:
-        return example
-    if example.startswith("import ") or example.startswith("const ") or example.startswith("export "):
-        return example
-    return example
+# --------------------------------------------------------------------------- #
+# Human-friendly descriptions
+# --------------------------------------------------------------------------- #
+_SUFFIX_DESCRIPTIONS = [
+    ("BorderRadius", "Corner radius for the {prefix}."),
+    ("BorderColor", "Border color for the {prefix}."),
+    ("BorderWidth", "Border width for the {prefix}."),
+    ("BorderStyle", "Border style for the {prefix}."),
+    ("BgColor", "Background color for the {prefix}."),
+    ("Color", "Color used for the {prefix}."),
+    ("Width", "Width of the {prefix}."),
+    ("Height", "Height of the {prefix}."),
+    ("Size", "Size of the {prefix}."),
+    ("Padding", "Padding for the {prefix}."),
+    ("Margin", "Margin for the {prefix}."),
+    ("Gap", "Space for the {prefix}."),
+    ("Duration", "Duration for the {prefix}, in milliseconds."),
+    ("Delay", "Delay before the {prefix}, in milliseconds."),
+    ("Elevation", "Elevation (shadow depth) of the {prefix}."),
+    ("Opacity", "Opacity of the {prefix}."),
+    ("Radius", "Corner radius for the {prefix}."),
+    ("Position", "Position of the {prefix}."),
+    ("Offset", "Offset for the {prefix}."),
+    ("Count", "Number of {prefix}."),
+    ("Icon", "Icon for the {prefix}."),
+    ("Label", "Label for the {prefix}."),
+    ("Title", "Title for the {prefix}."),
+    ("Text", "Text for the {prefix}."),
+    ("Index", "Index used for the {prefix}."),
+]
 
 
-def render_snippet_section(widget_name: str, level: str, example: str):
-    labels = {
-        "basic": ("Basic example", "The smallest useful version. Start here if this widget is new to you."),
-        "normal": ("Everyday example", "A practical version with the props most applications usually need."),
-        "full": ("Full example", "A larger example showing advanced styling, layout, events, and customization."),
-    }
-    title, explanation = labels[level]
-    return f'''## {title}
-
-{explanation}
-
-```javascript
-{normalize_snippet_imports(example, widget_name)}
-```
-'''
+def humanize(name: str) -> str:
+    spaced = re.sub(r"([a-z0-9])([A-Z])", r"\1 \2", name)
+    spaced = re.sub(r"([A-Z]+)([A-Z][a-z])", r"\1 \2", spaced)
+    return spaced.replace("_", " ").lower().strip()
 
 
-def infer_default(prop: str):
-    if prop in {"disabled", "fullWidth", "readonly", "required", "checked", "selected", "open", "muted", "autoplay", "loop", "controls", "showIndicators", "showArrows", "showDots", "infinite", "showValue", "expanded", "showLineNumbers", "closeOnOverlayClick", "dot", "visible", "wrap", "striped", "hoverable", "bordered", "clearable", "portal", "indeterminate", "animatedStripes", "readOnly", "allowHalf", "showLabels", "showGrid", "showValues", "smooth", "areaGradient", "animate", "glow", "showFeedback", "showDragHandle", "closeOnDragDown", "showCloseButton", "showFirstLast", "showPrevNext", "showTotal", "selectable", "defaultExpanded", "showIcons", "linkUnderline", "allowDangerousHtml"}:
-        return "false"
-    if prop in {"data", "items", "rows", "columns", "options", "actions", "steps", "colors", "marks", "acceptGroups", "expandedNodes", "badges"}:
-        return "[]"
-    return "-"
+def describe(prop: str) -> str:
+    if prop in DESC:
+        return DESC[prop]
+    if prop.startswith("on") and len(prop) > 2 and prop[2].isupper():
+        return f"Event handler for the `{prop}` event."
+    if prop.startswith("show") and len(prop) > 4 and prop[4].isupper():
+        return f"Controls whether the {humanize(prop[4:])} is shown."
+    if prop.startswith("hide") and len(prop) > 4 and prop[4].isupper():
+        return f"Controls whether the {humanize(prop[4:])} is hidden."
+    for suffix, template in _SUFFIX_DESCRIPTIONS:
+        if prop.endswith(suffix) and len(prop) > len(suffix):
+            prefix = humanize(prop[: -len(suffix)])
+            if prefix:
+                return template.format(prefix=prefix)
+    return f"The `{prop}` value for the widget."
 
 
-def build_prop_table(widget_name: str, props):
-    lines = ["| Prop | Type | Default | Description |", "| --- | --- | --- | --- |"]
-    for prop, declared_type in props:
-        if prop == "style":
-            continue
-        kind = declared_type.replace("|", "\\|")
-        default = infer_default(prop)
+# --------------------------------------------------------------------------- #
+# Rendering
+# --------------------------------------------------------------------------- #
+def known_exports() -> set[str]:
+    if not INDEX_JS.exists():
+        return set()
+    source = INDEX_JS.read_text(encoding="utf-8")
+    names: set[str] = set()
+    for block in re.findall(r"export\s*\{([^}]*)\}", source):
+        for part in block.split(","):
+            name = part.strip()
+            if re.fullmatch(r"[A-Za-z_$][\w$]*", name):
+                names.add(name)
+    return names
 
-        description = {
-            "text": "Visible text content rendered by the widget.",
-            "value": "Current value controlled by the widget.",
-            "label": "Label or caption shown near the control.",
-            "title": "Primary title text for the widget.",
-            "subtitle": "Secondary descriptive text.",
-            "message": "Body text or notification content.",
-            "content": "Markdown or rich content source.",
-            "placeholder": "Hint shown when the field is empty.",
-            "src": "Resource URL for media or image content.",
-            "alt": "Alternative text for media or image content.",
-            "name": "Identifier or label for the element.",
-            "variant": "Visual variation or style preset.",
-            "size": "Component size or preset.",
-            "color": "Color value or theme token.",
-            "bgColor": "Background color applied to the element.",
-            "padding": "Internal spacing around the component.",
-            "margin": "External spacing around the component.",
-            "gap": "Space between child items.",
-            "data": "Collection of items used to render content.",
-            "items": "List or set of entries shown by the widget.",
-            "rows": "Data rows used by table-like widgets.",
-            "columns": "Column definitions or list of columns.",
-            "options": "Available options for selection widgets.",
-            "steps": "Step entries for wizard or stepper patterns.",
-            "onChange": "Callback fired when the value changes.",
-            "onPress": "Callback fired when the widget is pressed.",
-            "onSelect": "Callback fired when an option is selected.",
-            "onClose": "Callback fired when the widget closes.",
-            "onInput": "Callback fired while the user types.",
-            "disabled": "Disables interaction and shows the non-interactive state.",
-            "checked": "Current checked state.",
-            "selected": "Current selected state.",
-            "open": "Whether the widget is visible or active.",
-        }.get(prop, f"Property used by the {widget_name} component.")
 
-        lines.append(f"| `{prop}` | `{kind}` | {default} | {description} |")
+KNOWN = known_exports()
+
+
+def imports_for(code: str) -> str:
+    used = sorted(
+        name
+        for name in KNOWN
+        if re.search(rf"(?<![\w-])\b{re.escape(name)}\b(?!\s*:)", code)
+    )
+    if not used:
+        return ""
+    return f'import {{ {", ".join(used)} }} from "flet-box";\n\n'
+
+
+def code_block(code: str, with_imports: bool = True) -> str:
+    prefix = imports_for(code) if with_imports else ""
+    return f"```javascript\n{prefix}{code}\n```"
+
+
+def prop_table(props: list[tuple[str, str]]) -> str:
+    lines = ["| Prop | Type | Description |", "| --- | --- | --- |"]
+    for prop, kind in props:
+        kind = kind.replace("|", "\\|")
+        lines.append(f"| `{prop}` | `{kind}` | {describe(prop)} |")
     return "\n".join(lines)
 
 
-def example_for_widget(widget_name: str):
-    if widget_name in SPECIAL_EXAMPLES:
-        return SPECIAL_EXAMPLES[widget_name]
-    props = PROPS_BY_WIDGET.get(widget_name, [])
-    sample = []
-    for prop in ["text", "title", "label", "value", "src", "data", "items", "checked", "open", "children"]:
-        if prop in props:
-            sample.append(prop)
-    if not sample:
-        sample = props[:5]
-    if not sample:
-        sample = ["children"]
-
-    lines = []
-    for prop in sample[:5]:
-        if prop == "children":
-            lines.append("  child: Text({ text: \"Example\" })")
-        elif prop in {"text", "title", "label", "message", "placeholder", "content"}:
-            lines.append(f'  {prop}: "Example value"')
-        elif prop in {"value", "currentPage", "currentStep", "max", "pageSize", "totalItems"}:
-            lines.append(f"  {prop}: 1")
-        elif prop in {"checked", "selected", "open", "disabled", "showValue", "loop", "autoplay", "controls", "muted", "expanded", "dot", "fullWidth"}:
-            lines.append(f"  {prop}: true")
-        elif prop in {"items", "data", "rows", "columns", "options", "steps", "actions"}:
-            lines.append(f"  {prop}: []")
-        elif prop in {"onClick", "onPress", "onChange", "onInput", "onClose", "onSelect", "onDelete"}:
-            lines.append(f"  {prop}: () => console.log(\"{prop}\")")
-        elif prop in {"color", "bgColor", "variant", "type", "display", "flexDirection", "position", "orientation", "fit", "theme", "language"}:
-            lines.append(f'  {prop}: "default"')
-        elif prop in {"size", "height", "width", "padding", "margin", "gap", "thickness", "borderRadius"}:
-            lines.append(f"  {prop}: 16")
-        elif prop in {"src", "alt"}:
-            lines.append(f'  {prop}: "https://example.com/image.jpg"')
-        else:
-            lines.append(f'  {prop}: "value"')
-
-    joined_lines = ",\n".join(lines)
-    imports = widget_name if widget_name == "Text" else f"{widget_name}, Text"
-    return f'''import {{ {imports} }} from "flet-box";
-
-const example = {widget_name}({{
-{joined_lines}
-}});'''
+def reading_path() -> dict[str, dict]:
+    info: dict[str, dict] = {}
+    flat: list[str] = []
+    for chapter, widgets in BOOK:
+        for name in widgets:
+            flat.append(name)
+    for chapter, widgets in BOOK:
+        total = len(widgets)
+        for index, name in enumerate(widgets, start=1):
+            position = flat.index(name)
+            prev_name = flat[position - 1] if position > 0 else None
+            next_name = flat[position + 1] if position + 1 < len(flat) else None
+            info[name] = {
+                "chapter": chapter,
+                "index": index,
+                "total": total,
+                "prev": prev_name,
+                "next": next_name,
+            }
+    return info
 
 
-def render_widget_doc(widget_name: str):
-    props = extract_declared_props(widget_name)
-    if not props:
-        props = [(prop, "Any") for prop in PROPS_BY_WIDGET.get(widget_name, [])]
-    table = build_prop_table(widget_name, props)
-    example = example_for_widget(widget_name)
-    snippets = extract_snippet_examples(widget_name)
-    snippet_sections = "\n".join(
-        render_snippet_section(widget_name, level, snippets[level])
-        for level in ("basic", "normal", "full")
-        if level in snippets
-    )
-    source_note = (
-        "The examples below come from the FletBox snippet library. The prop table is based on `src/index.d.ts`. "
-        "When an example and the type declaration use different names, prefer the type declaration and verify the implementation."
-    )
-    return f'''# {widget_name}
+PATH = reading_path()
 
-## Overview
-`{widget_name}` is a ready-to-use building block. Think of it like a LEGO piece: give it some props, place it inside another widget, and FletBox creates the browser element for you.
 
-You do not need to write HTML or manually change the DOM to use this widget. You call the widget as a JavaScript function and pass an object between `{{` and `}}`.
+def continue_reading(name: str) -> str:
+    entry = PATH.get(name)
+    if not entry:
+        return ""
+    if entry["prev"]:
+        previous = f"[{entry['prev']}]({entry['prev']}.md)"
+    else:
+        previous = "[Start here](START_HERE.md)"
+    if entry["next"]:
+        nxt = entry["next"]
+        following = f"[{nxt}]({nxt}.md)"
+    else:
+        following = f"[{NEXT_AFTER_BOOK}]({NEXT_AFTER_BOOK}.md) — Chapter 8 · App navigation"
+    return f"""---
 
-## Learn it in one minute
+## Continue reading
 
-1. Import the widget from `flet-box`.
-2. Call it with `WidgetName({{ ... }})`.
-3. Add props to describe its content, size, color, spacing, and behavior.
-4. Put it inside `Container`, `Row`, `Column`, or another widget.
+- **Previous:** {previous}
+- **Next:** {following}
+- **Index:** [Widget index](README.md) · [Start here](START_HERE.md)
 
-```javascript
-{BEGINNER_EXAMPLE}
-```
+You are reading **{entry['chapter']}** ({entry['index']} of {entry['total']})."""
 
-## When to use
-Use `{widget_name}` when you need this kind of interface element. Start with the smallest example, then add one prop at a time. You can copy the example, change the text or color, and see the result immediately.
 
-## Common props
+def bullet_list(items: list[str]) -> str:
+    return "\n".join(f"- {item}" for item in items)
 
-- `children` / `child`: content rendered inside the widget.
-- `id`: DOM id for the element.
-- `className`: CSS class names applied to the element.
-- `ref`: callback that receives the underlying DOM node.
-- `onClick` / event handlers: native browser event callbacks.
-- `disabled`: disables interaction when supported.
 
-## Full prop list
+def related_links(names: list[str]) -> str:
+    if not names:
+        names = ["Container", "Row", "Column"]
+    return bullet_list([f"[{name}]({name}.md)" for name in names])
 
-{table}
 
-## How props work
+def extends_common_chain(source: str, name: str) -> bool:
+    result = _interface_block(source, name)
+    if result is None:
+        return False
+    header, _ = result
+    target = re.search(r"extends\s+(.+)", header)
+    if not target:
+        return False
+    extends = target.group(1).strip()
+    if extends.startswith("Omit<"):
+        match = re.search(r"Omit<\s*([A-Za-z_$][\w$]*)", extends)
+        if not match:
+            return False
+        base = match.group(1)
+    else:
+        match = re.search(r"[A-Za-z_$][\w$]*", extends)
+        if not match:
+            return False
+        base = match.group(0)
+    if base == "CommonProps":
+        return True
+    return extends_common_chain(source, base)
 
-A prop is simply an instruction inside the object passed to the widget. The name tells FletBox what to change, and the value tells it how to change it.
 
-```javascript
-{widget_name}({{
-    padding: 16,              // space inside the widget
-    margin: "8px 0",         // space outside the widget
-    bgColor: "#eff6ff",      // background color
-    width: "100%",           // CSS size or a number of pixels
-    children: [],             // widgets placed inside it
-    onPress: () => {{         // what to do after a press
-        console.log("Hello");
-    }},
-}});
-```
+def render_widget_doc(source: str, name: str) -> str:
+    data = WIDGET_DOCS[name]
+    props = extract_props(source, f"{name}Props") or SPECIAL_PROPS.get(name, [])
+    common = extract_props(source, "CommonProps")
+    has_common = extends_common_chain(source, f"{name}Props")
 
-You do not need to use every prop. Begin with the required props, then add optional props only when you need them.
+    common_section = ""
+    if has_common:
+        common_section = f"""
+### Common props
 
-## Example usage
+Every widget also accepts these shared props — see [common props](COMMON_PROPS.md) for the full rules and aliases.
 
-```javascript
-{example}
-```
+{prop_table(common)}
+"""
 
-## Examples from the FletBox snippet library
+    return f"""# {name}
 
-{source_note}
+{data['summary']}
 
-{snippet_sections}
+## When to use it
 
-## Common layout and styling examples
+{data['when']}
 
-The following example shows how common FletBox props work together. Numeric spacing values are interpreted as pixels, while strings can use CSS units and shorthand values.
+## Quick start
 
-```javascript
-{COMMON_USAGE_EXAMPLE}
-```
+{code_block(data['basic'])}
 
-### Common prop quick reference
+> The prop table is generated from `src/index.d.ts`; the examples use only documented props.
 
-- `padding: 24` adds `24px` inside the widget on all sides.
-- `padding: "8px 16px"` uses CSS shorthand for vertical and horizontal spacing.
-- `margin: "16px auto"` adds outside spacing and can center a fixed-width element.
-- `bgColor: "#f8fafc"` sets the background color. Color tokens and CSS colors can be used.
-- `color: "#111827"` sets the foreground or text color when supported.
-- `width: 320` means `320px`; `width: "100%"` uses a CSS percentage.
-- `children` is an array of widgets; `child` is useful when a component accepts one child.
-- `gap: 12` controls the space between children in layout widgets.
-- `onPress` and `onClick` receive event callbacks for interactive behavior.
+## Props
 
-## Beginner tips
+{prop_table(props)}
+{common_section}
+## Examples
 
-- Change one value at a time so you can see what each prop does.
-- Use `Text` to check that your layout is in the place you expect.
-- Use `Container` for a box, `Row` for items side by side, and `Column` for items one below another.
-- Use `padding` when content needs breathing room inside a box.
-- Use `margin` when you need space between this widget and its neighbors.
-- Use `bgColor` to make the boundaries of a box easy to see while learning.
-- If a prop is optional, leaving it out lets FletBox use its default behavior.
+### Everyday
 
-## Common mistakes
+{code_block(data['normal'])}
 
-- Do not put plain text where a widget is expected unless the widget explicitly accepts strings.
-- Use `children: [ ... ]` for several child widgets and `child: widget` for one child when the widget supports both.
-- Check spelling carefully: `onPress`, `onClick`, and `onChange` are different events.
-- If a helper such as `padding()` or `margin()` is not available in your import list, use a number or CSS string first.
+### Full
 
-## Behavior notes
-- Integrates cleanly with FletBox runtime semantics and DOM rendering.
-- Can be nested inside layout widgets and combined with other components.
-- Uses the same direct prop and event conventions as the rest of the framework.
-- Keeps the API simple and readable for composing interfaces fast.
+{code_block(data['full'])}
+
+## Tips
+
+{bullet_list(data.get('tips') or ["Prefer the documented props over raw CSS where the widget offers them."])}
 
 ## Accessibility
-- Prefer clear labels and readable text for interactive controls.
-- Respect the `disabled` state and keyboard behavior when available.
-- Keep state changes understandable for screen readers and assistive technology.
+
+{bullet_list(data.get('accessibility') or ["Use an ARIA label (or a widget prop like `label`) when the widget is decorative or icon-only."])}
+
+## Behavior
+
+{bullet_list(data.get('behavior') or [
+    "The widget renders through the `WidgetFactory` and reacts to prop changes like any other FletBox widget.",
+    "Clean up listeners and timers it registers through an idempotent `onUnmount` disposer.",
+])}
 
 ## Related widgets
-- `Container`
-- `Row`
-- `Column`
-- `Stack`
-- `Text`
-- `Button`
-'''
+
+{related_links(data.get('related', []))}
+
+{continue_reading(name)}
+"""
 
 
-def main():
-    DOCS_DIR.mkdir(parents=True, exist_ok=True)
+# --------------------------------------------------------------------------- #
+# The book index
+# --------------------------------------------------------------------------- #
+CHAPTER_BLURB = {
+    "Chapter 1 · First steps: the core mental model": "layout and the core mental model",
+    "Chapter 2 · Interaction basics": "the widgets users click and type into",
+    "Chapter 3 · Layout, cards and lists": "cards, lists, grids and content rows",
+    "Chapter 4 · Feedback and overlays": "dialogs, sheets, notifications and progress",
+    "Chapter 5 · Navigation and flows": "multi-step flows, trees and rotating content",
+    "Chapter 6 · Data, rich content & effects": "tables, charts, rich text, ads and motion",
+    "Chapter 7 · Media and drag & drop": "audio, video and drag-and-drop",
+}
 
-    widget_names = sorted(
-        p.stem for p in SRC_DIR.glob("*.js") if p.name not in {"index.js"}
-    )
 
-    index_lines = [
-        "# Widgets documentation",
+def one_line_summary(name: str) -> str:
+    summary = WIDGET_DOCS[name]["summary"].strip()
+    match = re.match(rf"^{re.escape(name)}\b\W*\s*", summary, re.IGNORECASE)
+    if match:
+        summary = summary[match.end():]
+    if not summary:
+        return summary
+    return summary[0].upper() + summary[1:]
+
+
+def render_index() -> str:
+    parts = [
+        "# Widgets: the FletBox book",
         "",
-        "This directory teaches FletBox from the first widget to complete compositions.",
+        "This directory is a book. Read it in order to go from your first widget to "
+        "complete, data-rich compositions. Every page links to the previous and next "
+        "page, so you can follow it like a tutorial — or jump straight to a widget from "
+        "the alphabetical index below.",
         "",
-        "If you are new to FletBox, start with [Start here](START_HERE.md). Each widget page then includes simple explanations, the full prop list, and copy-paste examples.",
+        "If you have never used FletBox, begin with [Start here](START_HERE.md), then "
+        "follow the reading path.",
         "",
-        "For complete pages and application structures, read [Build your first FletBox app](../guides/app-templates.md).",
+        "## How to read this book",
         "",
-        "To create projects from the terminal, read [FletBox CLI](../cli/README.md).",
+        "- Chapters go from **basic to advanced**. Read them top to bottom the first time.",
+        "- Every widget page ends with a **Continue reading** block: previous page, next page, and a link back here.",
+        "- Every widget also accepts the [common props](COMMON_PROPS.md) — layout, spacing, color, typography, borders, events and aliases.",
+        "- Related widgets at the bottom of each page are clickable, so you can branch off whenever you are curious.",
         "",
-        "## Widget index",
+        "Related guides: [Build your first FletBox app](../guides/app-templates.md) · "
+        "[Routing with FletBox](../guides/router.md) · [FletBox CLI](../cli/README.md).",
+        "",
+        "## The reading path",
         "",
     ]
-    index_lines.insert(6, "Start with [Start here](START_HERE.md) before choosing a widget.")
-    for name in widget_names:
-        index_lines.append(f"- [{name}]({name}.md)")
-    (DOCS_DIR / "README.md").write_text("\n".join(index_lines) + "\n", encoding="utf-8")
 
-    for name in widget_names:
-        doc = render_widget_doc(name)
-        (DOCS_DIR / f"{name}.md").write_text(doc, encoding="utf-8")
+    number = 0
+    for chapter, widgets in BOOK:
+        parts.append(f"### {chapter}")
+        parts.append("")
+        parts.append(f"_{CHAPTER_BLURB.get(chapter, '')}_")
+        parts.append("")
+        for name in widgets:
+            number += 1
+            summary = one_line_summary(name).split(". ")[0].strip()
+            parts.append(f"{number}. [{name}]({name}.md) — {summary}")
+        parts.append("")
 
-    template = '''# WidgetName
+    parts.append("### Chapter 8 · App navigation")
+    parts.append("")
+    parts.append("_Build the shell of a real application and wire it to the router._")
+    parts.append("")
+    for name, blurb in NAV_PAGES:
+        number += 1
+        parts.append(f"{number}. [{name}]({name}.md) — {blurb}")
+    parts.append("")
+    parts.append("Then continue with [State, Router & Services](../guides/state.md) — Chapter 9.")
+    parts.append("")
+    parts.append("## Alphabetical index")
+    parts.append("")
+    for name in sorted(list(WIDGET_DOCS) + [n for n, _ in NAV_PAGES]):
+        parts.append(f"- [{name}]({name}.md)")
+    parts.append("")
+    return "\n".join(parts)
+
+
+# --------------------------------------------------------------------------- #
+# Template
+# --------------------------------------------------------------------------- #
+TEMPLATE = """# WidgetName
 
 ## Overview
-Explain what the widget is used for in simple language. Describe it as a building block.
 
-## Learn it in one minute
-Show the smallest useful example and explain what each part does.
+Explain what the widget is for in one or two sentences.
 
-## When to use
-Describe the scenarios where it adds value.
+## When to use it
 
-## Common props
+Describe the situation in which you reach for this widget.
 
-- `children` / `child`: content rendered inside the widget.
-- `id`: DOM id for the element.
-- `className`: CSS class names applied to the element.
-- `ref`: callback that receives the underlying DOM node.
-- `onClick` / event handlers: native browser event callbacks.
-- `disabled`: disables interaction when supported.
-
-## Full prop list
-
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `propName` | `Type` | `default` | Description |
-
-## How props work
-Explain how the most important props affect content, size, spacing, color, and interaction.
-
-## Example usage
+## Quick start
 
 ```javascript
 import { WidgetName } from "flet-box";
 
 const example = WidgetName({
-  children: "Example",
+  // the smallest useful call
 });
 ```
 
-## Examples from the FletBox snippet library
+## Props
 
-### Basic example
-Show the smallest useful version.
+| Prop | Type | Description |
+| --- | --- | --- |
+| `propName` | `Type` | What the prop does. |
 
-### Everyday example
-Show the most common real-world combination of props.
+## Examples
 
-### Full example
-Show advanced layout, styling, events, and customization.
+### Everyday
 
-## Common layout and styling examples
-Show `padding`, `margin`, `bgColor`, `color`, `width`, `gap`, `children`, and event handlers in a realistic composition.
+Show the most common combination of props.
 
-## Beginner tips
-- Explain what to try first and which props are optional.
+### Full
 
-## Behavior notes
-- Explain layout, interaction, and rendering details.
+Show advanced layout, styling and events.
+
+## Tips
+
+- Practical, widget-specific advice.
 
 ## Accessibility
-- Keyboard and screen-reader behavior considerations.
+
+- Keyboard and screen-reader considerations.
+
+## Behavior
+
+- Layout, interaction and re-render notes.
 
 ## Related widgets
-- `Container`
-- `Row`
-- `Column`
-- `Stack`
-'''
-    (DOCS_DIR / "_template.md").write_text(template, encoding="utf-8")
 
-    print(f"Generated widget docs for {len(widget_names)} widgets")
+- [Container](Container.md)
+
+---
+
+## Continue reading
+
+- **Previous:** ...
+- **Next:** ...
+- **Index:** [Widget index](README.md) · [Start here](START_HERE.md)
+
+You are reading **Chapter N · Title** (i of m).
+"""
+
+
+def main() -> None:
+    DOCS_DIR.mkdir(parents=True, exist_ok=True)
+    source = TYPE_DECLARATIONS.read_text(encoding="utf-8")
+
+    missing = [name for name in WIDGET_DOCS if not extract_props(source, f"{name}Props")
+               and name not in SPECIAL_PROPS]
+    if missing:
+        print(f"warning: no interface props found for: {', '.join(missing)}")
+
+    written = 0
+    for name in sorted(WIDGET_DOCS):
+        doc = render_widget_doc(source, name)
+        (DOCS_DIR / f"{name}.md").write_text(doc, encoding="utf-8")
+        written += 1
+
+    (DOCS_DIR / "README.md").write_text(render_index() + "\n", encoding="utf-8")
+    (DOCS_DIR / "_template.md").write_text(TEMPLATE, encoding="utf-8")
+    print(f"Generated {written} widget pages and the book index.")
 
 
 if __name__ == "__main__":

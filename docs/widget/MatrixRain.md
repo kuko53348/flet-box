@@ -1,19 +1,17 @@
-# Icon
+# MatrixRain
 
-Material icon glyph rendered as a span. `name` is required and maps to a Material Icons ligature.
+A canvas-based Matrix-style effect where random characters cascade down the screen. It runs a continuous animation loop with configurable speed and fade.
 
 ## When to use it
 
-Use Icon for compact actions, status indicators, and decoration next to a label.
+Use it as a full-viewport backdrop or an ambient section background for a retro-tech aesthetic.
 
 ## Quick start
 
 ```javascript
-import { Icon } from "flet-box";
+import { MatrixRain } from "flet-box";
 
-const settings = Icon({
-  name: "settings",
-});
+const rain = MatrixRain({});
 ```
 
 > The prop table is generated from `src/index.d.ts`; the examples use only documented props.
@@ -22,10 +20,14 @@ const settings = Icon({
 
 | Prop | Type | Description |
 | --- | --- | --- |
-| `name` | `string` | The `name` value for the widget. |
-| `size` | `number` | Overall size preset or pixel value, depending on the widget. |
-| `color` | `Color` | Foreground color, usually the text or icon color. |
-| `onPress` | `(widget: Widget) => void` | Callback fired when the widget is pressed. Alias: `onClick`. |
+| `chars` | `string` | Characters used by the matrix rain. |
+| `fontSize` | `number` | Size of the font. |
+| `speed` | `number` | Animation speed. |
+| `fadeAmount` | `number` | How quickly trails fade each frame. |
+| `resetProbability` | `number` | Chance a column resets to the top each frame. |
+| `useDynamicColor` | `boolean` | Cycles colors instead of using a fixed color. |
+| `position` | `'fixed' \| 'absolute'` | CSS `position` value, or `stack` for centered stacking. |
+| `zIndex` | `number` | Index used for the z. |
 
 ### Common props
 
@@ -58,60 +60,63 @@ Every widget also accepts these shared props — see [common props](COMMON_PROPS
 ### Everyday
 
 ```javascript
-import { Icon } from "flet-box";
+import { MatrixRain } from "flet-box";
 
-const settings = Icon({
-  name: "settings",
-  size: 28,
-  color: "#111827",
+const rain = MatrixRain({
+  fontSize: 18,
+  speed: 0.6,
+  position: "fixed",
 });
 ```
 
 ### Full
 
 ```javascript
-import { Icon } from "flet-box";
+import { MatrixRain } from "flet-box";
 
-const action = Icon({
-  name: "notifications",
-  size: 24,
-  color: "#2563eb",
-  bgColor: "#eff6ff",
-  padding: 8,
-  borderRadius: 999,
-  className: "icon-button",
-  onPress: () => console.log("notifications"),
+const rain = MatrixRain({
+  chars: "01",
+  fontSize: 20,
+  speed: 0.8,
+  fadeAmount: 0.08,
+  resetProbability: 0.98,
+  useDynamicColor: true,
+  position: "fixed",
+  zIndex: 1,
 });
 ```
 
 ## Tips
 
-- `size` defaults to 24 and `color` falls back to the theme's secondary text color.
-- Pass a Material Icons name such as `"settings"` or `"chevron_right"`.
-- Pair an icon with a visible label when it carries meaning, because the glyph alone is not descriptive.
+- position: "fixed" fills the viewport; "absolute" fills a positioned parent
+- instead.
+- Set zIndex low (1 or negative) so the rain renders behind your regular UI.
+- Tune resetProbability closer to 1 to make trails longer or drops rarer.
 
 ## Accessibility
 
-- Do not rely on the glyph to convey meaning on its own; add an adjacent text label for important actions.
+- The rain is decorative canvas output; pair it with real content on top and make it
+- pausable for motion-sensitive users.
 
 ## Behavior
 
-- The icon renders as an inline-flex span using the Material Icons class, and it is non-selectable by default.
-- Supplying `onPress` makes the icon interactive; `size` accepts a number of pixels or a CSS size string.
+- The returned canvas runs its animation loop immediately and exposes _cleanup() to
+- stop drawing and disconnect the ResizeObserver.
+- Changing speed or fadeAmount only affects future frames; update them before mount
+- for a clean start.
 
 ## Related widgets
 
-- [Button](Button.md)
-- [Text](Text.md)
-- [Row](Row.md)
-- [ListTile](ListTile.md)
+- [Container](Container.md)
+- [Card](Card.md)
+- [AnimatedBox](AnimatedBox.md)
 
 ---
 
 ## Continue reading
 
-- **Previous:** [Stack](Stack.md)
-- **Next:** [Image](Image.md)
+- **Previous:** [AnimatedText](AnimatedText.md)
+- **Next:** [ParallaxBox](ParallaxBox.md)
 - **Index:** [Widget index](README.md) · [Start here](START_HERE.md)
 
-You are reading **Chapter 1 · First steps: the core mental model** (6 of 7).
+You are reading **Chapter 6 · Data, rich content & effects** (12 of 13).

@@ -1,198 +1,139 @@
 # Dropdown
 
-## Overview
-`Dropdown` is a ready-to-use building block. Think of it like a LEGO piece: give it some props, place it inside another widget, and FletBox creates the browser element for you.
+A select control that shows the current choice and opens a menu of options when clicked.
 
-You do not need to write HTML or manually change the DOM to use this widget. You call the widget as a JavaScript function and pass an object between `{` and `}`.
+## When to use it
 
-## Learn it in one minute
+Use Dropdown when the option list is long enough that radios would crowd the page.
 
-1. Import the widget from `flet-box`.
-2. Call it with `WidgetName({ ... })`.
-3. Add props to describe its content, size, color, spacing, and behavior.
-4. Put it inside `Container`, `Row`, `Column`, or another widget.
+## Quick start
 
 ```javascript
-import { Column, Container, Text } from "flet-box";
+import { Dropdown } from "flet-box";
 
-const welcomeCard = Container({
-    padding: 20,
-    margin: 16,
-    bgColor: "#ffffff",
-    borderRadius: 12,
-    child: Column({
-        gap: 8,
-        children: [
-            Text({ text: "My first FletBox screen", size: 24, weight: "bold" }),
-            Text({ text: "Widgets are small building blocks. Put them inside each other to build a screen." }),
-        ],
-    }),
+const city = Dropdown({
+  options: ["Berlin", "Paris", "Tokyo"],
+  placeholder: "Choose a city",
 });
 ```
 
-## When to use
-Use `Dropdown` when you need this kind of interface element. Start with the smallest example, then add one prop at a time. You can copy the example, change the text or color, and see the result immediately.
+> The prop table is generated from `src/index.d.ts`; the examples use only documented props.
 
-## Common props
+## Props
 
-- `children` / `child`: content rendered inside the widget.
-- `id`: DOM id for the element.
-- `className`: CSS class names applied to the element.
-- `ref`: callback that receives the underlying DOM node.
-- `onClick` / event handlers: native browser event callbacks.
-- `disabled`: disables interaction when supported.
+| Prop | Type | Description |
+| --- | --- | --- |
+| `options` | `(string \| DropdownOption)[]` | Available options for a selection widget. |
+| `value` | `any` | Current value controlled by the widget. |
+| `placeholder` | `string` | Fallback text shown while the ad is unavailable. |
+| `disabled` | `boolean` | Disables interaction and shows the non-interactive state. |
+| `label` | `string` | Label or caption shown near the control. |
+| `error` | `boolean` | Error flag or message shown under the field. |
+| `variant` | `'outlined' \| 'filled'` | Visual variation or style preset. |
+| `size` | `'small' \| 'medium' \| 'large'` | Overall size preset or pixel value, depending on the widget. |
+| `borderRadius` | `number` | Rounds the corners of the widget. |
+| `color` | `Color` | Foreground color, usually the text or icon color. |
+| `bgColor` | `Color` | Background color. Alias: `backgroundColor`. |
+| `textColor` | `Color` | Color of the button label. |
+| `optionHoverColor` | `Color` | Background color of an option while hovered. |
+| `clearable` | `boolean` | Shows a button that clears the field. |
+| `width` | `number \| string` | Width of the widget. A number is pixels; a string uses any CSS unit. |
+| `portal` | `boolean` | Renders the dropdown menu in a portal above the page. |
+| `onChange` | `(value: any, label: string) => void` | Fired when the value changes. |
 
-## Full prop list
+### Common props
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `width` | `Size` | - | Property used by the Dropdown component. |
-| `height` | `Size` | - | Property used by the Dropdown component. |
-| `size` | `number` | - | Component size or preset. |
-| `padding` | `Padding` | - | Internal spacing around the component. |
-| `margin` | `Margin` | - | External spacing around the component. |
-| `bgColor` | `Color` | - | Background color applied to the element. |
-| `color` | `Color` | - | Color value or theme token. |
-| `borderRadius` | `number \| string` | - | Property used by the Dropdown component. |
-| `elevation` | `number` | - | Property used by the Dropdown component. |
-| `shadow` | `string` | - | Property used by the Dropdown component. |
-| `opacity` | `number` | - | Property used by the Dropdown component. |
-| `visible` | `boolean` | false | Property used by the Dropdown component. |
-| `disabled` | `boolean` | false | Disables interaction and shows the non-interactive state. |
-| `onPress` | `(widget: Widget) => void` | - | Callback fired when the widget is pressed. |
-| `onClick` | `(widget: Widget) => void` | - | Property used by the Dropdown component. |
-| `id` | `string` | - | Property used by the Dropdown component. |
-| `className` | `string` | - | Property used by the Dropdown component. |
-| `ref` | `(widget: Widget) => void` | - | Property used by the Dropdown component. |
-| `disableTransform` | `boolean` | - | Property used by the Dropdown component. |
-| `options` | `(string \| DropdownOption)[]` | [] | Available options for selection widgets. |
-| `value` | `any` | - | Current value controlled by the widget. |
-| `placeholder` | `string` | - | Hint shown when the field is empty. |
-| `label` | `string` | - | Label or caption shown near the control. |
-| `error` | `boolean` | - | Property used by the Dropdown component. |
-| `variant` | `'outlined' \| 'filled'` | - | Visual variation or style preset. |
-| `textColor` | `Color` | - | Property used by the Dropdown component. |
-| `optionHoverColor` | `Color` | - | Property used by the Dropdown component. |
-| `clearable` | `boolean` | false | Property used by the Dropdown component. |
-| `portal` | `boolean` | false | Property used by the Dropdown component. |
-| `onChange` | `(value: any, label: string) => void` | - | Callback fired when the value changes. |
+Every widget also accepts these shared props — see [common props](COMMON_PROPS.md) for the full rules and aliases.
 
-## How props work
+| Prop | Type | Description |
+| --- | --- | --- |
+| `width` | `Size` | Width of the widget. A number is pixels; a string uses any CSS unit. |
+| `height` | `Size` | Height of the widget. A number is pixels; a string uses any CSS unit. |
+| `size` | `number` | Overall size preset or pixel value, depending on the widget. |
+| `padding` | `Padding` | Space inside the widget, between its content and its border. |
+| `margin` | `Margin` | Space outside the widget, between it and its neighbors. |
+| `bgColor` | `Color` | Background color. Alias: `backgroundColor`. |
+| `color` | `Color` | Foreground color, usually the text or icon color. |
+| `borderRadius` | `number \| string` | Rounds the corners of the widget. |
+| `elevation` | `number` | Shadow depth. Higher values lift the widget off the page. |
+| `shadow` | `string` | Raw CSS `box-shadow` value, for a custom shadow. |
+| `opacity` | `number` | Opacity from 0 (invisible) to 1 (fully opaque). |
+| `visible` | `boolean` | Whether the widget is rendered and visible. |
+| `disabled` | `boolean` | Disables interaction and shows the non-interactive state. |
+| `onPress` | `(widget: Widget) => void` | Callback fired when the widget is pressed. Alias: `onClick`. |
+| `onClick` | `(widget: Widget) => void` | Callback fired when the widget is clicked. Alias: `onPress`. |
+| `id` | `string` | DOM `id` for the rendered element. |
+| `className` | `string` | CSS class names applied to the rendered element. |
+| `ref` | `(widget: Widget) => void` | Callback that receives the underlying DOM node. |
+| `disableTransform` | `boolean` | Disables the default press/scale transform animation. |
 
-A prop is simply an instruction inside the object passed to the widget. The name tells FletBox what to change, and the value tells it how to change it.
+## Examples
+
+### Everyday
 
 ```javascript
-Dropdown({
-    padding: 16,              // space inside the widget
-    margin: "8px 0",         // space outside the widget
-    bgColor: "#eff6ff",      // background color
-    width: "100%",           // CSS size or a number of pixels
-    children: [],             // widgets placed inside it
-    onPress: () => {         // what to do after a press
-        console.log("Hello");
-    },
+import { Dropdown } from "flet-box";
+
+const role = Dropdown({
+  label: "Role",
+  options: ["Admin", "Editor", "Viewer"],
+  value: "Editor",
+  onChange: (value) => console.log("role:", value),
 });
 ```
 
-You do not need to use every prop. Begin with the required props, then add optional props only when you need them.
-
-## Example usage
+### Full
 
 ```javascript
-import { Dropdown, Text } from "flet-box";
+import { Dropdown } from "flet-box";
 
-const example = Dropdown({
-  value: 1,
-  child: Text({ text: "Example" })
+const country = Dropdown({
+  label: "Country",
+  variant: "outlined",
+  size: "medium",
+  options: [
+    { value: "us", label: "United States" },
+    { value: "de", label: "Germany" },
+    { value: "jp", label: "Japan" },
+  ],
+  value: "de",
+  clearable: true,
+  portal: true,
+  borderRadius: 10,
+  bgColor: "#ffffff",
+  textColor: "#0f172a",
+  onChange: (value, label) => {
+    console.log("selected:", value, label);
+  },
 });
 ```
 
-## Examples from the FletBox snippet library
+## Tips
 
-The examples below come from the FletBox snippet library. The prop table is based on `src/index.d.ts`. When an example and the type declaration use different names, prefer the type declaration and verify the implementation.
-
-
-
-## Common layout and styling examples
-
-The following example shows how common FletBox props work together. Numeric spacing values are interpreted as pixels, while strings can use CSS units and shorthand values.
-
-```javascript
-import { Button, Column, Container, Row, Text } from "flet-box";
-
-const panel = Container({
-    width: "100%",          // number values are pixels; strings accept CSS units
-    padding: 24,            // 24px on every side
-    margin: "16px auto",   // CSS shorthand: vertical and horizontal spacing
-    bgColor: "#f8fafc",    // background color
-    borderRadius: 12,
-    elevation: 2,
-    gap: 12,
-    child: Column({
-        children: [
-            Text({ text: "Account settings", size: 24, weight: "bold" }),
-            Row({
-                gap: 8,
-                justifyContent: "space-between",
-                children: [
-                    Text({ text: "Update your profile" }),
-                    Button({
-                        text: "Save",
-                        bgColor: "#2563eb",
-                        color: "#ffffff",
-                        onPress: () => console.log("saved"),
-                    }),
-                ],
-            }),
-        ],
-    }),
-});
-```
-
-### Common prop quick reference
-
-- `padding: 24` adds `24px` inside the widget on all sides.
-- `padding: "8px 16px"` uses CSS shorthand for vertical and horizontal spacing.
-- `margin: "16px auto"` adds outside spacing and can center a fixed-width element.
-- `bgColor: "#f8fafc"` sets the background color. Color tokens and CSS colors can be used.
-- `color: "#111827"` sets the foreground or text color when supported.
-- `width: 320` means `320px`; `width: "100%"` uses a CSS percentage.
-- `children` is an array of widgets; `child` is useful when a component accepts one child.
-- `gap: 12` controls the space between children in layout widgets.
-- `onPress` and `onClick` receive event callbacks for interactive behavior.
-
-## Beginner tips
-
-- Change one value at a time so you can see what each prop does.
-- Use `Text` to check that your layout is in the place you expect.
-- Use `Container` for a box, `Row` for items side by side, and `Column` for items one below another.
-- Use `padding` when content needs breathing room inside a box.
-- Use `margin` when you need space between this widget and its neighbors.
-- Use `bgColor` to make the boundaries of a box easy to see while learning.
-- If a prop is optional, leaving it out lets FletBox use its default behavior.
-
-## Common mistakes
-
-- Do not put plain text where a widget is expected unless the widget explicitly accepts strings.
-- Use `children: [ ... ]` for several child widgets and `child: widget` for one child when the widget supports both.
-- Check spelling carefully: `onPress`, `onClick`, and `onChange` are different events.
-- If a helper such as `padding()` or `margin()` is not available in your import list, use a number or CSS string first.
-
-## Behavior notes
-- Integrates cleanly with FletBox runtime semantics and DOM rendering.
-- Can be nested inside layout widgets and combined with other components.
-- Uses the same direct prop and event conventions as the rest of the framework.
-- Keeps the API simple and readable for composing interfaces fast.
+- Pass objects with value/label when the value sent to onChange must differ from the text shown, such as an id versus a name.
+- Set clearable: true to give users an explicit way back to no selection.
 
 ## Accessibility
-- Prefer clear labels and readable text for interactive controls.
-- Respect the `disabled` state and keyboard behavior when available.
-- Keep state changes understandable for screen readers and assistive technology.
+
+- Supply the label prop so the trigger has a visible field name, and ensure the menu can be opened without a mouse.
+
+## Behavior
+
+- The option menu is portaled to document.body by default and repositions on scroll/resize; set portal: false to keep it inline.
+- The returned element exposes value, open(), close() and update(), and removes its listeners on unmount.
 
 ## Related widgets
-- `Container`
-- `Row`
-- `Column`
-- `Stack`
-- `Text`
-- `Button`
+
+- [Radio](Radio.md)
+- [Checkbox](Checkbox.md)
+- [Input](Input.md)
+
+---
+
+## Continue reading
+
+- **Previous:** [Slider](Slider.md)
+- **Next:** [Rating](Rating.md)
+- **Index:** [Widget index](README.md) · [Start here](START_HERE.md)
+
+You are reading **Chapter 2 · Interaction basics** (7 of 8).

@@ -1,196 +1,135 @@
 # Pagination
 
-## Overview
-`Pagination` is a ready-to-use building block. Think of it like a LEGO piece: give it some props, place it inside another widget, and FletBox creates the browser element for you.
+Pagination renders page controls derived from totalItems and pageSize, with optional first/last and prev/next buttons. It reports the chosen page through onPageChange.
 
-You do not need to write HTML or manually change the DOM to use this widget. You call the widget as a JavaScript function and pass an object between `{` and `}`.
+## When to use it
 
-## Learn it in one minute
+Use it under long lists or tables so users can move through paged results.
 
-1. Import the widget from `flet-box`.
-2. Call it with `WidgetName({ ... })`.
-3. Add props to describe its content, size, color, spacing, and behavior.
-4. Put it inside `Container`, `Row`, `Column`, or another widget.
+## Quick start
 
 ```javascript
-import { Column, Container, Text } from "flet-box";
+import { Pagination } from "flet-box";
 
-const welcomeCard = Container({
-    padding: 20,
-    margin: 16,
-    bgColor: "#ffffff",
-    borderRadius: 12,
-    child: Column({
-        gap: 8,
-        children: [
-            Text({ text: "My first FletBox screen", size: 24, weight: "bold" }),
-            Text({ text: "Widgets are small building blocks. Put them inside each other to build a screen." }),
-        ],
-    }),
+const pages = Pagination({
+  totalItems: 100,
+  pageSize: 10,
+  onPageChange: (page) => console.log(page),
 });
 ```
 
-## When to use
-Use `Pagination` when you need this kind of interface element. Start with the smallest example, then add one prop at a time. You can copy the example, change the text or color, and see the result immediately.
+> The prop table is generated from `src/index.d.ts`; the examples use only documented props.
 
-## Common props
+## Props
 
-- `children` / `child`: content rendered inside the widget.
-- `id`: DOM id for the element.
-- `className`: CSS class names applied to the element.
-- `ref`: callback that receives the underlying DOM node.
-- `onClick` / event handlers: native browser event callbacks.
-- `disabled`: disables interaction when supported.
+| Prop | Type | Description |
+| --- | --- | --- |
+| `totalItems` | `number` | Total number of items to paginate. |
+| `pageSize` | `number` | Number of items per page. |
+| `currentPage` | `number` | Currently active page. |
+| `onPageChange` | `(page: number) => void` | Fired with the new page number. |
+| `showFirstLast` | `boolean` | Shows first and last page buttons. |
+| `showPrevNext` | `boolean` | Shows previous and next page buttons. |
+| `maxButtons` | `number` | Maximum number of page buttons before truncation. |
+| `variant` | `'outlined' \| 'filled' \| 'text'` | Visual variation or style preset. |
+| `color` | `Color` | Foreground color, usually the text or icon color. |
+| `size` | `'small' \| 'medium' \| 'large'` | Overall size preset or pixel value, depending on the widget. |
+| `disabled` | `boolean` | Disables interaction and shows the non-interactive state. |
+| `showTotal` | `boolean` | Controls whether the total is shown. |
+| `label` | `string` | Label or caption shown near the control. |
 
-## Full prop list
+### Common props
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `width` | `Size` | - | Property used by the Pagination component. |
-| `height` | `Size` | - | Property used by the Pagination component. |
-| `size` | `number` | - | Component size or preset. |
-| `padding` | `Padding` | - | Internal spacing around the component. |
-| `margin` | `Margin` | - | External spacing around the component. |
-| `bgColor` | `Color` | - | Background color applied to the element. |
-| `color` | `Color` | - | Color value or theme token. |
-| `borderRadius` | `number \| string` | - | Property used by the Pagination component. |
-| `elevation` | `number` | - | Property used by the Pagination component. |
-| `shadow` | `string` | - | Property used by the Pagination component. |
-| `opacity` | `number` | - | Property used by the Pagination component. |
-| `visible` | `boolean` | false | Property used by the Pagination component. |
-| `disabled` | `boolean` | false | Disables interaction and shows the non-interactive state. |
-| `onPress` | `(widget: Widget) => void` | - | Callback fired when the widget is pressed. |
-| `onClick` | `(widget: Widget) => void` | - | Property used by the Pagination component. |
-| `id` | `string` | - | Property used by the Pagination component. |
-| `className` | `string` | - | Property used by the Pagination component. |
-| `ref` | `(widget: Widget) => void` | - | Property used by the Pagination component. |
-| `disableTransform` | `boolean` | - | Property used by the Pagination component. |
-| `totalItems` | `number` | - | Property used by the Pagination component. |
-| `pageSize` | `number` | - | Property used by the Pagination component. |
-| `currentPage` | `number` | - | Property used by the Pagination component. |
-| `onPageChange` | `(page: number) => void` | - | Property used by the Pagination component. |
-| `showFirstLast` | `boolean` | false | Property used by the Pagination component. |
-| `showPrevNext` | `boolean` | false | Property used by the Pagination component. |
-| `maxButtons` | `number` | - | Property used by the Pagination component. |
-| `variant` | `'outlined' \| 'filled' \| 'text'` | - | Visual variation or style preset. |
-| `showTotal` | `boolean` | false | Property used by the Pagination component. |
-| `label` | `string` | - | Label or caption shown near the control. |
+Every widget also accepts these shared props — see [common props](COMMON_PROPS.md) for the full rules and aliases.
 
-## How props work
+| Prop | Type | Description |
+| --- | --- | --- |
+| `width` | `Size` | Width of the widget. A number is pixels; a string uses any CSS unit. |
+| `height` | `Size` | Height of the widget. A number is pixels; a string uses any CSS unit. |
+| `size` | `number` | Overall size preset or pixel value, depending on the widget. |
+| `padding` | `Padding` | Space inside the widget, between its content and its border. |
+| `margin` | `Margin` | Space outside the widget, between it and its neighbors. |
+| `bgColor` | `Color` | Background color. Alias: `backgroundColor`. |
+| `color` | `Color` | Foreground color, usually the text or icon color. |
+| `borderRadius` | `number \| string` | Rounds the corners of the widget. |
+| `elevation` | `number` | Shadow depth. Higher values lift the widget off the page. |
+| `shadow` | `string` | Raw CSS `box-shadow` value, for a custom shadow. |
+| `opacity` | `number` | Opacity from 0 (invisible) to 1 (fully opaque). |
+| `visible` | `boolean` | Whether the widget is rendered and visible. |
+| `disabled` | `boolean` | Disables interaction and shows the non-interactive state. |
+| `onPress` | `(widget: Widget) => void` | Callback fired when the widget is pressed. Alias: `onClick`. |
+| `onClick` | `(widget: Widget) => void` | Callback fired when the widget is clicked. Alias: `onPress`. |
+| `id` | `string` | DOM `id` for the rendered element. |
+| `className` | `string` | CSS class names applied to the rendered element. |
+| `ref` | `(widget: Widget) => void` | Callback that receives the underlying DOM node. |
+| `disableTransform` | `boolean` | Disables the default press/scale transform animation. |
 
-A prop is simply an instruction inside the object passed to the widget. The name tells FletBox what to change, and the value tells it how to change it.
+## Examples
+
+### Everyday
 
 ```javascript
-Pagination({
-    padding: 16,              // space inside the widget
-    margin: "8px 0",         // space outside the widget
-    bgColor: "#eff6ff",      // background color
-    width: "100%",           // CSS size or a number of pixels
-    children: [],             // widgets placed inside it
-    onPress: () => {         // what to do after a press
-        console.log("Hello");
-    },
+import { Pagination } from "flet-box";
+
+const pages = Pagination({
+  totalItems: 248,
+  pageSize: 20,
+  currentPage: 1,
+  showPrevNext: true,
+  showFirstLast: true,
+  onPageChange: (page) => loadPage(page),
 });
 ```
 
-You do not need to use every prop. Begin with the required props, then add optional props only when you need them.
-
-## Example usage
+### Full
 
 ```javascript
-import { Pagination, Text } from "flet-box";
+import { Pagination } from "flet-box";
 
-const example = Pagination({
-  child: Text({ text: "Example" })
+const pages = Pagination({
+  totalItems: 512,
+  pageSize: 25,
+  currentPage: 4,
+  maxButtons: 7,
+  variant: "filled",
+  size: "medium",
+  showFirstLast: true,
+  showPrevNext: true,
+  showTotal: true,
+  label: "Rows",
+  color: "#2563eb",
+  onPageChange: (page) => loadPage(page),
 });
 ```
 
-## Examples from the FletBox snippet library
+## Tips
 
-The examples below come from the FletBox snippet library. The prop table is based on `src/index.d.ts`. When an example and the type declaration use different names, prefer the type declaration and verify the implementation.
-
-
-
-## Common layout and styling examples
-
-The following example shows how common FletBox props work together. Numeric spacing values are interpreted as pixels, while strings can use CSS units and shorthand values.
-
-```javascript
-import { Button, Column, Container, Row, Text } from "flet-box";
-
-const panel = Container({
-    width: "100%",          // number values are pixels; strings accept CSS units
-    padding: 24,            // 24px on every side
-    margin: "16px auto",   // CSS shorthand: vertical and horizontal spacing
-    bgColor: "#f8fafc",    // background color
-    borderRadius: 12,
-    elevation: 2,
-    gap: 12,
-    child: Column({
-        children: [
-            Text({ text: "Account settings", size: 24, weight: "bold" }),
-            Row({
-                gap: 8,
-                justifyContent: "space-between",
-                children: [
-                    Text({ text: "Update your profile" }),
-                    Button({
-                        text: "Save",
-                        bgColor: "#2563eb",
-                        color: "#ffffff",
-                        onPress: () => console.log("saved"),
-                    }),
-                ],
-            }),
-        ],
-    }),
-});
-```
-
-### Common prop quick reference
-
-- `padding: 24` adds `24px` inside the widget on all sides.
-- `padding: "8px 16px"` uses CSS shorthand for vertical and horizontal spacing.
-- `margin: "16px auto"` adds outside spacing and can center a fixed-width element.
-- `bgColor: "#f8fafc"` sets the background color. Color tokens and CSS colors can be used.
-- `color: "#111827"` sets the foreground or text color when supported.
-- `width: 320` means `320px`; `width: "100%"` uses a CSS percentage.
-- `children` is an array of widgets; `child` is useful when a component accepts one child.
-- `gap: 12` controls the space between children in layout widgets.
-- `onPress` and `onClick` receive event callbacks for interactive behavior.
-
-## Beginner tips
-
-- Change one value at a time so you can see what each prop does.
-- Use `Text` to check that your layout is in the place you expect.
-- Use `Container` for a box, `Row` for items side by side, and `Column` for items one below another.
-- Use `padding` when content needs breathing room inside a box.
-- Use `margin` when you need space between this widget and its neighbors.
-- Use `bgColor` to make the boundaries of a box easy to see while learning.
-- If a prop is optional, leaving it out lets FletBox use its default behavior.
-
-## Common mistakes
-
-- Do not put plain text where a widget is expected unless the widget explicitly accepts strings.
-- Use `children: [ ... ]` for several child widgets and `child: widget` for one child when the widget supports both.
-- Check spelling carefully: `onPress`, `onClick`, and `onChange` are different events.
-- If a helper such as `padding()` or `margin()` is not available in your import list, use a number or CSS string first.
-
-## Behavior notes
-- Integrates cleanly with FletBox runtime semantics and DOM rendering.
-- Can be nested inside layout widgets and combined with other components.
-- Uses the same direct prop and event conventions as the rest of the framework.
-- Keeps the API simple and readable for composing interfaces fast.
+- Provide totalItems and pageSize; the number of pages is computed for you.
+- Control the active page with currentPage and update it inside onPageChange.
+- Use maxButtons to limit how many page buttons appear before they collapse.
 
 ## Accessibility
-- Prefer clear labels and readable text for interactive controls.
-- Respect the `disabled` state and keyboard behavior when available.
-- Keep state changes understandable for screen readers and assistive technology.
+
+- Ensure the current page is distinguishable and that controls are reachable by keyboard.
+- Pair pagination with a visible total by enabling showTotal so users know how much data exists.
+
+## Behavior
+
+- Pages are recalculated whenever totalItems, pageSize or currentPage change.
+- onPageChange fires with the new page number when the user navigates.
 
 ## Related widgets
-- `Container`
-- `Row`
-- `Column`
-- `Stack`
-- `Text`
-- `Button`
+
+- [DataTable](DataTable.md)
+- [ListView](ListView.md)
+- [Button](Button.md)
+
+---
+
+## Continue reading
+
+- **Previous:** [FloatingActionButton](FloatingActionButton.md)
+- **Next:** [Stepper](Stepper.md)
+- **Index:** [Widget index](README.md) · [Start here](START_HERE.md)
+
+You are reading **Chapter 4 · Feedback and overlays** (10 of 10).

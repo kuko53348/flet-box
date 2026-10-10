@@ -1,225 +1,175 @@
 # Markdown
 
-## Overview
-`Markdown` is a ready-to-use building block. Think of it like a LEGO piece: give it some props, place it inside another widget, and FletBox creates the browser element for you.
+Renders markdown source as styled HTML with scoped CSS, syntax-highlighted code blocks, copy buttons, tables, and blockquotes inside a scrollable surface.
 
-You do not need to write HTML or manually change the DOM to use this widget. You call the widget as a JavaScript function and pass an object between `{` and `}`.
+## When to use it
 
-## Learn it in one minute
+Use it for documentation, changelogs, readmes, or any user-facing text authored in Markdown.
 
-1. Import the widget from `flet-box`.
-2. Call it with `WidgetName({ ... })`.
-3. Add props to describe its content, size, color, spacing, and behavior.
-4. Put it inside `Container`, `Row`, `Column`, or another widget.
+## Quick start
 
 ```javascript
-import { Column, Container, Text } from "flet-box";
+import { Markdown } from "flet-box";
 
-const welcomeCard = Container({
-    padding: 20,
-    margin: 16,
-    bgColor: "#ffffff",
-    borderRadius: 12,
-    child: Column({
-        gap: 8,
-        children: [
-            Text({ text: "My first FletBox screen", size: 24, weight: "bold" }),
-            Text({ text: "Widgets are small building blocks. Put them inside each other to build a screen." }),
-        ],
-    }),
+const notes = Markdown({
+  content: `# Hello
+
+**FletBox** renders markdown.`,
 });
 ```
 
-## When to use
-Use `Markdown` when you need this kind of interface element. Start with the smallest example, then add one prop at a time. You can copy the example, change the text or color, and see the result immediately.
+> The prop table is generated from `src/index.d.ts`; the examples use only documented props.
 
-## Common props
+## Props
 
-- `children` / `child`: content rendered inside the widget.
-- `id`: DOM id for the element.
-- `className`: CSS class names applied to the element.
-- `ref`: callback that receives the underlying DOM node.
-- `onClick` / event handlers: native browser event callbacks.
-- `disabled`: disables interaction when supported.
+| Prop | Type | Description |
+| --- | --- | --- |
+| `text` | `string` | Visible text content. |
+| `source` | `string` | Markdown source string to render. |
+| `content` | `string` | Main content of the overlay. |
+| `children` | `string` | An array of child widgets. Alias: `child` for a single child. |
+| `fontSize` | `number` | Size of the font. |
+| `fontFamily` | `string` | The `fontFamily` value for the widget. |
+| `lineHeight` | `number` | Line height as a number multiplier or CSS value. |
+| `color` | `Color` | Foreground color, usually the text or icon color. |
+| `linkColor` | `Color` | Color of links in rendered markdown. |
+| `linkHoverColor` | `Color` | Color used for the link hover. |
+| `linkUnderline` | `boolean` | The `linkUnderline` value for the widget. |
+| `codeBgColor` | `Color` | Background color of inline code. |
+| `codeColor` | `Color` | Color used for the code. |
+| `codeFontSize` | `number` | Size of the code font. |
+| `codeFontFamily` | `string` | The `codeFontFamily` value for the widget. |
+| `codeBorderRadius` | `number` | Corner radius for the code. |
+| `codePadding` | `Padding` | Padding for the code. |
+| `preBgColor` | `Color` | Background color of code blocks. |
+| `preBorderRadius` | `number` | Corner radius for the pre. |
+| `prePadding` | `Padding` | Padding for the pre. |
+| `preMargin` | `Padding` | Margin for the pre. |
+| `blockquoteBorderColor` | `Color` | Border color for the blockquote. |
+| `blockquoteBorderWidth` | `number` | Border width for the blockquote. |
+| `blockquoteColor` | `Color` | Color used for the blockquote. |
+| `blockquotePadding` | `Padding` | Padding for the blockquote. |
+| `blockquoteMargin` | `Padding` | Margin for the blockquote. |
+| `tableBorderColor` | `Color` | Border color for the table. |
+| `tableHeaderBgColor` | `Color` | Background color for the table header. |
+| `tableCellPadding` | `Padding` | Padding for the table cell. |
+| `headingColor` | `Color` | Color of markdown headings. |
+| `headingMargin` | `Padding` | Margin for the heading. |
+| `listMargin` | `Padding` | Margin for the list. |
+| `listPadding` | `Padding` | Padding for the list. |
+| `listItemMargin` | `Padding` | Margin for the list item. |
+| `imageMaxWidth` | `string` | Width of the image max. |
+| `imageBorderRadius` | `number` | Corner radius for the image. |
+| `padding` | `Padding` | Space inside the widget, between its content and its border. |
+| `maxHeight` | `number` | Maximum height the widget may grow to. |
+| `overflow` | `string` | How overflowing content is handled (`hidden`, `auto`, `scroll`). |
+| `backgroundColor` | `Color` | Background color. Alias of `bgColor`. |
+| `borderRadius` | `number` | Rounds the corners of the widget. |
+| `allowDangerousHtml` | `boolean` | Allows raw HTML inside markdown output. |
 
-## Full prop list
+### Common props
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `width` | `Size` | - | Property used by the Markdown component. |
-| `height` | `Size` | - | Property used by the Markdown component. |
-| `size` | `number` | - | Component size or preset. |
-| `padding` | `Padding` | - | Internal spacing around the component. |
-| `margin` | `Margin` | - | External spacing around the component. |
-| `bgColor` | `Color` | - | Background color applied to the element. |
-| `color` | `Color` | - | Color value or theme token. |
-| `borderRadius` | `number \| string` | - | Property used by the Markdown component. |
-| `elevation` | `number` | - | Property used by the Markdown component. |
-| `shadow` | `string` | - | Property used by the Markdown component. |
-| `opacity` | `number` | - | Property used by the Markdown component. |
-| `visible` | `boolean` | false | Property used by the Markdown component. |
-| `disabled` | `boolean` | false | Disables interaction and shows the non-interactive state. |
-| `onPress` | `(widget: Widget) => void` | - | Callback fired when the widget is pressed. |
-| `onClick` | `(widget: Widget) => void` | - | Property used by the Markdown component. |
-| `id` | `string` | - | Property used by the Markdown component. |
-| `className` | `string` | - | Property used by the Markdown component. |
-| `ref` | `(widget: Widget) => void` | - | Property used by the Markdown component. |
-| `disableTransform` | `boolean` | - | Property used by the Markdown component. |
-| `text` | `string` | - | Visible text content rendered by the widget. |
-| `source` | `string` | - | Property used by the Markdown component. |
-| `content` | `string` | - | Markdown or rich content source. |
-| `children` | `string` | - | Property used by the Markdown component. |
-| `fontSize` | `number` | - | Property used by the Markdown component. |
-| `fontFamily` | `string` | - | Property used by the Markdown component. |
-| `lineHeight` | `number` | - | Property used by the Markdown component. |
-| `linkColor` | `Color` | - | Property used by the Markdown component. |
-| `linkHoverColor` | `Color` | - | Property used by the Markdown component. |
-| `linkUnderline` | `boolean` | false | Property used by the Markdown component. |
-| `codeBgColor` | `Color` | - | Property used by the Markdown component. |
-| `codeColor` | `Color` | - | Property used by the Markdown component. |
-| `codeFontSize` | `number` | - | Property used by the Markdown component. |
-| `codeFontFamily` | `string` | - | Property used by the Markdown component. |
-| `codeBorderRadius` | `number` | - | Property used by the Markdown component. |
-| `codePadding` | `Padding` | - | Property used by the Markdown component. |
-| `preBgColor` | `Color` | - | Property used by the Markdown component. |
-| `preBorderRadius` | `number` | - | Property used by the Markdown component. |
-| `prePadding` | `Padding` | - | Property used by the Markdown component. |
-| `preMargin` | `Padding` | - | Property used by the Markdown component. |
-| `blockquoteBorderColor` | `Color` | - | Property used by the Markdown component. |
-| `blockquoteBorderWidth` | `number` | - | Property used by the Markdown component. |
-| `blockquoteColor` | `Color` | - | Property used by the Markdown component. |
-| `blockquotePadding` | `Padding` | - | Property used by the Markdown component. |
-| `blockquoteMargin` | `Padding` | - | Property used by the Markdown component. |
-| `tableBorderColor` | `Color` | - | Property used by the Markdown component. |
-| `tableHeaderBgColor` | `Color` | - | Property used by the Markdown component. |
-| `tableCellPadding` | `Padding` | - | Property used by the Markdown component. |
-| `headingColor` | `Color` | - | Property used by the Markdown component. |
-| `headingMargin` | `Padding` | - | Property used by the Markdown component. |
-| `listMargin` | `Padding` | - | Property used by the Markdown component. |
-| `listPadding` | `Padding` | - | Property used by the Markdown component. |
-| `listItemMargin` | `Padding` | - | Property used by the Markdown component. |
-| `imageMaxWidth` | `string` | - | Property used by the Markdown component. |
-| `imageBorderRadius` | `number` | - | Property used by the Markdown component. |
-| `maxHeight` | `number` | - | Property used by the Markdown component. |
-| `overflow` | `string` | - | Property used by the Markdown component. |
-| `backgroundColor` | `Color` | - | Property used by the Markdown component. |
-| `allowDangerousHtml` | `boolean` | false | Property used by the Markdown component. |
+Every widget also accepts these shared props — see [common props](COMMON_PROPS.md) for the full rules and aliases.
 
-## How props work
+| Prop | Type | Description |
+| --- | --- | --- |
+| `width` | `Size` | Width of the widget. A number is pixels; a string uses any CSS unit. |
+| `height` | `Size` | Height of the widget. A number is pixels; a string uses any CSS unit. |
+| `size` | `number` | Overall size preset or pixel value, depending on the widget. |
+| `padding` | `Padding` | Space inside the widget, between its content and its border. |
+| `margin` | `Margin` | Space outside the widget, between it and its neighbors. |
+| `bgColor` | `Color` | Background color. Alias: `backgroundColor`. |
+| `color` | `Color` | Foreground color, usually the text or icon color. |
+| `borderRadius` | `number \| string` | Rounds the corners of the widget. |
+| `elevation` | `number` | Shadow depth. Higher values lift the widget off the page. |
+| `shadow` | `string` | Raw CSS `box-shadow` value, for a custom shadow. |
+| `opacity` | `number` | Opacity from 0 (invisible) to 1 (fully opaque). |
+| `visible` | `boolean` | Whether the widget is rendered and visible. |
+| `disabled` | `boolean` | Disables interaction and shows the non-interactive state. |
+| `onPress` | `(widget: Widget) => void` | Callback fired when the widget is pressed. Alias: `onClick`. |
+| `onClick` | `(widget: Widget) => void` | Callback fired when the widget is clicked. Alias: `onPress`. |
+| `id` | `string` | DOM `id` for the rendered element. |
+| `className` | `string` | CSS class names applied to the rendered element. |
+| `ref` | `(widget: Widget) => void` | Callback that receives the underlying DOM node. |
+| `disableTransform` | `boolean` | Disables the default press/scale transform animation. |
 
-A prop is simply an instruction inside the object passed to the widget. The name tells FletBox what to change, and the value tells it how to change it.
+## Examples
+
+### Everyday
 
 ```javascript
-Markdown({
-    padding: 16,              // space inside the widget
-    margin: "8px 0",         // space outside the widget
-    bgColor: "#eff6ff",      // background color
-    width: "100%",           // CSS size or a number of pixels
-    children: [],             // widgets placed inside it
-    onPress: () => {         // what to do after a press
-        console.log("Hello");
-    },
+import { Markdown } from "flet-box";
+
+const readme = Markdown({
+  content: `# Getting started
+
+Edit the **props** and render.`,
+  fontSize: 15,
+  lineHeight: 1.7,
+  linkColor: "#2563eb",
 });
 ```
 
-You do not need to use every prop. Begin with the required props, then add optional props only when you need them.
-
-## Example usage
+### Full
 
 ```javascript
-import { Markdown, Text } from "flet-box";
+import { Markdown } from "flet-box";
 
-const example = Markdown({
-  child: Text({ text: "Example" })
+const guide = Markdown({
+  content: `# Guide
+
+- Install FletBox
+- Write declarative UI`,
+  fontSize: 16,
+  lineHeight: 1.8,
+  color: "#1f2937",
+  linkColor: "#2563eb",
+  codeBgColor: "#f3f4f6",
+  preBgColor: "#111827",
+  preBorderRadius: 8,
+  blockquoteBorderColor: "#e5e7eb",
+  tableHeaderBgColor: "#f9fafb",
+  headingColor: "#111827",
+  padding: 16,
+  borderRadius: 12,
+  backgroundColor: "#ffffff",
+  maxHeight: 480,
+  overflow: "auto",
 });
 ```
 
-## Examples from the FletBox snippet library
+## Tips
 
-The examples below come from the FletBox snippet library. The prop table is based on `src/index.d.ts`. When an example and the type declaration use different names, prefer the type declaration and verify the implementation.
-
-
-
-## Common layout and styling examples
-
-The following example shows how common FletBox props work together. Numeric spacing values are interpreted as pixels, while strings can use CSS units and shorthand values.
-
-```javascript
-import { Button, Column, Container, Row, Text } from "flet-box";
-
-const panel = Container({
-    width: "100%",          // number values are pixels; strings accept CSS units
-    padding: 24,            // 24px on every side
-    margin: "16px auto",   // CSS shorthand: vertical and horizontal spacing
-    bgColor: "#f8fafc",    // background color
-    borderRadius: 12,
-    elevation: 2,
-    gap: 12,
-    child: Column({
-        children: [
-            Text({ text: "Account settings", size: 24, weight: "bold" }),
-            Row({
-                gap: 8,
-                justifyContent: "space-between",
-                children: [
-                    Text({ text: "Update your profile" }),
-                    Button({
-                        text: "Save",
-                        bgColor: "#2563eb",
-                        color: "#ffffff",
-                        onPress: () => console.log("saved"),
-                    }),
-                ],
-            }),
-        ],
-    }),
-});
-```
-
-### Common prop quick reference
-
-- `padding: 24` adds `24px` inside the widget on all sides.
-- `padding: "8px 16px"` uses CSS shorthand for vertical and horizontal spacing.
-- `margin: "16px auto"` adds outside spacing and can center a fixed-width element.
-- `bgColor: "#f8fafc"` sets the background color. Color tokens and CSS colors can be used.
-- `color: "#111827"` sets the foreground or text color when supported.
-- `width: 320` means `320px`; `width: "100%"` uses a CSS percentage.
-- `children` is an array of widgets; `child` is useful when a component accepts one child.
-- `gap: 12` controls the space between children in layout widgets.
-- `onPress` and `onClick` receive event callbacks for interactive behavior.
-
-## Beginner tips
-
-- Change one value at a time so you can see what each prop does.
-- Use `Text` to check that your layout is in the place you expect.
-- Use `Container` for a box, `Row` for items side by side, and `Column` for items one below another.
-- Use `padding` when content needs breathing room inside a box.
-- Use `margin` when you need space between this widget and its neighbors.
-- Use `bgColor` to make the boundaries of a box easy to see while learning.
-- If a prop is optional, leaving it out lets FletBox use its default behavior.
-
-## Common mistakes
-
-- Do not put plain text where a widget is expected unless the widget explicitly accepts strings.
-- Use `children: [ ... ]` for several child widgets and `child: widget` for one child when the widget supports both.
-- Check spelling carefully: `onPress`, `onClick`, and `onChange` are different events.
-- If a helper such as `padding()` or `margin()` is not available in your import list, use a number or CSS string first.
-
-## Behavior notes
-- Integrates cleanly with FletBox runtime semantics and DOM rendering.
-- Can be nested inside layout widgets and combined with other components.
-- Uses the same direct prop and event conventions as the rest of the framework.
-- Keeps the API simple and readable for composing interfaces fast.
+- text, source, and content are interchangeable aliases for the markdown source.
+- Tune the palette with the per-instance props (codeBgColor, preBgColor, linkColor),
+- and set maxHeight with overflow to keep long pages scrollable.
+- Code blocks are syntax-highlighted and get a one-click copy action out of the box.
 
 ## Accessibility
-- Prefer clear labels and readable text for interactive controls.
-- Respect the `disabled` state and keyboard behavior when available.
-- Keep state changes understandable for screen readers and assistive technology.
+
+- Keep link text descriptive; rendered links stay real anchors that the keyboard can
+- tab to.
+- Heading levels map to real h1-h6 elements, so keep the document hierarchy sensible.
+
+## Behavior
+
+- Generated styles are scoped to each instance, so several Markdown blocks never leak
+- CSS into each other.
+- Rendered HTML is sanitized before insert; allowDangerousHtml stays false by default
+- for untrusted input.
 
 ## Related widgets
-- `Container`
-- `Row`
-- `Column`
-- `Stack`
-- `Text`
-- `Button`
+
+- [Text](Text.md)
+- [CodeViewer](CodeViewer.md)
+- [Card](Card.md)
+
+---
+
+## Continue reading
+
+- **Previous:** [CircularChart](CircularChart.md)
+- **Next:** [CodeViewer](CodeViewer.md)
+- **Index:** [Widget index](README.md) · [Start here](START_HERE.md)
+
+You are reading **Chapter 6 · Data, rich content & effects** (4 of 13).
