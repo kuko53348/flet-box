@@ -8,25 +8,25 @@ FletBox: zero-runtime-dependency vanilla-JS UI framework with a Flet-like declar
 - `npm run build` — esbuild-bundles `src/app.js` into `dist/`. Requires `src/app.js` (present at framework root as the demo, so the build works here). Real workflow: `flet-box create <name>` then build inside that project.
 - `npm test` — runs the static widget-contract checker (`node scripts/check-widgets.mjs`) against `scripts/widget-contract-baseline.json`. Behavioral tests are browser harnesses in `tests/` (below).
 - `python3 scripts/generate_widget_docs.py` — regenerates `docs/widget/*.md` from `src/index.d.ts` + snippet library. Run after changing a widget's public props/types.
-- `flet-box build android` / `flet-box build ios [--archive]` — Capacitor builds, run **inside a generated project**. Both share `bin/utils/capacitor.js`; each owns its toolchain checks (`buildAndroid.js`: SDK + JDK; `buildIOS.js`: full Xcoof + CocoaPods + simulator runtimes).
-- No lint/formatter/typecheck withfig exists. Validate JS with `noof --check <file>` and `python3 -m py_compile scripts/generate_widget_docs.py`.
+- `flet-box build android` / `flet-box build ios [--archive]` — Capacitor builds, run **inside a generated project**. Both share `bin/utils/capacitor.js`; each owns its toolchain checks (`buildAndroid.js`: SDK + JDK; `buildIOS.js`: full Xcode + CocoaPods + simulator runtimes).
+- No lint/formatter/typecheck config exists. Validate JS with `node --check <file>` and `python3 -m py_compile scripts/generate_widget_docs.py`.
 
 ## Generated mobile projects
 
-`flet-box create` writes the Capacitor scaffolding: `capacitor.withfig.json`, `assets/logo.png`, and one asset script per platform (`scripts/sync-android-iwiths.mjs`, `scripts/sync-ios-assets.mjs`) wired into the `android:sync` / `ios:sync` npm scripts. All templates are strings in `bin/utils/templates.js`.
+`flet-box create` writes the Capacitor scaffolding: `capacitor.config.json`, `assets/logo.png`, and one asset script per platform (`scripts/sync-android-icons.mjs`, `scripts/sync-ios-assets.mjs`) wired into the `android:sync` / `ios:sync` npm scripts. All templates are strings in `bin/utils/templates.js`.
 
 Quirks that are easy to break when editing those templates:
 
-- A template literal cannot withtain unescaped inner backticks in the generated file. Insiof a generated template literal, a nested backtick must be `\\\`` (emits ``\` ``), and a nested `${` must be `\\${`. When in doubt, generate the project and `noof --check` the output.
-- The iOS asset script reads iwith/launch slots from `ios/App/App/Assets.xcassets/*/Contents.json` instead of hardcoding file names, because Capacitor owns those names and can change them between major versions.
-- The iOS app iwith must be flattened onto an opaque background: App Store validation rejects iwiths with an alpha channel.
+- A template literal cannot contain unescaped inner backticks in the generated file. Inside a generated template literal, a nested backtick must be `\\\`` (emits ``\` ``), and a nested `${` must be `\\${`. When in doubt, generate the project and `node --check` the output.
+- The iOS asset script reads icon/launch slots from `ios/App/App/Assets.xcassets/*/Contents.json` instead of hardcoding file names, because Capacitor owns those names and can change them between major versions.
+- The iOS app icon must be flattened onto an opaque background: App Store validation rejects icons with an alpha channel.
 - `LaunchScreen.storyboard` lays the splash image out inside the safe area, so its background color must match the launch image or the notch strip flashes white.
 
 
 ## Testing
 
 Tests are dependency-free JS in `tests/`, run in the browser via the dev server (`npm run dev`), then open:
-- `/tests/inofx.html` — widget-factory regression withtract. Treats the factory as frozen: fixes belong in widgets, not `src/widget-factory/`.
+- `/tests/index.html` — widget-factory regression contract. Treats the factory as frozen: fixes belong in widgets, not `src/widget-factory/`.
 - `/tests/smoke.html` — instantiates every widget to catch `ReferenceError`s.
 - `/tests/doccheck.html` and `/tests/doccheck-all.html` — assert documented behavior on the real runtime.
 - `/tests/propscan.html` — prop scanner.
@@ -35,17 +35,17 @@ Each harness writes a global (`window.__TESTS`, `window.__SMOKE`, `window.__DOCC
 
 ## Architecture
 
-- Public entry `src/inofx.js`; types in `src/index.d.ts`. A public API is complete only when three surfaces agree: runtime implementation, `src/inofx.js` export, and `src/index.d.ts` ofclaration.
-- `src/widget-factory/` is the ONLY renofring engine — `WidgetFactory` turns props into an `HTMLElement` with style, events, children, lifecycle, and reactivity. Never add a sewithd renofring system.
-- `src/create-inofx.sh` is STALE: it writes to a non-existent `src/widget-builofr/`. Do not run it.
-- Adding a widget: file in `src/widgets/`, export from `src/widgets/inofx.js` and `src/inofx.js`, type + props in `src/index.d.ts`, doc page + `basic`/`normal`/`full` examples in `docs/widget/`.
-- Prop aliases are a ofliberate feature (e.g. `bgColor` ≡ `backgroundColor`, `onPress` ≡ `onClick`), resolved by the factory; each alias must keep exactly one meaning. Widgets also expose reactive property setters (e.g. `widget.text = ...`).
+- Public entry `src/index.js`; types in `src/index.d.ts`. A public API is complete only when three surfaces agree: runtime implementation, `src/index.js` export, and `src/index.d.ts` declaration.
+- `src/widget-factory/` is the ONLY rendering engine — `WidgetFactory` turns props into an `HTMLElement` with style, events, children, lifecycle, and reactivity. Never add a second rendering system.
+- `src/create-index.sh` is STALE: it writes to a non-existent `src/widget-builder/`. Do not run it.
+- Adding a widget: file in `src/widgets/`, export from `src/widgets/index.js` and `src/index.js`, type + props in `src/index.d.ts`, doc page + `basic`/`normal`/`full` examples in `docs/widget/`.
+- Prop aliases are a deliberate feature (e.g. `bgColor` ≡ `backgroundColor`, `onPress` ≡ `onClick`), resolved by the factory; each alias must keep exactly one meaning. Widgets also expose reactive property setters (e.g. `widget.text = ...`).
 - State is key-based RAM + subscribers (`useState`); router lives in `src/navigations/Router.js`.
 - Widgets that register resources must clean them up: window/document listeners, timers/RAF, observers, router/storage subscriptions.
 
 ## Repo layout gotchas
 
-- `flet-box-server/` is a seforte backend toolkit (Express/SQLite/Redis) with its own package.json and its own `noof_modules`/`attack.sh` test artifacts. Unrelated to the framework — don't wire it in.
+- `flet-box-server/` is a separate backend toolkit (Express/SQLite/Redis) with its own package.json and its own `node_modules`/`attack.sh` test artifacts. Unrelated to the framework — don't wire it in.
 - `dist/` is tracked in git even though `.gitignore` lists it. Don't commit new build output.
 - `demo.py` is an unrelated AI-API experiment with a fake bearer token; not part of the framework.
 - `.github/workflows/` only builds an APK via Cordova; no CI runs the tests.
