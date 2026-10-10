@@ -6,7 +6,7 @@
 
 <b>Ship web, PWA, Android &amp; iOS from one codebase — with zero runtime dependencies.</b><br>
 A declarative, Flutter/Flet-like UI framework in plain vanilla JavaScript.<br>
-Real DOM · No Virtual DOM · No build step to learn.
+Real DOM · No Virtual DOM · No build config to learn.
 
 <br>
 
@@ -16,16 +16,15 @@ Real DOM · No Virtual DOM · No build step to learn.
 <br><br>
 
 <a href="https://github.com/kuko53348/flet-box/blob/HEAD/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square" alt="License: MIT"></a>
-<a href="https://www.npmjs.com/package/flet-box"><img src="https://img.shields.io/npm/v/flet-box.svg?style=flat-square&logo=npm" alt="npm version"></a>
 <img src="https://img.shields.io/badge/dependencies-0-brightgreen?style=flat-square" alt="Zero dependencies">
 <img src="https://img.shields.io/badge/platforms-web%20%7C%20PWA%20%7C%20android%20%7C%20ios-007acc?style=flat-square" alt="Platforms">
 <a href="https://github.com/kuko53348/flet-box"><img src="https://img.shields.io/github/stars/kuko53348/flet-box?style=social" alt="GitHub stars"></a>
 
 <br><br>
 
+<a href="https://kuko53348.github.io/flet-box-docs/">📖 Docs</a> •
 <a href="#quick-start">Quick start</a> •
 <a href="https://www.youtube.com/@flet-box">▶ YouTube</a> •
-<a href="#documentation">Docs</a> •
 <a href="#support--sponsorship">❤️ Sponsor</a>
 
 </div>
@@ -35,6 +34,23 @@ Real DOM · No Virtual DOM · No build step to learn.
 **Stop paying the framework tax.** FletBox has no runtime dependencies, no Virtual DOM, and nothing to install beyond Node. Write widgets in the syntax you already know — plain JavaScript — and deploy to browser, PWA, Android, and iOS from the same source.
 
 > ▶ **Learn it on YouTube:** [@flet-box](https://www.youtube.com/@flet-box) — tutorials, walkthroughs, and new widgets.
+
+## Installation
+
+FletBox isn't on the npm registry, so clone it and link the CLI locally:
+
+```bash
+brew install node                 # macOS/Linux: ensure Node >= 18
+
+git clone https://github.com/kuko53348/flet-box.git
+cd flet-box
+npm link                          # link the flet-box CLI globally
+
+flet-box create appName           # scaffold your first app
+cd appName
+npm link flet-box                 # link FletBox into the new project
+flet-box run-spa                  # run as SPA with hot reload
+```
 
 ## Quick start
 
@@ -60,22 +76,6 @@ const App = () => {
 runApp(App);
 ```
 
-## Installation
-
-```bash
-brew install node                 # macOS/Linux: ensure Node >= 18
-
-git clone https://github.com/kuko53348/flet-box.git
-cd flet-box
-npm link                          # link the flet-box CLI globally
-
-flet-box create appName           # scaffold your first app
-cd appName
-npm link flet-box
-
-flet-box run-spa                  # run as SPA with hot reload
-```
-
 ## Features
 
 - Declarative, widget-based UI · reactive state with `useState` · router for SPAs
@@ -87,14 +87,14 @@ flet-box run-spa                  # run as SPA with hot reload
 ## Commands
 
 ```bash
-npm run dev . . . . . . . . . . # dev server on port 8000
-npm run build . . . . . . . . . # production bundle with esbuild
+npm run dev        # dev server on port 8000
+npm run build      # production bundle with esbuild
 
 # inside a generated project
-flet-box createBundle www . . . # bundle the app into www/
-flet-box build android . . . . . # Android debug APK
-flet-box build ios . . . . . . . # iOS Simulator app (macOS + Xcode)
-flet-box build ios --archive . . # unsigned iOS archive, sign in Xcode
+flet-box createBundle www      # bundle the app into www/
+flet-box build android         # Android debug APK
+flet-box build ios             # iOS Simulator app (macOS + Xcode)
+flet-box build ios --archive   # unsigned iOS archive, sign in Xcode
 ```
 
 ## Android and iOS
@@ -116,7 +116,9 @@ Full guide, including manual `npx cap` workflows: [Mobile and platforms](docs/gu
 
 ## Documentation
 
-The docs are **one continuous book** — the cover maps every page: [The FletBox Book](docs/README.md).
+Read the docs online: **[The FletBox Book — kuko53348.github.io/flet-box-docs](https://kuko53348.github.io/flet-box-docs/)**.
+
+They are **one continuous book** — the cover maps every page: [The FletBox Book source](docs/README.md).
 
 - [Your first app](docs/guides/first-app.md) — build a working todo app in 20 minutes
 - [The widget book](docs/widget/README.md) — every widget with property tables and examples
