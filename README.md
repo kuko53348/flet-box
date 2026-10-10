@@ -187,6 +187,23 @@ A map of how FletBox is organized internally — the widget contract, the single
 rendering engine, and how the docs stay in sync:
 [Architecture](docs/arquitectura.md).
 
+## Support & sponsorship
+
+FletBox is MIT-licensed and free forever. If it saves you time and you want to
+help keep it going, you can support the project in any of these ways:
+
+- **GitHub Sponsors** (recurring or one-time, supports the framework directly):
+  [github.com/sponsors/kuko53348](https://github.com/sponsors/kuko53348)
+- **Crypto donation** (Polygon / MATIC-POL) to the maintainer:
+  `0x6d437bB66af8d2c44670eA18F059BE1417Dcd7bA`
+- **Personal / commercial support, consulting or priority help:** email
+  [kuko53348@gmail.com](mailto:kuko53348@gmail.com)
+
+Living in Cuba makes traditional payment platforms like Mastercard hard to
+access, so crypto support is especially helpful. Every contribution — a sponsor
+tier, a donation, or simply starring the repo and spreading the word — keeps
+FletBox growing.
+
 ## License
 
 MIT — free for everyone to use, modify, redistribute, and build commercial
