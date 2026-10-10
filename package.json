@@ -1,6 +1,6 @@
 {
   "name": "flet-box",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Ultra-lightweight UI framework for vanilla JS web apps",
   "type": "module",
   "main": "src/index.js",
@@ -28,6 +28,14 @@
   ],
   "author": "Maenys Javier Quesada Reyes <kuko53348@gmail.com>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kuko53348/flet-box.git"
+  },
+  "homepage": "https://github.com/kuko53348/flet-box#readme",
+  "bugs": {
+    "url": "https://github.com/kuko53348/flet-box/issues"
+  },
   "devDependencies": {
     "chokidar": "^4.0.3",
     "esbuild": "^0.28.0",
