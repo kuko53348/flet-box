@@ -57,6 +57,11 @@ Thumbs.db
 coverage/
 .nyc_output/
 
+# Python caches (docs generator)
+__pycache__/
+*.py[cod]
+.ruff_cache/
+
 # Temporary files
 *.tmp
 *.temp
