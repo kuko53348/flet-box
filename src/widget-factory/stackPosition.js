@@ -1,4 +1,5 @@
 // core/stackPosition.js
+import { toREM } from "./remTool.js";
 
 /**
  * Applies positioning for Stack layout
@@ -9,10 +10,14 @@
  * @example
  * stackPosition(element, { position: 'stack', top: 10, left: 20 })
  * // → element.style.position = 'absolute'
- * // → element.style.top = '10px'
- * // → element.style.left = '20px'
+ * // → element.style.top = '0.625rem'
+ * // → element.style.left = '1.25rem'
  */
 export const stackPosition = (widget, props) => {
+  // Numeric offsets follow the framework-wide rule: numbers are pixels on a
+  // 16px base, emitted as rem so they scale with the root font size.
+  const offset = (value) => (typeof value === "number" ? toREM(value) : value);
+
   // Only apply if position is 'stack'
   if (props.position !== "stack") {
     return widget;
@@ -27,22 +32,22 @@ export const stackPosition = (widget, props) => {
 
     switch (key) {
       case "top":
-        widget.style.top = typeof value === "number" ? `${value}px` : value;
+        widget.style.top = offset(value);
         break;
       case "right":
-        widget.style.right = typeof value === "number" ? `${value}px` : value;
+        widget.style.right = offset(value);
         break;
       case "bottom":
-        widget.style.bottom = typeof value === "number" ? `${value}px` : value;
+        widget.style.bottom = offset(value);
         break;
       case "left":
-        widget.style.left = typeof value === "number" ? `${value}px` : value;
+        widget.style.left = offset(value);
         break;
       case "start":
-        widget.style.left = typeof value === "number" ? `${value}px` : value;
+        widget.style.left = offset(value);
         break;
       case "end":
-        widget.style.right = typeof value === "number" ? `${value}px` : value;
+        widget.style.right = offset(value);
         break;
       case "centerX":
         widget.style.left = "50%";

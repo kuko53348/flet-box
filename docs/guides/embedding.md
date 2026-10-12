@@ -278,7 +278,7 @@ app.start();
 ## Continue reading
 
 - **Previous:** [Compatibility and support](compatibility.md)
-- **Next:** none — you reached the end of the book.
+- **Next:** [Ship updates without the store (OTA / online updates)](online-updates.md) — Appendix E
 - **Index:** [Guides index](README.md) · [The FletBox Book](../README.md)
 
 > The [FletBox Server](../server/README.md) toolkit is a separate backend product and is not part of the reading path.

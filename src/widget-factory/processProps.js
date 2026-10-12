@@ -44,9 +44,14 @@ export const processProps = (props, tag = "div", widgetName = null) => {
 
     if (def) {
       switch (def.type) {
-        case "style":
-          style[def.domProp] = applyUnit(def, value);
+        case "style": {
+          // Shorthands may fan out to several CSS props (e.g. `px` →
+          // paddingLeft + paddingRight). Everything else writes to its domProp.
+          const cssValue = applyUnit(def, value);
+          const targets = def.targets || [def.domProp];
+          for (const target of targets) style[target] = cssValue;
           break;
+        }
         case "attribute":
           attributes[def.domProp] = value;
           break;

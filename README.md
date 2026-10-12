@@ -107,7 +107,7 @@ npm link flet-box              # or: npm install ../path/to/flet-box
 npm install                    # Capacitor CLI, sharp, platform package
 ```
 
-- **Android** — Node >= 20.9, a JDK, and the Android SDK. `flet-box build android` → debug APK; sign releases in Android Studio or with `./gradlew assembleRelease` / `bundleRelease`.
+- **Android** — Node >= 20.9, a JDK, and the Android SDK. `flet-box build android` → debug APK; `flet-box build android --release [--aab]` → unsigned release artifact to sign yourself (`apksigner` / Play App Signing).
 - **iOS** — macOS, the **full** Xcode app (not Command Line Tools), a simulator runtime, and CocoaPods. `flet-box build ios` → simulator; `flet-box build ios --archive` → sign in Xcode.
 - Drop a 1024×1024 icon at `assets/logo.png` and rebuild — launcher icons, launch images, and the launch screen regenerate automatically.
 - Capacitor serves from `https://localhost`, so a remote API must allow that origin in CORS.

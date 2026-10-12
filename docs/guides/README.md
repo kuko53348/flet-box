@@ -17,6 +17,7 @@ This directory is the **conceptual index** of FletBox: how to build apps, set up
 - **[Build FletBox for mobile and other platforms](mobile-and-platforms.md)** — package the same frontend for web, PWA, Android (Capacitor), and iOS.
 - **[Compatibility and support](compatibility.md)** — what FletBox ships in, and the platform matrix.
 - **[Add FletBox to an existing page](embedding.md)** — drop one widget into an existing HTML page without rewriting it.
+- **[Ship updates without the store (OTA / online updates)](online-updates.md)** — publish once, then self-update the web bundle from GitHub on every release.
 
 ## Also worth reading
 

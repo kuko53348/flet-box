@@ -25,19 +25,37 @@ const getValue = (val) => {
 };
 
 /**
- * Applies a single "special" shorthand prop directly to the widget's style or
- * dataset. Handles cases that are not pure CSS assignments, such as `value` for
- * form elements, `variant` as a dataset attribute, and axis-aligned margin /
- * padding shorthands.
+ * HTML attributes whose mere presence means "true". Writing them through
+ * `setAttribute` with a falsy value is wrong — `setAttribute("readonly", false)`
+ * leaves the attribute present (`readonly="false"`) and the field stays
+ * read-only. These are written as DOM properties instead, so passing `false`
+ * removes the attribute.
+ *
+ * @type {Set<string>}
+ */
+const BOOLEAN_ATTRIBUTES = new Set([
+  "disabled",
+  "checked",
+  "selected",
+  "readOnly",
+  "required",
+  "autofocus",
+  "hidden",
+  "draggable",
+]);
+
+/**
+ * Applies a single "special" prop directly to the widget. Handles cases that
+ * are not pure CSS assignments, such as `value` for form elements and `variant`
+ * as a dataset attribute.
  *
  * @param {HTMLElement} widget - The target DOM element.
- * @param {string} key - The special prop name (e.g. `'marginVertical'`).
+ * @param {string} key - The special prop name (e.g. `'variant'`).
  * @param {*} value - The raw value (resolved via `getValue` internally).
  * @returns {void}
  */
 const applySpecial = (widget, key, value) => {
   const val = getValue(value);
-  const px = typeof val === "number" ? val + "px" : val;
 
   switch (key) {
     case "value":
@@ -47,22 +65,6 @@ const applySpecial = (widget, key, value) => {
       break;
     case "variant":
       widget.dataset.variant = val;
-      break;
-    case "marginVertical":
-      widget.style.marginTop = px;
-      widget.style.marginBottom = px;
-      break;
-    case "marginHorizontal":
-      widget.style.marginLeft = px;
-      widget.style.marginRight = px;
-      break;
-    case "paddingVertical":
-      widget.style.paddingTop = px;
-      widget.style.paddingBottom = px;
-      break;
-    case "paddingHorizontal":
-      widget.style.paddingLeft = px;
-      widget.style.paddingRight = px;
       break;
   }
 };
@@ -76,8 +78,8 @@ const applySpecial = (widget, key, value) => {
  * 3. **events** – previous listeners are removed and the new set is attached.
  *    `click` is assigned via `onclick` for reliable override behaviour.
  * 4. **attributes** – applied with `setAttribute`, with special handling for
- *    `className`, `disabled`, `checked`, and `selected`.
- * 5. **special** – delegated to `applySpecial` for non-trivial shorthands.
+ *    `className` and boolean attributes (`disabled`, `readOnly`, `hidden`, …).
+ * 5. **special** – delegated to `applySpecial` (e.g. `value`, `variant`).
  *
  * Any keys not in the known set are handled as a flat-prop fallback: `on*`
  * functions become event listeners, common HTML attributes are set directly, and
@@ -151,12 +153,11 @@ export const assignProps = (widget, props) => {
         try {
           if (key === "className" || key === "class") {
             widget.className = finalValue;
-          } else if (
-            key === "disabled" ||
-            key === "checked" ||
-            key === "selected"
-          ) {
-            widget[key] = Boolean(finalValue);
+          } else if (BOOLEAN_ATTRIBUTES.has(key)) {
+            widget[key] =
+              typeof finalValue === "boolean"
+                ? finalValue
+                : Boolean(finalValue);
           } else {
             widget.setAttribute(key, finalValue);
           }

@@ -3,9 +3,16 @@
  * @description Google AdMob for native Capacitor targets (Android/iOS). This is
  * the mobile counterpart of `AdSense`: instead of a web SDK it drives the native
  * `@capacitor-community/admob` plugin. The widget renders a DOM placeholder that
- * reserves space and, on mount, shows the banner / prepares full-screen ads over
- * the native layer. On the web (no Capacitor) it degrades to the placeholder and
- * logs a single warning.
+ * reserves space and, when `autoInitialize: true`, shows the banner / prepares
+ * full-screen ads over the native layer. On the web (no Capacitor) it degrades
+ * to the placeholder and logs a single warning.
+ *
+ * Native ads are an explicit opt-in (`autoInitialize: true`) because the Google
+ * SDK hard-aborts the app when its AdMob App ID is not configured. Mounting an
+ * AdMob widget must never crash a misconfigured app, so the placeholder renders
+ * and the plugin is left untouched until the developer opts in and sets the App
+ * ID in the native config (`GADApplicationIdentifier` in Info.plist, `APPLICATION_ID`
+ * meta-data in AndroidManifest.xml).
  */
 
 import { WidgetFactory } from "../widget-factory/index.js";
@@ -31,11 +38,13 @@ const WIDGET_PROP_KEYS = [
   "placeholder",
   "interstitialId",
   "rewardedId",
+  "autoInitialize",
 ];
 
 // Initialisation is app-wide, so it only needs to happen once per plugin.
 let initPromise = null;
 let warnedMissingPlugin = false;
+let warnedNotInitialized = false;
 
 /**
  * Resolves the native AdMob plugin from an explicit prop or the Capacitor
@@ -78,6 +87,10 @@ const ensureInitialized = (plugin) => {
  * @param {string}  [props.interstitialId=""] - Ad unit id for `showInterstitial()`.
  * @param {string}  [props.rewardedId=""] - Ad unit id for `showRewarded()`.
  * @param {boolean} [props.autoShow=true] - Show the banner automatically on mount.
+ * @param {boolean} [props.autoInitialize=false] - Opt in to native ads. Requires a
+ * configured AdMob App ID (`GADApplicationIdentifier` in Info.plist, `APPLICATION_ID`
+ * in AndroidManifest.xml); until set, mounting the widget is placeholder-only so a
+ * misconfigured app never crashes (the Google SDK aborts otherwise).
  * @param {number|string} [props.width="100%"] - Placeholder width.
  * @param {number|string} [props.height=50] - Placeholder height (reserve banner space).
  * @param {boolean} [props.placeholder=true] - Show the dashed placeholder.
@@ -101,6 +114,7 @@ export const AdMob = (props) => {
     interstitialId = "",
     rewardedId = "",
     autoShow = true,
+    autoInitialize = false,
     width = "100%",
     height = 50,
     placeholder = true,
@@ -122,6 +136,7 @@ export const AdMob = (props) => {
   let currentMargin = margin;
   let currentLabel = label;
   let currentPlaceholder = placeholder;
+  let currentAutoInitialize = autoInitialize;
   let bannerVisible = false;
   let disposed = false;
   let labelElement = null;
@@ -129,6 +144,15 @@ export const AdMob = (props) => {
   const bannerId = () => currentAdId || TEST_BANNER_ID;
 
   const withPlugin = (run) => {
+    if (!currentAutoInitialize) {
+      if (!warnedNotInitialized) {
+        warnedNotInitialized = true;
+        console.warn(
+          "[FletBox AdMob] native ads are disabled (missing `autoInitialize: true`). Mounting an AdMob widget is placeholder-only by default because the Google SDK aborts the app when its AdMob App ID is not configured. To enable ads, set `autoInitialize: true` AND add the App ID to the native config: `GADApplicationIdentifier` in ios/App/App/Info.plist or the `APPLICATION_ID` meta-data in AndroidManifest.xml, then run `npm run ios:sync` / `android:sync`.",
+        );
+      }
+      return Promise.resolve(null);
+    }
     const plugin = resolvePlugin(pluginProp);
     if (!plugin) {
       if (!warnedMissingPlugin) {
@@ -266,12 +290,14 @@ export const AdMob = (props) => {
     if ("margin" in widgetProps) currentMargin = widgetProps.margin;
     if ("label" in widgetProps) currentLabel = widgetProps.label;
     if ("placeholder" in widgetProps) currentPlaceholder = widgetProps.placeholder;
+    if ("autoInitialize" in widgetProps) currentAutoInitialize = widgetProps.autoInitialize;
     refreshPlaceholder();
   });
 
   const dispose = () => {
     if (disposed) return;
     disposed = true;
+    if (!currentAutoInitialize) return;
     const plugin = resolvePlugin(pluginProp);
     if (plugin && typeof plugin.removeBanner === "function") {
       Promise.resolve(plugin.removeBanner()).catch(() => {});

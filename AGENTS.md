@@ -8,7 +8,8 @@ FletBox: zero-runtime-dependency vanilla-JS UI framework with a Flet-like declar
 - `npm run build` — esbuild-bundles `src/app.js` into `dist/`. Requires `src/app.js` (present at framework root as the demo, so the build works here). Real workflow: `flet-box create <name>` then build inside that project.
 - `npm test` — runs the static widget-contract checker (`node scripts/check-widgets.mjs`) against `scripts/widget-contract-baseline.json`. Behavioral tests are browser harnesses in `tests/` (below).
 - `python3 scripts/generate_widget_docs.py` — regenerates `docs/widget/*.md` from `src/index.d.ts` + snippet library. Run after changing a widget's public props/types.
-- `flet-box build android` / `flet-box build ios [--archive]` — Capacitor builds, run **inside a generated project**. Both share `bin/utils/capacitor.js`; each owns its toolchain checks (`buildAndroid.js`: SDK + JDK; `buildIOS.js`: full Xcode + CocoaPods + simulator runtimes).
+- `flet-box build android [--release [--aab]]` / `flet-box build ios [--archive]` — Capacitor builds, run **inside a generated project**. Both share `bin/utils/capacitor.js`; each owns its toolchain checks (`buildAndroid.js`: SDK + JDK; `buildIOS.js`: full Xcode + CocoaPods + simulator runtimes). Android `--release` leaves the artifact **unsigned on purpose** so it can be signed with the developer's own keystore (`apksigner` for the APK, `jarsigner`/Play App Signing for the AAB).
+- `flet-box run-native <android|ios> [--device|--livereload]` — wraps `npx cap run` to compile and launch on an emulator/simulator or device. It reuses the toolchain helpers exported by `buildAndroid.js` (`prepareAndroidEnvironment`) and `buildIOS.js` (`requireAppleToolchain`); keep those exports when editing the build commands.
 - No lint/formatter/typecheck config exists. Validate JS with `node --check <file>` and `python3 -m py_compile scripts/generate_widget_docs.py`.
 
 ## Generated mobile projects

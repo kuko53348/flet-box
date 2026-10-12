@@ -133,7 +133,10 @@ function value is attached as a native listener.
 - `child`: a single child widget.
 - `children`: an array of child widgets.
 - `ref`: a callback that receives the underlying DOM node — `ref: (el) => (myRef = el)`.
-- `style`: an object of raw CSS applied directly to the element.
+
+> There is intentionally **no `style` prop**. FletBox uses flat, aliased CSS
+> props instead. Passing `style: { ... }` is rejected with a console warning;
+> write the same declarations flat (`backgroundColor`, `padding`, `flexDirection`, …).
 
 ## Reactivity
 

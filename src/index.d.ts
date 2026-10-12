@@ -408,6 +408,8 @@ declare module 'flet-box' {
     interstitialId?: string;
     rewardedId?: string;
     autoShow?: boolean;
+    /** Opt in to native ads. Requires a configured AdMob App ID (GADApplicationIdentifier in Info.plist / APPLICATION_ID in AndroidManifest.xml); until set, mounting is placeholder-only so a misconfigured app never crashes. */
+    autoInitialize?: boolean;
     width?: Size;
     height?: Size;
     placeholder?: boolean;

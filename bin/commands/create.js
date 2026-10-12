@@ -12,9 +12,11 @@
 
 import fs from "fs";
 import path from "path";
+import readline from "readline";
 import { fileURLToPath } from "url";
 import { createFile, copyFile, makeExecutable } from "../utils/helpers.js";
 import * as templates from "../utils/templates.js";
+import { parseGithubRepo } from "../utils/bundleConfig.js";
 import { c, banner, gradient } from "../utils/colors.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -31,7 +33,8 @@ const capacitorAppId = (projectName) => {
 
 /**
  * Parses the raw CLI arguments passed after the project name to determine
- * which template was requested and whether an explicit name was given.
+ * which template was requested, whether an explicit name was given, and the
+ * optional `--repo <user/repo>` for OTA updates.
  *
  * Flag-to-template mapping:
  * - `--adaptive` → `"adaptive"`
@@ -41,13 +44,15 @@ const capacitorAppId = (projectName) => {
  * - (none)       → `"basic"` (default)
  *
  * Any non-flag argument (does not start with `--`) is treated as the project name.
+ * `--repo` consumes the next positional as its value (a GitHub user/repo or URL).
  *
  * @param {string[]} args - Raw CLI arguments, may include flags and a project name.
- * @returns {{ template: string, projectName: string|null }}
+ * @returns {{ template: string, projectName: string|null, repo: string|null }}
  */
 const parseCreateArgs = (args) => {
   let template = "basic"; // default template
   let projectName = null;
+  let repo = null;
   for (let i = 0; i < args.length; i++) {
     if (args[i] === "--adaptive") {
       template = "adaptive";
@@ -57,11 +62,54 @@ const parseCreateArgs = (args) => {
       template = "full";
     } else if (args[i] === "--sidebar") {
       template = "sidebar";
+    } else if (args[i] === "--repo") {
+      if (i + 1 < args.length && !args[i + 1].startsWith("--")) {
+        repo = args[i + 1];
+        i++;
+      }
     } else if (!args[i].startsWith("--")) {
       projectName = args[i];
     }
   }
-  return { template, projectName };
+  return { template, projectName, repo };
+};
+
+/** Asks the user for the OTA repo interactively (TTY only). */
+const askRepo = () =>
+  new Promise((resolve) => {
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+    rl.question(
+      c(
+        "cyan",
+        "GitHub repo for OTA updates (user/repo or https://... ) [Enter to skip]: ",
+      ),
+      (answer) => {
+        rl.close();
+        resolve(answer.trim());
+      },
+    );
+  });
+
+/**
+ * Normalizes the user's OTA target into a base URL ending in "/".
+ * - "user/repo" (or any GitHub URL shape) → GitHub Pages URL.
+ * - A full http(s) URL is used as-is.
+ * - Unrecognized input → null (the placeholder URL is left in the template).
+ *
+ * @param {string|null} input - The value from `--repo` or the interactive prompt.
+ * @returns {string|null} Base URL ending in "/", or null.
+ */
+const resolveOtaUrl = (input) => {
+  if (!input) return null;
+  const value = input.trim();
+  if (/^https?:\/\//i.test(value)) {
+    return value.endsWith("/") ? value : `${value}/`;
+  }
+  const gh = parseGithubRepo(value);
+  return gh ? `https://${gh.user}.github.io/${gh.repo}/` : null;
 };
 
 /**
@@ -81,7 +129,7 @@ const parseCreateArgs = (args) => {
  * @returns {Promise<void>}
  */
 export const createProject = async (projectName, rawArgs = []) => {
-  const { template, projectName: name } = parseCreateArgs([
+  const { template, projectName: name, repo: repoArg } = parseCreateArgs([
     projectName,
     ...rawArgs,
   ]);
@@ -91,10 +139,26 @@ export const createProject = async (projectName, rawArgs = []) => {
     console.log(
       c(
         "gray",
-        "Usage: flet-box create <name> [--adaptive|--blank|--full|--sidebar]",
+        "Usage: flet-box create <name> [--adaptive|--blank|--full|--sidebar|--repo user/repo]",
       ),
     );
     process.exit(1);
+  }
+
+  // OTA target: asked interactively when --repo is missing and stdin is a TTY.
+  // The value becomes update.url in fletbox.config.json (placeholder if skipped).
+  let repoInput = repoArg;
+  if (!repoInput && process.stdin.isTTY) {
+    repoInput = await askRepo();
+  }
+  const otaUrl = resolveOtaUrl(repoInput);
+  if (repoInput && !otaUrl) {
+    console.warn(
+      c(
+        "yellow",
+        `⚠️ Could not parse repo "${repoInput}" — leaving the placeholder OTA URL in fletbox.config.json.`,
+      ),
+    );
   }
 
   const appId = capacitorAppId(finalName);
@@ -136,6 +200,10 @@ export const createProject = async (projectName, rawArgs = []) => {
   createFile(
     path.join(projectPath, "package.json"),
     templates.packageJson(finalName),
+  );
+  createFile(
+    path.join(projectPath, "fletbox.config.json"),
+    templates.fletboxConfig(otaUrl || undefined),
   );
   createFile(path.join(projectPath, ".gitignore"), templates.gitignore());
   createFile(
@@ -306,6 +374,16 @@ export const createProject = async (projectName, rawArgs = []) => {
   console.log(`  ${c("brightCyan", "npm install")}`);
   console.log(`  ${c("brightCyan", "npm run dev")}\n`);
   console.log(`${c("gray", `📱 Template: ${template}`)}`);
+  if (otaUrl) {
+    console.log(`${c("gray", `⬆️  OTA updates: ${gradient(otaUrl, "#22d3ee", "#38bdf8")}`)}`);
+  } else {
+    console.log(
+      c(
+        "gray",
+        `⬆️  OTA: placeholder set — edit fletbox.config.json and replace TU-USUARIO/TU-REPO with your public GitHub repo.\n`,
+      ),
+    );
+  }
   console.log(
     c(
       "gray",

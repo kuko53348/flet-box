@@ -16,7 +16,9 @@ import { execSync } from "child_process";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { c, banner, gradient } from "../utils/colors.js";
+import { c, banner, gradient, section } from "../utils/colors.js";
+import { buildBundleConfig, getGitRemoteUrl } from "../utils/bundleConfig.js";
+import { INITIAL_VERSION, incrementVersion, isValidVersion } from "../utils/version.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -226,6 +228,131 @@ export const createBundle = async (targetArg) => {
   } catch (error) {
     console.error(c("red", "❌ Esbuild failed:"), error.message);
     process.exit(1);
+  }
+
+  // ---- OTA manifest -------------------------------------------------------
+  // Stamp a version header into the bundle (so the deployed app.js is
+  // self-describing), then hash the FINAL file and write www/config.json.
+  // The running app fetches this manifest to decide whether to self-update.
+  const outAppJs = path.join(targetDir, "src", "app.js");
+  const pkg = JSON.parse(
+    fs.readFileSync(path.join(projectRoot, "package.json"), "utf8"),
+  );
+  const appVersion = isValidVersion(pkg.version) ? pkg.version : INITIAL_VERSION;
+  const builtAt = new Date().toISOString();
+
+  // Visual reference only: createBundle NEVER bumps the version — only
+  // `flet-box release` does. Print what each release flag would produce so the
+  // next version is visible at build time.
+  console.log(section("🔢", `Versión del bundle: ${appVersion}`, "#34d399"));
+  console.log(c("gray", "     Qué haría cada release:"));
+  for (const [flag, type] of [
+    ["--patch", "patch"],
+    ["--minor", "minor"],
+    ["--major", "major"],
+  ]) {
+    const next = incrementVersion(appVersion, type);
+    console.log(
+      `       ${c("cyan", flag.padEnd(8))} ` +
+        `${c("gray", appVersion)} ${c("gray", "→")} ` +
+        `${gradient(next, "#34d399", "#22d3ee")}`,
+    );
+  }
+
+  const bundledCode = fs.readFileSync(outAppJs, "utf8");
+  const header = `/*! FletBox bundle v${appVersion} · built ${builtAt} */\n`;
+  const stampedCode = header + bundledCode;
+  fs.writeFileSync(outAppJs, stampedCode);
+
+  const bundleConfig = buildBundleConfig({
+    projectRoot,
+    bundleContent: stampedCode,
+    bundlePath: "src/app.js",
+  });
+  fs.writeFileSync(
+    path.join(targetDir, "config.json"),
+    JSON.stringify(bundleConfig, null, 2) + "\n",
+  );
+  console.log(
+    c("green", "✅ Wrote config.json ") +
+      c("gray", `(v${bundleConfig.version} · ${bundleConfig.hash.slice(0, 12)}…)`),
+  );
+  if (!bundleConfig.update.url) {
+    const remote = getGitRemoteUrl(projectRoot);
+    console.log(
+      "\n" +
+        c("yellow", "⚠️  THIS APP DOES NOT SUPPORT OTA UPDATES.") +
+        "\n" +
+        c(
+          "gray",
+          "    The bundle still works: installed apps will run the version that is inside this build (the local/current bundle).",
+        ) +
+        "\n" +
+        c(
+          "gray",
+          "    OTA activates only once a PUBLIC GitHub repository exists. " +
+            (remote
+              ? `Your origin remote is: ${c("cyan", remote)}`
+              : "No git remote `origin` was found in this project."),
+        ) +
+        "\n" +
+        c("gray", "    To enable OTA updates:") +
+        "\n" +
+        c("gray", "      1. Create the repository on GitHub (must be PUBLIC and readable).") +
+        "\n" +
+        c("gray", "      2. Push this project so `origin` is that GitHub repo, then rebuild here.") +
+        "\n" +
+        c("gray", "         (or set `update.url` in fletbox.config.json / `repository` in package.json)") +
+        "\n",
+    );
+  } else if (/TU-USUARIO|TU-REPO/.test(bundleConfig.update.url)) {
+    console.log(
+      c(
+        "yellow",
+        "⚠️ update.url is still the placeholder — OTA points at a fake site. Replace TU-USUARIO/TU-REPO in fletbox.config.json before releasing.",
+      ),
+    );
+  } else {
+    console.log(
+      c("green", "⬆️  OTA source: ") +
+        c("gray", bundleConfig.update.url + " · override with `fletbox.config.json`"),
+    );
+  }
+
+  // ---- OTA loader ---------------------------------------------------------
+  // Ship bin/ota/loader.js verbatim as www/loader.js and rewrite index.html so
+  // the module entry is the loader instead of src/app.js. The loader runs first,
+  // checks config.json for a newer bundle, and then imports the app. When OTA is
+  // disabled (no update URL) the loader still works — it just runs the shipped
+  // bundle directly, so wiring it unconditionally keeps the output consistent.
+  const loaderSrc = path.join(__dirname, "..", "ota", "loader.js");
+  const loaderDest = path.join(targetDir, "loader.js");
+  if (fs.existsSync(loaderSrc)) {
+    fs.copyFileSync(loaderSrc, loaderDest);
+    console.log(c("green", "✅ Wrote loader.js (OTA boot)"));
+
+    const indexFile = path.join(targetDir, "index.html");
+    if (fs.existsSync(indexFile)) {
+      const html = fs.readFileSync(indexFile, "utf8");
+      // Swap the bundled app entry (src="src/app.js" or "./src/app.js") for the
+      // loader, preserving any other attributes (e.g. type="module").
+      const patched = html.replace(
+        /<script\b([^>]*?)\bsrc=(["'])\.?\/?src\/app\.js\2([^>]*)>\s*<\/script>/i,
+        (_m, before, _q, after) =>
+          `<script${before}src="./loader.js"${after}></script>`,
+      );
+      if (patched !== html) {
+        fs.writeFileSync(indexFile, patched);
+        console.log(c("green", "✅ index.html → loads ./loader.js"));
+      } else {
+        console.log(
+          c(
+            "yellow",
+            "⚠️ Could not find the app.js <script> in index.html to wire the loader — OTA boot not installed.",
+          ),
+        );
+      }
+    }
   }
 
   // Preserve the app source tree so the in-app "View code" feature can read it.

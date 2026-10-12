@@ -29,8 +29,7 @@ export const indexHtml = (appName = "FletBox App") => `<!DOCTYPE html>
               live domain with your own content first).
            2. Replace ca-pub-XXXXXXXXXXXXXXXX below with your publisher ID.
            3. Activate it: delete this whole comment block but KEEP the
-              <script> tag below (remove the "<!--" and "-->" and these
-              instructions), so only the live <script> remains in <head>.
+              <script> tag below, so only the live <script> remains in <head>.
            4. Place an <ins class="adsbygoogle"> unit where you want the ad,
               or use the flet-box AdSense widget (see docs/widget/AdSense.md).
 
@@ -607,14 +606,17 @@ echo "✅ Bundle listo: \$TARGET/   Prueba: cd \$TARGET && bash run.sh"
 `;
 
 export const serviceWorkerJs = () => `// service-worker.js - PWA offline support
-const CACHE_NAME = 'fletbox-v1';
+const CACHE_NAME = 'fletbox-v2';
+// The shipped (baked-in) shell, precached so the app opens with no connection.
+// loader.js owns a SEPARATE cache ('fletbox-ota') for downloaded bundles.
+const PRECACHE = ['/', '/index.html', '/loader.js', '/config.json', '/src/app.js'];
 
 self.addEventListener('install', event => {
   event.waitUntil(
     (async () => {
       try {
         const cache = await caches.open(CACHE_NAME);
-        const urls = ['/', '/index.html'];
+        const urls = PRECACHE;
         
         for (const url of urls) {
           try {
@@ -645,7 +647,7 @@ self.addEventListener('activate', event => {
       try {
         const cacheNames = await caches.keys();
         for (const cacheName of cacheNames) {
-          if (cacheName !== CACHE_NAME) {
+          if (cacheName !== CACHE_NAME && cacheName !== 'fletbox-ota') {
             await caches.delete(cacheName);
           }
         }
@@ -657,8 +659,44 @@ self.addEventListener('activate', event => {
   );
 });
 
+// Hybrid caching:
+//  - Static assets (fonts/icons/images/css): cache-first (they are immutable
+//    per release and re-fetched only when missing).
+//  - Updatable shell (html/js/json, incl. src/app.js + config.json):
+//    network-first so a new release is picked up immediately, falling back to
+//    the cache when offline. This is what keeps OTA correct: the service worker
+//    must never hand back a stale app.js while online.
+// Cross-origin requests (the remote OTA config/bundle) are left to the network.
 self.addEventListener('fetch', event => {
-  event.respondWith(fetch(event.request));
+  const req = event.request;
+  if (req.method !== 'GET') return;
+  const url = new URL(req.url);
+  if (url.origin !== self.location.origin) return;
+
+  const isStatic = /\\.(png|jpe?g|svg|gif|webp|ico|woff2?|ttf|otf|css)$/i.test(url.pathname);
+
+  event.respondWith(
+    (async () => {
+      const cache = await caches.open(CACHE_NAME);
+      if (isStatic) {
+        const hit = await cache.match(req);
+        if (hit) return hit;
+      }
+      try {
+        const fresh = await fetch(req, { cache: 'no-store' });
+        if (fresh.ok) cache.put(req, fresh.clone());
+        return fresh;
+      } catch (err) {
+        const cached = await cache.match(req);
+        if (cached) return cached;
+        if (req.mode === 'navigate') {
+          const shell = await cache.match('/index.html');
+          if (shell) return shell;
+        }
+        return Response.error();
+      }
+    })()
+  );
 });
 `;
 
@@ -706,8 +744,28 @@ export const capacitorConfig = (appName, appId) => `${JSON.stringify(
   },
   null,
   2,
-)}
-`;
+)}\n`;
+
+// Placeholder update URL used when `flet-box create` is run without --repo.
+// The user replaces TU-USUARIO/TU-REPO with their real public GitHub names.
+export const OTA_PLACEHOLDER_URL = "https://TU-USUARIO.github.io/TU-REPO/";
+
+// OTA manifest written to every generated project. The loader (www/loader.js)
+// reads `update.url` via www/config.json to know where to fetch updates.
+export const fletboxConfig = (url = OTA_PLACEHOLDER_URL) => `${JSON.stringify(
+  {
+    update: {
+      url,
+      mode: "prompt",
+      channel: "stable",
+      mandatory: false,
+      minNativeVersion: "0.0.0",
+      notes: "",
+    },
+  },
+  null,
+  2,
+)}\n`;
 
 export const syncAndroidIconsScript = () => `import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -777,7 +835,57 @@ if (!backgroundColor.test(xml)) {
 }
 await writeFile(backgroundPath, xml.replace(backgroundColor, "$1#1a1a2e$2"));
 
-console.log("Android launcher icons generated from assets/logo.png.");
+// SPLASH SCREENS
+// The launch theme (AppTheme.NoActionBarLaunch) shows @drawable/splash while the
+// WebView boots. Draw the app icon (the logo flattened on the brand color),
+// centred and sized to ~30% of the shorter side, with rounded corners whose
+// radius is 24dp at the mdpi baseline and scales with the device density.
+const ICON_SCALE = 0.3;
+const BORDER_RADIUS_DP = 24;
+
+const roundedIcon = async (size, radius) => {
+  const tile = await sharp(logo)
+    .resize(size, size, { fit: "contain" })
+    .flatten({ background })
+    .png()
+    .toBuffer();
+  const mask = Buffer.from(
+    \`<svg xmlns="http://www.w3.org/2000/svg" width="\${size}" height="\${size}"><rect width="\${size}" height="\${size}" rx="\${radius}" ry="\${radius}"/></svg>\`,
+  );
+  return sharp(tile).composite([{ input: mask, blend: "dest-in" }]).png().toBuffer();
+};
+
+const splashScreens = [
+  ["drawable", 480, 320, 1],
+  ["drawable-port-mdpi", 320, 480, 1],
+  ["drawable-port-hdpi", 480, 800, 1.5],
+  ["drawable-port-xhdpi", 720, 1280, 2],
+  ["drawable-port-xxhdpi", 960, 1600, 3],
+  ["drawable-port-xxxhdpi", 1280, 1920, 4],
+  ["drawable-land-mdpi", 480, 320, 1],
+  ["drawable-land-hdpi", 800, 480, 1.5],
+  ["drawable-land-xhdpi", 1280, 720, 2],
+  ["drawable-land-xxhdpi", 1600, 960, 3],
+  ["drawable-land-xxxhdpi", 1920, 1280, 4],
+];
+
+for (const [directory, width, height, scale] of splashScreens) {
+  const target = path.join(androidRes, directory);
+  await mkdir(target, { recursive: true });
+  const iconSize = Math.round(ICON_SCALE * Math.min(width, height));
+  const radius = Math.min(Math.round(BORDER_RADIUS_DP * scale), Math.floor(iconSize / 2));
+  const icon = await roundedIcon(iconSize, radius);
+  const splash = await sharp({
+    create: { width, height, channels: 4, background },
+  })
+    .composite([{ input: icon, gravity: "centre" }])
+    .removeAlpha()
+    .png()
+    .toBuffer();
+  await writeFile(path.join(target, "splash.png"), splash);
+}
+
+console.log("Android launcher icons and splash screens generated from assets/logo.png.");
 `;
 
 export const syncIOSAssetsScript = () => `import { access, readFile, writeFile } from "node:fs/promises";
@@ -858,15 +966,33 @@ for (const slot of iconSlots) {
 // LaunchScreen.storyboard stretches the "Splash" image with scaleAspectFill, so
 // a square brand image covers every screen. Each file keeps the dimensions the
 // template ships with, which the asset catalog scales per device.
+// The app icon (logo flattened on the brand color) is centred at ~30% of the
+// side with rounded corners. The corner radius is 24dp at the mdpi baseline, so
+// the ratio comes from a 96px icon: 24 / 96.
 const splashContents = await readContents(splashSet);
 const splashSlots = splashContents.images.filter((image) => image.filename);
+const ICON_SCALE = 0.3;
+const BORDER_RADIUS_RATIO = 24 / 96;
 
 for (const slot of splashSlots) {
   const target = path.join(splashSet, slot.filename);
   const metadata = await sharp(target).metadata();
   const side = metadata.width && metadata.width === metadata.height ? metadata.width : 2732;
-  const badge = await sharp(logo)
-    .resize(Math.round(side * 0.3), Math.round(side * 0.3), { fit: "contain" })
+  const iconSize = Math.round(side * ICON_SCALE);
+  const radius = Math.min(
+    Math.round(iconSize * BORDER_RADIUS_RATIO),
+    Math.floor(iconSize / 2),
+  );
+  const tile = await sharp(logo)
+    .resize(iconSize, iconSize, { fit: "contain" })
+    .flatten({ background })
+    .png()
+    .toBuffer();
+  const mask = Buffer.from(
+    \`<svg xmlns="http://www.w3.org/2000/svg" width="\${iconSize}" height="\${iconSize}"><rect width="\${iconSize}" height="\${iconSize}" rx="\${radius}" ry="\${radius}"/></svg>\`,
+  );
+  const badge = await sharp(tile)
+    .composite([{ input: mask, blend: "dest-in" }])
     .png()
     .toBuffer();
   const splash = await sharp({
@@ -1003,13 +1129,15 @@ export const githubWorkflow = (appName = "FletBox App", appId = "com.fletbox.app
   return `name: Build ${appName}
 
 # One push (or manual trigger) fans out into three parallel jobs:
-#   web     -> bundles the PWA and deploys it to GitHub Pages for a live preview
+#   web     -> bundles the PWA; publishes to GitHub Pages ONLY on release
+#              tags (v*), which is what triggers OTA self-updates
 #   android -> compiles a debug APK and uploads it as an artifact
 #   ios     -> compiles a simulator .app and uploads it as an artifact
 # All three run at the same time on separate runners.
 on:
   push:
     branches: [ main ]
+    tags: [ 'v*' ]
   pull_request:
     branches: [ main ]
   workflow_dispatch:
@@ -1040,7 +1168,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Install dependencies
         run: npm install
@@ -1048,16 +1176,20 @@ jobs:
       - name: Bundle web app (flet-box createBundle www)
         run: npm run build
 
+      # Pages is the OTA update source (www/config.json), so it is published
+      # ONLY for release tags (v*) created by \`flet-box release\`. Ordinary
+      # pushes still build (to catch breakage in CI) but never publish an
+      # update, so test builds cannot reach installed apps.
       - name: Upload Pages artifact
+        if: startsWith(github.ref, 'refs/tags/v')
         uses: actions/upload-pages-artifact@v3
         with:
           path: www
 
-      # Deploy only on the default branch, not on pull requests.
       # Enable Pages first: Settings -> Pages -> Source = "GitHub Actions".
       - name: Deploy to GitHub Pages
         id: deployment
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: startsWith(github.ref, 'refs/tags/v')
         uses: actions/deploy-pages@v4
 
   # ---------- ANDROID: debug APK ----------
@@ -1069,7 +1201,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - uses: actions/setup-java@v4
         with:
@@ -1113,7 +1245,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Install dependencies
         run: npm install
@@ -1326,6 +1458,34 @@ also drop the \`AdSense\` widget into any screen (see
 4. Uncomment the \`AdMob\` import and the \`AdMob({...})\` widget in
    \`src/screens/HomeScreen.js\` (they are marked with ADMOB comments). Full
    props in \`node_modules/flet-box/docs/widget/AdMob.md\`.
+
+## Over-the-air updates (OTA)
+
+This app can update its web layer without a new store submission. The project
+ships with \`fletbox.config.json\`, which tells the app where to check for
+updates:
+
+\`\`\`json
+{
+  "update": {
+    "url": "https://TU-USUARIO.github.io/TU-REPO/",
+    "mode": "prompt"
+  }
+}
+\`\`\`
+
+- The GitHub repository **must be public**.
+- Replace \`TU-USUARIO\` with your GitHub username and \`TU-REPO\` with the
+  repository name, or set \`update.url\` to any HTTPS host that serves your
+  \`config.json\` + bundle.
+- Enable GitHub Pages: **Settings → Pages → Source: GitHub Actions**.
+- Cut a release with \`flet-box release --push\` (bumps the version, rebuilds
+  \`www/\`, commits and tags \`vX.Y.Z\`). CI then deploys \`www/\` and installed
+  apps self-update the next time they open.
+- The update URL is also reflected in \`www/config.json\` after \`flet-box
+  createBundle www\`; it is baked into Android/iOS builds at \`cap sync\` time.
+- Only web files are updated OTA. Native changes (plugins, permissions,
+  manifest/Info.plist edits) still require a new store submission.
 
 ## Features
 

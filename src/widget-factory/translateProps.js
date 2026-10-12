@@ -12,7 +12,9 @@ import { warnUnknownProp, setPropNames } from "./warnings.js";
  *   type      : 'style' | 'attribute' | 'event' | 'text' | 'special'
  *   unit      : (optional) 'rem' | 'px' | 'none' – only for style props
  *   reactive  : (optional) true/false – whether the prop is reactive
- *   expand    : (optional) 'horizontal' | 'vertical' – for shorthands
+ *   targets   : (optional) list of CSS DOM props a shorthand expands to
+ *               (e.g. 'px' → paddingLeft + paddingRight). When absent the
+ *               prop writes to its single `domProp`.
  */
 
 export const ALL_PROPS = [
@@ -220,14 +222,14 @@ export const ALL_PROPS = [
     reactive: true,
   },
 
-  // Shorthands (expand)
+  // Shorthands (expand to both sides of an axis)
   {
     prop: "px",
     domProp: "paddingLeft",
     type: "style",
     unit: "rem",
     reactive: true,
-    expand: "horizontal",
+    targets: ["paddingLeft", "paddingRight"],
   },
   {
     prop: "py",
@@ -235,7 +237,7 @@ export const ALL_PROPS = [
     type: "style",
     unit: "rem",
     reactive: true,
-    expand: "vertical",
+    targets: ["paddingTop", "paddingBottom"],
   },
   {
     prop: "mx",
@@ -243,7 +245,7 @@ export const ALL_PROPS = [
     type: "style",
     unit: "rem",
     reactive: true,
-    expand: "horizontal",
+    targets: ["marginLeft", "marginRight"],
   },
   {
     prop: "my",
@@ -251,7 +253,7 @@ export const ALL_PROPS = [
     type: "style",
     unit: "rem",
     reactive: true,
-    expand: "vertical",
+    targets: ["marginTop", "marginBottom"],
   },
   { prop: "gap", domProp: "gap", type: "style", unit: "rem", reactive: true },
 
@@ -585,13 +587,14 @@ export const ALL_PROPS = [
     reactive: true,
   },
 
-  // Individual corners
+  // Corner shorthands (expand to both corners of a side)
   {
     prop: "roundedTop",
     domProp: "borderTopLeftRadius",
     type: "style",
     unit: "rem",
     reactive: true,
+    targets: ["borderTopLeftRadius", "borderTopRightRadius"],
   },
   {
     prop: "roundedBottom",
@@ -599,6 +602,7 @@ export const ALL_PROPS = [
     type: "style",
     unit: "rem",
     reactive: true,
+    targets: ["borderBottomLeftRadius", "borderBottomRightRadius"],
   },
   {
     prop: "roundedLeft",
@@ -606,6 +610,7 @@ export const ALL_PROPS = [
     type: "style",
     unit: "rem",
     reactive: true,
+    targets: ["borderTopLeftRadius", "borderBottomLeftRadius"],
   },
   {
     prop: "roundedRight",
@@ -613,6 +618,7 @@ export const ALL_PROPS = [
     type: "style",
     unit: "rem",
     reactive: true,
+    targets: ["borderTopRightRadius", "borderBottomRightRadius"],
   },
 
   // ==================== SHADOWS ====================
@@ -825,7 +831,7 @@ export const ALL_PROPS = [
   // CSS props (backgroundColor, padding, flexDirection, ...). Passing
   // `style: {...}` is rejected with a warning by processProps.
 
-  // ==================== ADDITIONAL SPECIALS (shorthands) ====================
+  // ==================== ADDITIONAL SPECIALS (handled elsewhere) ====================
   {
     prop: "value",
     domProp: "value",
@@ -838,29 +844,39 @@ export const ALL_PROPS = [
     type: "special",
     reactive: true,
   },
+
+  // ==================== AXIS SHORTHANDS (≡ px/py/mx/my) ====================
   {
     prop: "marginVertical",
-    domProp: "marginVertical",
-    type: "special",
+    domProp: "marginTop",
+    type: "style",
+    unit: "rem",
     reactive: true,
+    targets: ["marginTop", "marginBottom"],
   },
   {
     prop: "marginHorizontal",
-    domProp: "marginHorizontal",
-    type: "special",
+    domProp: "marginLeft",
+    type: "style",
+    unit: "rem",
     reactive: true,
+    targets: ["marginLeft", "marginRight"],
   },
   {
     prop: "paddingVertical",
-    domProp: "paddingVertical",
-    type: "special",
+    domProp: "paddingTop",
+    type: "style",
+    unit: "rem",
     reactive: true,
+    targets: ["paddingTop", "paddingBottom"],
   },
   {
     prop: "paddingHorizontal",
-    domProp: "paddingHorizontal",
-    type: "special",
+    domProp: "paddingLeft",
+    type: "style",
+    unit: "rem",
     reactive: true,
+    targets: ["paddingLeft", "paddingRight"],
   },
 
   // ==================== EXTRA CSS (used by built-in widgets) ====================
@@ -918,6 +934,18 @@ export const ALL_PROPS = [
   // Consumed by effects.js / widgets via _originalProps; never written to the DOM.
   { prop: "disableTransform", domProp: "disableTransform", type: "special" },
   { prop: "data", domProp: "data", type: "special" },
+
+  // Stack positioning shorthands, consumed by stackPosition.js from the widget's
+  // original props when `position: "stack"`. Registered here so they are not
+  // reported as unknown props; they write nothing to the DOM themselves.
+  { prop: "start", domProp: "start", type: "special" },
+  { prop: "end", domProp: "end", type: "special" },
+  { prop: "centerX", domProp: "centerX", type: "special" },
+  { prop: "centerY", domProp: "centerY", type: "special" },
+  { prop: "center", domProp: "center", type: "special" },
+  { prop: "fullWidth", domProp: "fullWidth", type: "special" },
+  { prop: "fullHeight", domProp: "fullHeight", type: "special" },
+  { prop: "full", domProp: "full", type: "special" },
 ];
 
 // ============================================================

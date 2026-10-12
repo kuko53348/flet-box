@@ -51,7 +51,7 @@ const developerDir = () => {
  * @returns {void}
  * @throws {Error} With an actionable message when a requirement is missing.
  */
-const requireAppleToolchain = ({ simulator }) => {
+export const requireAppleToolchain = ({ simulator }) => {
   if (process.platform !== "darwin") {
     throw new Error(
       "Building iOS requires macOS with Xcode. Run `flet-box build ios` on a Mac.",

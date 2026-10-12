@@ -1,6 +1,6 @@
 # AdMob
 
-Google AdMob banner and full-screen ads for native Capacitor builds. It renders a placeholder that reserves banner space and drives the native plugin on mount.
+Google AdMob banner and full-screen ads for native Capacitor builds. It renders a placeholder that reserves banner space, and (only when opted in via `autoInitialize: true`) drives the native plugin to show ads.
 
 ## When to use it
 
@@ -14,6 +14,7 @@ import { AdMob } from "flet-box";
 const banner = AdMob({
   adId: "ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY",
   isTesting: true,
+  autoInitialize: true,
 });
 ```
 
@@ -31,6 +32,7 @@ const banner = AdMob({
 | `interstitialId` | `string` | AdMob interstitial ad unit id. |
 | `rewardedId` | `string` | AdMob rewarded ad unit id. |
 | `autoShow` | `boolean` | Shows the ad automatically when it is ready. |
+| `autoInitialize` | `boolean` | The `autoInitialize` value for the widget. |
 | `width` | `Size` | Width of the widget. A number is pixels; a string uses any CSS unit. |
 | `height` | `Size` | Height of the widget. A number is pixels; a string uses any CSS unit. |
 | `placeholder` | `boolean` | Fallback text shown while the ad is unavailable. |
@@ -82,6 +84,7 @@ const banner = AdMob({
   size: "ADAPTIVE_BANNER",
   margin: 8,
   isTesting: false,
+  autoInitialize: true,
 });
 ```
 
@@ -98,6 +101,7 @@ const banner = AdMob({
   rewardedId: "ca-app-pub-XXXXXXXXXXXXXXXX/2222222222",
   isTesting: true,
   autoShow: true,
+  autoInitialize: true,
   label: "AdMob banner",
   bgColor: "#f8fafc",
   onLoaded: (widget) => console.log("banner visible", widget),
@@ -108,6 +112,7 @@ const banner = AdMob({
 
 ## Tips
 
+- Native ads are opt-in: mount ADMOB with `autoInitialize: true` and add the AdMob App ID to the native config (`GADApplicationIdentifier` in Info.plist on iOS, `APPLICATION_ID` meta-data in AndroidManifest.xml on Android). Google's SDK aborts the app when the App ID is missing, so until then the widget stays placeholder-only.
 - On the web with no Capacitor plugin it degrades to the placeholder and logs one warning, so development keeps working.
 - Keep `isTesting: true` until your real ad units are approved, then switch to production ids.
 - Choose `position: "top"` or `"bottom"` and use `margin` to offset the banner from the device edge.
@@ -118,6 +123,7 @@ const banner = AdMob({
 
 ## Behavior
 
+- Until `autoInitialize: true` is passed, the widget is placeholder-only and never touches the native plugin.
 - The returned element exposes `show()`, `hide()`, `showInterstitial()`, and `showRewarded()` for full-screen ads.
 - `onLoaded` fires after the banner is shown, `onFailed` on native errors, and `onDismissed` after a full-screen ad closes; unmount removes the banner.
 

@@ -17,12 +17,14 @@ import { packageManager } from "./commands/package.js";
 import { createBundle } from "./commands/createBundle.js";
 import { buildAndroid } from "./commands/buildAndroid.js";
 import { buildIOS } from "./commands/buildIOS.js";
+import { runNative } from "./commands/runNative.js";
 import { runDevServer } from "./commands/runServer.js";
 import { createScreen } from "./commands/createScreen.js";
 import { createComponent } from "./commands/createComponent.js";
 import { killServer } from "./commands/killServer.js";
 import { runBundle } from "./commands/runBundle.js";
 import { runCloudflareDemo } from "./commands/runCloudflare.js";
+import { release } from "./commands/release.js";
 import { c, gradient, section, banner, divider, width, setupCtrlC } from "./utils/colors.js";
 
 const require = createRequire(import.meta.url);
@@ -63,13 +65,21 @@ ${cmd("create --adaptive", "responsive (mobile + desktop)")}
 ${cmd("create --blank", "empty project")}
 ${cmd("create --full", "AppBar+Drawer+BottomNav")}
 ${cmd("create --sidebar", "desktop (Sidebar+AppBar)")}
+${cmd("create --repo <user/repo>", "set GitHub repo for OTA updates")}
 ${cmd("screen <name|num>", "Create screen(s) (1-10)")}
 ${cmd("component <name|num>", "Create component(s) (1-10)")}
 ${cmd("createBundle [dir]", "Unified production bundle")}
 ${cmd("   └─ [dir]", "target folder (default www)")}
+${cmd("release [--patch]", "Bump version, rebuild, tag (OTA release)")}
+${cmd("   └─ --minor|--major", "bump that position instead of patch")}
+${cmd("   └─ --push", "push the commit + tag to origin")}
 ${cmd("build android", "Build Android debug APK")}
+${cmd("build android --release", "Build unsigned release APK/AAB to sign yourself")}
 ${cmd("build ios", "Build iOS Simulator app (macOS + Xcode)")}
 ${cmd("build ios --archive", "Build unsigned device archive (.xcarchive)")}
+${cmd("run-native <android|ios>", "Compile & launch on emulator/device")}
+${cmd("   └─ --device", "use a physical device instead (alias: rn)")}
+${cmd("   └─ --livereload", "hot reload on the device")}
 ${cmd("run", "Static file server")}
 ${cmd("run --hot", "Dev server with hot reload")}
 ${cmd("run-spa", "SPA + hot reload")}
@@ -89,8 +99,11 @@ ${opt("--dry-run | --list", "kill-server: just list, do not kill")}
 ${section("✨", "EXAMPLES")}
   ${c("gray", "flet-box create my-app --adaptive")}
   ${c("gray", "flet-box build android        # create a debug APK")}
+  ${c("gray", "flet-box build android --release --aab  # unsigned .aab for Play")}
   ${c("gray", "flet-box build ios            # create an iOS Simulator app")}
   ${c("gray", "flet-box build ios --archive  # create an .xcarchive to sign in Xcode")}
+  ${c("gray", "flet-box run-native android    # build & launch on an emulator")}
+  ${c("gray", "flet-box run-native ios --device --livereload  # hot reload on iPhone")}
   ${c("gray", "cd my-app && flet-box run-spa")}
   ${c("gray", "flet-box run-bundle            # build & preview production")}
   ${c("gray", "flet-box cloudflare            # public HTTPS demo link in console")}
@@ -191,7 +204,7 @@ async function main() {
           console.log(
             c(
               "gray",
-              "Usage: flet-box create <project-name> [--adaptive|--blank|--full|--sidebar]",
+              "Usage: flet-box create <project-name> [--adaptive|--blank|--full|--sidebar|--repo user/repo]",
             ),
           );
           process.exit(1);
@@ -244,14 +257,25 @@ async function main() {
         await createBundle(args[1]);
         break;
 
+      case "release":
+        ensureProject();
+        await release(args.slice(1));
+        break;
+
       case "build":
         if (args[1] === "android") {
-          buildAndroid();
+          buildAndroid(args.slice(2));
         } else if (args[1] === "ios") {
           buildIOS(args.slice(2));
         } else {
           await createBundle(args[1]);
         }
+        break;
+
+      case "run-native":
+      case "runNative":
+      case "rn":
+        runNative(args.slice(1));
         break;
 
       case "pkg":
@@ -274,6 +298,16 @@ async function main() {
       case "dev":
       case "serve":
         ensureProject();
+        if (args[1] === "android" || args[1] === "ios") {
+          console.log(
+            c(
+              "dim",
+              `ℹ️ \`flet-box run ${args[1]}\` launches the native app — see \`flet-box run-native ${args[1]}\`.`,
+            ),
+          );
+          runNative(args.slice(1));
+          break;
+        }
         await runDevServer({
           spaMode: false,
           hotReload: flags.hot,

@@ -324,7 +324,42 @@ logo before building. Android builds require Node.js 20.9 or newer, Java, and
 the Android SDK; the command checks for Java and the SDK but does not install
 system-wide tools such as Android Studio or the JDK.
 
+To build a **release** artifact that you sign yourself, pass `--release`:
+
+```bash
+flet-box build android --release          # unsigned release APK
+flet-box build android --release --aab    # unsigned release AAB (for Play)
+```
+
+Release artifacts are left **unsigned by design** so you can sign them with your
+own keystore: the APK at `android/app/build/outputs/apk/release/` is already
+aligned by Gradle, so sign it directly with `apksigner sign --ks <tu.keystore>
+--ks-key-alias <alias> app-release-unsigned.apk` (firma release = tu *upload
+key*). For Play Store, upload the AAB at
+`android/app/build/outputs/bundle/release/app-release.aab` and let Play App
+Signing apply the final key.
+
 To open the native project in Android Studio, run `npm run android:open`.
+
+## Preview on an emulator, simulator or device
+
+To see the app running natively without a store release, use `run-native`. It
+initializes the platform if missing, synchronizes the web app, compiles the debug
+build, and launches it on the first available emulator — or on a connected
+device with `--device`:
+
+```bash
+flet-box run-native android            # Android emulator (AVD or device)
+flet-box run-native ios                # iOS Simulator (macOS + Xcode)
+flet-box run-native android --device   # physical Android over USB
+flet-box run-native ios --device --livereload   # hot reload on an iPhone
+```
+
+`--livereload` keeps a dev server running so edits to `src/app.js` reload the
+app on the device instantly. The same toolchain requirements as `build android`
+/ `build ios` apply: Android needs the SDK and a JDK and an AVD (or USB
+debugging enabled); iOS needs full Xcode, CocoaPods, and an iOS simulator
+runtime.
 
 ## Create an iOS app
 
@@ -405,8 +440,13 @@ color `#1a1a2e` is defined at the top of the script.
 | `flet-box run-spa` | Starts the SPA server with hot reload. |
 | `flet-box build` | Creates a production bundle. |
 | `flet-box build android` | Builds the Android debug APK. |
+| `flet-box build android --release` | Builds an unsigned release APK to sign yourself. |
+| `flet-box build android --release --aab` | Builds an unsigned release AAB for Play. |
 | `flet-box build ios` | Builds an iOS Simulator app (macOS and Xcode required). |
 | `flet-box build ios --archive` | Builds an unsigned device archive to sign in Xcode. |
+| `flet-box run-native <android\|ios>` | Compiles and launches the app on an emulator/simulator or connected device. |
+| `flet-box run-native <android\|ios> --device` | Forces a physical device instead of the emulator. |
+| `flet-box run-native <android\|ios> --livereload` | Launches the app with hot reload on the device. |
 | `flet-box pkg` | Opens the package manager. |
 | `flet-box --version` | Shows the CLI version. |
 | `flet-box --help` | Shows the command list. |
