@@ -48,7 +48,7 @@ Each harness writes a global (`window.__TESTS`, `window.__SMOKE`, `window.__DOCC
 ## Repo layout gotchas
 
 - The backend is a separate package and repo, `flet-box-server` (a sibling checkout, `../flet-box-server`); `docs/server/` documents it from here. It is NOT part of this repo and is not published with the framework — don't wire it in, and don't import it from `src/`.
-- `www/` IS tracked (the demo bundle doubles as the OTA source); `dist/` is not. Never hand-edit build output — regenerate it with `npm run build` or `flet-box release`.
+- `www/` and `dist/` are gitignored build output — regenerate them with `npm run build` or `flet-box release`, never hand-edit them. `www/` is built from the root demo (`src/app.js` + `index.html`) so `flet-box run-bundle` works here; in a generated app it is the OTA source that CI builds and deploys to Pages on `v*` tags, and it stays out of git there too.
 - `.github/workflows/npm-publish.yml` is the only workflow: it publishes to npm when `package.json` carries a version npm doesn't have yet. APK/AAB CI belongs to generated apps (`bin/utils/templates.js` writes theirs), not here. No CI runs the tests.
 - npm ships all of `bin/`, so a stray `bin/package.json` would be published and shadow module resolution. Keep `bin/` free of package manifests.
 
