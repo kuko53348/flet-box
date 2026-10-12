@@ -1,33 +1,90 @@
-# This workflow will run tests using node and then publish a package to GitHub Packages when a release is created
-# For more information see: https://docs.github.com/en/actions/publishing-packages/publishing-nodejs-packages
+name: Publish to npm
 
-name: Node.js Package
-
+# GitHub is the ONLY place you publish from. Bump the version with
+# `flet-box release --patch --push` (or edit package.json and push) and this
+# workflow publishes that exact version to npm automatically. Pushes that do
+# not change the version are skipped, so WIP commits never publish and a
+# re-run of the same tag is harmless.
+#
+# Auth — the first one you configure wins, you only need ONE:
+#   1. NPM_TOKEN secret (classic, works immediately):
+#        npmjs.com -> Access Tokens -> Generate New Token -> Automation
+#        then repo Settings -> Secrets and variables -> Actions -> NPM_TOKEN
+#   2. npm Trusted Publishing / OIDC (no secret to rotate):
+#        npmjs.com -> package "flet-box" -> Settings -> Trusted Publisher ->
+#        GitHub Actions, with user kuko53348, repo flet-box,
+#        workflow filename npm-publish.yml, environment left empty.
 on:
-  release:
-    types: [created]
+  push:
+    branches: [ refactory, main ]
+    tags: [ 'v*' ]
+  workflow_dispatch:
+
+# Least privilege: read the repo; mint an OIDC token for npm provenance.
+permissions:
+  contents: read
+  id-token: write
+
+# Never let two publishes race each other.
+concurrency:
+  group: npm-publish
+  cancel-in-progress: false
 
 jobs:
-  build:
+  publish:
+    name: Publish if version is new
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - run: npm ci
-      - run: npm test
+      - name: Checkout
+        uses: actions/checkout@v5
 
-  publish-npm:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Setup Node
+        uses: actions/setup-node@v5
         with:
-          node-version: 20
-          registry-url: https://registry.npmjs.org/
-      - run: npm ci
-      - run: npm publish
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      # Trusted Publishing (OIDC) needs npm >= 11.5.1.
+      - name: Ensure recent npm
+        run: npm install -g npm@latest
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run contract checks
+        run: npm test
+
+      - name: Read name and version from package.json
+        id: pkg
+        run: |
+          echo "name=$(node -p "require('./package.json').name")" >> "$GITHUB_OUTPUT"
+          echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Check whether this version already exists on npm
+        id: exists
+        run: |
+          if npm view "${{ steps.pkg.outputs.name }}@${{ steps.pkg.outputs.version }}" version >/dev/null 2>&1; then
+            echo "published=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "published=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Token auth when the NPM_TOKEN secret exists; otherwise fall back to
+      # npm Trusted Publishing (OIDC). The empty-token case is never passed
+      # to npm, so the two paths cannot interfere with each other.
+      - name: Publish to npm
+        if: steps.exists.outputs.published == 'false'
         env:
-          NODE_AUTH_TOKEN: ${{secrets.npm_token}}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -n "$NODE_AUTH_TOKEN" ]; then
+            echo "Publishing with NPM_TOKEN secret…"
+            npm publish
+          else
+            echo "No NPM_TOKEN secret — publishing with npm Trusted Publishing (OIDC)…"
+            npm publish --provenance
+          fi
+
+      - name: Nothing to publish
+        if: steps.exists.outputs.published == 'true'
+        run: echo "${{ steps.pkg.outputs.name }}@${{ steps.pkg.outputs.version }} is already on npm — skipping."

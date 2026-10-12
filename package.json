@@ -1,18 +1,25 @@
 {
   "name": "flet-box",
   "version": "1.0.1",
-  "description": "Ultra-lightweight UI framework for vanilla JS web apps",
+  "description": "Declarative, zero-dependency UI framework in vanilla JS — ship web, PWA, Android and iOS from one codebase",
   "type": "module",
   "main": "src/index.js",
   "types": "src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    },
+    "./package.json": "./package.json"
+  },
   "bin": {
     "flet-box": "bin/cli.js"
   },
   "scripts": {
     "dev": "node bin/cli.js run --hot",
     "build": "node bin/cli.js createBundle",
-    "test": "node scripts/check-widgets.mjs",
-    "prepublishOnly": "npm run build"
+    "release": "node bin/cli.js release",
+    "test": "node scripts/check-widgets.mjs"
   },
   "keywords": [
     "fletbox",
@@ -48,9 +55,6 @@
     "LICENSE"
   ],
   "engines": {
-    "node": ">=18.0.0"
-  },
-  "allowScripts": {
-    "esbuild@0.28.2": true
+    "node": ">=20.9.0"
   }
 }

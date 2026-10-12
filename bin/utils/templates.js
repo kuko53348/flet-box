@@ -1164,9 +1164,9 @@ jobs:
       name: github-pages
       url: \${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
 
@@ -1182,7 +1182,7 @@ jobs:
       # update, so test builds cannot reach installed apps.
       - name: Upload Pages artifact
         if: startsWith(github.ref, 'refs/tags/v')
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: www
 
@@ -1190,27 +1190,27 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         if: startsWith(github.ref, 'refs/tags/v')
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
 
   # ---------- ANDROID: debug APK ----------
   android:
     name: Android (APK)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 17
 
       # ubuntu runners ship the Android SDK; this step accepts licences and
       # installs any packages the Capacitor Gradle build asks for.
-      - uses: android-actions/setup-android@v3
+      - uses: android-actions/setup-android@v4
 
       - name: Install dependencies
         run: npm install
@@ -1230,7 +1230,7 @@ jobs:
           ./gradlew assembleDebug --no-daemon
 
       - name: Upload APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${slug}-android-debug
           path: android/app/build/outputs/apk/debug/app-debug.apk
@@ -1241,9 +1241,9 @@ jobs:
     name: iOS (simulator)
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
 
@@ -1280,7 +1280,7 @@ jobs:
             build
 
       - name: Upload .app
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${slug}-ios-simulator
           path: ios/App/build/Build/Products/Debug-iphonesimulator/App.app
@@ -1422,7 +1422,7 @@ enable: get an approved domain at https://www.google.com/adsense, put your
 publisher ID in the script, and delete the surrounding \`<!--\` / \`-->\` so the
 tag goes live. Ads only render on an approved domain, not on localhost. You can
 also drop the \`AdSense\` widget into any screen (see
-\`node_modules/flet-box/docs/widget/AdSense.md\`).
+https://github.com/kuko53348/flet-box/blob/refactory/docs/widget/AdSense.md).
 
 ### AdMob (Android / iOS)
 
@@ -1457,7 +1457,8 @@ also drop the \`AdSense\` widget into any screen (see
 
 4. Uncomment the \`AdMob\` import and the \`AdMob({...})\` widget in
    \`src/screens/HomeScreen.js\` (they are marked with ADMOB comments). Full
-   props in \`node_modules/flet-box/docs/widget/AdMob.md\`.
+   props in
+   https://github.com/kuko53348/flet-box/blob/refactory/docs/widget/AdMob.md.
 
 ## Over-the-air updates (OTA)
 

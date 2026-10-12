@@ -1,11 +1,12 @@
 # AGENTS.md
 
-FletBox: zero-runtime-dependency vanilla-JS UI framework with a Flet-like declarative API. ESM only (`"type": "module"`), Node >= 18. Dev happens on branch `refactory`.
+FletBox: zero-runtime-dependency vanilla-JS UI framework with a Flet-like declarative API. ESM only (`"type": "module"`), Node >= 20.9. Dev happens on branch `refactory`.
 
 ## Commands
 
 - `npm run dev` — static dev server on port 8000 (override with `--port`). Despite the `--hot` flag in package.json, `run` never enables HMR (the CLI only parses `--port`/`--quiet`); use `flet-box run-spa` for hot reload.
 - `npm run build` — esbuild-bundles `src/app.js` into `dist/`. Requires `src/app.js` (present at framework root as the demo, so the build works here). Real workflow: `flet-box create <name>` then build inside that project.
+- `npm run release -- --patch [--push]` — the ONLY way to bump a version. Requires a clean tree, bumps `package.json` with the odometer scheme (`bin/utils/version.js`: MAJOR unbounded, MINOR/PATCH 0–9 with carry), rebuilds the bundle (`www/config.json` + hash), commits, and tags `vX.Y.Z`. CI publishes that tag to npm; never run `npm publish` by hand. See `docs/guides/online-updates.md`.
 - `npm test` — runs the static widget-contract checker (`node scripts/check-widgets.mjs`) against `scripts/widget-contract-baseline.json`. Behavioral tests are browser harnesses in `tests/` (below).
 - `python3 scripts/generate_widget_docs.py` — regenerates `docs/widget/*.md` from `src/index.d.ts` + snippet library. Run after changing a widget's public props/types.
 - `flet-box build android [--release [--aab]]` / `flet-box build ios [--archive]` — Capacitor builds, run **inside a generated project**. Both share `bin/utils/capacitor.js`; each owns its toolchain checks (`buildAndroid.js`: SDK + JDK; `buildIOS.js`: full Xcode + CocoaPods + simulator runtimes). Android `--release` leaves the artifact **unsigned on purpose** so it can be signed with the developer's own keystore (`apksigner` for the APK, `jarsigner`/Play App Signing for the AAB).
@@ -46,11 +47,10 @@ Each harness writes a global (`window.__TESTS`, `window.__SMOKE`, `window.__DOCC
 
 ## Repo layout gotchas
 
-- `flet-box-server/` is a separate backend toolkit (Express/SQLite/Redis) with its own package.json and its own `node_modules`/`attack.sh` test artifacts. Unrelated to the framework — don't wire it in.
-- `dist/` is tracked in git even though `.gitignore` lists it. Don't commit new build output.
-- `demo.py` is an unrelated AI-API experiment with a fake bearer token; not part of the framework.
-- `.github/workflows/` only builds an APK via Cordova; no CI runs the tests.
-- `run.sh` (root and `dist/`) is a raw `python -m http.server 8000`.
+- `flet-box-server/` is a separate backend toolkit (Express/SQLite/Redis) with its own package.json, `node_modules`, and pentest artifacts; `docs/server/` documents it. It is NOT part of the framework — don't wire it in.
+- `www/` IS tracked (the demo bundle doubles as the OTA source); `dist/` is not. Never hand-edit build output — regenerate it with `npm run build` or `flet-box release`.
+- `.github/workflows/npm-publish.yml` is the only workflow: it publishes to npm when `package.json` carries a version npm doesn't have yet. APK/AAB CI belongs to generated apps (`bin/utils/templates.js` writes theirs), not here. No CI runs the tests.
+- npm ships all of `bin/`, so a stray `bin/package.json` would be published and shadow module resolution. Keep `bin/` free of package manifests.
 
 ## Widget structure contract
 
