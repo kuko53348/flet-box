@@ -36,10 +36,10 @@ Use browser storage for offline cache and preferences, and sync with the API whe
 
 The current `Database` helper supports SQLite through the `SQLite` wrapper.
 
-> **Current state:** the `flet-box-server` package declares `main: "index.js"` but no such file exists at its root, and `tools/index.js` points to a `modules/` folder that does not exist. The top-level imports below document the intended API; until the exports are fixed, use the working `SQLite` wrapper directly as shown in the [API server section](#api-server-for-sqlite).
+> **Import rule:** the package root exports the core only. Every tool is a deep import (`flet-box-server/tools/<name>.js`) so that loading one never pulls in puppeteer, twilio, xlsx or the optional Google Cloud packages.
 
 ```javascript
-import { Database } from "flet-box-server";
+import { Database } from "flet-box-server/tools/Database.js";
 
 const db = Database({
   type: "sqlite",
@@ -144,7 +144,7 @@ REDIS_URL=redis://localhost:6379
 Use the cache helpers:
 
 ```javascript
-import { connectRedis, cacheSet, cacheGet, cacheDel } from "flet-box-server";
+import { connectRedis, cacheSet, cacheGet, cacheDel } from "flet-box-server/tools/cache.js";
 
 connectRedis();
 await cacheSet("user:1", { name: "Ada" }, 3600);
@@ -157,7 +157,7 @@ await cacheDel("user:1");
 The local storage module uses `STORAGE_PATH` or `./storage`:
 
 ```javascript
-import { uploadFile, downloadFile, listFiles, deleteFile } from "flet-box-server";
+import { uploadFile, downloadFile, listFiles, deleteFile } from "flet-box-server/tools/storage.js";
 
 const file = await uploadFile("avatars", "profile.jpg", imageBuffer);
 const stream = await downloadFile(file.path);
@@ -172,7 +172,7 @@ Validate file names, sizes, and content types before storing uploads.
 Configure SMTP credentials through environment variables in production. A simple send looks like:
 
 ```javascript
-import { sendEmail } from "flet-box-server";
+import { sendEmail } from "flet-box-server/tools/email.js";
 
 await sendEmail({
   sendTo: "user@example.com",
@@ -195,7 +195,7 @@ TWILIO_PHONE_NUMBER=...
 ```
 
 ```javascript
-import { sendSMS, sendVerificationCode, verifyPhone } from "flet-box-server";
+import { sendSMS, sendVerificationCode, verifyPhone } from "flet-box-server/tools/sms.js";
 
 await sendSMS("+123456789", "Your code is 123456");
 const code = await sendVerificationCode("+123456789");
@@ -207,7 +207,7 @@ The default verification store is in memory. Use a shared persistent store when 
 ## PDF
 
 ```javascript
-import { generatePDF, savePDF, generateInvoice } from "flet-box-server";
+import { generatePDF, savePDF, generateInvoice } from "flet-box-server/tools/pdf.js";
 
 const pdf = await generatePDF("<h1>Hello</h1>", { format: "A4" });
 await savePDF(pdf, "output.pdf");
@@ -226,7 +226,7 @@ PDF generation uses Puppeteer and may require additional system configuration in
 ## CSV and Excel
 
 ```javascript
-import { readCSV, writeCSV, readExcel, writeExcel } from "flet-box-server";
+import { readCSV, writeCSV, readExcel, writeExcel } from "flet-box-server/tools/csv.js";
 
 const users = await readCSV("users.csv");
 await writeCSV("copy.csv", users);
@@ -239,7 +239,7 @@ await writeExcel("copy.xlsx", workbookRows);
 Queues use Redis and Bull:
 
 ```javascript
-import { createQueue, addJob, processQueue } from "flet-box-server";
+import { createQueue, addJob, processQueue } from "flet-box-server/tools/queue.js";
 
 createQueue("emails", { attempts: 3, backoff: 5000 });
 
@@ -258,7 +258,7 @@ Use queues for slow work that should not block an HTTP request.
 ## WebSockets
 
 ```javascript
-import { createWebSocketServer } from "flet-box-server";
+import { createWebSocketServer } from "flet-box-server/tools/webSocket.js";
 
 const wss = createWebSocketServer(3001);
 
@@ -275,10 +275,12 @@ The server supports connection, message, close, error, broadcast, and room opera
 
 ## Speech and translation
 
-Optional Google Cloud modules provide speech-to-text and text-to-speech. They require cloud credentials and should be configured outside source control.
+Optional Google Cloud modules provide speech-to-text and text-to-speech. They are `optionalDependencies`, so install the ones you use (`npm install @google-cloud/speech @google-cloud/text-to-speech`); they require cloud credentials and should be configured outside source control.
 
 ```javascript
-import { transcribeFile, speak, translate } from "flet-box-server";
+import { transcribeFile } from "flet-box-server/tools/speechToText.js";
+import { speak } from "flet-box-server/tools/textToSpeech.js";
+import { translate } from "flet-box-server/tools/translator.js";
 
 const text = await transcribeFile("audio.mp3", { language: "en-US" });
 const audio = await speak("Hello", "en");
@@ -288,7 +290,7 @@ const translated = await translate("hello", "es");
 ## Logging
 
 ```javascript
-import { logger } from "flet-box-server";
+import { logger } from "flet-box-server/tools/logger.js";
 
 logger.save("logs/app.log");
 logger.info("Server started");
