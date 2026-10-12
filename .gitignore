@@ -10,9 +10,6 @@ build/
 # Logs and reports
 *.log
 logs/
-logAttack.txt
-reporte_ataques.txt
-vulnerabilidades.txt
 
 # Environment and secrets
 .env
@@ -65,7 +62,3 @@ __pycache__/
 # Temporary files
 *.tmp
 *.temp
-
-# Pentest artifacts
-attack.sh
-flet-box-server/attack.sh
