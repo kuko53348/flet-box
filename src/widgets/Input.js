@@ -104,6 +104,11 @@ export const Input = (props) => {
   let inputWrapper = null;
   let container = null;
 
+  // Whether the native input currently holds focus. Used to keep the focus
+  // ring (a box-shadow) in sync with validation colors without ever changing
+  // the border width — changing the width would resize the box and shift layout.
+  const isFocused = () => document.activeElement === inputElement;
+
   // ========== SIZES ==========
   // Maps the `size` prop to concrete CSS values so the rest of the code stays size-agnostic.
   const sizes = {
@@ -223,10 +228,19 @@ export const Input = (props) => {
       borderColorValue = colors.success;
     }
 
+    // The border keeps a fixed 1px width in every state; focus thickness is
+    // drawn as a 1px box-shadow ring instead. This changes the look on focus
+    // without altering the element's box size, so nothing gets pushed around.
     if (variant === "outlined") {
       inputWrapper.style.borderColor = borderColorValue;
+      inputWrapper.style.boxShadow = isFocused()
+        ? `0 0 0 1px ${borderColorValue}`
+        : "none";
     } else if (variant === "underlined") {
       inputWrapper.style.borderBottomColor = borderColorValue;
+      inputWrapper.style.boxShadow = isFocused()
+        ? `inset 0 -1px 0 0 ${borderColorValue}`
+        : "none";
     }
 
     if (showValidationIcon && validationIcon) {
@@ -400,13 +414,15 @@ export const Input = (props) => {
   });
 
   inputElement.addEventListener("focus", (e) => {
-    // Highlight the border on focus to signal the active field
+    // Highlight the border on focus to signal the active field.
+    // The border width stays at 1px; the thicker focus look comes from a
+    // 1px box-shadow ring so focusing never resizes the box or shifts layout.
     if (variant === "outlined") {
       inputWrapper.style.borderColor = colors.primary;
-      inputWrapper.style.borderWidth = "2px";
+      inputWrapper.style.boxShadow = `0 0 0 1px ${colors.primary}`;
     } else if (variant === "underlined") {
       inputWrapper.style.borderBottomColor = colors.primary;
-      inputWrapper.style.borderBottomWidth = "2px";
+      inputWrapper.style.boxShadow = `inset 0 -1px 0 0 ${colors.primary}`;
     }
     if (onFocus) onFocus(e);
   });
@@ -415,12 +431,12 @@ export const Input = (props) => {
     // Restore normal border and run final validation when the user leaves the field
     if (variant === "outlined") {
       inputWrapper.style.borderColor = error ? colors.danger : colors.border;
-      inputWrapper.style.borderWidth = "1px";
+      inputWrapper.style.boxShadow = "none";
     } else if (variant === "underlined") {
       inputWrapper.style.borderBottomColor = error
         ? colors.danger
         : colors.border;
-      inputWrapper.style.borderBottomWidth = "1px";
+      inputWrapper.style.boxShadow = "none";
     }
     const result = validateValue(currentValue);
     isValid = result.valid;
