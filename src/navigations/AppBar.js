@@ -165,6 +165,8 @@ export const AppBar = (props) => {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
+    width: "100%",
+    boxSizing: "border-box",
     minHeight: 56,
     borderRadius: finalBorderRadius,
     marginTop: finalMarginTop,
@@ -217,7 +219,10 @@ export const AppBar = (props) => {
   }
 
   const centerSection = Container({
-    flex: centerTitle ? 1 : "none",
+    // Always flex:1 so the title absorbs whatever the leading and action zones
+    // do not use. With flex:"none" a long title keeps its intrinsic width and
+    // pushes the actions past the viewport edge on narrow screens.
+    flex: 1,
     display: "flex",
     alignItems: "center",
     justifyContent: centerTitle ? "center" : "flex-start",
@@ -232,9 +237,11 @@ export const AppBar = (props) => {
   // ========== RIGHT SECTION (only rendered when there are valid actions) ==========
   if (validActions.length > 0) {
     const rightSection = Row({
+      // Row defaults to width:"100%", which inside the flex header demands the
+      // whole bar width and overflows it. The zone must be content-sized.
+      width: "auto",
       alignItems: "center",
       justifyContent: "flex-end",
-      paddingRight: paddingRight,
       gap: actionsGap,
       minWidth: 48,
       flexShrink: 0,
