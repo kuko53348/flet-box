@@ -1,6 +1,6 @@
 {
   "name": "flet-box",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Declarative, zero-dependency UI framework in vanilla JS — ship web, PWA, Android and iOS from one codebase",
   "type": "module",
   "main": "src/index.js",
