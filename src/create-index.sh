@@ -60,7 +60,7 @@ export {
     Scaffold, AppBar, Drawer, BottomNavigation, Tabs, DrawerItem,
     openDrawer, closeDrawer, toggleDrawer, destroyDrawer,
     initRouter, goTo, goBack, goForward, replace,
-    getCurrentPath, getCurrentRoute, getCurrentRouteConfig,
+    getCurrentPath, getBasePath, getCurrentRoute, getCurrentRouteConfig,
     getRoute, isActive, subscribe, useParams, useQueryParams,
     buildUrl, clearRouter
 } from './src/navigations/index.js';
@@ -178,7 +178,7 @@ export { Drawer, openDrawer, closeDrawer, toggleDrawer, destroyDrawer } from './
 export { BottomNavigation } from './BottomNavigation.js';
 export { Tabs } from './Tabs.js';
 export { DrawerItem } from './DrawerItem.js';
-export { initRouter, goTo, goBack, goForward, replace, getCurrentPath, getCurrentRoute, getCurrentRouteConfig, getRoute, isActive, subscribe, useParams, useQueryParams, buildUrl, clearRouter } from './Router.js';
+export { initRouter, goTo, goBack, goForward, replace, getCurrentPath, getBasePath, getCurrentRoute, getCurrentRouteConfig, getRoute, isActive, subscribe, useParams, useQueryParams, buildUrl, clearRouter } from './Router.js';
 EOF
 echo "✅ Created: src/navigations/index.js"
 

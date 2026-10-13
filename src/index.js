@@ -208,6 +208,7 @@ export {
   goForward,
   replace,
   getCurrentPath,
+  getBasePath,
   getCurrentRoute,
   getCurrentRouteConfig,
   getRoute,

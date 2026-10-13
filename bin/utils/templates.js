@@ -607,9 +607,13 @@ echo "✅ Bundle listo: \$TARGET/   Prueba: cd \$TARGET && bash run.sh"
 
 export const serviceWorkerJs = () => `// service-worker.js - PWA offline support
 const CACHE_NAME = 'fletbox-v2';
+// Deployment prefix: a worker's own URL always sits at the app root, so this
+// is '/' at the host root and '/repo-name/' on a GitHub Pages project site.
+// Hard-coded '/' entries would miss every file under a subpath.
+const BASE = new URL('./', self.location).pathname;
 // The shipped (baked-in) shell, precached so the app opens with no connection.
 // loader.js owns a SEPARATE cache ('fletbox-ota') for downloaded bundles.
-const PRECACHE = ['/', '/index.html', '/loader.js', '/config.json', '/src/app.js'];
+const PRECACHE = [BASE, BASE + 'index.html', BASE + 'loader.js', BASE + 'config.json', BASE + 'src/app.js'];
 
 self.addEventListener('install', event => {
   event.waitUntil(
@@ -690,7 +694,7 @@ self.addEventListener('fetch', event => {
         const cached = await cache.match(req);
         if (cached) return cached;
         if (req.mode === 'navigate') {
-          const shell = await cache.match('/index.html');
+          const shell = await cache.match(BASE + 'index.html');
           if (shell) return shell;
         }
         return Response.error();

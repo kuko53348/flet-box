@@ -36,6 +36,8 @@ export {
   replace,
   /** Returns the currently active path. */
   getCurrentPath,
+  /** Returns the deployment base path, e.g. "/flet-box-docs". */
+  getBasePath,
   /** Returns the component/config for the current route. */
   getCurrentRoute,
   /** Returns the full route state (route, params, query, path). */

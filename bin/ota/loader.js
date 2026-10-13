@@ -331,7 +331,12 @@ async function checkAndUpdate(shippedConfig, activeHash) {
 (async function main() {
   let shippedConfig = null;
   try {
-    shippedConfig = await fetchJson("./config.json");
+    // Anchored to this script, not the document: on a static host with SPA
+    // fallback (GitHub Pages) the app can boot from a deep URL, where a
+    // document-relative "./config.json" would resolve to the wrong folder.
+    shippedConfig = await fetchJson(
+      new URL("./config.json", import.meta.url).href,
+    );
   } catch (e) {
     warn("no shipped config.json:", e.message);
   }

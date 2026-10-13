@@ -18,6 +18,7 @@ import { initRouter, getCurrentRoute, subscribe } from "./Router.js";
  * @property {number} [navSideBarWidth=260] - Legacy alias for leftNavBarWidth (deprecated).
  * @property {"left"|"right"} [navSideBarPosition="left"] - Legacy: which side navSideBar renders on.
  * @property {Object} [routes] - Route map object for router mode (path → component).
+ * @property {string} [basePath] - Deployment prefix, e.g. "/flet-box-docs". Auto-detected when omitted.
  * @property {string} [backgroundColor] - Background color of the scaffold shell.
  * @property {boolean} [closeDrawerOnNavigate=false] - Whether to close the drawer automatically on route change.
  */
@@ -54,6 +55,7 @@ export const Scaffold = (props) => {
     navSideBarWidth = 260,
     navSideBarPosition = "left",
     routes,
+    basePath,
     backgroundColor = colors.background,
     closeDrawerOnNavigate = false,
     ...rest
@@ -81,11 +83,12 @@ export const Scaffold = (props) => {
   }
 
   // Bootstrap the router with the current browser URL so deep-links work
-  // on first load without redirecting to "/".
+  // on first load without redirecting to "/". `basePath` pins the deployment
+  // prefix when the app is served from a subpath (e.g. GitHub Pages).
   if (isRouterMode && routesConfig) {
     const currentUrl =
       typeof window !== "undefined" ? window.location.pathname : "/";
-    initRouter(routesConfig, currentUrl);
+    initRouter(routesConfig, currentUrl, { base: basePath });
   }
 
   // Resolve the legacy navSideBar prop to the appropriate side.

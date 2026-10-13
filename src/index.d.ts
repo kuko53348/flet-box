@@ -977,12 +977,13 @@ declare module 'flet-box' {
   // =========================================================================
   // Router
   // =========================================================================
-  export function initRouter(routes: Record<string, any>, initialPath?: string): void;
+  export function initRouter(routes: Record<string, any>, initialPath?: string, options?: { base?: string }): void;
   export function goTo(path: string, params?: Record<string, any>): void;
   export function goBack(): void;
   export function goForward(): void;
   export function replace(path: string, params?: Record<string, any>): void;
   export function getCurrentPath(): string;
+  export function getBasePath(): string;
   export function getCurrentRoute(): any;
   export function getCurrentRouteConfig(): { route: any; params: Record<string, any>; query: Record<string, any>; path: string };
   export function getRoute(path: string): any;

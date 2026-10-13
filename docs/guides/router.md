@@ -176,6 +176,88 @@ runApp(App, "root", true, routes);
 
 Use `AppBar`, `DrawerItem`, `BottomNavigation`, or `Button` to call `goTo()`.
 
+## Deploy under a subpath
+
+A router URL is app-relative: `"/settings"`. Static hosts such as GitHub Pages
+serve a project site under a prefix — `https://user.github.io/my-app/` — so the
+browser sees `/my-app/settings` while the route map only knows `/settings`. The
+router handles that prefix on its own. It reads the deployment base when it
+initializes and adds it back to every URL it writes, so `goTo()` and the
+back/forward buttons stay inside `/my-app/` instead of jumping to the host root.
+
+The base is resolved in this order:
+
+1. The explicit option, which wins over everything:
+   `initRouter(routes, path, { base: "/my-app" })`, or
+   `Scaffold({ routes, basePath: "/my-app" })`.
+2. `window.__FLETBOX_BASE__`, when the live URL actually sits under it. Set it
+   in the page before the app loads: `<script>window.__FLETBOX_BASE__ = "/my-app/";</script>`.
+   The guard is what lets one build run both at `/my-app/` on Pages and at the
+   origin root inside a Capacitor WebView.
+3. Auto-detection: the shortest leading segment of the URL whose remainder
+   matches a registered route becomes the base (`/my-app/settings` → base
+   `/my-app`, route `/settings`). A root-hosted app resolves to `""` and its
+   URLs are untouched.
+
+Read the result with `getBasePath()` — it returns `"/my-app"` or `""`. Use it
+for anything the router does not touch, such as fetching content files, and
+compute it at call time rather than at import time, because the base only
+exists once the router has initialized:
+
+```javascript
+import { getBasePath } from "flet-box";
+
+const assetUrl = (path) =>
+  new URL(path, `${window.location.origin}${getBasePath()}/`).href;
+// https://user.github.io/my-app/docs/guides/router.md  ·  http://localhost:8000/docs/…
+```
+
+## Deep links on a static host
+
+Being able to *write* `/my-app/settings` is only half of it: a static host has
+no such file, so a visitor who opens or reloads that URL gets a 404. GitHub
+Pages answers a missing path by serving the project's `404.html` **under the
+requested URL**, which is exactly the hook an SPA needs — make `404.html` a
+copy of `index.html` and the router will read the real path from the address
+bar and render it.
+
+Generate it at build time so it never drifts from the real entry point. Two
+details make the copy work at any depth, and both are easy to get wrong:
+
+- **Absolute references.** A page served for `/my-app/docs/guides/router.md`
+  resolves `"./loader.js"` against `/my-app/docs/guides/`, not the app root.
+  Rewrite every relative reference, including the import map and the
+  `serviceWorker.register()` path.
+- **Declare the base.** A deep URL is not always recognizable as a route (an
+  unknown path matches nothing), so publish `window.__FLETBOX_BASE__` in the
+  fallback page.
+
+A build script does the whole job in a few lines:
+
+```javascript
+// scripts/spa-fallback.mjs — run after the bundle is written.
+const base = "/my-app/";
+const html = await readFile("www/index.html", "utf8");
+
+const fallback = html
+  .replace(/(["'])\.\//g, `$1${base}`)
+  .replace(
+    /register\((["'])service-worker\.js\1\)/g,
+    `register($1${base}service-worker.js$1)`,
+  )
+  .replace(
+    "</head>",
+    `    <script>window.__FLETBOX_BASE__ = "${base}";</script>\n  </head>`,
+  );
+
+await writeFile("www/404.html", fallback, "utf8");
+```
+
+Keep the service worker in the same scheme: derive its prefix from
+`new URL("./", self.location).pathname` instead of hard-coding `/`, otherwise
+the precache and the offline navigation fallback miss every file under a
+subpath.
+
 ## Unknown routes
 
 If the initial URL is not found, the router redirects to the first configured route. You can also define a `*` or `/404` route for navigation attempts that do not exist.
@@ -188,6 +270,8 @@ If the initial URL is not found, the router redirects to the first configured ro
 - Calling `goTo()` before the router has been initialized.
 - Forgetting to unsubscribe from route listeners in a long-lived integration.
 - Expecting `goBack()` to work like a server redirect; it uses browser history.
+- Assuming the app owns the host root: under a subpath, content fetches need
+  `getBasePath()` and the host needs a `404.html` fallback for deep links.
 
 ---
 

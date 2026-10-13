@@ -7,6 +7,7 @@
  * - Dynamic segments: `/user/:id`, `/post/:slug/comments`
  * - Wildcard / 404 routes: `*` or `/404`
  * - Query string parameters
+ * - Deployment base paths (`/repo-name/`) for static hosts like GitHub Pages
  * - Browser history integration (pushState / popstate)
  * - Observer pattern (subscribe/notify) so layout shells like Scaffold can
  *   re-render when the route changes.
@@ -41,6 +42,15 @@ let currentQuery = {};
 
 /** @type {Function|null} Removes the popstate event listener; set during initRouter. */
 let removePopStateListener = null;
+
+/**
+ * Deployment base path the app is served under, e.g. "/flet-box-docs".
+ * Empty string means the app owns the host root. Router state stays
+ * app-relative; the base is only added when writing browser URLs.
+ *
+ * @type {string}
+ */
+let basePath = "";
 
 // ========== UTILITIES ==========
 
@@ -132,6 +142,93 @@ const findMatchingRoute = (path) => {
   return null;
 };
 
+// ========== DEPLOYMENT BASE PATH ==========
+
+/**
+ * Normalize a deployment base to "" or "/segment(s)" with no trailing slash.
+ *
+ * @param {string|null|undefined} base - e.g. "/", "flet-box-docs", "/flet-box-docs/".
+ * @returns {string} "" for a root-hosted app, otherwise a leading-slash prefix.
+ */
+const normalizeBase = (base) => {
+  if (!base) return "";
+  let out = String(base).trim();
+  if (!out.startsWith("/")) out = `/${out}`;
+  out = out.replace(/\/+$/, "");
+  return out === "/" ? "" : out;
+};
+
+/**
+ * Build a browser URL from an app-relative path by prefixing the base.
+ *
+ * @param {string} path - App-relative path, possibly with a query string.
+ * @returns {string} Path as seen by the browser.
+ */
+const withBase = (path) => `${basePath}${path}`;
+
+/**
+ * Remove the deployment base from a browser URL path.
+ *
+ * @param {string} path - Path as seen by the browser.
+ * @returns {string} App-relative path.
+ */
+const stripBase = (path) =>
+  basePath && path.startsWith(basePath)
+    ? path.slice(basePath.length) || "/"
+    : path;
+
+/**
+ * Work out which prefix of a browser path is the deployment base.
+ *
+ * Static hosts such as GitHub Pages serve a project site under
+ * `/<repo>/`, so `location.pathname` is `/<repo>/<route>` while the app's
+ * route map only knows `/<route>`. Scanning prefixes from the shortest one
+ * and returning the first whose remainder matches a registered route keeps
+ * root-hosted apps untouched (`base` resolves to "").
+ *
+ * @param {string} rawPath - Browser path, including any base prefix.
+ * @returns {string} Normalized base, or "" when no prefix yields a match.
+ */
+const detectBase = (rawPath) => {
+  const clean = cleanPath(rawPath);
+  if (findMatchingRoute(clean)) return "";
+
+  const segments = clean.split("/").filter(Boolean);
+  // i === segments.length covers the bare subpath root ("/repo/"), where the
+  // remainder is the app's own "/" route.
+  for (let i = 1; i <= segments.length; i++) {
+    const candidate = `/${segments.slice(0, i).join("/")}`;
+    const rest = segments.slice(i);
+    const remainder = rest.length ? `/${rest.join("/")}` : "/";
+    if (findMatchingRoute(remainder)) return normalizeBase(candidate);
+  }
+  return "";
+};
+
+/**
+ * Resolve the deployment base for the current document.
+ *
+ * Precedence: explicit `base` option > `window.__FLETBOX_BASE__` (only when
+ * the live URL actually sits under it, so the same bundle works when
+ * packaged by Capacitor at the origin root) > auto-detection from the URL.
+ *
+ * @param {string|null|undefined} explicitBase - Base passed to initRouter.
+ * @param {string} rawPath - Browser path the app is being entered on.
+ * @returns {string} Normalized base.
+ */
+const resolveBase = (explicitBase, rawPath) => {
+  const explicit = normalizeBase(explicitBase);
+  if (explicit) return explicit;
+
+  if (typeof window !== "undefined") {
+    const declared = normalizeBase(window.__FLETBOX_BASE__);
+    if (declared && (rawPath === `${declared}/` || rawPath.startsWith(`${declared}/`))) {
+      return declared;
+    }
+  }
+  return detectBase(rawPath);
+};
+
 // ========== INITIALIZATION ==========
 
 /**
@@ -146,8 +243,9 @@ const findMatchingRoute = (path) => {
  *
  * @param {Object.<string, *>} routesConfig - Map of path patterns to components/config.
  * @param {string|null} [initialPath=null] - Override the starting path; defaults to window.location.pathname.
+ * @param {{base?: string}} [options={}] - `base` pins the deployment prefix; auto-detected when omitted.
  */
-export const initRouter = (routesConfig, initialPath = null) => {
+export const initRouter = (routesConfig, initialPath = null, options = {}) => {
   routes = routesConfig;
 
   // Prefer the explicit initialPath; fall back to the live browser URL so
@@ -156,6 +254,11 @@ export const initRouter = (routesConfig, initialPath = null) => {
   if (!urlPath && typeof window !== "undefined") {
     urlPath = window.location.pathname;
   }
+
+  // Peel the deployment prefix off the browser URL before matching so a site
+  // served under /repo-name/ resolves to its routes instead of redirecting.
+  basePath = resolveBase(options.base, urlPath || "/");
+  if (urlPath) urlPath = stripBase(urlPath);
 
   // Last resort: use the first registered route or the root.
   if (!urlPath) {
@@ -188,9 +291,13 @@ export const initRouter = (routesConfig, initialPath = null) => {
   // redirected to the first route above).
   if (
     typeof window !== "undefined" &&
-    window.location.pathname !== currentPath
+    window.location.pathname !== withBase(currentPath)
   ) {
-    window.history.replaceState({ path: currentPath }, "", currentPath);
+    window.history.replaceState(
+      { path: currentPath },
+      "",
+      withBase(currentPath),
+    );
   }
 
   // Listen for browser-native back/forward navigation so the router state
@@ -198,7 +305,8 @@ export const initRouter = (routesConfig, initialPath = null) => {
   if (typeof window !== "undefined") {
     if (removePopStateListener) removePopStateListener();
     const handlePopState = (event) => {
-      const path = event.state?.path || window.location.pathname;
+      const path =
+        event.state?.path || stripBase(window.location.pathname);
       if (path !== currentPath) {
         currentPath = path;
         const match = findMatchingRoute(currentPath);
@@ -243,7 +351,7 @@ export const goTo = (path, params = {}) => {
     currentQuery = { ...queryParams, ...params };
 
     if (typeof window !== "undefined") {
-      window.history.pushState({ path: currentPath }, "", path);
+      window.history.pushState({ path: currentPath }, "", withBase(path));
     }
     notify();
   } else {
@@ -278,7 +386,7 @@ export const replace = (path, params = {}) => {
     currentQuery = { ...queryParams, ...params };
 
     if (typeof window !== "undefined") {
-      window.history.replaceState({ path: currentPath }, "", path);
+      window.history.replaceState({ path: currentPath }, "", withBase(path));
     }
     notify();
   }
@@ -315,6 +423,15 @@ export const goForward = () => {
  * @returns {string}
  */
 export const getCurrentPath = () => currentPath;
+
+/**
+ * Returns the deployment base the router resolved at init, e.g. "/flet-box-docs".
+ * Empty string for a root-hosted app. Use it to build asset or document URLs
+ * that must survive being served from a subpath.
+ *
+ * @returns {string}
+ */
+export const getBasePath = () => basePath;
 
 /**
  * Returns a shallow copy of the current dynamic route params.
@@ -454,6 +571,7 @@ export const clearRouter = () => {
   listeners = [];
   currentParams = {};
   currentQuery = {};
+  basePath = "";
 };
 
 export default {
@@ -463,6 +581,7 @@ export default {
   goBack,
   goForward,
   getCurrentPath,
+  getBasePath,
   getCurrentRoute,
   getCurrentRouteConfig,
   getRoute,
