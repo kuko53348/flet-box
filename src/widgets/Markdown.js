@@ -5,6 +5,7 @@
  */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
+import { composeUpdate } from "../utils/composeUpdate.js";
 import { generateHighlightedHtml } from "../utils/syntaxHighlight.js";
 
 /**
@@ -36,19 +37,49 @@ let markdownScopeUid = 0;
  * @param {string} html - Raw HTML produced by `parseMarkdown`.
  * @returns {string} The sanitized HTML.
  */
+/** True for URL values that must never reach an attribute (see sanitizeMarkdown). */
+const isDangerousUrl = (value) => {
+  const v = String(value).replace(/[\u0000-\u0020]/g, "").toLowerCase();
+  if (v.startsWith("javascript:") || v.startsWith("vbscript:")) return true;
+  // Inline images are legitimate; every other `data:` URL is not.
+  return v.startsWith("data:") && !v.startsWith("data:image/");
+};
+
 const sanitizeMarkdown = (html) => {
   const withoutScripts = html.replace(
     /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
     "",
   );
-  return withoutScripts.replace(/<[^<>]+>/g, (tag) =>
-    tag
-      .replace(/\son[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, "")
-      .replace(
-        /\s(href|src|xlink:href|formaction|action)\s*=\s*(?:"javascript:[^"]*"|'javascript:[^']*'|javascript:[^\s>]+)/gi,
-        ' $1="#"',
-      ),
-  );
+  // Parse for real and walk the tree. A regex over raw tags cannot see a `>`
+  // that sits *inside* a quoted attribute value, so `<img src="x>y" onerror=…>`
+  // used to pass through untouched while the browser kept the handler. Letting
+  // the browser tokenize removes that entire class of bypass.
+  try {
+    const doc = new DOMParser().parseFromString(withoutScripts, "text/html");
+    doc.querySelectorAll("script").forEach((node) => node.remove());
+    doc.querySelectorAll("*").forEach((node) => {
+      for (const attr of [...node.attributes]) {
+        if (attr.name.toLowerCase().startsWith("on")) {
+          node.removeAttribute(attr.name);
+        } else if (isDangerousUrl(attr.value)) {
+          // Neutralise rather than delete: the documented contract keeps the
+          // attribute and points it at "#", so links stay focusable and styled.
+          node.setAttribute(attr.name, "#");
+        }
+      }
+    });
+    return doc.body.innerHTML;
+  } catch {
+    // No DOMParser (non-browser host): keep the previous best-effort regex pass.
+    return withoutScripts.replace(/<[^<>]+>/g, (tag) =>
+      tag
+        .replace(/\son[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, "")
+        .replace(
+          /\s(href|src|xlink:href|formaction|action)\s*=\s*(?:"javascript:[^"]*"|'javascript:[^']*'|javascript:[^\s>]+)/gi,
+          ' $1="#"',
+        ),
+    );
+  }
 };
 
 // ─── Syntax highlighting ────────────────────────────────────────────────────
@@ -1229,6 +1260,20 @@ export const Markdown = (props) => {
    * @returns {string}
    */
   container.getSource = () => markdownText;
+
+  // `text`/`source`/`content` are reactive props mapped to `textContent` in the
+  // prop database, so letting the factory see them replaced the rendered
+  // Markdown with a bare text node. Own them and re-render instead.
+  composeUpdate(container, ["text", "source", "content"], (props) => {
+    const next = props.text ?? props.source ?? props.content;
+    if (next !== undefined) container.updateContent(String(next));
+    // `makeReactive` rewrites the value into `_originalProps` on every setter
+    // call; leaving it there means the next factory update maps it to
+    // `textContent` and wipes the widget anyway.
+    for (const key of ["text", "source", "content"]) {
+      delete container._originalProps[key];
+    }
+  });
 
   return container;
 };

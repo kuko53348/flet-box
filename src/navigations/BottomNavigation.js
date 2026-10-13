@@ -285,10 +285,22 @@ export const BottomNavigation = (props) => {
     return getCurrentPath();
   };
 
-  // Cleanup: unsubscribe from the router when the bar is removed from the DOM.
+  // Cleanup: release the router subscription on EITHER teardown path. `_cleanup`
+  // is only run by runApp's teardownTree / Scaffold; the lifecycle observer that
+  // fires on a plain DOM disconnect never calls it, so without `onUnmount` the
+  // router kept invoking `updateColorsFromRouter()` (and `onTabChange`) on a
+  // detached bar forever. The disposer is idempotent because both paths can run.
+  let unsubscribed = false;
+  const dispose = () => {
+    if (unsubscribed) return;
+    unsubscribed = true;
+    if (unsubscribe) unsubscribe();
+  };
+  container.onUnmount(dispose);
+
   const originalCleanup = container._cleanup;
   container._cleanup = () => {
-    if (unsubscribe) unsubscribe();
+    dispose();
     if (originalCleanup) originalCleanup();
   };
 

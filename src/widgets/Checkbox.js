@@ -67,13 +67,19 @@ export const Checkbox = (props) => {
 
   // Handle click
   if (!disabled) {
-    checkbox.onclick = (e) => {
+    const handleClick = (e) => {
       e.stopPropagation();
       const newChecked = !internalChecked;
       internalChecked = newChecked;
       updateUI(newChecked);
       if (onPress) onPress(newChecked);
     };
+    // Route the handler through the factory's props instead of assigning
+    // `onclick` directly. `assignProps` clears `onclick` on every update and only
+    // re-applies handlers it can see in the merged props, so a direct assignment
+    // died on the first `update()` — and every reactive setter (opacity, bgColor,
+    // padding…) calls update — leaving the control unable to toggle ever again.
+    checkbox.update({ onPress: handleClick });
 
     // Hover effect
     checkbox.addEventListener("mouseenter", () => {

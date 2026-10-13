@@ -1,6 +1,7 @@
 // core/processProps.js
 import { getPropDefinition, ATTRIBUTE_DOM_SET } from "./translateProps.js";
 import { toREM } from "./remTool.js"; // Centralized REM conversion utility
+import { resolveReactive } from "./reactiveValue.js";
 
 /**
  * Processes raw props and classifies them into:
@@ -26,8 +27,12 @@ export const processProps = (props, tag = "div", widgetName = null) => {
   // Derive widget name from tag (e.g., 'div' → 'Div', 'span' → 'Span')
   const name = widgetName || tag.charAt(0).toUpperCase() + tag.slice(1);
 
-  for (const [key, value] of Object.entries(props)) {
-    if (value === undefined || value === null) continue;
+  for (const [key, rawValue] of Object.entries(props)) {
+    if (rawValue === undefined || rawValue === null) continue;
+    // Resolve the reactive-prop protocol once, here. A live value must be READ
+    // now so `width: count` yields a number (and gets its px/rem unit), and a
+    // function must never reach a CSS assignment.
+    const value = resolveReactive(rawValue);
 
     // `style` is deliberately NOT part of the API: FletBox uses flat, aliased
     // CSS props. Fail loudly instead of silently ignoring the object.

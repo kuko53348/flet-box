@@ -494,8 +494,15 @@ export const Scaffold = (props) => {
     clearContainer(fabContainer);
     clearContainer(leftNavBarContainer);
     clearContainer(rightNavBarContainer);
-    if (container._drawer?.parentNode)
+    // `destroy()` releases the viewport-resize listener, the Escape key handler
+    // and the pending close timer, then removes the node itself. Removing only
+    // the node (the previous behaviour) left all three behind, so every rebuilt
+    // scaffold leaked one more listener and one more body child.
+    if (typeof container._drawer?.destroy === "function") {
+      container._drawer.destroy();
+    } else if (container._drawer?.parentNode) {
       container._drawer.parentNode.removeChild(container._drawer);
+    }
     if (originalCleanup) originalCleanup();
   };
 

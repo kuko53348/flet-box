@@ -7,7 +7,10 @@ FletBox: zero-runtime-dependency vanilla-JS UI framework with a Flet-like declar
 - `npm run dev` — static dev server on port 8000 (override with `--port`). Despite the `--hot` flag in package.json, `run` never enables HMR (the CLI only parses `--port`/`--quiet`); use `flet-box run-spa` for hot reload.
 - `npm run build` — esbuild-bundles `src/app.js` into `dist/`. Requires `src/app.js` (present at framework root as the demo, so the build works here). Real workflow: `flet-box create <name>` then build inside that project.
 - `npm run release -- --patch [--push]` — the ONLY way to bump a version. Requires a clean tree, bumps `package.json` with the odometer scheme (`bin/utils/version.js`: MAJOR unbounded, MINOR/PATCH 0–9 with carry), rebuilds the bundle (`www/config.json` + hash), commits, and tags `vX.Y.Z`. CI publishes that tag to npm; never run `npm publish` by hand. See `docs/guides/online-updates.md`.
-- `npm test` — runs the static widget-contract checker (`node scripts/check-widgets.mjs`) against `scripts/widget-contract-baseline.json`. Behavioral tests are browser harnesses in `tests/` (below).
+- `npm test` — runs two static checkers, in order:
+  - `node scripts/check-widgets.mjs` — widget-structure contract against `scripts/widget-contract-baseline.json`.
+  - `node scripts/check-api-surface.mjs` — API coupling across the three surfaces. It imports `src/index.js` for real, so it also fails when the barrel re-exports a name that no longer exists, or when the package stops being importable in Node (module-scope `window`/`document`).
+  Behavioral tests are browser harnesses in `tests/` (below).
 - `python3 scripts/generate_widget_docs.py` — regenerates `docs/widget/*.md` from `src/index.d.ts` + snippet library. Run after changing a widget's public props/types.
 - `flet-box build android [--release [--aab]]` / `flet-box build ios [--archive]` — Capacitor builds, run **inside a generated project**. Both share `bin/utils/capacitor.js`; each owns its toolchain checks (`buildAndroid.js`: SDK + JDK; `buildIOS.js`: full Xcode + CocoaPods + simulator runtimes). Android `--release` leaves the artifact **unsigned on purpose** so it can be signed with the developer's own keystore (`apksigner` for the APK, `jarsigner`/Play App Signing for the AAB).
 - `flet-box run-native <android|ios> [--device|--livereload]` — wraps `npx cap run` to compile and launch on an emulator/simulator or device. It reuses the toolchain helpers exported by `buildAndroid.js` (`prepareAndroidEnvironment`) and `buildIOS.js` (`requireAppleToolchain`); keep those exports when editing the build commands.
@@ -27,17 +30,19 @@ Quirks that are easy to break when editing those templates:
 
 ## Testing
 
-Tests are dependency-free JS in `tests/`, run in the browser via the dev server (`npm run dev`), then open:
+Tests are dependency-free JS in `tests/`. They can be run headlessly with `npm run test:browser` (`scripts/run-browser-tests.mjs`: serves the repo, drives the system Chrome through puppeteer, and reads each harness's global). That script is optional — it resolves puppeteer from `$FLETBOX_PUPPETEER` or a sibling checkout and a browser from `$FLETBOX_CHROME` or the usual install paths, and skips with a notice when either is missing, so it never breaks `npm test`. To run one harness interactively: `npm run dev`, then open:
+
 - `/tests/index.html` — widget-factory regression contract. Treats the factory as frozen: fixes belong in widgets, not `src/widget-factory/`.
 - `/tests/smoke.html` — instantiates every widget to catch `ReferenceError`s.
+- `/tests/regression.html` — guards for the bugs fixed in the widget audit (engine child-wipe, `ListView.updateData`, `DataTable` body rebuild, `SnackBar.close` idempotency, `AnimatedBox` keyframe dedupe, `MatrixRain` loop teardown). Add an assertion here for every bug you fix: each one failed before its fix.
 - `/tests/doccheck.html` and `/tests/doccheck-all.html` — assert documented behavior on the real runtime.
 - `/tests/propscan.html` — prop scanner.
 
-Each harness writes a global (`window.__TESTS`, `window.__SMOKE`, `window.__DOCCHECK`) for automation. These pages cannot open via `file://` (ESM + CORS); they must be served.
+Each harness writes a global (`window.__TESTS`, `window.__SMOKE`, `window.__REGRESSION`, `window.__DOCCHECK`, `window.__CONTRACT`) for automation. These pages cannot open via `file://` (ESM + CORS); they must be served.
 
 ## Architecture
 
-- Public entry `src/index.js`; types in `src/index.d.ts`. A public API is complete only when three surfaces agree: runtime implementation, `src/index.js` export, and `src/index.d.ts` declaration.
+- Public entry `src/index.js`; types in `src/index.d.ts`. A public API is complete only when three surfaces agree: runtime implementation, `src/index.js` export, and `src/index.d.ts` declaration — `scripts/check-api-surface.mjs` enforces this under `npm test`. Two rules follow from it: every `interface`/`type` in `index.d.ts` must be `export`ed (otherwise consumers cannot `import type` it), and the package must stay importable in Node (never touch `window`/`document` at module scope — guard with `typeof window !== "undefined"`).
 - `src/widget-factory/` is the ONLY rendering engine — `WidgetFactory` turns props into an `HTMLElement` with style, events, children, lifecycle, and reactivity. Never add a second rendering system.
 - `src/create-index.sh` is STALE: it writes to a non-existent `src/widget-builder/`. Do not run it.
 - Adding a widget: file in `src/widgets/`, export from `src/widgets/index.js` and `src/index.js`, type + props in `src/index.d.ts`, doc page + `basic`/`normal`/`full` examples in `docs/widget/`.

@@ -89,7 +89,9 @@ src/index.js exports
 src/index.d.ts declarations
 ```
 
-If a function is declared but not exported, or exported but not typed, document it as a known mismatch and fix the source of truth before calling it stable.
+If a function is declared but not exported, or exported but not typed, do not ship it as stable: fix the source of truth.
+
+`npm test` enforces this with `scripts/check-api-surface.mjs`. It imports `src/index.js` for real, so it fails when a runtime export has no declaration, when a declared value does not exist at runtime, when an `interface`/`type` is not `export`ed (a consumer could not `import type` it), or when the barrel re-exports a name that no longer exists. It also fails when the package stops being importable in Node, so never touch `window` / `document` at module scope — guard with `typeof window !== "undefined"`.
 
 ## Cleanup rules
 
@@ -109,12 +111,15 @@ Use the widget cleanup lifecycle when available.
 Before opening a pull request:
 
 ```bash
+npm test
 node --check path/to/changed-file.js
 python3 -m py_compile scripts/generate_widget_docs.py
 python3 scripts/generate_widget_docs.py
 ```
 
-`npm test` is only a placeholder (`echo "No tests yet"`). The real tests are dependency-free browser harnesses in `tests/`. Serve the repo with the dev server (`npm run dev` or `node bin/cli.js run-spa`), then open:
+`npm test` runs the two static checkers described above — the widget-structure contract (`scripts/check-widgets.mjs`) and the API surface coupling (`scripts/check-api-surface.mjs`) — and must pass before a pull request.
+
+The behavioral tests are dependency-free browser harnesses in `tests/`. Serve the repo with the dev server (`npm run dev` or `node bin/cli.js run-spa`), then open:
 
 - `/tests/index.html` — widget-factory regression contract
 - `/tests/smoke.html` — instantiates every widget

@@ -9,6 +9,7 @@ import {
 } from "../utils/themes.js";
 import { Container } from "../widgets/Container.js";
 import { setGlobalRender } from "../tools/useState.js";
+import { beginRenderPass, endRenderPass } from "../widget-factory/reactiveValue.js";
 
 /**
  * Mounts a FletBox application into the DOM and manages its full lifecycle.
@@ -182,7 +183,18 @@ export const runApp = (
       currentMainContainer = null;
     }
 
-    const appContent = typeof App === "function" ? App() : App;
+    // Wrap the component call in a render pass. A reactive value the component
+    // reads *here* — a template literal, a conditional, a list — is a structural
+    // read, so its key is flagged for an app render. Reads the factory performs
+    // while filling props are not flagged, which is what keeps a directly-passed
+    // state value surgical.
+    beginRenderPass();
+    let appContent;
+    try {
+      appContent = typeof App === "function" ? App() : App;
+    } finally {
+      endRenderPass();
+    }
 
     const mainContainer = Container({
       margin: 0,

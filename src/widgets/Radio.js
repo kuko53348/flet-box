@@ -67,7 +67,7 @@ export const Radio = (props) => {
 
   // Handle click
   if (!disabled) {
-    radio.onclick = (e) => {
+    const handleClick = (e) => {
       e.stopPropagation();
       if (internalSelected) return;
 
@@ -88,6 +88,10 @@ export const Radio = (props) => {
 
       if (onPress) onPress(true);
     };
+    // Routed through the factory props: `assignProps` clears `onclick` on every
+    // update and only re-applies handlers present in the merged props, so a
+    // direct assignment died on the first `update()` or reactive setter.
+    radio.update({ onPress: handleClick });
 
     // Hover effect
     radio.addEventListener("mouseenter", () => {

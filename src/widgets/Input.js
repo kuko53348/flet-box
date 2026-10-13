@@ -6,6 +6,7 @@ import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 import { Icon } from "./Icon.js";
 import { TextInputValidator } from "../utils/TextInputValidator.js";
+import { composeUpdate } from "../utils/composeUpdate.js";
 
 /**
  * @typedef {Object} InputProps
@@ -314,11 +315,16 @@ export const Input = (props) => {
   });
 
   // --- Optional label rendered above the input ---
-  if (label) {
-    const requiredMark = required ? " *" : "";
-    const labelEl = WidgetFactory({
+  let labelEl = null;
+  const renderLabel = (text) => {
+    if (labelEl) {
+      labelEl.textContent = text;
+      return;
+    }
+    if (!text) return;
+    labelEl = WidgetFactory({
       tag: "label",
-      text: label + requiredMark,
+      text,
       fontSize: 12,
       fontWeight: 500,
       color: error ? colors.danger : colors.textSecondary,
@@ -329,8 +335,23 @@ export const Input = (props) => {
     labelEl.addEventListener("click", () => {
       inputElement?.focus();
     });
-    container.appendChild(labelEl);
-  }
+    container.insertBefore(labelEl, container.firstChild);
+  };
+
+  if (label) renderLabel(label + (required ? " *" : ""));
+
+  // `label` is registered as a REACTIVE_PROP that maps to `textContent`, so if the
+  // factory ever sees it, `container.textContent = "…"` replaces this whole
+  // composite widget (label + wrapper + native <input> + icons) with a bare text
+  // node. Own the key and update the label element instead.
+  composeUpdate(container, ["label"], (props) => {
+    if (props.label === undefined) return;
+    renderLabel(props.label ? String(props.label) + (required ? " *" : "") : "");
+    // `makeReactive` writes the value back into `_originalProps` on every setter
+    // call; leaving it there means the next factory update merges it, maps it to
+    // `textContent` and wipes the widget anyway.
+    delete container._originalProps.label;
+  });
 
   // --- Wrapper — contains icons + native input, owns the border/fill style ---
   let wrapperStyles = {

@@ -8,6 +8,29 @@ import { processProps } from "./processProps.js";
 import { assignProps } from "./assignProps.js";
 import { stackPosition } from "./stackPosition.js";
 import { addChildren, removePropChildren } from "./addChildren.js";
+import { reactiveKeyOf } from "./reactiveValue.js";
+import { registerWidget } from "../tools/useState.js";
+
+/**
+ * Auto-binds reactive props to their state key.
+ *
+ * A prop whose value is a live reactive (what `useState` returns) carries the key
+ * it came from, so the factory can subscribe this widget to that key. A later
+ * change then updates **only this widget** instead of rebuilding the whole app —
+ * which is what makes the plain
+ * `const [color, setColor] = useState("color", "red"); Widget({ bgColor: color })`
+ * syntax surgical.
+ *
+ * @param {HTMLElement} widget - The widget being built or updated.
+ * @param {Object} props - The props to scan.
+ * @returns {void}
+ */
+const bindReactiveProps = (widget, props) => {
+  for (const [prop, value] of Object.entries(props || {})) {
+    const key = reactiveKeyOf(value);
+    if (key) registerWidget(key, widget, prop);
+  }
+};
 
 /**
  * Main widget factory. Creates a fully functional DOM widget with reactivity,
@@ -96,6 +119,7 @@ export function WidgetFactory(tag, customProps = {}) {
   // ============================================================
   const initialProps = processProps(finalProps, finalTag, widgetName);
   assignProps(widget, initialProps);
+  bindReactiveProps(widget, finalProps);
   stackPosition(widget, finalProps);
 
   if (finalProps.child !== undefined) {
@@ -160,6 +184,9 @@ export function WidgetFactory(tag, customProps = {}) {
 
       const processed = processProps(merged, finalTag, widgetName);
       assignProps(widget, processed);
+      // Only the incoming keys can introduce a new binding; the ones present at
+      // construction were registered then.
+      bindReactiveProps(widget, normalized);
       stackPosition(widget, merged);
 
       if (hasChild || hasChildren) {

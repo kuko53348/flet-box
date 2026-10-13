@@ -124,9 +124,18 @@ export function SnackBar(options) {
   });
 
   let timeoutId = null;
+  let rafId = null;
+  // `close()` is final: it must fire `onClose` exactly once and must win any
+  // race against the pending `show()` frame, otherwise closing a toast right
+  // after creating it would flash it back to opacity 1 for a full animation.
+  let closed = false;
 
   const show = () => {
-    requestAnimationFrame(() => {
+    if (closed) return;
+    if (rafId !== null) cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(() => {
+      rafId = null;
+      if (closed) return;
       snackbar.style.opacity = "1";
       snackbar.style.transform = "translateY(0)";
     });
@@ -134,7 +143,16 @@ export function SnackBar(options) {
   };
 
   const close = () => {
-    if (timeoutId) clearTimeout(timeoutId);
+    if (closed) return;
+    closed = true;
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      timeoutId = null;
+    }
+    if (rafId !== null) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
     snackbar.style.opacity = "0";
     snackbar.style.transform =
       position === "bottom"

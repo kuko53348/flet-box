@@ -471,7 +471,8 @@ export default function run(ctx) {
     const label = W.Text({ text: "Hello" });
     const out = W.Inspector(label);
     eq(typeof out, "string");
-    eq(out, "Span()");
+    eq(out.startsWith("Span({"), true);
+    eq(out.includes("text"), true); // props ARE reported; they used to be dropped entirely
     eq(label.children.length, 0);
   });
 
@@ -480,7 +481,7 @@ export default function run(ctx) {
     const out = W.Inspector(tree);
     eq(out.startsWith("Div({"), true);
     eq(out.includes("children: ["), true);
-    eq(out.includes("Span()"), true);
+    eq(out.includes("Span({"), true);
     eq(out.endsWith("\n})"), true);
   });
 
@@ -488,7 +489,7 @@ export default function run(ctx) {
     const out = W.Inspector(W.Button({ text: "Save" }));
     eq(out.startsWith("Button({"), true);
     eq(out.includes("Div({"), true);
-    eq(out.includes("Span()"), true);
+    eq(out.includes("Span({"), true);
   });
 
   t("Inspector: indent shifts the closing brace", () => {

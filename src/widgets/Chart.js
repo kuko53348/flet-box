@@ -134,7 +134,10 @@ export const Chart = (props) => {
     const paddingRange = range * 0.1;
     return {
       maxValue: maxVal + paddingRange,
-      minValue: Math.max(0, minVal - paddingRange),
+      // Do NOT clamp to 0. With all-negative data that inverts the range
+      // (min > max) and every point is drawn far outside the canvas, so the
+      // chart looks empty and the axis labels run from 0 to a negative max.
+      minValue: minVal - paddingRange,
     };
   };
 

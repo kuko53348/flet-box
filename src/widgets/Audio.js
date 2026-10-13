@@ -74,6 +74,9 @@ export const Audio = (props) => {
   let duration = 0;
   let durationPoll = null;
   let audioContextFallbackAttempted = false;
+  // Set on unmount so deferred work (the duration fallback, in-flight fetches)
+  // never touches a discarded widget.
+  let disposed = false;
 
   /**
    * Recalculates the current playback position and fires the progress callbacks.
@@ -139,19 +142,25 @@ export const Audio = (props) => {
    * cannot determine duration without fully downloading the file.
    */
   const fallbackGetDuration = async () => {
-    if (audioContextFallbackAttempted) return;
+    if (audioContextFallbackAttempted || disposed) return;
     audioContextFallbackAttempted = true;
 
     try {
       const response = await fetch(src);
       const arrayBuffer = await response.arrayBuffer();
+      if (disposed) return;
       const audioContext = new (
         window.AudioContext || window.webkitAudioContext
       )();
-      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-      const durationSeconds = audioBuffer.duration;
-      setDuration(durationSeconds);
-      audioContext.close();
+      // `close()` must run even when decoding fails: AudioContexts are a capped
+      // resource (~6 per page in Chromium) and leaking them makes every later
+      // context fail to start, which breaks the fallback for good.
+      try {
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+        setDuration(audioBuffer.duration);
+      } finally {
+        audioContext.close();
+      }
     } catch (err) {
       console.warn("[Audio] Fallback duration fetch failed:", err);
     }
@@ -178,16 +187,29 @@ export const Audio = (props) => {
   audio.addEventListener("error", (e) => console.warn("[Audio] Error:", e));
 
   // Kick off duration detection immediately; if unavailable after 2 s, use fetch fallback
+  let fallbackTimer = null;
   if (!tryGetDurationFromAudio()) {
     pollDuration();
-    setTimeout(() => {
+    fallbackTimer = setTimeout(() => {
+      fallbackTimer = null;
       if (!duration) fallbackGetDuration();
     }, 2000);
   }
 
-  // Cancel the duration polling interval when the widget unmounts
+  // Release everything the widget owns on unmount. The 2 s fallback timer was
+  // never stored, so after teardown it still fetched the whole file and spun up
+  // an AudioContext (and called onLoad) for a widget that no longer exists — and
+  // a tree rebuild does that on every state change.
   audio.onUnmount(() => {
-    if (durationPoll) clearInterval(durationPoll);
+    disposed = true;
+    if (durationPoll) {
+      clearInterval(durationPoll);
+      durationPoll = null;
+    }
+    if (fallbackTimer) {
+      clearTimeout(fallbackTimer);
+      fallbackTimer = null;
+    }
   });
 
   // ========== PUBLIC PLAYBACK API ==========

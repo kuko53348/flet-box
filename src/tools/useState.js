@@ -1,11 +1,19 @@
 // src/tools/useState.js
 import { saveRam, getRam, subscribeRam } from "../services/RamStore.js";
+import { createReactiveValue, setImperativeReadListener } from "../widget-factory/reactiveValue.js";
 
 // Store callbacks for each state key
 const subscribers = new Map();
 
 // 🔥 Store widgets by state key for automatic updates
 const widgetsByKey = new Map();
+
+// Keys the component reads *structurally* — inside a template literal, a
+// conditional, a list. Those need the app render even when a widget is bound to
+// the key, because a surgical prop patch cannot change what the component
+// computes. A key passed straight into a prop is never listed here.
+const imperativeKeys = new Set();
+setImperativeReadListener((key) => imperativeKeys.add(key));
 
 // Global render function (set by runApp)
 let globalRender = null;
@@ -35,6 +43,56 @@ const triggerRender = () => {
   }, 0);
 };
 
+let ramDispatcherReady = false;
+
+/**
+ * Installs **one** RamStore subscriber that dispatches to the widgets and
+ * callbacks registered for the key that actually changed.
+ *
+ * RamStore walks a flat subscriber array on every `saveRam`, so registering one
+ * subscriber per key made a single state change cost O(number of keys) — with
+ * every callback immediately rejecting the key. One dispatcher makes the lookup
+ * O(1), and the work proportional to what the key really has bound.
+ *
+ * @returns {void}
+ */
+const ensureRamDispatcher = () => {
+  if (ramDispatcherReady) return;
+  ramDispatcherReady = true;
+
+  const unsubscribe = subscribeRam((changedKey, newValue, oldValue) => {
+    const callbacks = subscribers.get(changedKey);
+    // A key nobody ever passed to `useState` has no listeners: ignore it.
+    if (!callbacks) return;
+
+    // 1. Surgical update: patch only the widgets bound to this key.
+    const bound = widgetsByKey.get(changedKey);
+    let handled = 0;
+    if (bound) {
+      bound.forEach((propNames, widget) => {
+        if (!widget || typeof widget.update !== "function") return;
+        propNames.forEach((propName) => {
+          widget.update({ [propName]: newValue });
+          handled++;
+        });
+      });
+    }
+
+    // 2. Notify the manual subscribers.
+    callbacks.forEach((callback) => callback(newValue, oldValue));
+
+    // 3. Re-render the app when nothing was bound, or when the component also
+    // reads this key structurally (a template literal, a conditional, a list):
+    // the surgical patch above cannot change what the component computes.
+    if (handled === 0 || imperativeKeys.has(changedKey)) triggerRender();
+  });
+
+  if (typeof window !== "undefined") {
+    if (!window._useStateCleanups) window._useStateCleanups = [];
+    window._useStateCleanups.push(unsubscribe);
+  }
+};
+
 /**
  * Registers a widget instance so it receives automatic prop updates whenever
  * the state value associated with `key` changes.
@@ -45,31 +103,54 @@ const triggerRender = () => {
  * @returns {void}
  */
 export const registerWidget = (key, widget, propName) => {
-  if (!widgetsByKey.has(key)) {
-    widgetsByKey.set(key, new Set());
+  // Two levels — key -> widget -> prop names — so looking a widget up is O(1).
+  // A flat Set with a linear scan made registering N widgets on the same key
+  // O(N^2): 1,600 widgets on one key cost ~44 ms.
+  let perWidget = widgetsByKey.get(key);
+  if (!perWidget) {
+    perWidget = new Map();
+    widgetsByKey.set(key, perWidget);
   }
-  widgetsByKey.get(key).add({ widget, propName });
+  let propNames = perWidget.get(widget);
+  if (!propNames) {
+    propNames = new Set();
+    perWidget.set(widget, propNames);
+  }
+  // Idempotent: rebuilding the same widget position must not stack duplicates.
+  const already = propNames.has(propName);
+  propNames.add(propName);
 
-  // Set initial value if the state already exists
+  // Push the current value straight away when the widget can already take it.
+  // (During construction `update` does not exist yet — the value has just been
+  // applied by the factory, so there is nothing to push.)
   const currentValue = getRam(key);
   if (currentValue !== undefined && widget && widget.update) {
     widget.update({ [propName]: currentValue });
   }
 
-  // Patch the widget's cleanup to also remove it from the registry when destroyed
-  const originalCleanup = widget._cleanup;
-  widget._cleanup = () => {
-    const widgets = widgetsByKey.get(key);
-    if (widgets) {
-      for (const item of widgets) {
-        if (item.widget === widget) {
-          widgets.delete(item);
-          break;
-        }
-      }
-    }
-    if (originalCleanup) originalCleanup();
+  if (already) return;
+
+  // Release the binding through `onUnmount`, which the framework fires on BOTH
+  // teardown paths. Patching `_cleanup` here (the previous approach) leaked: the
+  // lifecycle observer never calls `_cleanup`, so a widget removed without a full
+  // app rebuild stayed registered forever and kept receiving updates.
+  const release = () => {
+    const map = widgetsByKey.get(key);
+    const props = map && map.get(widget);
+    if (!props) return;
+    props.delete(propName);
+    if (props.size === 0) map.delete(widget);
   };
+
+  if (typeof widget.onUnmount === "function") {
+    widget.onUnmount(release);
+  } else {
+    const originalCleanup = widget._cleanup;
+    widget._cleanup = () => {
+      release();
+      if (originalCleanup) originalCleanup();
+    };
+  }
 };
 
 /**
@@ -80,15 +161,8 @@ export const registerWidget = (key, widget, propName) => {
  * @returns {void}
  */
 export const unregisterWidget = (key, widget) => {
-  const widgets = widgetsByKey.get(key);
-  if (widgets) {
-    for (const item of widgets) {
-      if (item.widget === widget) {
-        widgets.delete(item);
-        break;
-      }
-    }
-  }
+  const perWidget = widgetsByKey.get(key);
+  if (perWidget) perWidget.delete(widget);
 };
 
 /**
@@ -117,36 +191,13 @@ export const useState = (key, initialState, widget = null, propName = null) => {
     saveRam(key, currentValue);
   }
 
-  // Set up a single RamStore subscriber per key
-  if (!subscribers.has(key)) {
-    subscribers.set(key, new Set());
-
-    // Listen to RamStore changes for this key
-    const unsubscribe = subscribeRam((changedKey, newValue, oldValue) => {
-      if (changedKey === key) {
-        // 🔥 Push the new value to all registered widgets for this key
-        const widgets = widgetsByKey.get(key);
-        if (widgets) {
-          widgets.forEach(({ widget, propName }) => {
-            if (widget && widget.update) {
-              widget.update({ [propName]: newValue });
-            }
-          });
-        }
-
-        // Notify all subscriber callbacks
-        const callbacks = subscribers.get(key);
-        callbacks.forEach((callback) => callback(newValue, oldValue));
-
-        // Trigger a global re-render
-        triggerRender();
-      }
-    });
-
-    // Track the unsubscribe handle for hot-reload cleanup
-    if (!window._useStateCleanups) window._useStateCleanups = [];
-    window._useStateCleanups.push(unsubscribe);
-  }
+  // Register the key so the shared dispatcher knows it has listeners. Previously
+  // every key installed its OWN RamStore subscriber, and RamStore notifies all of
+  // them on every save — so one state change cost O(number of keys), each callback
+  // rejecting the key immediately. One dispatcher makes it O(1) + the work for the
+  // key that actually changed.
+  if (!subscribers.has(key)) subscribers.set(key, new Set());
+  ensureRamDispatcher();
 
   // 🔥 Register the widget for automatic updates if one was provided
   if (widget && propName) {
@@ -194,18 +245,11 @@ export const useState = (key, initialState, widget = null, propName = null) => {
     };
   };
 
-  // 🔥 Create a reactive value object so WidgetFactory can detect state bindings automatically
-  const reactiveValue = {
-    _isReactive: true,
-    _stateKey: key,
-    _value: currentValue,
-    valueOf() {
-      return this._value;
-    },
-    toString() {
-      return String(this._value);
-    },
-  };
+  // 🔥 A LIVE reactive value: reads the store on every access (so it never goes
+  // stale) and carries the key, so WidgetFactory can auto-bind any prop it is
+  // passed to. That binding is what makes a state change update **only the widget
+  // that uses it** instead of rebuilding the app.
+  const reactiveValue = createReactiveValue(() => getRam(key), key);
 
   // Return an array matching React's useState pattern: [value, setter, subscriber]
   return [reactiveValue, setState, subscribe];
@@ -242,6 +286,9 @@ export const cleanupUseState = () => {
   }
   subscribers.clear();
   widgetsByKey.clear();
+  imperativeKeys.clear();
+  // The dispatcher was unsubscribed above, so a later call must reinstall it.
+  ramDispatcherReady = false;
   globalRender = null;
   if (renderTimeout) clearTimeout(renderTimeout);
 };

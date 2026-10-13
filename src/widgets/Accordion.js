@@ -156,11 +156,12 @@ export const Accordion = (props) => {
     titleElement.style.fontSize = `${currentTitleSize}px`;
     titleElement.style.fontWeight = currentTitleWeight;
 
-    // Swap icon based on current expanded state
-    iconElement.setAttribute(
-      "name",
-      isExpanded ? currentIconExpanded : currentIconCollapsed,
-    );
+    // Swap icon based on current expanded state. `Icon` renders its glyph as
+    // TEXT (a material-icons ligature), so setting a `name` attribute changed
+    // nothing and the chevron stayed on `chevron_right` forever.
+    iconElement.textContent = isExpanded
+      ? currentIconExpanded
+      : currentIconCollapsed;
     iconElement.style.color = currentIconColor;
     iconElement.style.fontSize = `${currentIconSize}px`;
 

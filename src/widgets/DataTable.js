@@ -83,7 +83,9 @@ export const DataTable = (props) => {
   table.appendChild(thead);
 
   // ========== BODY ==========
-  const tbody = document.createElement("tbody");
+  // `let`, not `const`: `updateData` replaces the body and must re-point here,
+  // otherwise the second call tries to replace an already-detached node.
+  let tbody = document.createElement("tbody");
 
   rows.forEach((row, index) => {
     const tr = document.createElement("tr");
@@ -152,8 +154,12 @@ export const DataTable = (props) => {
 
   // Update table data
   container.updateData = (newRows) => {
+    // Snapshot BEFORE clearing. `updateColumns` calls this with `rows` itself as
+    // the argument, so clearing first and then spreading produced an empty body
+    // and every row silently disappeared.
+    const nextRows = [...newRows];
     rows.length = 0;
-    rows.push(...newRows);
+    rows.push(...nextRows);
 
     // Rebuild body
     const newTbody = document.createElement("tbody");
@@ -213,6 +219,9 @@ export const DataTable = (props) => {
     });
 
     table.replaceChild(newTbody, tbody);
+    // Re-point at the live node, otherwise the next call replaces an already
+    // detached node and throws NotFoundError.
+    tbody = newTbody;
   };
 
   // Update table columns

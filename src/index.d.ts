@@ -5,16 +5,35 @@ declare module 'flet-box' {
   // =========================================================================
   // Tipos base
   // =========================================================================
-  type Widget = HTMLElement;
-  type Color = string;
-  type Size = number | string;
-  type Padding = number | string;
-  type Margin = number | string;
+  export type Widget = HTMLElement;
+  export type Color = string;
+  export type Size = number | string;
+  export type Padding = number | string;
+  export type Margin = number | string;
+
+  /**
+   * The element returned by `WidgetFactory()`. It is a real `HTMLElement` with
+   * the factory's imperative API attached (see `src/widget-factory/`).
+   */
+  export interface WidgetFactoryInstance extends Widget {
+    /** Merge new props and re-apply styles, attributes, children and effects. */
+    update(props?: Record<string, any>): WidgetFactoryInstance;
+    /** Shallow copy of the widget's currently stored props. */
+    getProps(): Record<string, any>;
+    /** Register a callback fired when the widget enters the live DOM. */
+    onMount(fn: (widget: WidgetFactoryInstance) => void): void;
+    /** Register a disposer fired on every teardown path. Must be idempotent. */
+    onUnmount(fn: (widget: WidgetFactoryInstance) => void): void;
+    /** Fire mount callbacks immediately when the widget is already connected. */
+    triggerMount(): WidgetFactoryInstance;
+    /** Release the widget's resources and remove it from the lifecycle registry. */
+    _cleanup(): void;
+  }
 
   // =========================================================================
   // Props comunes (heredadas by todos the widgets)
   // =========================================================================
-  interface CommonProps {
+  export interface CommonProps {
     width?: Size;
     height?: Size;
     size?: number;
@@ -121,9 +140,65 @@ declare module 'flet-box' {
   export function httpDelete<T = any>(url: string, options?: HttpRequestOptions): Promise<T>;
 
   // =========================================================================
+  // Service namespaces
+  // =========================================================================
+  // Each store is also exported as a namespace object whose members are exactly
+  // the functions above, so both call styles are valid:
+  //   saveRam("k", 1)   |   RamStore.saveRam("k", 1)
+  // Members are typed through `typeof` so a namespace can never drift from the
+  // individual declaration.
+  export const RamStore: {
+    saveRam: typeof saveRam;
+    getRam: typeof getRam;
+    getAllRam: typeof getAllRam;
+    getAllRamKeys: typeof getAllRamKeys;
+    hasRam: typeof hasRam;
+    updateRam: typeof updateRam;
+    deleteRam: typeof deleteRam;
+    clearAllRam: typeof clearAllRam;
+    subscribeRam: typeof subscribeRam;
+    getRamItemCount: typeof getRamItemCount;
+    isRamAvailable: typeof isRamAvailable;
+  };
+
+  export const Session: {
+    saveSession: typeof saveSession;
+    getSession: typeof getSession;
+    getSessionSync: typeof getSessionSync;
+    updateSession: typeof updateSession;
+    deleteSession: typeof deleteSession;
+    clearAllSession: typeof clearAllSession;
+    hasSession: typeof hasSession;
+    getAllSessionKeys: typeof getAllSessionKeys;
+    getAllSessionData: typeof getAllSessionData;
+    getSessionSize: typeof getSessionSize;
+    deleteSessionByPrefix: typeof deleteSessionByPrefix;
+    deleteSessionBySuffix: typeof deleteSessionBySuffix;
+    getSessionItemCount: typeof getSessionItemCount;
+    isSessionAvailable: typeof isSessionAvailable;
+  };
+
+  export const Storage: {
+    saveData: typeof saveData;
+    getData: typeof getData;
+    getDataSync: typeof getDataSync;
+    updateData: typeof updateData;
+    deleteData: typeof deleteData;
+    clearAllData: typeof clearAllData;
+    hasData: typeof hasData;
+    getAllKeys: typeof getAllKeys;
+    getAllData: typeof getAllData;
+    getStorageSize: typeof getStorageSize;
+    deleteDataByPrefix: typeof deleteDataByPrefix;
+    deleteDataBySuffix: typeof deleteDataBySuffix;
+    getItemCount: typeof getItemCount;
+    isStorageAvailable: typeof isStorageAvailable;
+  };
+
+  // =========================================================================
   // Layouts
   // =========================================================================
-  interface ContainerProps extends CommonProps {
+  export interface ContainerProps extends CommonProps {
     direction?: 'row' | 'column';
     gap?: number | string;
     justifyContent?: 'flex-start' | 'center' | 'flex-end' | 'space-between' | 'space-around' | 'space-evenly';
@@ -141,7 +216,7 @@ declare module 'flet-box' {
   }
   export function Container(props: ContainerProps): Widget;
 
-  interface RowProps extends CommonProps {
+  export interface RowProps extends CommonProps {
     gap?: number | string;
     justifyContent?: ContainerProps['justifyContent'];
     alignItems?: ContainerProps['alignItems'];
@@ -151,7 +226,7 @@ declare module 'flet-box' {
   }
   export function Row(props: RowProps): Widget;
 
-  interface ColumnProps extends CommonProps {
+  export interface ColumnProps extends CommonProps {
     gap?: number | string;
     justifyContent?: ContainerProps['justifyContent'];
     alignItems?: ContainerProps['alignItems'];
@@ -160,14 +235,14 @@ declare module 'flet-box' {
   }
   export function Column(props: ColumnProps): Widget;
 
-  interface StackProps extends CommonProps {
+  export interface StackProps extends CommonProps {
     children?: Widget[];
     position?: 'relative' | 'absolute';
     alignment?: 'top-left' | 'top-center' | 'top-right' | 'center-left' | 'center' | 'center-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
   }
   export function Stack(props: StackProps): Widget;
 
-  interface ListViewProps extends CommonProps {
+  export interface ListViewProps extends CommonProps {
     data?: any[];
     renderItem?: (item: any, index: number) => Widget;
     height?: number | string;
@@ -195,7 +270,7 @@ declare module 'flet-box' {
     scrollToEnd(animated?: boolean): void;
   };
 
-  interface GridViewProps extends Omit<ListViewProps, 'wrapItems' | 'crossAxisCount'> {
+  export interface GridViewProps extends Omit<ListViewProps, 'wrapItems' | 'crossAxisCount'> {
     columns?: number;
     spacing?: number;
     itemHeight?: number;
@@ -205,7 +280,7 @@ declare module 'flet-box' {
   // =========================================================================
   // Widgets básicos
   // =========================================================================
-  interface TextProps extends CommonProps {
+  export interface TextProps extends CommonProps {
     text?: string;
     value?: string;
     children?: string;
@@ -223,7 +298,7 @@ declare module 'flet-box' {
   }
   export function Text(props: TextProps): Widget;
 
-  interface ButtonProps extends CommonProps {
+  export interface ButtonProps extends CommonProps {
     text?: string;
     onPress?: () => void;
     variant?: 'filled' | 'outlined' | 'text';
@@ -246,7 +321,7 @@ declare module 'flet-box' {
   }
   export function Button(props: ButtonProps): Widget;
 
-  interface IconProps extends CommonProps {
+  export interface IconProps extends CommonProps {
     name: string;
     size?: number;
     color?: Color;
@@ -254,7 +329,7 @@ declare module 'flet-box' {
   }
   export function Icon(props: IconProps): Widget;
 
-  interface ImageProps extends CommonProps {
+  export interface ImageProps extends CommonProps {
     src: string;
     alt?: string;
     width?: Size;
@@ -267,7 +342,7 @@ declare module 'flet-box' {
   }
   export function Image(props: ImageProps): Widget;
 
-  interface AvatarProps extends CommonProps {
+  export interface AvatarProps extends CommonProps {
     src?: string;
     name?: string;
     icon?: string;
@@ -281,7 +356,7 @@ declare module 'flet-box' {
     updateContent(newProps: Partial<AvatarProps>): void;
   };
 
-  interface CardProps extends CommonProps {
+  export interface CardProps extends CommonProps {
     child?: Widget;
     children?: Widget[];
     elevation?: number;
@@ -295,7 +370,7 @@ declare module 'flet-box' {
   }
   export function Card(props: CardProps): Widget;
 
-  interface ListTileProps extends CommonProps {
+  export interface ListTileProps extends CommonProps {
     leftItem?: Widget;
     title?: string | Widget;
     subtitle?: string | Widget;
@@ -315,7 +390,7 @@ declare module 'flet-box' {
   }
   export function ListTile(props: ListTileProps): Widget;
 
-  interface ProgressBarProps extends CommonProps {
+  export interface ProgressBarProps extends CommonProps {
     value?: number;
     max?: number;
     height?: number;
@@ -337,7 +412,7 @@ declare module 'flet-box' {
     setValue(value: number): void;
   };
 
-  interface RatingProps extends CommonProps {
+  export interface RatingProps extends CommonProps {
     value?: number;
     max?: number;
     size?: number;
@@ -360,7 +435,7 @@ declare module 'flet-box' {
     getValue(): number;
   };
 
-  interface ChipProps extends CommonProps {
+  export interface ChipProps extends CommonProps {
     label: string;
     icon?: string;
     onPress?: () => void;
@@ -376,7 +451,7 @@ declare module 'flet-box' {
   }
   export function Chip(props: ChipProps): Widget;
 
-  interface AdSenseProps extends CommonProps {
+  export interface AdSenseProps extends CommonProps {
     client?: string;
     slot?: string;
     format?: string;
@@ -399,7 +474,7 @@ declare module 'flet-box' {
     getElement(): Widget;
   };
 
-  interface AdMobProps extends CommonProps {
+  export interface AdMobProps extends CommonProps {
     adId?: string;
     isTesting?: boolean;
     position?: 'top' | 'bottom';
@@ -430,7 +505,7 @@ declare module 'flet-box' {
     getPlugin(): object | null;
   };
 
-  interface BadgeProps extends CommonProps {
+  export interface BadgeProps extends CommonProps {
     value: string | number;
     child: Widget;
     bgColor?: Color;
@@ -447,7 +522,7 @@ declare module 'flet-box' {
     updateValue(newValue: string | number): void;
   };
 
-  interface SliderProps extends CommonProps {
+  export interface SliderProps extends CommonProps {
     value?: number;
     min?: number;
     max?: number;
@@ -482,7 +557,7 @@ declare module 'flet-box' {
     update(props: Partial<SliderProps>): void;
   };
 
-  interface AccordionProps extends CommonProps {
+  export interface AccordionProps extends CommonProps {
     title: string | Widget;
     children: Widget;
     expanded?: boolean;
@@ -513,7 +588,7 @@ declare module 'flet-box' {
     update(props: Partial<AccordionProps>): void;
   };
 
-  interface DividerProps extends CommonProps {
+  export interface DividerProps extends CommonProps {
     color?: Color;
     thickness?: number;
     margin?: number | { top?: number; right?: number; bottom?: number; left?: number };
@@ -524,7 +599,7 @@ declare module 'flet-box' {
   // =========================================================================
   // Formularios e interacción
   // =========================================================================
-  interface InputProps extends CommonProps {
+  export interface InputProps extends CommonProps {
     value?: string;
     placeholder?: string;
     type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'search' | 'url';
@@ -566,7 +641,7 @@ declare module 'flet-box' {
     blur(): void;
   };
 
-  interface RadioProps extends CommonProps {
+  export interface RadioProps extends CommonProps {
     selected?: boolean;
     onSelect?: (selected: boolean) => void;
     disabled?: boolean;
@@ -581,7 +656,7 @@ declare module 'flet-box' {
     isSelected(): boolean;
   };
 
-  interface SwitchProps extends CommonProps {
+  export interface SwitchProps extends CommonProps {
     value?: boolean;
     onToggle?: (value: boolean) => void;
     disabled?: boolean;
@@ -594,7 +669,7 @@ declare module 'flet-box' {
     getValue(): boolean;
   };
 
-  interface CheckboxProps extends CommonProps {
+  export interface CheckboxProps extends CommonProps {
     checked?: boolean;
     onCheck?: (checked: boolean) => void;
     disabled?: boolean;
@@ -607,8 +682,8 @@ declare module 'flet-box' {
     getChecked(): boolean;
   };
 
-  type DropdownOption = { label: string; value: any; icon?: string };
-  interface DropdownProps extends CommonProps {
+  export type DropdownOption = { label: string; value: any; icon?: string };
+  export interface DropdownProps extends CommonProps {
     options: (string | DropdownOption)[];
     value?: any;
     placeholder?: string;
@@ -640,7 +715,7 @@ declare module 'flet-box' {
   // =========================================================================
   // Alert dialogs and feedback
   // =========================================================================
-  interface SnackBarOptions {
+  export interface SnackBarOptions {
     message: string;
     action?: string;
     onAction?: () => void;
@@ -662,7 +737,7 @@ declare module 'flet-box' {
   }
   export function SnackBar(options: SnackBarOptions): { close(): void; show(): void; getElement(): Widget };
 
-  interface ModalProps {
+  export interface ModalProps {
     title?: string;
     content?: Widget | string;
     actions?: Widget[];
@@ -709,7 +784,7 @@ declare module 'flet-box' {
     setLoading(loading: boolean, loadingText?: string): void;
   };
 
-  interface BottomSheetProps {
+  export interface BottomSheetProps {
     content: Widget;
     title?: string;
     actions?: Widget[];
@@ -746,7 +821,7 @@ declare module 'flet-box' {
     destroy(): void;
   };
 
-  interface AlertDialogProps {
+  export interface AlertDialogProps {
     title: string;
     message: string;
     confirmText?: string;
@@ -768,7 +843,7 @@ declare module 'flet-box' {
   // =========================================================================
   // Navegación
   // =========================================================================
-  interface ScaffoldProps extends CommonProps {
+  export interface ScaffoldProps extends CommonProps {
     appBar?: Widget | boolean;
     body?: Widget | Record<string, any>;
     bottomBar?: Widget | boolean;
@@ -794,7 +869,7 @@ declare module 'flet-box' {
     closeDrawer?(): void;
   };
 
-  interface AdaptiveScaffoldProps extends CommonProps {
+  export interface AdaptiveScaffoldProps extends CommonProps {
     appBar?: Widget;
     body?: Widget | Record<string, any>;
     bottomBar?: Widget;
@@ -818,7 +893,7 @@ declare module 'flet-box' {
     closeDrawer?(): void;
   };
 
-  interface AppBarProps extends CommonProps {
+  export interface AppBarProps extends CommonProps {
     title?: string | Widget;
     leading?: Widget;
     actions?: Widget[];
@@ -849,7 +924,7 @@ declare module 'flet-box' {
     hide(): void;
   };
 
-  interface DrawerItemProps extends CommonProps {
+  export interface DrawerItemProps extends CommonProps {
     icon?: string;
     label: string;
     route?: string;
@@ -866,14 +941,14 @@ declare module 'flet-box' {
   }
   export function DrawerItem(props: DrawerItemProps): Widget;
 
-  interface DrawerInstance {
+  export interface DrawerInstance {
     open(): void;
     close(): void;
     toggle(): void;
     destroy(): void;
     element: HTMLElement;
   }
-  interface DrawerProps {
+  export interface DrawerProps {
     header?: Widget;
     body?: Widget[];
     footer?: Widget;
@@ -896,7 +971,7 @@ declare module 'flet-box' {
   export function toggleDrawer(): void;
   export function destroyDrawer(): void;
 
-  interface BottomNavigationProps extends CommonProps {
+  export interface BottomNavigationProps extends CommonProps {
     items: Array<{ icon: string; label?: string; route?: string; onPress?: () => void }>;
     currentIndex?: number;
     onTabChange?: (index: number) => void;
@@ -919,7 +994,7 @@ declare module 'flet-box' {
     getCurrentRoute(): string | null;
   };
 
-  interface FloatingActionButtonProps extends CommonProps {
+  export interface FloatingActionButtonProps extends CommonProps {
     icon?: string | Widget;
     label?: string;
     onPress?: () => void;
@@ -933,7 +1008,7 @@ declare module 'flet-box' {
   }
   export function FloatingActionButton(props: FloatingActionButtonProps): Widget;
 
-  interface TabsProps extends CommonProps {
+  export interface TabsProps extends CommonProps {
     tabs: (string | { label: string; icon?: string; badge?: number | string })[];
     children: Widget[];
     activeIndex?: number;
@@ -959,7 +1034,7 @@ declare module 'flet-box' {
     setActiveTab(index: number): void;
   };
 
-  interface CollapsibleSideBarProps extends CommonProps {
+  export interface CollapsibleSideBarProps extends CommonProps {
     children: Widget;
     expanded?: boolean;
     id?: string;
@@ -997,7 +1072,7 @@ declare module 'flet-box' {
   // =========================================================================
   // Animations
   // =========================================================================
-  interface AnimationStep {
+  export interface AnimationStep {
     effect: string;
     from: any;
     to: any;
@@ -1006,7 +1081,7 @@ declare module 'flet-box' {
     loop?: boolean;
     delay?: string;
   }
-  interface AnimatedBoxProps extends CommonProps {
+  export interface AnimatedBoxProps extends CommonProps {
     animations: AnimationStep[];
     child: Widget;
     timing?: string;
@@ -1019,7 +1094,7 @@ declare module 'flet-box' {
   }
   export function AnimatedBox(props: AnimatedBoxProps): Widget;
 
-  interface AnimatedTextProps extends CommonProps {
+  export interface AnimatedTextProps extends CommonProps {
     child: Widget;
     animations: AnimationStep[];
     sameTime?: boolean;
@@ -1028,7 +1103,7 @@ declare module 'flet-box' {
   }
   export function AnimatedText(props: AnimatedTextProps): Widget;
 
-  interface MatrixRainProps extends CommonProps {
+  export interface MatrixRainProps extends CommonProps {
     chars?: string;
     fontSize?: number;
     speed?: number;
@@ -1040,7 +1115,7 @@ declare module 'flet-box' {
   }
   export function MatrixRain(props?: MatrixRainProps): Widget;
 
-  interface ParallaxBoxProps extends CommonProps {
+  export interface ParallaxBoxProps extends CommonProps {
     child: Widget;
     type?: 'scroll' | 'mouse' | 'hover';
     speed?: number;
@@ -1085,13 +1160,13 @@ declare module 'flet-box' {
   // =========================================================================
   // Widgets adicionales (Data, Media, Utils)
   // =========================================================================
-  interface DataTableColumn {
+  export interface DataTableColumn {
     key: string;
     label: string;
     align?: 'left' | 'center' | 'right';
     format?: (value: any, row: any) => string;
   }
-  interface DataTableProps extends CommonProps {
+  export interface DataTableProps extends CommonProps {
     columns: (string | DataTableColumn)[];
     rows: Record<string, any>[];
     striped?: boolean;
@@ -1117,7 +1192,7 @@ declare module 'flet-box' {
     updateColumns(columns: DataTableColumn[]): void;
   };
 
-  interface ChartProps extends CommonProps {
+  export interface ChartProps extends CommonProps {
     type?: 'bar' | 'line' | 'area' | 'candle';
     data: number[] | Array<{ open: number; high: number; low: number; close: number }>;
     labels?: string[];
@@ -1148,7 +1223,7 @@ declare module 'flet-box' {
     redraw(): void;
   };
 
-  interface QRCodeProps extends CommonProps {
+  export interface QRCodeProps extends CommonProps {
     value: string;
     size?: number;
     bgColor?: Color;
@@ -1164,7 +1239,7 @@ declare module 'flet-box' {
     getValue(): string;
   };
 
-  interface CodeViewerProps extends CommonProps {
+  export interface CodeViewerProps extends CommonProps {
     code: string;
     title?: string;
     maxHeight?: number;
@@ -1186,7 +1261,7 @@ declare module 'flet-box' {
     scrollToEnd(): void;
   };
 
-  interface InspectorProps {
+  export interface InspectorProps {
     widget: Widget;
     indent?: number;
   }
@@ -1194,7 +1269,7 @@ declare module 'flet-box' {
   export function printWidgetCode(widget: Widget): void;
   export function inspectWidget(widget: Widget): Widget;
 
-  interface DraggBoxProps extends CommonProps {
+  export interface DraggBoxProps extends CommonProps {
     child: Widget;
     data?: any;
     group?: string;
@@ -1209,7 +1284,7 @@ declare module 'flet-box' {
   }
   export function DraggBox(props: DraggBoxProps): Widget;
 
-  interface DroppBoxProps extends CommonProps {
+  export interface DroppBoxProps extends CommonProps {
     child: Widget;
     onDrop?: (data: any, group: string, event: DragEvent) => void;
     onDragEnter?: (event: DragEvent) => void;
@@ -1239,7 +1314,7 @@ declare module 'flet-box' {
   }
   export function DroppBox(props: DroppBoxProps): Widget;
 
-  interface CarouselProps extends CommonProps {
+  export interface CarouselProps extends CommonProps {
     items: (Widget | string | { src: string; alt?: string })[];
     autoPlay?: boolean;
     interval?: number;
@@ -1267,7 +1342,7 @@ declare module 'flet-box' {
     getCurrentIndex(): number;
   };
 
-  interface TooltipProps extends CommonProps {
+  export interface TooltipProps extends CommonProps {
     text: string;
     child: Widget;
     position?: 'top' | 'bottom' | 'left' | 'right';
@@ -1296,7 +1371,7 @@ declare module 'flet-box' {
     updatePosition(): void;
   };
 
-  interface PaginationProps extends CommonProps {
+  export interface PaginationProps extends CommonProps {
     totalItems: number;
     pageSize?: number;
     currentPage?: number;
@@ -1313,7 +1388,7 @@ declare module 'flet-box' {
   }
   export function Pagination(props: PaginationProps): Widget;
 
-  interface TreeViewProps extends CommonProps {
+  export interface TreeViewProps extends CommonProps {
     nodes: Array<{
       id: string;
       label: string;
@@ -1362,7 +1437,7 @@ declare module 'flet-box' {
     setSelected(nodeId: string): void;
   };
 
-  interface StepperProps extends CommonProps {
+  export interface StepperProps extends CommonProps {
     steps: Array<{ label: string; content: Widget; icon?: string }>;
     activeStep?: number;
     onStepChange?: (index: number) => void;
@@ -1391,7 +1466,7 @@ declare module 'flet-box' {
     getActiveStep(): number;
   };
 
-  interface SkeletonProps extends CommonProps {
+  export interface SkeletonProps extends CommonProps {
     variant?: 'text' | 'circular' | 'avatar' | 'image' | 'card' | 'listTile' | 'button';
     width?: number | string;
     height?: number | string;
@@ -1407,7 +1482,7 @@ declare module 'flet-box' {
   }
   export function Skeleton(props: SkeletonProps): Widget;
 
-  interface InstallButtonProps extends CommonProps {
+  export interface InstallButtonProps extends CommonProps {
     text?: string;
     variant?: 'filled' | 'outlined' | 'text';
     size?: 'small' | 'medium' | 'large';
@@ -1419,7 +1494,7 @@ declare module 'flet-box' {
   }
   export function InstallButton(props: InstallButtonProps): Widget;
 
-  interface VideoProps extends CommonProps {
+  export interface VideoProps extends CommonProps {
     src: string;
     width?: number | string;
     height?: number | string;
@@ -1441,7 +1516,7 @@ declare module 'flet-box' {
     unmuteVideo(): void;
   };
 
-  interface AudioProps extends CommonProps {
+  export interface AudioProps extends CommonProps {
     src: string;
     autoplay?: boolean;
     controls?: boolean;
@@ -1472,7 +1547,7 @@ declare module 'flet-box' {
     isPlaying(): boolean;
   };
 
-  interface CircularBarProps extends CommonProps {
+  export interface CircularBarProps extends CommonProps {
     value?: number;
     max?: number;
     size?: number;
@@ -1516,13 +1591,13 @@ declare module 'flet-box' {
     updateValue(newValue: number, newMax?: number): void;
   };
 
-  interface CircularChartSlice {
+  export interface CircularChartSlice {
     value: number;
     label?: string;
     color?: Color;
   }
 
-  interface CircularChartProps extends CommonProps {
+  export interface CircularChartProps extends CommonProps {
     data?: CircularChartSlice[];
     size?: number;
     strokeWidth?: number;
@@ -1559,7 +1634,7 @@ declare module 'flet-box' {
     setCornerRadius(radius: number): void;
   };
 
-  interface MarkdownProps extends CommonProps {
+  export interface MarkdownProps extends CommonProps {
     text?: string;
     source?: string;
     content?: string;
@@ -1612,16 +1687,37 @@ declare module 'flet-box' {
   // =========================================================================
   // Core
   // =========================================================================
-  export function runApp(App: () => Widget, rootId?: string, preventRefresh?: boolean, routes?: any): void;
+  export function runApp(
+    App: (() => Widget) | Widget,
+    rootId?: string,
+    preventRefresh?: boolean,
+    routes?: any
+  ): { destroy(): void };
+
+  /**
+   * Mounts a single widget into `#root`, creating the container when it is
+   * missing. Never clears `document.body`. Returns the root container.
+   */
+  export function App(widget: Widget): Widget;
+
+  /**
+   * The only rendering engine. Turns a tag (or config object) plus props into a
+   * real `HTMLElement` with styles, events, children, lifecycle and reactivity.
+   */
+  export function WidgetFactory(
+    tag: string | { tag?: string; [prop: string]: any },
+    customProps?: Record<string, any>
+  ): WidgetFactoryInstance;
+
   export function createApp(routes: any, options?: { rootId?: string; fallback?: Widget | (() => Widget) }): {
     start(): void;
     destroy(): void;
   };
   export function insertBy(widget: Widget, rootId?: string): Widget;
   export function prependBy(widget: Widget, rootId?: string): Widget;
-  export function insertBefore(widget: Widget, targetId: string | HTMLElement): Widget;
-  export function insertAfter(widget: Widget, targetId: string | HTMLElement): Widget;
-  export function replaceBy(widget: Widget, targetId: string | HTMLElement): Widget;
+  export function insertBefore(widget: Widget, targetId: string): Widget;
+  export function insertAfter(widget: Widget, targetId: string): Widget;
+  export function replaceBy(widget: Widget, targetId: string): Widget;
   export function mountAll(widget: Widget, rootIds: string[]): Widget;
 
   // =========================================================================
@@ -1889,6 +1985,23 @@ declare module 'flet-box' {
   export function memo<T extends (...args: any[]) => any>(fn: T): T & { cache?: Map<string, ReturnType<T>> };
   export function memoWithKey<T extends (...args: any[]) => any>(fn: T, keyFn: (...args: Parameters<T>) => string): T;
   export function clearMemo(memoizedFn: any): void;
+
+  /**
+   * Thin `console` wrapper that adds a level icon plus optional timestamp and
+   * label. The second argument may also be the options object (legacy style).
+   */
+  export function print(
+    message: any,
+    type?:
+      | "log"
+      | "warn"
+      | "error"
+      | "info"
+      | "success"
+      | "debug"
+      | { timestamp?: boolean; label?: string; prefix?: boolean },
+    options?: { timestamp?: boolean; label?: string; prefix?: boolean }
+  ): void;
 
   export function setBaseFontSize(size: number): void;
   export function toREM(value: number | string): string | undefined;

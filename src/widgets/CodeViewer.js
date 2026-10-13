@@ -4,6 +4,7 @@
  */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
+import { composeUpdate } from "../utils/composeUpdate.js";
 import { generateHighlightedHtml } from "../utils/syntaxHighlight.js";
 
 export const CodeViewer = (props) => {
@@ -81,8 +82,14 @@ code = "",
     ...rest,
   });
 
-  // Header
-  if (currentTitle && showHeader) {
+  // Header. Built through a helper so a later `title` update can create one on a
+  // widget that was constructed without it.
+  const ensureHeader = (text) => {
+    if (!showHeader || !text) return null;
+    if (headerRef) {
+      headerRef.textContent = text;
+      return headerRef;
+    }
     headerRef = WidgetFactory({
       tag: "div",
       padding: "8px 12px",
@@ -91,10 +98,12 @@ code = "",
       color: "#fff",
       fontSize: "14px",
       fontWeight: "bold",
-      textContent: currentTitle,
+      textContent: text,
     });
-    container.appendChild(headerRef);
-  }
+    container.insertBefore(headerRef, container.firstChild);
+    return headerRef;
+  };
+  ensureHeader(currentTitle);
 
   // Scroll wrapper
   scrollWrapperRef = WidgetFactory({
@@ -209,10 +218,19 @@ code = "",
 
   container.updateTitle = (newTitle) => {
     currentTitle = newTitle;
-    if (headerRef) {
-      headerRef.textContent = currentTitle;
-    }
+    ensureHeader(currentTitle);
   };
+
+  // `title` is a reactive prop mapped to `textContent` in the prop database, so
+  // letting the factory see it would replace the header and the whole code
+  // wrapper with a bare text node. Own it and update the header instead.
+  composeUpdate(container, ["title"], (props) => {
+    if (props.title === undefined) return;
+    container.updateTitle(props.title);
+    // `makeReactive` rewrites the value into `_originalProps` on every setter
+    // call; leaving it there means the next factory update wipes the widget.
+    delete container._originalProps.title;
+  });
 
   container.scrollTo = (x, y) => {
     if (scrollWrapperRef) {

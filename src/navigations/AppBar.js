@@ -277,9 +277,15 @@ export const AppBar = (props) => {
       lastScrollY = currentScrollY;
     };
     window.addEventListener("scroll", handleScroll);
-    // Store the remover so _cleanup can deregister the listener.
-    appBar._cleanupScroll = () =>
+    // Register the remover through BOTH teardown paths. `_cleanup` is only called
+    // by runApp's teardownTree / Scaffold, while a plain DOM disconnect goes
+    // through the lifecycle observer, which never calls `_cleanup` — so without
+    // `onUnmount` this listener (and the detached bar) stayed alive forever.
+    // `removeEventListener` is idempotent, so running both is harmless.
+    const removeScroll = () =>
       window.removeEventListener("scroll", handleScroll);
+    appBar._cleanupScroll = removeScroll;
+    appBar.onUnmount(removeScroll);
   }
 
   // ========== PUBLIC API ==========

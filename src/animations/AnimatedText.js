@@ -39,9 +39,13 @@ export const AnimatedText = ({
   if (!child) return null;
   if (!animations || animations.length === 0) return child;
 
-  // Extract text content and props from the original Text widget
-  const originalText = child._props?.text || child.textContent || "";
-  const originalProps = { ...(child._props || {}) };
+  // Extract text content and props from the original Text widget. The factory
+  // stores props in `_originalProps`; `_props` is never assigned by anything, so
+  // reading it here silently dropped every style (font, size, colour) and the
+  // documented per-letter inheritance never happened.
+  const sourceProps = child._originalProps || child._props || {};
+  const originalText = sourceProps.text || child.textContent || "";
+  const originalProps = { ...sourceProps };
   // Ensure no background animation styles bleed into individual letter widgets
   delete originalProps.animations;
 

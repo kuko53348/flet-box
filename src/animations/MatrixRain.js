@@ -52,6 +52,11 @@ export const MatrixRain = (props = {}) => {
   let drops = [];
   let columns = 0;
   let resizeObserver = null;
+  let observedParent = null;
+  // The canvas is returned to the caller and appended afterwards, so it is NOT
+  // connected when the animation starts. `wasConnected` tracks that first mount
+  // so the loop can stop when the canvas is later removed from the document.
+  let wasConnected = false;
 
   /**
    * Determines the canvas dimensions based on positioning mode.
@@ -84,14 +89,17 @@ export const MatrixRain = (props = {}) => {
    */
   const resizeCanvas = () => {
     if (!canvas) return;
-    if (
-      position === "absolute" &&
-      !resizeObserver &&
-      typeof ResizeObserver !== "undefined" &&
-      canvas.parentElement
-    ) {
-      resizeObserver = new ResizeObserver(resizeCanvas);
-      resizeObserver.observe(canvas.parentElement);
+    // The canvas is returned to the caller and appended afterwards, so on the
+    // first call there is no parent yet. Create the observer once and (re)attach
+    // it whenever the canvas ends up living in a different parent.
+    if (position === "absolute" && typeof ResizeObserver !== "undefined") {
+      if (!resizeObserver) resizeObserver = new ResizeObserver(resizeCanvas);
+      const parent = canvas.parentElement;
+      if (parent && observedParent !== parent) {
+        if (observedParent) resizeObserver.unobserve(observedParent);
+        resizeObserver.observe(parent);
+        observedParent = parent;
+      }
     }
     const { width, height } = getCanvasSize();
     canvas.width = width;
@@ -154,6 +162,25 @@ export const MatrixRain = (props = {}) => {
   const draw = () => {
     if (!ctx || !canvas) return;
 
+    // The canvas is handed back to the caller and appended afterwards, so it is
+    // disconnected while the animation starts. Once it HAS been mounted, a
+    // disconnect means it was removed from the document — stop there.
+    //
+    // Nothing else covers that path: `runApp`'s teardownTree and Scaffold's
+    // observer call `_cleanup()`, but the lifecycle observer in
+    // `src/widget-factory/lifecycle.js` only fires `onUnmount`, and a raw canvas
+    // has no such hook. Without this guard the loop would keep re-arming at
+    // 60fps painting into a detached canvas, forever.
+    if (canvas.isConnected) {
+      if (!wasConnected) {
+        wasConnected = true;
+        resizeCanvas(); // size to the real parent and attach the observer
+      }
+    } else if (wasConnected) {
+      cleanup();
+      return;
+    }
+
     // Semi-transparent black overlay produces the trailing-fade effect
     ctx.fillStyle = `rgba(0, 0, 0, ${fadeAmount})`;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -188,10 +215,8 @@ export const MatrixRain = (props = {}) => {
   };
 
   window.addEventListener("resize", handleResize);
-  if (position === "absolute" && typeof ResizeObserver !== "undefined") {
-    resizeObserver = new ResizeObserver(resizeCanvas);
-    if (canvas.parentElement) resizeObserver.observe(canvas.parentElement);
-  }
+  // NOTE: the parent ResizeObserver is attached from `resizeCanvas()` (see
+  // above), because the canvas has no parent until the caller appends it.
 
   /**
    * Stops the animation loop, removes event listeners, disconnects the

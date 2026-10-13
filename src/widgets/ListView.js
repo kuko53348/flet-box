@@ -407,8 +407,14 @@ export const ListView = (props) => {
   const updateData = (newData) => {
     _data = [...newData];
     itemCache.clear();
+    // The dataset changed but the viewport did not, so the previous window
+    // bounds would make `renderVisibleItems()` bail out and leave the OLD rows
+    // on screen for same-length data.
+    visibleStart = -1;
+    visibleEnd = -1;
     refreshUI();
-    element.data = _data;
+    // Do NOT write `element.data` here: `data` is an accessor whose setter calls
+    // this very function, so assigning to it recursed until the stack overflowed.
   };
 
   /**

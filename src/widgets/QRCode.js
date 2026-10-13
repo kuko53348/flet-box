@@ -116,7 +116,9 @@ function buildQRMatrix(text, ecLevel = "M") {
     for (let i = len - 1; i >= 0; i--) bits.push((val >> i) & 1);
   };
   pushBits(0b0100, 4);           // mode indicator: byte
-  pushBits(bytes.length, 8);    // character count
+  // Character count: 8 bits for versions 1-9, 16 bits for versions 10-40
+  // (ISO/IEC 18004). Emitting 8 bits at version 10 misaligns every later bit.
+  pushBits(bytes.length, version < 10 ? 8 : 16);
   for (const b of bytes) pushBits(b, 8);
   // Terminator
   for (let i = 0; i < 4 && bits.length < dataCodewords * 8; i++) bits.push(0);
@@ -161,7 +163,12 @@ function buildQRMatrix(text, ecLevel = "M") {
 
   // 7. Build final bit sequence
   const finalBits = [];
-  for (const cw of finalCW) pushBits(cw, 8);
+  // NOTE: `pushBits` writes into `bits` (the pre-interleave stream), so it must
+  // not be used here. Using it left `finalBits` empty, and the placement pass
+  // then wrote every data module as 0 — the symbol carried no payload at all.
+  for (const cw of finalCW) {
+    for (let i = 7; i >= 0; i--) finalBits.push((cw >> i) & 1);
+  }
   // Remainder bits (version-dependent, versions 2–6 need 7)
   const remainderBitsCount = version >= 2 && version <= 6 ? 7 : 0;
   for (let i = 0; i < remainderBitsCount; i++) finalBits.push(0);

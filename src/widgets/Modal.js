@@ -312,6 +312,8 @@ export const Modal = (props = {}) => {
 
   let isOpen = false;
   let overlay = null;
+  // Pending "hide after the close animation" timer, so it can be cancelled.
+  let closeTimer = null;
   let modalBody = null;
 
   // Handlers
@@ -323,7 +325,11 @@ export const Modal = (props = {}) => {
       modalBody.style.opacity = "0";
     }
     if (overlay) overlay.style.opacity = "0";
-    setTimeout(() => {
+    // Keep the id: `handleOpen` clears it, otherwise a reopen within 300 ms gets
+    // a stale timer that hides an OPEN modal, leaving it invisible and unusable.
+    if (closeTimer) clearTimeout(closeTimer);
+    closeTimer = setTimeout(() => {
+      closeTimer = null;
       if (overlay) overlay.style.visibility = "hidden";
     }, 300);
     if (closeOnEsc) document.removeEventListener("keydown", handleKeyDown);
@@ -333,6 +339,11 @@ export const Modal = (props = {}) => {
   const handleOpen = () => {
     if (isOpen) return;
     isOpen = true;
+    // Cancel any pending hide from a close that is still animating out.
+    if (closeTimer) {
+      clearTimeout(closeTimer);
+      closeTimer = null;
+    }
     if (overlay) {
       overlay.style.visibility = "visible";
       overlay.style.opacity = "1";
@@ -404,6 +415,18 @@ export const Modal = (props = {}) => {
   });
   overlay.appendChild(modalBody);
   document.body.appendChild(overlay);
+
+  // The overlay lives in `document.body` and can be removed without `close()`
+  // ever running (a state rebuild, a route change, a plain removeChild of the
+  // host). `_cleanup` is not called on that path, so release the document
+  // listener and any pending animation timer through the lifecycle hook too.
+  overlay.onUnmount(() => {
+    if (closeTimer) {
+      clearTimeout(closeTimer);
+      closeTimer = null;
+    }
+    if (closeOnEsc) document.removeEventListener("keydown", handleKeyDown);
+  });
 
   // Public API
   const instance = {

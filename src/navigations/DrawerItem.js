@@ -246,11 +246,24 @@ export const DrawerItem = (props) => {
   // Apply the initial visual state now that DOM refs are set.
   updateUI();
 
-  // Cleanup: unsubscribe from router and selection events to prevent memory leaks.
-  const originalCleanup = container._cleanup;
-  container._cleanup = () => {
+  // Cleanup: release the router subscription and the selection listener on EITHER
+  // teardown path. `_cleanup` is only run by runApp's teardownTree / Scaffold; the
+  // lifecycle observer that fires on a plain DOM disconnect never calls it, so
+  // without `onUnmount` every removed item kept a live router callback (retaining
+  // its DOM refs) plus a listener on the shared selection EventTarget. The
+  // disposer is idempotent because both paths can run.
+  let disposed = false;
+  const dispose = () => {
+    if (disposed) return;
+    disposed = true;
     if (unsubscribeRouter) unsubscribeRouter();
     if (unsubscribeGlobal) unsubscribeGlobal();
+  };
+  container.onUnmount(dispose);
+
+  const originalCleanup = container._cleanup;
+  container._cleanup = () => {
+    dispose();
     if (originalCleanup) originalCleanup();
   };
 

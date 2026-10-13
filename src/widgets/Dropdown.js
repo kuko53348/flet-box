@@ -243,7 +243,11 @@ export const Dropdown = (props) => {
     if (outsideClickListener)
       document.removeEventListener("click", outsideClickListener);
     if (resizeListener) window.removeEventListener("resize", resizeListener);
-    if (scrollListener) window.removeEventListener("scroll", scrollListener);
+    // The capture flag MUST match the one used when adding (see the `scroll`
+    // registration below), otherwise the listener is never removed: every
+    // open/close cycle leaked one window listener holding the whole closure.
+    if (scrollListener)
+      window.removeEventListener("scroll", scrollListener, true);
     outsideClickListener = resizeListener = scrollListener = null;
   };
 

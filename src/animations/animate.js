@@ -114,7 +114,13 @@ const getEasing = (type, t) => {
 const readAnimatedValue = (widget, property) => {
   if (property === "scale") return 1;
   if (widget?.style && property in widget.style) {
-    return widget.style[property];
+    const inline = widget.style[property];
+    // An inline-unset property reads as "" and `interpolate` turns that into the
+    // string "NaN", which the browser silently drops — so `animate(el, "opacity",
+    // undefined, 1, 300)` (the documented API) wrote "NaN" every frame and never
+    // animated anything. Fall back to the property's neutral value.
+    if (inline !== "" && inline !== null && inline !== undefined) return inline;
+    return property === "opacity" ? 1 : 0;
   }
   return widget?.[property];
 };
@@ -180,13 +186,21 @@ export const animate = (
   duration = 300,
   easing = "linear",
 ) => {
+  // A negative duration makes elapsed/duration increasingly negative, so the
+  // loop re-armed forever and the property was driven backwards. Clamping the
+  // progress is not enough (it just sits at 0 and `0 < 1` stays true), so
+  // sanitise the duration itself. `0` collapses to a single frame.
+  duration = Math.max(0, Number(duration) || 0);
   const startTime = performance.now();
   const startValue = from !== undefined ? from : readAnimatedValue(widget, property);
   const endValue = to;
 
   const step = (currentTime) => {
     const elapsed = currentTime - startTime;
-    const progress = Math.min(1, elapsed / duration);
+    // Clamp both ends. A negative `duration` makes elapsed/duration increasingly
+    // negative, so `progress` never reached 1 and the loop re-armed forever (and
+    // `animateAsync` never resolved). `duration: 0` yields Infinity, clamped to 1.
+    const progress = Math.max(0, Math.min(1, elapsed / duration));
     const easedProgress = getEasing(easing, progress);
     const currentValue = interpolate(startValue, endValue, easedProgress);
 
@@ -224,6 +238,9 @@ export const animateAsync = (
   duration = 300,
   easing = "linear",
 ) => {
+  // See `animate`: a negative duration would keep the loop alive forever and this
+  // promise would never resolve.
+  duration = Math.max(0, Number(duration) || 0);
   return new Promise((resolve) => {
     const startTime = performance.now();
     const startValue = from !== undefined ? from : readAnimatedValue(widget, property);
@@ -231,7 +248,9 @@ export const animateAsync = (
 
     const step = (currentTime) => {
       const elapsed = currentTime - startTime;
-      const progress = Math.min(1, elapsed / duration);
+      // Same clamp as `animate`: a negative `duration` would otherwise never
+      // reach progress 1 and this promise would never resolve.
+      const progress = Math.max(0, Math.min(1, elapsed / duration));
       const easedProgress = getEasing(easing, progress);
       const currentValue = interpolate(startValue, endValue, easedProgress);
 

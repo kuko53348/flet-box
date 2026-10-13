@@ -207,7 +207,7 @@ export default function run(ctx) {
     const fill = track.firstElementChild;
     eq(track.style.height, "8px");
     eq(track.style.borderRadius, "4px"); // height / 2
-    eq(cs(track).backgroundColor, "rgb(226, 232, 240)"); // colors.border
+    eq(cs(track).backgroundColor, rgbOf(colors.border)); // colors.border
     eq(cs(fill).backgroundColor, rgbOf(colors.primary));
   });
   t("ProgressBar: value 50 / max 100 -> fill width 50%", () => {
@@ -284,7 +284,7 @@ export default function run(ctx) {
     eq(block.style.width, "100%");
     eq(block.style.height, "16px");
     eq(block.style.borderRadius, "4px");
-    eq(cs(block).backgroundColor, "rgb(226, 232, 240)"); // colors.gray200
+    eq(cs(block).backgroundColor, rgbOf(colors.gray200)); // colors.gray200
   });
   t("Skeleton: default pulse animation + injected keyframes", () => {
     const e = mount(W.Skeleton({}));

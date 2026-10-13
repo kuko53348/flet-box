@@ -280,7 +280,9 @@ export const TreeView = (props) => {
 
   // ========== PUBLIC METHODS ==========
 
-  container.updateNodes = (newNodes, selectedId = null) => {
+  // NOTE: no `selectedId = null` default. The guard below tests `!== undefined`,
+  // so a `null` default made it always true and every call wiped the selection.
+  container.updateNodes = (newNodes, selectedId) => {
     nodes.length = 0;
     nodes.push(...newNodes);
     if (selectedId !== undefined) currentSelectedId = selectedId;

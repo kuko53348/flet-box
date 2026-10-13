@@ -7,6 +7,14 @@ const IS_DEV = typeof FLETBOX_DEV !== 'undefined' ? FLETBOX_DEV : true;
 const suggestionCache = new Map();
 let propNames = [];
 
+// Props already reported. Without this, every prop *application* re-printed the
+// whole block — a captured stack trace plus ~8 styled console calls — so a widget
+// carrying a single unknown prop paid ~137 µs on every `update()`, roughly 400×
+// the cost of a known prop. Because `update()` re-applies every original prop, one
+// unknown prop slowed that widget for its whole lifetime.
+const warnedProps = new Set();
+const warnedDeprecated = new Set();
+
 export function setPropNames(names) {
   propNames = names;
   try { if (typeof window !== 'undefined') window.__FLETBOX_PROP_NAMES = names; } catch(e){}
@@ -216,6 +224,9 @@ function printDocs(prop) {
 
 export function warnUnknownProp(propName, context = {}) {
   if (!IS_DEV) return;
+  // Report each unknown prop once, not once per application.
+  if (warnedProps.has(propName)) return;
+  warnedProps.add(propName);
 
   const suggestions = getSuggestions(propName);
   const location = getCallLocation();
@@ -231,6 +242,10 @@ export function warnUnknownProp(propName, context = {}) {
 
 export function warnDeprecatedProp(propName, replacement = null, context = {}) {
   if (!IS_DEV) return;
+  // Same reasoning as `warnUnknownProp`: one report per prop/replacement pair.
+  const deprecatedKey = `${propName}\u0000${replacement || ""}`;
+  if (warnedDeprecated.has(deprecatedKey)) return;
+  warnedDeprecated.add(deprecatedKey);
 
   const location = getCallLocation();
 

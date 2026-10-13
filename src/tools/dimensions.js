@@ -16,8 +16,14 @@
  * // Call remove() to stop listening.
  */
 
-let windowWidth = window.innerWidth;
-let windowHeight = window.innerHeight;
+// SSR / Node guard: this module must stay importable where `window` does not
+// exist (SSR, test runners, build tooling). Reading `window.innerWidth` at
+// module scope used to throw a ReferenceError on import. Same convention as
+// `src/core/pwa.js`.
+const hasWindow = typeof window !== "undefined";
+
+let windowWidth = hasWindow ? window.innerWidth : 0;
+let windowHeight = hasWindow ? window.innerHeight : 0;
 
 // Live named exports — is-module live bindings: importers of { width, height }
 // always read the current value, kept in sync on resize.
@@ -45,7 +51,9 @@ const handleResize = () => {
   });
 };
 
-window.addEventListener("resize", handleResize);
+// Only subscribe inside a browser; in Node the listener list stays inert and
+// `addListener` / `removeListener` keep working without throwing.
+if (hasWindow) window.addEventListener("resize", handleResize);
 
 /**
  * Dimensions object — provides getter properties and listener management.

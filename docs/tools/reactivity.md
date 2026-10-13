@@ -122,18 +122,41 @@ The router notifies subscribers on navigation. Layout shells and navigation widg
 subscribe((route, params, query) => setBreadcrumb(route.path));
 ```
 
-## 10. Reactive prop values — resolved, not subscribed
+## 10. Reactive prop values — resolved **and bound when passed directly**
 
-A prop value can be a function or object flagged as reactive (`_isReactive`). The factory resolves it to its current value when the prop is applied.
+A prop value can be a function or object flagged as reactive (`_isReactive`). The
+factory resolves it to its current value when the prop is applied — and when the
+value carries a state key (what `useState` returns), the factory **binds the widget
+to that key automatically**.
 
 ```javascript
-const [speed] = useState("speed", 1);
-Slider({ min: 0, max: speed }); // resolves to the value at build time
+const [color, setColor] = useState("color", "red");
+
+const box = Container({ bgColor: color });   // ← the binding is created here
+setColor("blue");                            // ← only `box` is patched
 ```
 
-### Important nuance
+A directly-passed reactive prop gives you a **surgical** update: the change patches
+that one widget. The app does **not** re-render — not even once — and the DOM node
+is reused, so `widget.prop = value` writes made earlier are not thrown away.
 
-Passing a reactive value into a prop resolves it **once, at apply time**; the widget does not auto-subscribe. Targeted updates arrive through the mechanisms above (registered widgets, `ref`, prop setters). The plain path still updates correctly — via the app's render — but it goes through the whole app, not just that widget.
+The binding is released automatically when the widget is removed (`onUnmount`), so
+detached widgets stop receiving updates.
+
+### When it falls back to the app render
+
+A reactive value that is **computed** before it reaches a prop has no prop to bind:
+
+```javascript
+Text({ text: `N=${count}` });          // resolved to a plain string at build time
+count > 3 ? Text({ text: "mucho" }) : null;   // the value drives *structure*
+items.map((i) => Row({ child: Text({ text: i }) }));
+```
+
+Here the value is only read inside the component function, so the only way to
+reflect a change is to re-run the app. FletBox detects this per key: **if no widget
+is bound to the key, it re-renders the app; if widgets are bound, it patches them
+and skips the app render.** Both styles work side by side in the same component.
 
 ## Widget-owned reactivity
 
@@ -145,14 +168,15 @@ Every subscriber API returns an unsubscribe function, and widget registration is
 
 ## Which one should you use?
 
-| You want to… | Use |
-| --- | --- |
-| Re-render whatever listens to a key | `useState` + `setState` |
-| Update one widget without touching the app | `widget.prop = value`, `ref().update`, or registered `useState` |
-| React to any RamStore change | `subscribeRam` |
-| Run a side effect on a key | `useWatchState` / `subscribe` |
-| Follow the theme or the route | `subscribeTheme` / router `subscribe` |
-| Update a widget's whole prop set | `widget.update(props)` |
+| You want to… | Use | Cost |
+| --- | --- | --- |
+| Update ONE widget from a state value, without touching the app | `useState` + pass the value straight into a prop (`Container({ bgColor: color })`) | surgical — 0 app renders |
+| Re-render whatever reads the key inside the component function | `useState` + `setState` (the value is computed, not passed) | one app render |
+| Update one widget without state at all | `widget.prop = value`, `widget.update(props)`, `ref().update` | surgical — 0 app renders |
+| React to any RamStore change | `subscribeRam` | surgical |
+| Run a side effect on a key | `useWatchState` / `subscribe` | none |
+| Follow the theme or the route | `subscribeTheme` / router `subscribe` | theme re-renders the app |
+| Update a widget's whole prop set | `widget.update(props)` | surgical |
 
 ## Related pages
 

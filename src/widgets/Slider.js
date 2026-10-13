@@ -299,6 +299,9 @@ export const Slider = (props) => {
 
   function generateDefaultMarks() {
     const stepMark = (currentMax - currentMin) / 4;
+    // With `min === max` (or non-numeric bounds) stepMark is 0/NaN, so
+    // `i += stepMark` never advances and the loop hangs the tab forever.
+    if (!(stepMark > 0)) return [currentMin];
     const marksList = [];
     for (let i = currentMin; i <= currentMax + 0.1; i += stepMark) {
       marksList.push(Math.round(i));

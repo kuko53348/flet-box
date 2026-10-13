@@ -334,6 +334,24 @@ const interpolateGradient = (gradient1, gradient2, t) => {
  * @param {string} keyframes - The keyframe body (everything inside `@keyframes name { … }`).
  * @returns {void}
  */
+/**
+ * Stable hash of a keyframe body, used as the generated animation name so that
+ * identical keyframes are injected only once.
+ *
+ * @param {string} keyframes
+ * @returns {string}
+ */
+const hashKeyframes = (keyframes) => {
+  let h1 = 0x811c9dc5;
+  let h2 = 0x01000193;
+  for (let i = 0; i < keyframes.length; i++) {
+    const c = keyframes.charCodeAt(i);
+    h1 = Math.imul(h1 ^ c, 0x01000193);
+    h2 = Math.imul(h2 + c, 0x85ebca6b) ^ (h2 >>> 13);
+  }
+  return (h1 >>> 0).toString(36) + (h2 >>> 0).toString(36);
+};
+
 const injectKeyframes = (name, keyframes) => {
   if (injectedKeyframes.has(name)) return;
   const style = document.createElement("style");
@@ -364,6 +382,15 @@ const generateKeyframes = (animations) => {
     animations.forEach((anim) => {
       const effect = effectMap[anim.effect] || anim.effect;
       const { from, to, reverse = true } = anim;
+
+      // A descriptor without `from`/`to` is malformed. Skip it with a warning
+      // rather than throwing a TypeError out of the caller's entire render.
+      if (from === undefined || to === undefined) {
+        console.warn(
+          `⚠️ [AnimatedBox] Skipping animation "${anim.effect}": "from" and "to" are required.`,
+        );
+        return;
+      }
 
       let value;
       let color;
@@ -589,8 +616,12 @@ export const AnimatedBox = ({
       child.style.background = firstAnim.from;
     }
 
-    const name = `anim-${Date.now()}-${animationCounter++}`;
     const keyframes = generateKeyframes(animations);
+    // The name is derived from the keyframe body so identical animations reuse a
+    // single <style>. A per-call unique name (`Date.now()`) made the dedupe check
+    // in `injectKeyframes` dead code: every call appended a permanent <style> to
+    // document.head, and AnimatedText calls this once per letter.
+    const name = `anim-${hashKeyframes(keyframes)}`;
     injectKeyframes(name, keyframes);
 
     const duration = animations[0]?.duration || 500;

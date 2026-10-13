@@ -341,12 +341,16 @@ export const ParallaxBox = (props = {}) => {
 
   const originalCleanup = container._cleanup;
   /**
-   * Removes all event listeners, cancels pending animation frames, clears
-   * timers, and calls any previously assigned `_cleanup` function.
+   * Removes all event listeners, cancels pending animation frames and clears
+   * timers. Idempotent, because it runs from BOTH teardown paths: the lifecycle
+   * observer fires `onUnmount`, while runApp/Scaffold call `_cleanup`.
    *
    * @returns {void}
    */
-  container._cleanup = () => {
+  let disposed = false;
+  const dispose = () => {
+    if (disposed) return;
+    disposed = true;
     if (type === "scroll") {
       window.removeEventListener("scroll", handleScroll);
     } else {
@@ -360,6 +364,15 @@ export const ParallaxBox = (props = {}) => {
     if (initialTimer) clearTimeout(initialTimer);
     transitionTimers.forEach((timer) => clearTimeout(timer));
     transitionTimers.clear();
+  };
+
+  // The lifecycle observer fires `onUnmount` on a plain DOM disconnect but never
+  // calls `_cleanup`, so without this the window scroll listener and the timers
+  // survived every removal that was not a full app rebuild.
+  container.onUnmount(dispose);
+
+  container._cleanup = () => {
+    dispose();
     if (originalCleanup) originalCleanup();
   };
 

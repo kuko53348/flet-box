@@ -1,5 +1,6 @@
 // core/assignProps.js
 import { setStyles } from "./tools.js";
+import { resolveReactive } from "./reactiveValue.js";
 
 /**
  * Extracts the real value from a prop that may be a reactive accessor or a
@@ -14,15 +15,7 @@ import { setStyles } from "./tools.js";
  * @param {*} val - The raw prop value (may be reactive or plain).
  * @returns {*} The resolved runtime value.
  */
-const getValue = (val) => {
-  if (typeof val === "function" && val._isReactive) {
-    return val();
-  }
-  if (val && typeof val === "object" && val._isReactive === true) {
-    return val._value !== undefined ? val._value : val.valueOf();
-  }
-  return val;
-};
+const getValue = resolveReactive;
 
 /**
  * HTML attributes whose mere presence means "true". Writing them through
@@ -110,7 +103,11 @@ export const assignProps = (widget, props) => {
     // ============================================================
     // 2. TEXT
     // ============================================================
-    if (props.textContent !== undefined) {
+    // `null` is `processProps`' sentinel for "this prop set carries no text".
+    // Only an explicitly present value (including "") may touch textContent:
+    // assigning null stringifies to "" and therefore REMOVES every child, which
+    // silently wiped widgets on any `update()` that did not re-pass `child`.
+    if (props.textContent !== undefined && props.textContent !== null) {
       const textValue = getValue(props.textContent);
       if (widget.tagName === "INPUT" || widget.tagName === "TEXTAREA") {
         if (widget.value !== textValue) widget.value = textValue;

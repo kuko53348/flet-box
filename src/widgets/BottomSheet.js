@@ -58,6 +58,8 @@ export const BottomSheet = (props) => {
 
   let isOpen = false;
   let overlay = null;
+  // Pending "hide after the close animation" timer, so it can be cancelled.
+  let closeTimer = null;
   let sheetContainer = null;
   let startY = 0;
   let currentY = 0;
@@ -190,6 +192,18 @@ onclick: (e) => e.stopPropagation(), // ✅ Prevents the click from reaching the
   overlay.appendChild(sheetContainer);
   document.body.appendChild(overlay);
 
+  // The overlay lives in `document.body` and can be removed without `close()`
+  // ever running (state rebuild, route change, plain removeChild of the host).
+  // `_cleanup` is not called on that path, so release the document listener and
+  // any pending animation timer through the lifecycle hook too.
+  overlay.onUnmount(() => {
+    if (closeTimer) {
+      clearTimeout(closeTimer);
+      closeTimer = null;
+    }
+    document.removeEventListener("keydown", handleKeyDown);
+  });
+
   // Drag handlers
   const onTouchStart = (e) => {
     // ✅ Prevent the drag event from propagating to the overlay
@@ -229,6 +243,11 @@ onclick: (e) => e.stopPropagation(), // ✅ Prevents the click from reaching the
   const open = () => {
     if (isOpen) return;
     isOpen = true;
+    // Cancel any pending hide from a close that is still animating out.
+    if (closeTimer) {
+      clearTimeout(closeTimer);
+      closeTimer = null;
+    }
     overlay.style.visibility = "visible";
     overlay.style.opacity = "1";
     sheetContainer.style.transform = "translateY(0)";
@@ -250,7 +269,11 @@ onclick: (e) => e.stopPropagation(), // ✅ Prevents the click from reaching the
     isOpen = false;
     sheetContainer.style.transform = "translateY(100%)";
     overlay.style.opacity = "0";
-    setTimeout(() => {
+    // Keep the id: `open()` clears it, otherwise reopening within the animation
+    // window lets a stale timer hide an OPEN sheet (invisible but isOpen true).
+    if (closeTimer) clearTimeout(closeTimer);
+    closeTimer = setTimeout(() => {
+      closeTimer = null;
       overlay.style.visibility = "hidden";
     }, animationDuration);
     if (onClose) onClose();

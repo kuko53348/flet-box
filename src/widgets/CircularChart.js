@@ -335,7 +335,10 @@ export const CircularChart = (props) => {
     if (!ctx || !canvas) return;
     if (!startTime) {
       startTime = timestamp;
-      requestAnimationFrame(updateAnimation);
+      // Keep the id. The previous frame's id is already spent, so cleanup would
+      // cancel nothing and the pending frame kept re-arming forever on a detached
+      // canvas — and a re-`startAnimation()` could run two loops at once.
+      animationId = requestAnimationFrame(updateAnimation);
       return;
     }
     const elapsed = timestamp - startTime;

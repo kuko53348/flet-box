@@ -318,6 +318,11 @@ export const Tabs = (props) => {
     updateContent();
   };
 
+  // Mount the initially active pane during construction. Without this the pane
+  // area stayed empty until the user clicked a *different* tab, even though the
+  // first tab already rendered as `aria-selected="true"`.
+  updateContent();
+
   // Defer the initial slider position calculation by one frame so the DOM
   // has been laid out and getBoundingClientRect() returns real values.
   let initialPositionTimer = setTimeout(() => {
@@ -341,18 +346,41 @@ export const Tabs = (props) => {
 
   // Also observe the tab bar element itself so the thumb repositions when
   // the container resizes independently of the window (e.g. sidebar toggle).
-  if (typeof ResizeObserver !== "undefined") {
+  // Only the slider variant has a thumb, so skip it for the other variants.
+  if (variant === "slider" && typeof ResizeObserver !== "undefined") {
     resizeObserver = new ResizeObserver(() => updateSliderPosition());
     if (tabsWrapperRef) resizeObserver.observe(tabsWrapperRef);
   }
 
-  // Cleanup: cancel timers and remove listeners when the component is unmounted.
+  // Cleanup: release the timers, the window listener and the observer on EITHER
+  // teardown path. `_cleanup` is only run by runApp's teardownTree / Scaffold; a
+  // plain DOM disconnect goes through the lifecycle observer, which never calls
+  // it — so without `onUnmount` the resize listener stayed registered and the
+  // ResizeObserver kept observing (and retaining) a detached tab bar. The
+  // disposer is idempotent because both paths can run.
+  let disposed = false;
+  const dispose = () => {
+    if (disposed) return;
+    disposed = true;
+    if (initialPositionTimer) {
+      clearTimeout(initialPositionTimer);
+      initialPositionTimer = null;
+    }
+    if (resizeTimeout) {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = null;
+    }
+    window.removeEventListener("resize", handleResize);
+    if (resizeObserver) {
+      resizeObserver.disconnect();
+      resizeObserver = null;
+    }
+  };
+  container.onUnmount(dispose);
+
   const originalCleanup = container._cleanup;
   container._cleanup = () => {
-    if (initialPositionTimer) clearTimeout(initialPositionTimer);
-    if (resizeTimeout) clearTimeout(resizeTimeout);
-    window.removeEventListener("resize", handleResize);
-    if (resizeObserver) resizeObserver.disconnect();
+    dispose();
     if (originalCleanup) originalCleanup();
   };
 

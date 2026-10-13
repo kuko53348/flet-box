@@ -79,13 +79,17 @@ export const Switch = (props) => {
 
   // Handle click
   if (!disabled) {
-    switchContainer.onclick = (e) => {
+    const handleClick = (e) => {
       e.stopPropagation();
       const newValue = !internalValue;
       internalValue = newValue;
       updateUI(newValue);
       if (onPress) onPress(newValue);
     };
+    // Routed through the factory props: `assignProps` clears `onclick` on every
+    // update and only re-applies handlers present in the merged props, so a
+    // direct assignment died on the first `update()` or reactive setter.
+    switchContainer.update({ onPress: handleClick });
   }
 
   // Public methods

@@ -162,6 +162,16 @@ export const Inspector = (widget, indent = 0) => {
   // Separate structural props from the rest so we can render them last
   const { child, children, ...otherProps } = props;
 
+  // `child` may legitimately be an ARRAY (`child: [Text(...)]`), which the
+  // factory accepts. Normalise it into the children list: otherwise the subtree
+  // is dropped and — because `child` is truthy — the DOM-children fallback below
+  // is skipped too, so the whole branch disappears from the output.
+  const childNode = Array.isArray(child) ? null : child;
+  const kids = [
+    ...(Array.isArray(child) ? child : []),
+    ...(Array.isArray(children) ? children : []),
+  ];
+
   const propsList = Object.entries(otherProps)
     .map(([key, value]) => {
       const formattedValue = stringifyValue(value, indent + 1);
@@ -171,14 +181,14 @@ export const Inspector = (widget, indent = 0) => {
 
   // Reconstruct a single `child` prop
   let childStr = "";
-  if (child && child.nodeType === 1) {
-    childStr = `\n${nextSpaces}child: ${Inspector(child, indent + 1)}`;
+  if (childNode && childNode.nodeType === 1) {
+    childStr = `\n${nextSpaces}child: ${Inspector(childNode, indent + 1)}`;
   }
 
-  // Reconstruct a `children` array prop
+  // Reconstruct a `children` array prop (including an array-valued `child`)
   let childrenStr = "";
-  if (children && Array.isArray(children) && children.length > 0) {
-    const childrenItems = children
+  if (kids.length > 0) {
+    const childrenItems = kids
       .filter((c) => c && c.nodeType === 1)
       .map((c) => Inspector(c, indent + 1))
       .join(",\n" + nextSpaces + "  ");
@@ -191,11 +201,7 @@ export const Inspector = (widget, indent = 0) => {
   // Fall back to actual DOM children when no explicit child/children props exist
   const domChildren = collectChildren(widget);
   let domChildrenStr = "";
-  if (
-    domChildren.length > 0 &&
-    !child &&
-    (!children || children.length === 0)
-  ) {
+  if (domChildren.length > 0 && !childNode && kids.length === 0) {
     const domChildrenItems = domChildren
       .map((c) => Inspector(c, indent + 1))
       .join(",\n" + nextSpaces + "  ");

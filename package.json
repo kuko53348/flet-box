@@ -19,7 +19,8 @@
     "dev": "node bin/cli.js run --hot",
     "build": "node bin/cli.js createBundle",
     "release": "node bin/cli.js release",
-    "test": "node scripts/check-widgets.mjs"
+    "test": "node scripts/check-widgets.mjs && node scripts/check-api-surface.mjs",
+    "test:browser": "node scripts/run-browser-tests.mjs"
   },
   "keywords": [
     "fletbox",
