@@ -19,12 +19,9 @@ import { createBundle } from "./commands/createBundle.js";
 import { buildAndroid } from "./commands/buildAndroid.js";
 import { buildIOS } from "./commands/buildIOS.js";
 import { runNative } from "./commands/runNative.js";
-import { runDevServer } from "./commands/runServer.js";
 import { createScreen } from "./commands/createScreen.js";
 import { createComponent } from "./commands/createComponent.js";
 import { killServer } from "./commands/killServer.js";
-import { runBundle } from "./commands/runBundle.js";
-import { runCloudflareDemo } from "./commands/runCloudflare.js";
 import { release } from "./commands/release.js";
 import { c, gradient, section, banner, divider, width, setupCtrlC } from "./utils/colors.js";
 
@@ -323,7 +320,11 @@ async function main() {
           runNative(args.slice(1));
           break;
         }
-        await runDevServer({
+        // The server commands are the only ones that pull in `ws`/`chokidar`,
+        // which are devDependencies: a consumer installing `flet-box` from npm
+        // has neither, so loading them at module scope would break every CLI
+        // command for them. Import them when a server is actually started.
+        await (await import("./commands/runServer.js")).runDevServer({
           spaMode: false,
           hotReload: flags.hot,
           port: flags.port,
@@ -344,7 +345,7 @@ async function main() {
           !args[1].startsWith("-")
             ? args[1]
             : "www";
-        await runBundle({
+        await (await import("./commands/runBundle.js")).runBundle({
           target: targetDir,
           port: flags.port,
           askPort: !flags.portExplicit,
@@ -357,7 +358,7 @@ async function main() {
       case "runSpa":
       case "spa":
         ensureProject();
-        await runDevServer({
+        await (await import("./commands/runServer.js")).runDevServer({
           spaMode: true,
           hotReload: true,
           port: flags.port,
@@ -371,7 +372,7 @@ async function main() {
       case "demo":
       case "tunnel":
         ensureProject();
-        await runCloudflareDemo({
+        await (await import("./commands/runCloudflare.js")).runCloudflareDemo({
           port: flags.port,
           logRequests: flags.logRequests,
         });

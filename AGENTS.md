@@ -13,6 +13,7 @@ FletBox: zero-runtime-dependency vanilla-JS UI framework with a Flet-like declar
   - `node scripts/check-docs-props.mjs` — the `docs/widget/*.md` prop tables vs the registry, the implementations and `src/index.d.ts`. Blocks `DEAD` (a documented prop nothing routes or reads) and `BOOL_STYLE` (a documented `boolean` that reaches CSS as `1` because its registry entry has no `boolValues`).
   - `node scripts/check-api-surface.mjs` — API coupling across the three surfaces. It imports `src/index.js` for real, so it also fails when the barrel re-exports a name that no longer exists, or when the package stops being importable in Node (module-scope `window`/`document`).
   - `node scripts/check-router-base.mjs` — deployment base path.
+  - `node scripts/check-cli-install.mjs` — the shape of the **published** package: it `npm pack`s the repo, extracts the tarball and runs `bin/cli.js` from it with no `node_modules` in scope, which is the only place where a `bin/` module reaching for a devDependency at import time shows up (it used to break every CLI command for consumers, since the checkout always has `ws`/`chokidar`). It also asserts `docs/widget/` shipped.
   - `python3 tools/snippets-creator-flet-box/build_snippets.py --check` + `node scripts/check-snippets.mjs` — the VSCode snippet library (see Snippets below).
   Behavioral tests are browser harnesses in `tests/` (below).
 - `python3 scripts/generate_widget_docs.py` — regenerates `docs/widget/*.md` from `src/index.d.ts` + the curated examples in `scripts/_docdata/`. Run after changing a widget's public props/types.
@@ -62,6 +63,7 @@ Each harness writes a global (`window.__TESTS`, `window.__SMOKE`, `window.__REGR
 - `www/` and `dist/` are gitignored build output — regenerate them with `npm run build` or `flet-box release`, never hand-edit them. `www/` is built from the root demo (`src/app.js` + `index.html`) so `flet-box run-bundle` works here; in a generated app it is the OTA source that CI builds and deploys to Pages on `v*` tags, and it stays out of git there too.
 - `.github/workflows/npm-publish.yml` is the only workflow: it publishes to npm when `package.json` carries a version npm doesn't have yet. APK/AAB CI belongs to generated apps (`bin/utils/templates.js` writes theirs), not here. No CI runs the tests.
 - npm ships all of `bin/`, so a stray `bin/package.json` would be published and shadow module resolution. Keep `bin/` free of package manifests.
+- `bin/` may not import a devDependency at module scope. `ws` and `chokidar` exist only for the dev server, so `bin/cli.js` loads `runServer.js`/`runBundle.js`/`runCloudflare.js` with `await import()` inside their command branches; keep them lazy or `flet-box` crashes on every command for anyone who installs it from npm. `check-cli-install.mjs` (above) is the tripwire.
 
 ## Widget structure contract
 
