@@ -13,6 +13,7 @@ import { createRequire } from "module";
 import fs from "fs";
 import path from "path";
 import { createProject } from "./commands/create.js";
+import { checkApi } from "./commands/checkApi.js";
 import { packageManager } from "./commands/package.js";
 import { createBundle } from "./commands/createBundle.js";
 import { buildAndroid } from "./commands/buildAndroid.js";
@@ -73,6 +74,11 @@ ${cmd("   └─ [dir]", "target folder (default www)")}
 ${cmd("release [--patch]", "Bump version, rebuild, tag (OTA release)")}
 ${cmd("   └─ --minor|--major", "bump that position instead of patch")}
 ${cmd("   └─ --push", "push the commit + tag to origin")}
+${cmd("check-api", "Validate the app against the installed flet-box API")}
+${cmd("   └─ --props <Widget>", "print one widget's real props")}
+${cmd("   └─ --list", "list every widget")}
+${cmd("   └─ --emit-api", "write .fletbox/api/cheatsheet.md")}
+${cmd("   └─ alias", "check | checkApi | doctor")}
 ${cmd("build android", "Build Android debug APK")}
 ${cmd("build android --release", "Build unsigned release APK/AAB to sign yourself")}
 ${cmd("build ios", "Build iOS Simulator app (macOS + Xcode)")}
@@ -261,6 +267,15 @@ async function main() {
         ensureProject();
         await release(args.slice(1));
         break;
+
+      case "check-api":
+      case "checkApi":
+      case "check":
+      case "doctor": {
+        const { exitCode } = await checkApi(args.slice(1));
+        if (exitCode) process.exit(exitCode);
+        break;
+      }
 
       case "build":
         if (args[1] === "android") {

@@ -95,7 +95,17 @@ flet-box createBundle www      # bundle the app into www/
 flet-box build android         # Android debug APK
 flet-box build ios             # iOS Simulator app (macOS + Xcode)
 flet-box build ios --archive   # unsigned iOS archive, sign in Xcode
+
+# API lookup + anti-hallucination gate (works offline, in the repo or any app)
+flet-box check-api                      # scan src/ for invented widgets/props
+flet-box check-api --props Button       # print the real props of one widget
+flet-box check-api --list               # print every public export
+flet-box check-api --emit-api           # (re)generate .fletbox/api/cheatsheet.md
 ```
+
+In a generated app these are also `npm run check` (and `npm run check -- --props Button`),
+because `flet-box create` writes `scripts/check-app.mjs` plus the `AGENTS.md` contract
+that points any AI assistant at the real API.
 
 ## Android and iOS
 

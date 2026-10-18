@@ -710,6 +710,7 @@ export const packageJson = (name) => `{
   "type": "module",
   "scripts": {
     "dev": "bash run.sh",
+    "check": "node scripts/check-app.mjs",
     "build": "flet-box createBundle www",
     "start": "npm run dev",
     "android:init": "npm run build && cap add android",
@@ -1177,6 +1178,11 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      # Fails the build on an invented widget/prop, a positional widget call or a
+      # foreign-framework import. See AGENTS.md section 4.
+      - name: Check app API usage (npm run check)
+        run: npm run check
+
       - name: Bundle web app (flet-box createBundle www)
         run: npm run build
 
@@ -1321,6 +1327,31 @@ The generated Capacitor configuration uses package id \`${appId}\`.
 npm install
 npm run dev
 \`\`\`
+
+## Working with an AI assistant
+
+This project ships an in-project agent contract, so an AI editing the app uses the
+real FletBox API instead of inventing one and burning tokens relearning the
+framework from scratch:
+
+- \`AGENTS.md\` — the rules: FletBox syntax only, real widgets and props only, and the
+  verification loop it must run after every edit.
+- \`.claude/CLAUDE.md\`, \`.cursor/rules/fletbox.mdc\` — short pointers to \`AGENTS.md\` for
+  Claude Code and Cursor.
+- \`.fletbox/api/cheatsheet.md\` — every widget and its real props, generated from the
+  installed package. This is the lookup an agent reads instead of the framework.
+- \`.fletbox/memory/\` — notes the agent keeps between sessions, so it does not
+  rediscover the same thing twice.
+- \`scripts/check-app.mjs\` — the gate that catches hallucinated APIs.
+
+\`\`\`bash
+npm run check                      # scan src/ for invented widgets, props, imports
+npm run check -- --props Button    # print the real props of one widget
+npm run check -- --list            # print every public export
+\`\`\`
+
+\`npm run check\` exits non-zero on a real error and also runs in CI. If you upgrade
+\`flet-box\`, regenerate the cheatsheet with \`flet-box check-api --emit-api\`.
 
 ## Android
 
@@ -1553,12 +1584,14 @@ export const ProfileScreen = () => {
 };
 `;
 
-// Screens index for easier imports
-export const screensIndexJs = () => `// screens/index.js
+// Screens index for easier imports. ProfileScreen only exists in the adaptive
+// template, so it is re-exported only when that screen file was actually written.
+export const screensIndexJs = (template) => `// screens/index.js
 export { RootScreen } from './RootScreen.js';
 export { HomeScreen } from './HomeScreen.js';
-export { AboutScreen } from './AboutScreen.js';
-export { ProfileScreen } from './ProfileScreen.js';
+export { AboutScreen } from './AboutScreen.js';${
+  template === "adaptive" ? `\nexport { ProfileScreen } from './ProfileScreen.js';` : ""
+}
 `;
 
 // Layout components
@@ -1587,16 +1620,18 @@ export const AppBarComponent = ({ title, isMobile = false, showBack = false, onB
 export const bottomNavJs = () => `// components/layouts/BottomNav.js
 import { BottomNavigation, colors, goTo } from 'flet-box';
 
-export const BottomNav = ({ items = [], currentRoute }) => {
+export const BottomNav = ({ items = [], currentRoute } = {}) => {
     const defaultItems = [
         { icon: 'home', label: 'Home', route: '/home' },
         { icon: 'info', label: 'About', route: '/about' }
     ];
     const navItems = items.length ? items : defaultItems;
+    // BottomNavigation selects a tab by index, not by route.
+    const currentIndex = Math.max(0, navItems.findIndex((item) => item.route === currentRoute));
     return BottomNavigation({
         items: navItems,
-        currentRoute: currentRoute,
-        onTabChange: (route) => goTo(route),
+        currentIndex,
+        onTabChange: (index) => goTo(navItems[index].route),
         backgroundColor: colors.surface,
         selectedColor: colors.primary
     });
@@ -1606,7 +1641,7 @@ export const BottomNav = ({ items = [], currentRoute }) => {
 export const sidebarJs = () => `// components/layouts/Sidebar.js
 import { Container, Column, Row, Text, Icon, colors, goTo } from 'flet-box';
 
-export const Sidebar = ({ items = [], currentRoute }) => {
+export const Sidebar = ({ items = [], currentRoute } = {}) => {
     const defaultItems = [
         { icon: 'dashboard', label: 'Dashboard', route: '/home' },
         { icon: 'info', label: 'About', route: '/about' },
@@ -1659,7 +1694,7 @@ export const Sidebar = ({ items = [], currentRoute }) => {
 export const drawerMenuModularJs = () => `// components/layouts/DrawerMenu.js
 import { Drawer, DrawerItem, Container, Column, Text, Icon, colors, closeDrawer } from 'flet-box';
 
-export const DrawerMenu = ({ items = [] }) => {
+export const DrawerMenu = ({ items = [] } = {}) => {
     const defaultItems = [
         { icon: 'dashboard', label: 'Dashboard', route: '/home' },
         { icon: 'info', label: 'About', route: '/about' },
@@ -1715,9 +1750,9 @@ import { AppBarComponent } from './components/layouts/AppBarComponent.js';
 import { DrawerMenu } from './components/layouts/DrawerMenu.js';
 
 // make sure to export all screens in screens/index.js for easier imports
-import RootScreen from './screens/RootScreen.js';
-import HomeScreen from './screens/HomeScreen.js';
-import AboutScreen from './screens/AboutScreen.js';
+import { RootScreen } from './screens/RootScreen.js';
+import { HomeScreen } from './screens/HomeScreen.js';
+import { AboutScreen } from './screens/AboutScreen.js';
 
 const routes = {
     '/': RootScreen,
@@ -1737,15 +1772,15 @@ runApp(MyApp, 'root');
 
 export const fullAppJs =
   () => `// app.js - Full template (AppBar + Drawer + BottomNav)
-import { runApp, Scaffold, colors, useWindowSize } from 'flet-box';
+import { runApp, Scaffold, colors, useState, dimensions } from 'flet-box';
 import { AppBarComponent } from './components/layouts/AppBarComponent.js';
 import { DrawerMenu } from './components/layouts/DrawerMenu.js';
 import { BottomNav } from './components/layouts/BottomNav.js';
 
 // make sure to export all screens in screens/index.js for easier imports
-import RootScreen from './screens/RootScreen.js';
-import HomeScreen from './screens/HomeScreen.js';
-import AboutScreen from './screens/AboutScreen.js';
+import { RootScreen } from './screens/RootScreen.js';
+import { HomeScreen } from './screens/HomeScreen.js';
+import { AboutScreen } from './screens/AboutScreen.js';
 
 const routes = {
     '/': RootScreen,
@@ -1753,9 +1788,15 @@ const routes = {
     '/about': AboutScreen
 };
 
+// State is key-based, so the viewport width survives re-renders. One resize
+// subscription feeds it from module scope: registering it inside the component
+// would add a listener on every render.
+const [viewportWidth, setViewportWidth] = useState('viewportWidth', dimensions.getWidth());
+dimensions.addListener(({ width }) => setViewportWidth(width));
+
 const MyApp = () => {
-    const { width } = useWindowSize();
-    const isMobile = width < 768;
+    // Structural read of the key, so crossing the breakpoint re-renders the shell.
+    const isMobile = viewportWidth.valueOf() < 768;
     return Scaffold({
         routes,
         appBar: AppBarComponent({ title: 'FletBox', isMobile }),
@@ -1783,7 +1824,7 @@ const routes = {
 const MyApp = () => Scaffold({
     routes,
     appBar: AppBarComponent({ title: 'FletBox', isMobile: false }),
-    sidebar: Sidebar(),
+    leftNavBar: Sidebar(),
     backgroundColor: colors.background
 });
 
@@ -1792,17 +1833,17 @@ runApp(MyApp, 'root');
 
 export const adaptiveAppJs =
   () => `// app.js - Adaptive template (mobile + desktop)
-import { runApp, Scaffold, colors, useWindowSize } from 'flet-box';
+import { runApp, Scaffold, colors, useState, dimensions } from 'flet-box';
 import { AppBarComponent } from './components/layouts/AppBarComponent.js';
 import { DrawerMenu } from './components/layouts/DrawerMenu.js';
 import { BottomNav } from './components/layouts/BottomNav.js';
 import { Sidebar } from './components/layouts/Sidebar.js';
 
 // make sure to export all screens in screens/index.js for easier imports
-import RootScreen from './screens/RootScreen.js';
-import HomeScreen from './screens/HomeScreen.js';
-import AboutScreen from './screens/AboutScreen.js';
-import ProfileScreen from './screens/ProfileScreen.js';
+import { RootScreen } from './screens/RootScreen.js';
+import { HomeScreen } from './screens/HomeScreen.js';
+import { AboutScreen } from './screens/AboutScreen.js';
+import { ProfileScreen } from './screens/ProfileScreen.js';
 
 const routes = {
     '/': RootScreen,
@@ -1811,18 +1852,313 @@ const routes = {
     '/profile': ProfileScreen
 };
 
+// State is key-based, so the viewport width survives re-renders. The resize
+// subscription is registered once at module scope; doing it inside the component
+// would add another listener on every render.
+const [viewportWidth, setViewportWidth] = useState('viewportWidth', dimensions.getWidth());
+dimensions.addListener(({ width }) => setViewportWidth(width));
+
 const MyApp = () => {
-    const { width } = useWindowSize();
-    const isMobile = width < 768;
+    // Structural read of the keyed viewport state, so crossing the breakpoint
+    // re-renders the shell (drawer + bottom bar <-> sidebar).
+    const isMobile = viewportWidth.valueOf() < 768;
     return Scaffold({
         routes,
         appBar: AppBarComponent({ title: 'FletBox', isMobile }),
         drawer: isMobile ? DrawerMenu() : null,
         bottomBar: isMobile ? BottomNav() : null,
-        sidebar: !isMobile ? Sidebar() : null,
+        leftNavBar: !isMobile ? Sidebar() : null,
         backgroundColor: colors.background
     });
 };
 
 runApp(MyApp, 'root');
 `;
+
+// ---------------------------------------------------------------------------
+// AI agent contract
+// ---------------------------------------------------------------------------
+// Every generated app ships an in-project agent guide so an AI editing the app
+// uses real FletBox APIs instead of inventing them. These are built with
+// array.join() and single-quoted lines: the content is markdown full of fenced
+// code blocks and backticks, which would break an ordinary template literal.
+// ---------------------------------------------------------------------------
+
+export const agentsMd = (appName, template, version) =>
+  [
+    '# AGENTS.md',
+    '',
+    `**App:** \`${appName}\` · **Template:** \`${template}\` · **flet-box@${version}**`,
+    'FletBox is a vanilla-JS UI framework: ESM only, zero runtime dependencies,',
+    'fully offline. There is no build step to learn and no compiler to blame.',
+    '',
+    'This file is the contract. Read it before writing any code in this project.',
+    'You do **not** need to read the whole framework to work here — sections 1 to 3',
+    'tell you where the authoritative answers live, and the checker in section 4',
+    'proves you right or wrong in seconds.',
+    '',
+    '## 1. The API is a fact, not a guess',
+    '',
+    'Never invent a widget, prop, hook or helper. Look it up:',
+    '',
+    '| I want to know… | Look here |',
+    '| --- | --- |',
+    '| Which widgets exist and which props each accepts | `.fletbox/api/cheatsheet.md` (generated, covers every widget) |',
+    '| Everything for one widget | `npm run check -- --props <Widget>` |',
+    '| Prose, types and a worked example | `node_modules/flet-box/docs/widget/<Widget>.md` |',
+    '| Every public export of the package | `npm run check -- --list` |',
+    '',
+    '**If a name is not in those files, it does not exist.** A prop that silently',
+    'does nothing is worse than a compile error: it renders as a broken layout and',
+    'nobody finds it for weeks.',
+    '',
+    '- Do not edit `node_modules/flet-box`. It is a dependency, not source.',
+    '- The cheatsheet is generated output. Regenerate it with',
+    '  `flet-box check-api --emit-api` after upgrading the package; never hand-edit it.',
+    '',
+    '## 2. FletBox syntax only — no other framework',
+    '',
+    'A widget is a **function call that returns an HTMLElement**. That is the whole',
+    'model. Do not mix in syntax from another ecosystem:',
+    '',
+    '```js',
+    '// Correct',
+    "Text({ text: 'Hello', size: 18, color: colors.primary })",
+    "Button({ text: 'Save', onPress: save, bgColor: colors.primary })",
+    'Box({ child: Text({ text: count }), padding: 12 })',
+    '```',
+    '',
+    '```js',
+    '// Wrong — never write any of these',
+    '<Text>Hello</Text>                      // JSX',
+    "h('div', ...)                            // hyperscript",
+    'Text("Hello")                            // positional args',
+    "Text('Hello', size: 18)                  // Dart / Flutter named args",
+    'new Text(...)                            // classes',
+    "t('div')                                 // Vue template",
+    '```',
+    '',
+    '- No `react`, `vue`, `svelte`, `@angular/core`, `solid-js`, `lit`, `jquery`,',
+    '  `tailwindcss` or `bootstrap` imports. This app is offline: nothing installs',
+    '  at runtime and nothing fetches a CDN.',
+    '- No `.jsx`, `.tsx`, `.vue` or `.svelte` files. Plain `.js`, ESM imports with a',
+    '  explicit `.js` extension.',
+    '- Styling is props (`bgColor`, `radius`, `padding`), not class strings or',
+    '  `styled-components`.',
+    '- `child` takes one widget; `children` takes an array or string. Swapping them',
+    '  is the most common silent bug.',
+    '- Prop aliases (`bgColor` ≡ `backgroundColor`, `onPress` ≡ `onClick`) are',
+    '  intentional. Pick one per file and stay consistent; do not "dedupe" them.',
+    '',
+    '## 3. Architecture the framework expects',
+    '',
+    '```',
+    'app.js                      -> runApp(App, \'root\')',
+    'screens/                    -> one exported widget per route',
+    'components/                 -> reusable, stateless unless they own state',
+    'components/layouts/         -> appBar, drawer, sidebar, bottomBar',
+    '```',
+    '',
+    'The app root is `Scaffold`, which owns navigation and chrome. Use it:',
+    '',
+    '```js',
+    'Scaffold({',
+    '  routes,',
+    "  appBar: AppBarComponent({ title: 'FletBox', isMobile }),",
+    '  drawer: isMobile ? DrawerMenu() : null,',
+    '  bottomBar: isMobile ? BottomNav() : null,',
+    '  leftNavBar: !isMobile ? Sidebar() : null,   // NOT `sidebar:`',
+    '  leftNavBarWidth: 240,',
+    "  fab: isMobile ? ActionButton({ icon: 'add', onPress: open }) : null,",
+    '  body: isMobile ? null : HomeScreen(),',
+    '})',
+    '```',
+    '',
+    'Real `Scaffold` props: `appBar body bottomBar fab drawer leftNavBar',
+    'leftNavBarWidth rightNavBar rightNavBarWidth routes basePath backgroundColor',
+    'closeDrawerOnNavigate`. (`--props Scaffold` is authoritative.)',
+    'For a responsive app, branch in JS on the keyed viewport state — `useState`',
+    'seeded from `dimensions.getWidth()` plus one `dimensions.addListener()` at',
+    'module scope — not on CSS alone. See `src/app.js` in this project.',
+    '',
+    'Custom widgets follow the same shape every framework widget uses',
+    '(`QRCode.js` is the reference):',
+    '',
+    '```js',
+    'export const MyWidget = (props = {}) => {',
+    '  const widget = WidgetFactory("div", { ...props, widgetName: "MyWidget" });',
+    '  // children, then composeUpdate(widget, ...), then return',
+    '};',
+    '```',
+    '',
+    '- Use `composeUpdate()`; never overwrite `container.update`.',
+    '- Register resources (listeners, timers, RAF, observers) and release them in an',
+    '  idempotent `onUnmount` disposer. Never monkey-patch `_cleanup`.',
+    '- State is key-based: `useState("key", 0)` plus subscribers. There is no',
+    '  component re-render tree to reason about.',
+    '- Reuse the framework utilities (`colors`, `margin`, `padding`, `gradient',
+    '  shadow`, `rgba`, `stackPosition`) instead of hand-writing CSS.',
+    '',
+    'One rendering engine exists: `src/widget-factory/`. Never add a second one, and',
+    'never style by reaching around the factory. **If you believe the engine is',
+    'broken, prove it with a minimal repro and record the finding in memory** — do',
+    'not work around it silently.',
+    '',
+    '## 4. Verification loop (required)',
+    '',
+    'After every edit, before you say a task is done:',
+    '',
+    '```bash',
+    'npm run check          # static gate: invented widgets/props, positional args,',
+    '                       # foreign framework imports, wrong file extensions',
+    'npm run dev            # serve on :8000 — check the UI actually renders',
+    '```',
+    '',
+    '`npm run check` exits non-zero on a real error. Fix the code, not the checker.',
+    'It reads the installed package, so it is always in sync with what runs. A',
+    'warning is allowed to stay only when you can justify it in one sentence.',
+    '',
+    '## 5. Memory — do not relearn the same thing',
+    '',
+    'At the start of every session read `.fletbox/memory/MEMORY.md` and any entry it',
+    'points at. That is how this agent remembers the framework between chats instead',
+    'of rediscovering it each time.',
+    '',
+    '- When you learn something non-obvious about this app or the framework, write',
+    '  `.fletbox/memory/<kebab-case-topic>.md` with: what (fact or rule), **Why:**',
+    '  (the incident or constraint behind it), **How to apply:** (when it kicks in),',
+    '  and an absolute date for anything time-bound.',
+    '- Add a one-line pointer to it in `MEMORY.md`. Keep the index short.',
+    '- One entry per topic, under 10 lines. Update or delete an entry that turns out',
+    '  to be wrong rather than appending a correction beside it.',
+    '- Commit memory files with the code change they describe.',
+    '',
+    '## 6. Commands',
+    '',
+    '| Command | What it does |',
+    '| --- | --- |',
+    '| `npm run dev` | static dev server on port 8000 |',
+    '| `npm run check` | anti-hallucination gate over `src/` |',
+    '| `npm run check -- --props Button` | print the real props of a widget |',
+    '| `npm run build` | esbuild bundle into `dist/` |',
+    '| `flet-box build android` / `ios` | Capacitor native build |',
+    '| `flet-box run-native android` | compile and launch on device/emulator |',
+    '',
+    'Generated by `flet-box create`. To refresh the guide and cheatsheet after a',
+    'framework upgrade: `flet-box check-api --emit-api`.',
+    '',
+  ].join('\n');
+
+export const claudeMd = () =>
+  [
+    '# CLAUDE.md',
+    '',
+    'The rules for this project live in [AGENTS.md](./AGENTS.md). Read it first and',
+    'follow it exactly — FletBox syntax only, real props only, `npm run check` after',
+    'every edit.',
+    '',
+    'Memory: read `.fletbox/memory/MEMORY.md` before working, and write new entries',
+    'there when you learn something the next session should not rediscover.',
+    '',
+  ].join('\n');
+
+export const cursorRules = () =>
+  [
+    '---',
+    'description: FletBox app rules — real APIs only, no other framework',
+    'globs: "**/*.js"',
+    'alwaysApply: true',
+    '---',
+    '',
+    'This is a FletBox app (vanilla JS, ESM, offline). The full contract is',
+    '[AGENTS.md](../../AGENTS.md); read it before editing.',
+    '',
+    '- Widgets are function calls returning an element: `Text({ text: "Hi", size: 18 })`.',
+    '  No JSX, no positional args, no Flutter/Vue/Svelte/React syntax or imports.',
+    '- Before using a widget or prop you have not just seen in',
+    '  `.fletbox/api/cheatsheet.md`, look it up: `npm run check -- --props <Widget>`.',
+    '  If it is not listed, it does not exist — do not invent it.',
+    '- Run `npm run check` after every change and fix what it reports.',
+    '- Check `.fletbox/memory/MEMORY.md` at session start; record new non-obvious',
+    '  findings there instead of re-deriving them.',
+    '',
+  ].join('\n');
+
+export const memoryIndexMd = (appName) =>
+  [
+    '# Memory index',
+    '',
+    `Persistent notes for the AI agent working on \`${appName}\`. One line per entry.`,
+    'Read this at the start of every session; open the files it points at.',
+    '',
+    '- [Project baseline](notes/baseline.md) — template, flet-box version, verified commands',
+    '',
+  ].join('\n');
+
+export const memoryBaselineMd = (appName, template, version) =>
+  [
+    '---',
+    'name: project-baseline',
+    'description: What this app is, which FletBox version it runs, and the commands that are known to work',
+    'metadata:',
+    '  type: project',
+    '---',
+    '',
+    `App \`${appName}\` created with \`flet-box create\` using the \`${template}\` template,`,
+    `against \`flet-box@${version}\`. Vanilla JS, ESM, no runtime dependencies, offline.`,
+    '',
+    '**Why:** the agent needs the version and shape of the project up front; API names',
+    'and templates shift between releases, and re-deriving them costs tokens every session.',
+    '',
+    '**How to apply:** trust this for the project layout. For props and widget names,',
+    'trust `.fletbox/api/cheatsheet.md` and `npm run check`, not memory — that file is',
+    'regenerated from the installed package and this one is not.',
+    '',
+    'Verified commands: `npm run dev` (:8000), `npm run check`, `npm run build`.',
+    '',
+  ].join('\n');
+
+export const checkAppScript = (appName) =>
+  [
+    '// scripts/check-app.mjs',
+    `// Anti-hallucination gate for ${appName}: every widget, prop and import in src/`,
+    '// is checked against the flet-box package that is actually installed.',
+    '//',
+    '//   npm run check                    scan src/',
+    '//   npm run check -- --props Button  print the real props of a widget',
+    '//   npm run check -- --list          list every public export',
+    '//   npm run check -- --json          machine-readable findings',
+    '//',
+    '// The package exports map only publishes "." and "./package.json", so the',
+    "// checker's own file is imported by URL rather than by specifier.",
+    '',
+    "import path from 'node:path';",
+    "import { createRequire } from 'node:module';",
+    "import { pathToFileURL } from 'node:url';",
+    '',
+    "const require = createRequire(import.meta.url);",
+    '',
+    'function resolvePackage() {',
+    "  const candidates = [path.resolve(process.cwd(), 'node_modules/flet-box')];",
+    '  try {',
+    "    candidates.push(path.dirname(require.resolve('flet-box/package.json')));",
+    '  } catch {',
+    '    /* not installed yet */',
+    '  }',
+    '  for (const dir of candidates) {',
+    "    if (require('fs').existsSync(path.join(dir, 'bin/commands/checkApi.js'))) {",
+    '      return dir;',
+    '    }',
+    '  }',
+    "  console.error('flet-box package not found. Run: npm install');",
+    '  process.exit(1);',
+    '}',
+    '',
+    "const pkgDir = resolvePackage();",
+    "const checker = path.join(pkgDir, 'bin', 'commands', 'checkApi.js');",
+    "const { checkApi } = await import(pathToFileURL(checker).href);",
+    '',
+    "const { exitCode } = await checkApi(process.argv.slice(2));",
+    'process.exit(exitCode);',
+    '',
+  ].join('\n');

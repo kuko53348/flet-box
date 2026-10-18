@@ -42,6 +42,9 @@ declare module 'flet-box' {
     padding?: Padding;
     margin?: Margin;
     bgColor?: Color;
+    // Alias kept because the engine routes it and every generated template uses
+    // it: `bgColor` is the Flet-style short name for the same style.
+    backgroundColor?: Color;
     color?: Color;
     borderRadius?: number | string;
     elevation?: number;

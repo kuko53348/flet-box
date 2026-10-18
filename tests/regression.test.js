@@ -11,7 +11,8 @@
 //
 // It publishes `window.__REGRESSION = { pass, fail, results }`.
 import * as W from "../src/widgets/index.js";
-import { AppBar, Tabs, Scaffold, Drawer } from "../src/navigations/index.js";
+import { AppBar, Tabs, Scaffold, Drawer, BottomNavigation } from "../src/navigations/index.js";
+import { goTo, getCurrentPath, initRouter, clearRouter } from "../src/navigations/Router.js";
 import { WidgetFactory } from "../src/widget-factory/index.js";
 import { AnimatedBox } from "../src/animations/AnimatedBox.js";
 import { AnimatedText } from "../src/animations/AnimatedText.js";
@@ -1287,6 +1288,41 @@ async function run() {
     // an explicit axis must win over the preset, and no alignment keeps the block
     ok(read("center", { justifyContent: "flex-end" }) === "flex/flex-end/center", "explicit justifyContent ignored");
     ok(getComputedStyle(mount(W.Stack({ width: 40, height: 40 }))).display === "block", "a plain Stack stopped being a block");
+  });
+
+  await t("BottomNavigation: a navigating onTabChange does not recurse", async () => {
+    // updateColorsFromRouter() fired onTabChange on every router event, so the
+    // documented usage (go to the tab's route from the callback) looped
+    // route change -> goTo -> route change until the call stack blew and the
+    // whole app rendered nothing.
+    const items = [
+      { icon: "home", label: "Home", route: "/home" },
+      { icon: "info", label: "About", route: "/about" },
+    ];
+    // goTo() refuses a path that is not registered, so the router needs routes
+    // before the bar can be driven. This guard is the last one, and clearRouter()
+    // resets the singleton afterwards.
+    const blank = () => WidgetFactory("div");
+    initRouter({ "/": blank, "/home": blank, "/about": blank }, "/home");
+
+    let calls = 0;
+    mount(
+      BottomNavigation({
+        items,
+        onTabChange: (index) => {
+          calls++;
+          if (calls < 40) goTo(items[index].route);
+        },
+      }),
+    );
+    await wait(60);
+    ok(calls < 5, `fired ${calls} time(s) while mounting`);
+
+    goTo("/about");
+    await wait(60);
+    ok(calls >= 1 && calls < 8, `after one navigation: ${calls}`);
+    ok(getCurrentPath() === "/about", `router is at ${getCurrentPath()}`);
+    clearRouter();
   });
 
   // ------------------------------------------------------------------ report

@@ -17,6 +17,7 @@ import { fileURLToPath } from "url";
 import { createFile, copyFile, makeExecutable } from "../utils/helpers.js";
 import * as templates from "../utils/templates.js";
 import { parseGithubRepo } from "../utils/bundleConfig.js";
+import { checkApi } from "../commands/checkApi.js";
 import { c, banner, gradient } from "../utils/colors.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -179,6 +180,11 @@ export const createProject = async (projectName, rawArgs = []) => {
     "src",
     "src/assets/fonts",
     "src/database",
+    // AI agent contract: rules, memory and the generated API cheatsheet.
+    ".fletbox/api",
+    ".fletbox/memory/notes",
+    ".claude",
+    ".cursor/rules",
   ];
   const extraDirs =
     template === "blank" ? [] : ["src/screens", "src/components"];
@@ -291,15 +297,15 @@ export const createProject = async (projectName, rawArgs = []) => {
       path.join(projectPath, "src/screens/AboutScreen.js"),
       templates.aboutScreenJs(),
     );
+    // Barrel export so app.js and screens can import all screens from one place.
+    createFile(
+      path.join(projectPath, "src/screens/index.js"),
+      templates.screensIndexJs(template),
+    );
     if (template === "adaptive") {
       createFile(
         path.join(projectPath, "src/screens/ProfileScreen.js"),
         templates.profileScreenJs(),
-      );
-      // Barrel export so app.js can import all screens from one place.
-      createFile(
-        path.join(projectPath, "src/screens/index.js"),
-        templates.screensIndexJs(),
       );
     }
     // Layout components (skipped for blank).
@@ -365,11 +371,70 @@ export const createProject = async (projectName, rawArgs = []) => {
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // AI agent contract (AGENTS.md + pointers + memory + checker)
+  // ---------------------------------------------------------------------------
+  // Written into every app so an AI editing it looks APIs up instead of inventing
+  // them, and has a machine gate that proves it right or wrong offline.
+  const pkgVersion = (() => {
+    try {
+      return JSON.parse(
+        fs.readFileSync(path.join(sourcePackageDir, "package.json"), "utf8"),
+      ).version;
+    } catch {
+      return "unknown";
+    }
+  })();
+
+  createFile(
+    path.join(projectPath, "AGENTS.md"),
+    templates.agentsMd(finalName, template, pkgVersion),
+  );
+  createFile(
+    path.join(projectPath, ".claude/CLAUDE.md"),
+    templates.claudeMd(),
+  );
+  createFile(
+    path.join(projectPath, ".cursor/rules/fletbox.mdc"),
+    templates.cursorRules(),
+  );
+  createFile(
+    path.join(projectPath, ".fletbox/memory/MEMORY.md"),
+    templates.memoryIndexMd(finalName),
+  );
+  createFile(
+    path.join(projectPath, ".fletbox/memory/notes/baseline.md"),
+    templates.memoryBaselineMd(finalName, template, pkgVersion),
+  );
+  createFile(
+    path.join(projectPath, "scripts/check-app.mjs"),
+    templates.checkAppScript(finalName),
+  );
+
+  // Generate the API cheatsheet from the framework the CLI was installed with.
+  // `npm install` is not required here: check-api resolves the package sources
+  // from its own copy, so a fresh app can be validated fully offline.
+  await checkApi(["--emit-api", "--root", projectPath], {
+    print: (line) => console.log(line),
+  });
+
   makeExecutable(path.join(projectPath, "run.sh"));
 
   console.log(
     `\n${gradient(` ✅ Project "${finalName}" created successfully!`, "#34d399", "#22d3ee")}\n`,
   );
+
+  // Prove the starter code passes the gate the agent will be held to.
+  const { exitCode } = await checkApi(["--root", projectPath]);
+  if (exitCode !== 0) {
+    console.warn(
+      c(
+        "yellow",
+        `⚠️  Starter code reported issues — check-api exited ${exitCode}. Fix them before building on top.`,
+      ),
+    );
+  }
+
   console.log(`  ${c("brightCyan", "cd")} ${finalName}`);
   console.log(`  ${c("brightCyan", "npm install")}`);
   console.log(`  ${c("brightCyan", "npm run dev")}\n`);
@@ -401,6 +466,13 @@ export const createProject = async (projectName, rawArgs = []) => {
       "gray",
       "CI:      .github/workflows/build.yml builds web + Android + iOS on every push.\n" +
         "         Enable GitHub Pages (Settings → Pages → Source: GitHub Actions) for the web preview.\n",
+    ),
+  );
+  console.log(
+    c(
+      "gray",
+      "AI:      AGENTS.md is the contract for any assistant editing this app.\n" +
+        "         npm run check verifies every widget/prop against the installed package.\n",
     ),
   );
 };

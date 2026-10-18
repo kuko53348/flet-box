@@ -149,6 +149,7 @@ export const BottomNavigation = (props) => {
     if (!useRouter) return;
 
     const currentPath = getCurrentPath();
+    const previousIndex = activeIndex;
 
     buttons.forEach((btnData, idx) => {
       const isSelected = btnData.route === currentPath;
@@ -163,7 +164,10 @@ export const BottomNavigation = (props) => {
       if (isSelected) activeIndex = idx;
     });
 
-    if (onTabChange) onTabChange(activeIndex);
+    // Fire only when the route actually moved the selection. A consumer that
+    // navigates from `onTabChange` (the normal case) would otherwise recurse:
+    // route change -> callback -> goTo -> route change, until the stack blows.
+    if (activeIndex !== previousIndex && onTabChange) onTabChange(activeIndex);
   };
 
   // ========== BUILD TAB BUTTONS ==========
