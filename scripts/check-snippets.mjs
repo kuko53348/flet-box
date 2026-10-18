@@ -14,17 +14,28 @@
  *   node scripts/check-snippets.mjs --full     # list every finding
  *   node scripts/check-snippets.mjs --json     # machine-readable report
  *
- * Findings (the first three fail the build):
+ * Findings (everything except BROKEN_CALL fails the build):
  * - SYNTAX           — the body is not valid JavaScript at all.
  * - BROKEN_IMPORT    — it imports a name the package does not export.
  * - DEAD_SNIPPET     — the widget it builds does not exist.
  * - UNKNOWN_PROP     — a prop the registry does not know and the target widget
  *                      never mentions in its source.
+ * - POSITIONAL_ARG   — a config-object API (`Text`, `SnackBar`) called with a
+ *                      positional string, which builds an empty widget.
  * - BROKEN_CALL      — a free call that is neither exported nor declared
  *                      locally; most of these are example-local placeholders
  *                      (`fetchMore()`), so the tier only informs.
  * - DUPLICATE_PREFIX — two category files claim the same prefix.
  * - AGGREGATE_DRIFT  — FletBox.json differs from the union of the category files.
+ * - UNCOVERED_EXPORT — the package exports a name that no snippet shows.
+ * - UNCOVERED_PROP   — the prop database carries a prop that something reads and
+ *                      no snippet uses.
+ *
+ * The library is also the coverage report for the public API: every export has
+ * at least one snippet, and so does every prop the registry knows that a widget
+ * actually reads. `language`, `downloadable`, `downloadFileName`, `searchable`
+ * and `searchPlaceholder` are the registry entries no widget reads, so they stay
+ * out on purpose.
  */
 
 import { readFileSync, readdirSync } from "node:fs";
@@ -65,13 +76,14 @@ const { PROP_MAP } = await import(
 const REGISTRY = new Set(Object.keys(PROP_MAP));
 
 // Keys the factory consumes structurally rather than through the prop database.
+// `style` and `key` are deliberately NOT here: the factory warns that an inline
+// `style` object is not the API, and nothing reads `key`, so neither belongs in
+// an example.
 const ENGINE_KEYS = new Set([
   "tag",
   "widgetName",
   "child",
   "children",
-  "key",
-  "style",
   "props",
   "value",
   "variant",
@@ -82,7 +94,8 @@ const ENGINE_KEYS = new Set([
 // JavaScript / DOM builtins a snippet body may legitimately call.
 const BUILTINS = new Set([
   "if", "for", "while", "switch", "catch", "return", "function", "typeof",
-  "new", "String", "Number", "Boolean", "Array", "Object", "JSON", "Math",
+  "new", "async", "await", "yield", "delete", "void", "in", "of", "do", "else",
+  "String", "Number", "Boolean", "Array", "Object", "JSON", "Math",
   "Date", "Map", "Set", "Promise", "parseInt", "parseFloat", "isNaN",
   "console", "document", "window", "localStorage", "setTimeout",
   "clearTimeout", "setInterval", "clearInterval", "requestAnimationFrame",
@@ -114,6 +127,49 @@ for (const dir of ["widgets", "navigations", "animations", "utils", "tools"]) {
     }
   }
 }
+
+/**
+ * The public functions that read their config from an object literal, taken from
+ * the declared signature in `src/index.d.ts`. Widgets are called as
+ * `Text({ text })` and `SnackBar({ message })`, so a positional string there is
+ * not a shorthand — it builds an empty widget. Helpers such as
+ * `WidgetFactory("div", props)` legitimately take one, and the checker must not
+ * report documented usage as a bug.
+ */
+const propsApi = (() => {
+  const dts = readFileSync(join(srcDir, "index.d.ts"), "utf8");
+  const names = new Set();
+  for (const m of dts.matchAll(/export (?:function|const) ([A-Za-z_$][\w$]*)/g)) {
+    let s = dts.slice(m.index + m[0].length).trimStart();
+    if (s.startsWith(":")) s = s.slice(1).trimStart();
+    if (!s.startsWith("(")) continue; // an object const (RamStore) or a type alias
+    let depth = 0;
+    let end = -1;
+    for (let i = 0; i < s.length; i++) {
+      const c = s[i];
+      if ("([{".includes(c)) depth++;
+      else if (")]}".includes(c)) {
+        depth--;
+        if (depth === 0) {
+          end = i;
+          break;
+        }
+      } else if (depth === 1 && c === ",") {
+        end = i;
+        break;
+      }
+    }
+    if (end === -1) continue;
+    const first = /^([A-Za-z_$][\w$]*)\??\s*:\s*(.+)/.exec(s.slice(1, end).trim());
+    if (!first) continue;
+    const [, param, type] = first;
+    const isConfigObject =
+      ["props", "options", "config", "opts"].includes(param) ||
+      /(Props|Options|Config)\b/.test(type);
+    if (isConfigObject) names.add(m[1]);
+  }
+  return names;
+})();
 
 // ---------------------------------------------------------------------------
 // 2. Snippet body parsing
@@ -175,7 +231,7 @@ const CALL_RE = /([A-Za-z_$][\w$]*)\s*\(\s*\{/g;
 // (`colors.get(`), not an object-literal method (`get() {`), and not preceded by
 // `.` or `new` handled separately below.
 const CALL_SITE_RE = /(^|[^\w$.])\b([A-Za-z_$][\w$]*)\s*\(/g;
-const IMPORT_RE = /import\s*\{([^}]*)\}\s*from\s*["']flet-box["']/g;
+const IMPORT_RE = /import\s*\{([^}]*)\}\s*from\s*["']flet-?box["']/g;
 
 /** @returns {{widget: string, keys: string[]}[]} one entry per widget call */
 const callsIn = (masked) => {
@@ -198,12 +254,17 @@ const calledNames = (masked) => {
   return names;
 };
 
-/** Names a snippet imports from the package — they must exist to be importable. */
-const importedNames = (masked) => {
+/**
+ * Names a snippet imports from the package — they must exist to be importable.
+ *
+ * Read from the raw body: `mask()` blanks string contents, and the module
+ * specifier is exactly the string that says whether this is a flet-box import.
+ */
+const importedNames = (source) => {
   const names = new Set();
   let m;
   IMPORT_RE.lastIndex = 0;
-  while ((m = IMPORT_RE.exec(masked))) {
+  while ((m = IMPORT_RE.exec(source))) {
     for (const part of m[1].split(",")) {
       const name = part.trim().split(/\s+as\s+/)[0].trim();
       if (name) names.add(name);
@@ -212,12 +273,26 @@ const importedNames = (masked) => {
   return names;
 };
 
-/** Names declared inside the snippet itself (`const x = ...`). */
+/**
+ * Names declared inside the snippet itself.
+ *
+ * Destructuring counts too: `const [count, setCount] = useState(…)` binds both
+ * names, and without it every React-style example looks broken.
+ */
 const declaredNames = (masked) => {
   const names = new Set();
   for (const re of [/\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)/g, /function\s+([A-Za-z_$][\w$]*)/g, /\b([A-Za-z_$][\w$]*)\s*=\s*(?:\([^)]*\)|[\w$]+)\s*=>/g]) {
     let m;
     while ((m = re.exec(masked))) names.add(m[1]);
+  }
+  for (const re of [/\b(?:const|let|var)\s*\[([^\]]*)\]/g, /\b(?:const|let|var)\s*\{([^}]*)\}/g]) {
+    let m;
+    while ((m = re.exec(masked))) {
+      for (const part of m[1].split(",")) {
+        const name = part.split(":").pop().split("=")[0].trim();
+        if (/^[A-Za-z_$][\w$]*$/.test(name)) names.add(name);
+      }
+    }
   }
   return names;
 };
@@ -269,9 +344,13 @@ const findings = {
   duplicatePrefix: [],
   aggregateDrift: [],
   unparsable: [],
+  uncoveredExport: [],
+  uncoveredProp: [],
 };
 const prefixOwner = new Map();
 const allPrefixes = new Map(); // prefix -> Set<file>
+const allBodies = []; // every snippet body, used for the coverage tiers below
+const writtenKeys = new Set(); // prop keys written somewhere in the library
 const aggregate = "FletBox.json";
 let snippetCount = 0;
 
@@ -301,6 +380,11 @@ for (const file of SNIPPET_FILES) {
     const body = Array.isArray(snippet?.body) ? snippet.body.join("\n") : String(snippet?.body || "");
     if (!body.trim()) continue;
 
+    allBodies.push(body);
+    for (const [, prop] of body.matchAll(/(?:^|[({,\s])([A-Za-z_$][\w$]*)\s*:/g)) {
+      writtenKeys.add(prop);
+    }
+
     const masked = mask(body);
     const locals = declaredNames(masked);
 
@@ -309,14 +393,16 @@ for (const file of SNIPPET_FILES) {
 
     // Widgets read their config by destructuring, so a positional string is not a
     // shorthand — it silently builds an empty widget (`Text("Hello")` renders "")
-    // and spreads the characters into the style object.
+    // and spreads the characters into the style object. Only the APIs whose
+    // declared first parameter is `props` are held to that; `WidgetFactory("div")`
+    // is documented usage.
     for (const [, widget, quote] of body.matchAll(/\b([A-Z][A-Za-z0-9]*)\s*\(\s*(["'`])/g)) {
-      if (!EXPORTS.has(widget)) continue;
+      if (!propsApi.has(widget)) continue;
       findings.positionalArg.push({ file, prefix, widget, quote: { '"': "string", "'": "string", "`": "template" }[quote] });
     }
 
     // Anything imported from the package must be importable.
-    for (const name of importedNames(masked)) {
+    for (const name of importedNames(body)) {
       if (!EXPORTS.has(name)) findings.brokenImport.push({ file, prefix, symbol: name });
     }
 
@@ -383,6 +469,50 @@ for (const [prefix, files] of allPrefixes) {
 }
 
 // ---------------------------------------------------------------------------
+// 3b. Coverage — the library doubles as the checklist of what the framework has
+// ---------------------------------------------------------------------------
+
+/**
+ * Every public export must have at least one example, and so must every prop the
+ * prop database carries that something actually reads. A `special` prop no widget
+ * source mentions is registry debt (`check-prop-registry.mjs` reports it as DEAD),
+ * so it is skipped here rather than documented as if it worked.
+ */
+const corpus = [...new Set(widgetSources.values())].join("\n");
+const engineTypes = new Set(["style", "attribute", "event", "text"]);
+const dtsSource = readFileSync(join(srcDir, "index.d.ts"), "utf8");
+const bodiesText = allBodies.join("\n");
+
+/**
+ * Whether a `special` prop is really part of the API: the types declare it, or
+ * the implementation reads it (`props.x`, `x = default`, `["x"]`). A bare `x:`
+ * key write in some internal object does not count — that is how `language`
+ * looked consumed.
+ */
+const QUOTE_CHARS = '["\'`]';
+const readInSource = (name) => {
+  const id = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const source = [
+    "\\.\\s*" + id + "\\b",
+    "\\b" + id + "\\s*=\\s*[^=]",
+    QUOTE_CHARS + id + QUOTE_CHARS,
+  ].join("|");
+  return new RegExp(source).test(corpus);
+};
+const declaredInTypes = (name) => new RegExp(`^\\s*${name}\\??\\s*[:,]`, "m").test(dtsSource);
+
+for (const name of EXPORTS) {
+  if (!new RegExp(`\\b${name}\\b`).test(bodiesText)) {
+    findings.uncoveredExport.push({ symbol: name });
+  }
+}
+for (const [name, def] of Object.entries(PROP_MAP)) {
+  if (writtenKeys.has(name)) continue;
+  const live = engineTypes.has(def.type) || declaredInTypes(name) || readInSource(name);
+  if (live) findings.uncoveredProp.push({ symbol: name });
+}
+
+// ---------------------------------------------------------------------------
 // 4. Report
 // ---------------------------------------------------------------------------
 const unique = (rows, keyFn) => {
@@ -404,6 +534,8 @@ const groups = {
   DUPLICATE_PREFIX: unique(findings.duplicatePrefix, (r) => r.prefix),
   AGGREGATE_DRIFT: unique(findings.aggregateDrift, (r) => `${r.key}:${r.issue}`),
   UNPARSABLE: findings.unparsable,
+  UNCOVERED_EXPORT: unique(findings.uncoveredExport, (r) => r.symbol),
+  UNCOVERED_PROP: unique(findings.uncoveredProp, (r) => r.symbol),
 };
 
 if (asJson) {
@@ -421,6 +553,8 @@ const LABELS = {
   DUPLICATE_PREFIX: "same prefix claimed by two category files — editor load order decides",
   AGGREGATE_DRIFT: "FletBox.json (what the editor loads) differs from the category files",
   UNPARSABLE: "snippet file is not valid JSON",
+  UNCOVERED_EXPORT: "the package exports this name and no snippet shows it",
+  UNCOVERED_PROP: "the prop database carries this prop, something reads it, and no snippet uses it",
 };
 
 /**
@@ -437,7 +571,9 @@ function blockingCount() {
     findings.positionalArg.length +
     findings.duplicatePrefix.length +
     findings.aggregateDrift.length +
-    findings.unparsable.length
+    findings.unparsable.length +
+    findings.uncoveredExport.length +
+    findings.uncoveredProp.length
   );
 }
 
@@ -457,12 +593,13 @@ for (const [name, rows] of Object.entries(groups)) {
     else if (name === "DUPLICATE_PREFIX") console.log(`  · ${r.prefix}  (${r.files.join(" + ")})`);
     else if (name === "AGGREGATE_DRIFT") console.log(`  · ${r.key} — ${r.issue}`);
     else if (name === "UNPARSABLE") console.log(`  · ${r.file}: ${r.detail}`);
+    else if (name === "UNCOVERED_EXPORT" || name === "UNCOVERED_PROP") console.log(`  · ${r.symbol}`);
     else console.log(`  · ${r.symbol}  (${r.file} · ${r.prefix})`);
   }
   if (shown.length < rows.length) console.log(`  … ${rows.length - shown.length} más (use --full)`);
 }
 
 console.log(
-  `\nSummary: SYNTAX=${groups.SYNTAX.length} BROKEN_IMPORT=${groups.BROKEN_IMPORT.length} DEAD_SNIPPET=${groups.DEAD_SNIPPET.length} UNKNOWN_PROP=${groups.UNKNOWN_PROP.length} POSITIONAL_ARG=${groups.POSITIONAL_ARG.length} BROKEN_CALL=${groups.BROKEN_CALL.length} DUPLICATE_PREFIX=${groups.DUPLICATE_PREFIX.length} AGGREGATE_DRIFT=${groups.AGGREGATE_DRIFT.length}`,
+  `\nSummary: SYNTAX=${groups.SYNTAX.length} BROKEN_IMPORT=${groups.BROKEN_IMPORT.length} DEAD_SNIPPET=${groups.DEAD_SNIPPET.length} UNKNOWN_PROP=${groups.UNKNOWN_PROP.length} POSITIONAL_ARG=${groups.POSITIONAL_ARG.length} BROKEN_CALL=${groups.BROKEN_CALL.length} DUPLICATE_PREFIX=${groups.DUPLICATE_PREFIX.length} AGGREGATE_DRIFT=${groups.AGGREGATE_DRIFT.length} UNCOVERED_EXPORT=${groups.UNCOVERED_EXPORT.length} UNCOVERED_PROP=${groups.UNCOVERED_PROP.length}`,
 );
 process.exit(blockingCount() ? 1 : 0);

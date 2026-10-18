@@ -59,7 +59,9 @@
     "prefix": "clipboard.copyWithFeedback",
     "description": "Make a FletBox widgets clipboard.copyWithFeedback widget",
     "body": [
-      "clipboard.copyWithFeedback(\"flet-box\", button)"
+      "// The element shows \"\u2713\" and flashes green for a second, then restores itself.",
+      "const button = Button({ text: \"Copy token\" });",
+      "clipboard.copyWithFeedback(\"flet-box\", button);"
     ]
   },
   "FletBox widgets clipboard.read": {
@@ -157,7 +159,8 @@
     "prefix": "createList.fromData",
     "description": "Make a FletBox widgets createList.fromData widget",
     "body": [
-      "createList.fromData(apiData, { id: (item) => item.userId })"
+      "const apiData = [{ userId: 7, name: \"Ada\" }, { userId: 8, name: \"Linus\" }];",
+      "const rows = createList.fromData(apiData, { id: (item) => item.userId, label: (item) => item.name });"
     ]
   },
   "FletBox widgets createList.range": {
@@ -178,28 +181,32 @@
     "prefix": "createList.paginate",
     "description": "Make a FletBox widgets createList.paginate widget",
     "body": [
-      "createList.paginate(users, 2, 20)"
+      "const users = [\"Ada\", \"Linus\", \"Grace\", \"Alan\", \"Edsger\"];",
+      "const page = createList.paginate(users, 2, 2);"
     ]
   },
   "FletBox widgets createList.search": {
     "prefix": "createList.search",
     "description": "Make a FletBox widgets createList.search widget",
     "body": [
-      "createList.search(users, \"flet-box\", [\"name\", \"description\"])"
+      "const users = [{ name: \"Ada Lovelace\" }, { name: \"Alan Turing\" }];",
+      "const found = createList.search(users, \"ada\", [\"name\"]);"
     ]
   },
   "FletBox widgets createList.sort": {
     "prefix": "createList.sort",
     "description": "Make a FletBox widgets createList.sort widget",
     "body": [
-      "createList.sort(users, \"age\", \"desc\")"
+      "const users = [{ name: \"Ada\", age: 36 }, { name: \"Linus\", age: 24 }];",
+      "const byAge = createList.sort(users, \"age\", \"desc\");"
     ]
   },
   "FletBox widgets createList.groupBy": {
     "prefix": "createList.groupBy",
     "description": "Make a FletBox widgets createList.groupBy widget",
     "body": [
-      "createList.groupBy(users, \"status\")"
+      "const users = [{ name: \"Ada\", status: \"open\" }, { name: \"Linus\", status: \"done\" }];",
+      "const grouped = createList.groupBy(users, \"status\");"
     ]
   },
   "FletBox widgets delay_fn": {
@@ -1123,7 +1130,7 @@
     "prefix": "parseMarkdownToWidgets",
     "description": "Make a FletBox widgets parseMarkdownToWidgets widget",
     "body": [
-      "parseMarkdownToWidgets(markdownText)"
+      "const nodes = parseMarkdownToWidgets(\"# Title\\n\\n- one\\n- two\");"
     ]
   },
   "FletBox widgets parseInlineToWidgets": {
@@ -1875,20 +1882,6 @@
       "onWheel: (e) => console.log(e.deltaY),"
     ]
   },
-  "FletBox widgets key": {
-    "prefix": "key",
-    "description": "Make a FletBox widgets key widget",
-    "body": [
-      "key: item.id,"
-    ]
-  },
-  "FletBox widgets style": {
-    "prefix": "style",
-    "description": "Make a FletBox widgets style widget",
-    "body": [
-      "style: { marginTop: 10 },"
-    ]
-  },
   "FletBox widgets disabled": {
     "prefix": "disabled",
     "description": "Make a FletBox widgets disabled widget",
@@ -2463,9 +2456,9 @@
       "poster: \"thumbnail.jpg\","
     ]
   },
-  "FletBox widgets buttonText": {
-    "prefix": "buttonText",
-    "description": "Make a FletBox widgets buttonText widget",
+  "FletBox widgets buttonLabel": {
+    "prefix": "buttonLabel",
+    "description": "Make a FletBox widgets buttonLabel widget",
     "body": [
       "text: \"Click me\","
     ]
@@ -5025,6 +5018,1351 @@
       "fillMode: \"forwards\","
     ]
   },
+  "FletBox widgets w": {
+    "prefix": "w",
+    "description": "Make a FletBox widgets w widget",
+    "body": [
+      "w: 240,"
+    ]
+  },
+  "FletBox widgets h": {
+    "prefix": "h",
+    "description": "Make a FletBox widgets h widget",
+    "body": [
+      "h: 160,"
+    ]
+  },
+  "FletBox widgets minW": {
+    "prefix": "minW",
+    "description": "Make a FletBox widgets minW widget",
+    "body": [
+      "minW: 120,"
+    ]
+  },
+  "FletBox widgets maxW": {
+    "prefix": "maxW",
+    "description": "Make a FletBox widgets maxW widget",
+    "body": [
+      "maxW: 480,"
+    ]
+  },
+  "FletBox widgets minH": {
+    "prefix": "minH",
+    "description": "Make a FletBox widgets minH widget",
+    "body": [
+      "minH: 80,"
+    ]
+  },
+  "FletBox widgets minHeight": {
+    "prefix": "minHeight",
+    "description": "Make a FletBox widgets minHeight widget",
+    "body": [
+      "minHeight: 80,"
+    ]
+  },
+  "FletBox widgets maxH": {
+    "prefix": "maxH",
+    "description": "Make a FletBox widgets maxH widget",
+    "body": [
+      "maxH: 320,"
+    ]
+  },
+  "FletBox widgets p": {
+    "prefix": "p",
+    "description": "Make a FletBox widgets p widget",
+    "body": [
+      "p: 16,"
+    ]
+  },
+  "FletBox widgets m": {
+    "prefix": "m",
+    "description": "Make a FletBox widgets m widget",
+    "body": [
+      "m: 12,"
+    ]
+  },
+  "FletBox widgets pt": {
+    "prefix": "pt",
+    "description": "Make a FletBox widgets pt widget",
+    "body": [
+      "pt: 8,"
+    ]
+  },
+  "FletBox widgets paddingTop": {
+    "prefix": "paddingTop",
+    "description": "Make a FletBox widgets paddingTop widget",
+    "body": [
+      "paddingTop: 8,"
+    ]
+  },
+  "FletBox widgets pr": {
+    "prefix": "pr",
+    "description": "Make a FletBox widgets pr widget",
+    "body": [
+      "pr: 12,"
+    ]
+  },
+  "FletBox widgets paddingRight": {
+    "prefix": "paddingRight",
+    "description": "Make a FletBox widgets paddingRight widget",
+    "body": [
+      "paddingRight: 12,"
+    ]
+  },
+  "FletBox widgets pb": {
+    "prefix": "pb",
+    "description": "Make a FletBox widgets pb widget",
+    "body": [
+      "pb: 16,"
+    ]
+  },
+  "FletBox widgets paddingBottom": {
+    "prefix": "paddingBottom",
+    "description": "Make a FletBox widgets paddingBottom widget",
+    "body": [
+      "paddingBottom: 16,"
+    ]
+  },
+  "FletBox widgets pl": {
+    "prefix": "pl",
+    "description": "Make a FletBox widgets pl widget",
+    "body": [
+      "pl: 12,"
+    ]
+  },
+  "FletBox widgets paddingLeft": {
+    "prefix": "paddingLeft",
+    "description": "Make a FletBox widgets paddingLeft widget",
+    "body": [
+      "paddingLeft: 12,"
+    ]
+  },
+  "FletBox widgets mt": {
+    "prefix": "mt",
+    "description": "Make a FletBox widgets mt widget",
+    "body": [
+      "mt: 8,"
+    ]
+  },
+  "FletBox widgets marginTop": {
+    "prefix": "marginTop",
+    "description": "Make a FletBox widgets marginTop widget",
+    "body": [
+      "marginTop: 8,"
+    ]
+  },
+  "FletBox widgets mr": {
+    "prefix": "mr",
+    "description": "Make a FletBox widgets mr widget",
+    "body": [
+      "mr: 8,"
+    ]
+  },
+  "FletBox widgets marginRight": {
+    "prefix": "marginRight",
+    "description": "Make a FletBox widgets marginRight widget",
+    "body": [
+      "marginRight: 8,"
+    ]
+  },
+  "FletBox widgets mb": {
+    "prefix": "mb",
+    "description": "Make a FletBox widgets mb widget",
+    "body": [
+      "mb: 16,"
+    ]
+  },
+  "FletBox widgets marginBottom": {
+    "prefix": "marginBottom",
+    "description": "Make a FletBox widgets marginBottom widget",
+    "body": [
+      "marginBottom: 16,"
+    ]
+  },
+  "FletBox widgets ml": {
+    "prefix": "ml",
+    "description": "Make a FletBox widgets ml widget",
+    "body": [
+      "ml: 12,"
+    ]
+  },
+  "FletBox widgets marginLeft": {
+    "prefix": "marginLeft",
+    "description": "Make a FletBox widgets marginLeft widget",
+    "body": [
+      "marginLeft: 12,"
+    ]
+  },
+  "FletBox widgets px": {
+    "prefix": "px",
+    "description": "Make a FletBox widgets px widget",
+    "body": [
+      "px: 20,"
+    ]
+  },
+  "FletBox widgets py": {
+    "prefix": "py",
+    "description": "Make a FletBox widgets py widget",
+    "body": [
+      "py: 12,"
+    ]
+  },
+  "FletBox widgets mx": {
+    "prefix": "mx",
+    "description": "Make a FletBox widgets mx widget",
+    "body": [
+      "mx: 24,"
+    ]
+  },
+  "FletBox widgets my": {
+    "prefix": "my",
+    "description": "Make a FletBox widgets my widget",
+    "body": [
+      "my: 16,"
+    ]
+  },
+  "FletBox widgets marginHorizontal": {
+    "prefix": "marginHorizontal",
+    "description": "Make a FletBox widgets marginHorizontal widget",
+    "body": [
+      "marginHorizontal: 24,"
+    ]
+  },
+  "FletBox widgets marginVertical": {
+    "prefix": "marginVertical",
+    "description": "Make a FletBox widgets marginVertical widget",
+    "body": [
+      "marginVertical: 16,"
+    ]
+  },
+  "FletBox widgets pos": {
+    "prefix": "pos",
+    "description": "Make a FletBox widgets pos widget",
+    "body": [
+      "pos: \"absolute\","
+    ]
+  },
+  "FletBox widgets z": {
+    "prefix": "z",
+    "description": "Make a FletBox widgets z widget",
+    "body": [
+      "z: 10,"
+    ]
+  },
+  "FletBox widgets inset": {
+    "prefix": "inset",
+    "description": "Make a FletBox widgets inset widget",
+    "body": [
+      "inset: 16,"
+    ]
+  },
+  "FletBox widgets bg": {
+    "prefix": "bg",
+    "description": "Make a FletBox widgets bg widget",
+    "body": [
+      "bg: colors.surface,"
+    ]
+  },
+  "FletBox widgets bgImage": {
+    "prefix": "bgImage",
+    "description": "Make a FletBox widgets bgImage widget",
+    "body": [
+      "bgImage: \"url('/assets/hero.jpg')\","
+    ]
+  },
+  "FletBox widgets bgSize": {
+    "prefix": "bgSize",
+    "description": "Make a FletBox widgets bgSize widget",
+    "body": [
+      "bgSize: \"cover\","
+    ]
+  },
+  "FletBox widgets bgPosition": {
+    "prefix": "bgPosition",
+    "description": "Make a FletBox widgets bgPosition widget",
+    "body": [
+      "bgPosition: \"center\","
+    ]
+  },
+  "FletBox widgets bgRepeat": {
+    "prefix": "bgRepeat",
+    "description": "Make a FletBox widgets bgRepeat widget",
+    "body": [
+      "bgRepeat: \"no-repeat\","
+    ]
+  },
+  "FletBox widgets fontWeight": {
+    "prefix": "fontWeight",
+    "description": "Make a FletBox widgets fontWeight widget",
+    "body": [
+      "fontWeight: \"bold\","
+    ]
+  },
+  "FletBox widgets lineH": {
+    "prefix": "lineH",
+    "description": "Make a FletBox widgets lineH widget",
+    "body": [
+      "lineH: 1.5,"
+    ]
+  },
+  "FletBox widgets letterSpace": {
+    "prefix": "letterSpace",
+    "description": "Make a FletBox widgets letterSpace widget",
+    "body": [
+      "letterSpace: 1,"
+    ]
+  },
+  "FletBox widgets textDecoration": {
+    "prefix": "textDecoration",
+    "description": "Make a FletBox widgets textDecoration widget",
+    "body": [
+      "textDecoration: \"underline\","
+    ]
+  },
+  "FletBox widgets textTransform": {
+    "prefix": "textTransform",
+    "description": "Make a FletBox widgets textTransform widget",
+    "body": [
+      "textTransform: \"uppercase\","
+    ]
+  },
+  "FletBox widgets whiteSpace": {
+    "prefix": "whiteSpace",
+    "description": "Make a FletBox widgets whiteSpace widget",
+    "body": [
+      "whiteSpace: \"nowrap\","
+    ]
+  },
+  "FletBox widgets wordBreak": {
+    "prefix": "wordBreak",
+    "description": "Make a FletBox widgets wordBreak widget",
+    "body": [
+      "wordBreak: \"break-word\","
+    ]
+  },
+  "FletBox widgets textOverflow": {
+    "prefix": "textOverflow",
+    "description": "Make a FletBox widgets textOverflow widget",
+    "body": [
+      "textOverflow: \"ellipsis\","
+    ]
+  },
+  "FletBox widgets buttonText": {
+    "prefix": "buttonText",
+    "description": "Make a FletBox widgets buttonText widget",
+    "body": [
+      "buttonText: \"Save\","
+    ]
+  },
+  "FletBox widgets textContent": {
+    "prefix": "textContent",
+    "description": "Make a FletBox widgets textContent widget",
+    "body": [
+      "textContent: \"Plain text\","
+    ]
+  },
+  "FletBox widgets display": {
+    "prefix": "display",
+    "description": "Make a FletBox widgets display widget",
+    "body": [
+      "display: \"grid\","
+    ]
+  },
+  "FletBox widgets justify": {
+    "prefix": "justify",
+    "description": "Make a FletBox widgets justify widget",
+    "body": [
+      "justify: \"center\","
+    ]
+  },
+  "FletBox widgets wrap": {
+    "prefix": "wrap",
+    "description": "Make a FletBox widgets wrap widget",
+    "body": [
+      "wrap: \"wrap\","
+    ]
+  },
+  "FletBox widgets flexGrow": {
+    "prefix": "flexGrow",
+    "description": "Make a FletBox widgets flexGrow widget",
+    "body": [
+      "flexGrow: 1,"
+    ]
+  },
+  "FletBox widgets flexShrink": {
+    "prefix": "flexShrink",
+    "description": "Make a FletBox widgets flexShrink widget",
+    "body": [
+      "flexShrink: 0,"
+    ]
+  },
+  "FletBox widgets flexBasis": {
+    "prefix": "flexBasis",
+    "description": "Make a FletBox widgets flexBasis widget",
+    "body": [
+      "flexBasis: 200,"
+    ]
+  },
+  "FletBox widgets boxSizing": {
+    "prefix": "boxSizing",
+    "description": "Make a FletBox widgets boxSizing widget",
+    "body": [
+      "boxSizing: \"border-box\","
+    ]
+  },
+  "FletBox widgets overflowX": {
+    "prefix": "overflowX",
+    "description": "Make a FletBox widgets overflowX widget",
+    "body": [
+      "overflowX: \"auto\","
+    ]
+  },
+  "FletBox widgets overflowY": {
+    "prefix": "overflowY",
+    "description": "Make a FletBox widgets overflowY widget",
+    "body": [
+      "overflowY: \"hidden\","
+    ]
+  },
+  "FletBox widgets objectFit": {
+    "prefix": "objectFit",
+    "description": "Make a FletBox widgets objectFit widget",
+    "body": [
+      "objectFit: \"cover\","
+    ]
+  },
+  "FletBox widgets borderTop": {
+    "prefix": "borderTop",
+    "description": "Make a FletBox widgets borderTop widget",
+    "body": [
+      "borderTop: \"1px solid #e2e8f0\","
+    ]
+  },
+  "FletBox widgets borderBottom": {
+    "prefix": "borderBottom",
+    "description": "Make a FletBox widgets borderBottom widget",
+    "body": [
+      "borderBottom: \"1px solid #e2e8f0\","
+    ]
+  },
+  "FletBox widgets borderLeft": {
+    "prefix": "borderLeft",
+    "description": "Make a FletBox widgets borderLeft widget",
+    "body": [
+      "borderLeft: \"1px solid #e2e8f0\","
+    ]
+  },
+  "FletBox widgets borderTopLeftRadius": {
+    "prefix": "borderTopLeftRadius",
+    "description": "Make a FletBox widgets borderTopLeftRadius widget",
+    "body": [
+      "borderTopLeftRadius: 8,"
+    ]
+  },
+  "FletBox widgets borderTopRightRadius": {
+    "prefix": "borderTopRightRadius",
+    "description": "Make a FletBox widgets borderTopRightRadius widget",
+    "body": [
+      "borderTopRightRadius: 8,"
+    ]
+  },
+  "FletBox widgets borderBottomLeftRadius": {
+    "prefix": "borderBottomLeftRadius",
+    "description": "Make a FletBox widgets borderBottomLeftRadius widget",
+    "body": [
+      "borderBottomLeftRadius: 8,"
+    ]
+  },
+  "FletBox widgets borderBottomRightRadius": {
+    "prefix": "borderBottomRightRadius",
+    "description": "Make a FletBox widgets borderBottomRightRadius widget",
+    "body": [
+      "borderBottomRightRadius: 8,"
+    ]
+  },
+  "FletBox widgets roundedTop": {
+    "prefix": "roundedTop",
+    "description": "Make a FletBox widgets roundedTop widget",
+    "body": [
+      "roundedTop: 12,"
+    ]
+  },
+  "FletBox widgets roundedBottom": {
+    "prefix": "roundedBottom",
+    "description": "Make a FletBox widgets roundedBottom widget",
+    "body": [
+      "roundedBottom: 12,"
+    ]
+  },
+  "FletBox widgets roundedLeft": {
+    "prefix": "roundedLeft",
+    "description": "Make a FletBox widgets roundedLeft widget",
+    "body": [
+      "roundedLeft: 12,"
+    ]
+  },
+  "FletBox widgets roundedRight": {
+    "prefix": "roundedRight",
+    "description": "Make a FletBox widgets roundedRight widget",
+    "body": [
+      "roundedRight: 12,"
+    ]
+  },
+  "FletBox widgets borderRadiusBottom": {
+    "prefix": "borderRadiusBottom",
+    "description": "Make a FletBox widgets borderRadiusBottom widget",
+    "body": [
+      "borderRadiusBottom: 12,"
+    ]
+  },
+  "FletBox widgets borderRadiusLeft": {
+    "prefix": "borderRadiusLeft",
+    "description": "Make a FletBox widgets borderRadiusLeft widget",
+    "body": [
+      "borderRadiusLeft: 12,"
+    ]
+  },
+  "FletBox widgets borderRadiusRight": {
+    "prefix": "borderRadiusRight",
+    "description": "Make a FletBox widgets borderRadiusRight widget",
+    "body": [
+      "borderRadiusRight: 12,"
+    ]
+  },
+  "FletBox widgets visibility": {
+    "prefix": "visibility",
+    "description": "Make a FletBox widgets visibility widget",
+    "body": [
+      "visibility: \"hidden\","
+    ]
+  },
+  "FletBox widgets pointerEvents": {
+    "prefix": "pointerEvents",
+    "description": "Make a FletBox widgets pointerEvents widget",
+    "body": [
+      "pointerEvents: \"none\","
+    ]
+  },
+  "FletBox widgets userSelect": {
+    "prefix": "userSelect",
+    "description": "Make a FletBox widgets userSelect widget",
+    "body": [
+      "userSelect: \"none\","
+    ]
+  },
+  "FletBox widgets touchAction": {
+    "prefix": "touchAction",
+    "description": "Make a FletBox widgets touchAction widget",
+    "body": [
+      "touchAction: \"none\","
+    ]
+  },
+  "FletBox widgets willChange": {
+    "prefix": "willChange",
+    "description": "Make a FletBox widgets willChange widget",
+    "body": [
+      "willChange: \"transform\","
+    ]
+  },
+  "FletBox widgets class": {
+    "prefix": "class",
+    "description": "Make a FletBox widgets class widget",
+    "body": [
+      "class: \"panel\","
+    ]
+  },
+  "FletBox widgets href": {
+    "prefix": "href",
+    "description": "Make a FletBox widgets href widget",
+    "body": [
+      "href: \"https://fletbox.dev\","
+    ]
+  },
+  "FletBox widgets role": {
+    "prefix": "role",
+    "description": "Make a FletBox widgets role widget",
+    "body": [
+      "role: \"button\","
+    ]
+  },
+  "FletBox widgets lang": {
+    "prefix": "lang",
+    "description": "Make a FletBox widgets lang widget",
+    "body": [
+      "lang: \"es\","
+    ]
+  },
+  "FletBox widgets dir": {
+    "prefix": "dir",
+    "description": "Make a FletBox widgets dir widget",
+    "body": [
+      "dir: \"rtl\","
+    ]
+  },
+  "FletBox widgets tabIndex": {
+    "prefix": "tabIndex",
+    "description": "Make a FletBox widgets tabIndex widget",
+    "body": [
+      "tabIndex: 0,"
+    ]
+  },
+  "FletBox widgets draggable": {
+    "prefix": "draggable",
+    "description": "Make a FletBox widgets draggable widget",
+    "body": [
+      "draggable: true,"
+    ]
+  },
+  "FletBox widgets hidden": {
+    "prefix": "hidden",
+    "description": "Make a FletBox widgets hidden widget",
+    "body": [
+      "hidden: true,"
+    ]
+  },
+  "FletBox widgets for": {
+    "prefix": "for",
+    "description": "Make a FletBox widgets for widget",
+    "body": [
+      "for: \"email-input\","
+    ]
+  },
+  "FletBox widgets htmlFor": {
+    "prefix": "htmlFor",
+    "description": "Make a FletBox widgets htmlFor widget",
+    "body": [
+      "htmlFor: \"email-input\","
+    ]
+  },
+  "FletBox widgets autofocus": {
+    "prefix": "autofocus",
+    "description": "Make a FletBox widgets autofocus widget",
+    "body": [
+      "autofocus: true,"
+    ]
+  },
+  "FletBox widgets spellcheck": {
+    "prefix": "spellcheck",
+    "description": "Make a FletBox widgets spellcheck widget",
+    "body": [
+      "spellcheck: false,"
+    ]
+  },
+  "FletBox widgets onclick": {
+    "prefix": "onclick",
+    "description": "Make a FletBox widgets onclick widget",
+    "body": [
+      "onclick: () => console.log(\"clicked\"),"
+    ]
+  },
+  "FletBox widgets onKeyDown": {
+    "prefix": "onKeyDown",
+    "description": "Make a FletBox widgets onKeyDown widget",
+    "body": [
+      "onKeyDown: (e) => console.log(e.key),"
+    ]
+  },
+  "FletBox widgets onKeyUp": {
+    "prefix": "onKeyUp",
+    "description": "Make a FletBox widgets onKeyUp widget",
+    "body": [
+      "onKeyUp: (e) => console.log(e.key),"
+    ]
+  },
+  "FletBox widgets onKeyPress": {
+    "prefix": "onKeyPress",
+    "description": "Make a FletBox widgets onKeyPress widget",
+    "body": [
+      "onKeyPress: (e) => console.log(e.key),"
+    ]
+  },
+  "FletBox widgets onMouseDown": {
+    "prefix": "onMouseDown",
+    "description": "Make a FletBox widgets onMouseDown widget",
+    "body": [
+      "onMouseDown: (e) => console.log(e.button),"
+    ]
+  },
+  "FletBox widgets onMouseUp": {
+    "prefix": "onMouseUp",
+    "description": "Make a FletBox widgets onMouseUp widget",
+    "body": [
+      "onMouseUp: (e) => console.log(e.button),"
+    ]
+  },
+  "FletBox widgets onMouseMove": {
+    "prefix": "onMouseMove",
+    "description": "Make a FletBox widgets onMouseMove widget",
+    "body": [
+      "onMouseMove: (e) => console.log(e.clientX, e.clientY),"
+    ]
+  },
+  "FletBox widgets onTouchStart": {
+    "prefix": "onTouchStart",
+    "description": "Make a FletBox widgets onTouchStart widget",
+    "body": [
+      "onTouchStart: (e) => console.log(e.touches[0].clientX),"
+    ]
+  },
+  "FletBox widgets onTouchMove": {
+    "prefix": "onTouchMove",
+    "description": "Make a FletBox widgets onTouchMove widget",
+    "body": [
+      "onTouchMove: (e) => console.log(e.touches[0].clientY),"
+    ]
+  },
+  "FletBox widgets onTouchEnd": {
+    "prefix": "onTouchEnd",
+    "description": "Make a FletBox widgets onTouchEnd widget",
+    "body": [
+      "onTouchEnd: (e) => console.log(e.changedTouches[0].clientX),"
+    ]
+  },
+  "FletBox widgets stackStart": {
+    "prefix": "stackStart",
+    "description": "Make a FletBox widgets stackStart widget",
+    "body": [
+      "start: 16, // parent Stack needs position: \"stack\""
+    ]
+  },
+  "FletBox widgets stackEnd": {
+    "prefix": "stackEnd",
+    "description": "Make a FletBox widgets stackEnd widget",
+    "body": [
+      "end: 16, // parent Stack needs position: \"stack\""
+    ]
+  },
+  "FletBox widgets stackCenterX": {
+    "prefix": "stackCenterX",
+    "description": "Make a FletBox widgets stackCenterX widget",
+    "body": [
+      "centerX: true, // parent Stack needs position: \"stack\""
+    ]
+  },
+  "FletBox widgets stackCenterY": {
+    "prefix": "stackCenterY",
+    "description": "Make a FletBox widgets stackCenterY widget",
+    "body": [
+      "centerY: true, // parent Stack needs position: \"stack\""
+    ]
+  },
+  "FletBox widgets stackCenter": {
+    "prefix": "stackCenter",
+    "description": "Make a FletBox widgets stackCenter widget",
+    "body": [
+      "center: true, // parent Stack needs position: \"stack\""
+    ]
+  },
+  "FletBox widgets stackFullHeight": {
+    "prefix": "stackFullHeight",
+    "description": "Make a FletBox widgets stackFullHeight widget",
+    "body": [
+      "fullHeight: true, // parent Stack needs position: \"stack\""
+    ]
+  },
+  "FletBox widgets stackFull": {
+    "prefix": "stackFull",
+    "description": "Make a FletBox widgets stackFull widget",
+    "body": [
+      "full: true, // parent Stack needs position: \"stack\""
+    ]
+  },
+  "FletBox widgets basePath": {
+    "prefix": "basePath",
+    "description": "Make a FletBox widgets basePath widget",
+    "body": [
+      "basePath: \"/flet-box-docs\","
+    ]
+  },
+  "FletBox widgets actionsGap": {
+    "prefix": "actionsGap",
+    "description": "Make a FletBox widgets actionsGap widget",
+    "body": [
+      "actionsGap: 12,"
+    ]
+  },
+  "FletBox widgets showBorder": {
+    "prefix": "showBorder",
+    "description": "Make a FletBox widgets showBorder widget",
+    "body": [
+      "showBorder: false,"
+    ]
+  },
+  "FletBox widgets buttonTop": {
+    "prefix": "buttonTop",
+    "description": "Make a FletBox widgets buttonTop widget",
+    "body": [
+      "buttonTop: \"46%\","
+    ]
+  },
+  "FletBox widgets imageCircular": {
+    "prefix": "imageCircular",
+    "description": "Make a FletBox widgets imageCircular widget",
+    "body": [
+      "circular: true,"
+    ]
+  },
+  "FletBox widgets onIconPress": {
+    "prefix": "onIconPress",
+    "description": "Make a FletBox widgets onIconPress widget",
+    "body": [
+      "onIconPress: () => console.log(\"icon pressed\"),"
+    ]
+  },
+  "FletBox widgets titleProps": {
+    "prefix": "titleProps",
+    "description": "Make a FletBox widgets titleProps widget",
+    "body": [
+      "titleProps: { size: 16, weight: \"bold\" },"
+    ]
+  },
+  "FletBox widgets subtitleProps": {
+    "prefix": "subtitleProps",
+    "description": "Make a FletBox widgets subtitleProps widget",
+    "body": [
+      "subtitleProps: { color: colors.textSecondary },"
+    ]
+  },
+  "FletBox widgets descriptionProps": {
+    "prefix": "descriptionProps",
+    "description": "Make a FletBox widgets descriptionProps widget",
+    "body": [
+      "descriptionProps: { color: colors.textSecondary, size: 12 },"
+    ]
+  },
+  "FletBox widgets activeBorderStyle": {
+    "prefix": "activeBorderStyle",
+    "description": "Make a FletBox widgets activeBorderStyle widget",
+    "body": [
+      "activeBorderStyle: \"dashed\","
+    ]
+  },
+  "FletBox widgets activeBorderWidth": {
+    "prefix": "activeBorderWidth",
+    "description": "Make a FletBox widgets activeBorderWidth widget",
+    "body": [
+      "activeBorderWidth: 2,"
+    ]
+  },
+  "FletBox widgets activeShadow": {
+    "prefix": "activeShadow",
+    "description": "Make a FletBox widgets activeShadow widget",
+    "body": [
+      "activeShadow: \"0 0 12px rgba(99, 102, 241, 0.4)\","
+    ]
+  },
+  "FletBox widgets gradientAngle": {
+    "prefix": "gradientAngle",
+    "description": "Make a FletBox widgets gradientAngle widget",
+    "body": [
+      "gradientAngle: 135,"
+    ]
+  },
+  "FletBox widgets customValueFormatter": {
+    "prefix": "customValueFormatter",
+    "description": "Make a FletBox widgets customValueFormatter widget",
+    "body": [
+      "customValueFormatter: (value, max) => `${value}/${max} MB`,"
+    ]
+  },
+  "FletBox widgets startAngle": {
+    "prefix": "startAngle",
+    "description": "Make a FletBox widgets startAngle widget",
+    "body": [
+      "startAngle: 0,"
+    ]
+  },
+  "FletBox widgets endAngle": {
+    "prefix": "endAngle",
+    "description": "Make a FletBox widgets endAngle widget",
+    "body": [
+      "endAngle: Math.PI,"
+    ]
+  },
+  "FletBox widgets innerRadius": {
+    "prefix": "innerRadius",
+    "description": "Make a FletBox widgets innerRadius widget",
+    "body": [
+      "innerRadius: 40,"
+    ]
+  },
+  "FletBox widgets semiCircle": {
+    "prefix": "semiCircle",
+    "description": "Make a FletBox widgets semiCircle widget",
+    "body": [
+      "semiCircle: \"top\","
+    ]
+  },
+  "FletBox widgets defaultColors": {
+    "prefix": "defaultColors",
+    "description": "Make a FletBox widgets defaultColors widget",
+    "body": [
+      "defaultColors: [\"#6366f1\", \"#22c55e\", \"#f59e0b\"],"
+    ]
+  },
+  "FletBox widgets sliceBorderColor": {
+    "prefix": "sliceBorderColor",
+    "description": "Make a FletBox widgets sliceBorderColor widget",
+    "body": [
+      "sliceBorderColor: \"#ffffff\","
+    ]
+  },
+  "FletBox widgets sliceBorderWidth": {
+    "prefix": "sliceBorderWidth",
+    "description": "Make a FletBox widgets sliceBorderWidth widget",
+    "body": [
+      "sliceBorderWidth: 2,"
+    ]
+  },
+  "FletBox widgets markdownSource": {
+    "prefix": "markdownSource",
+    "description": "Make a FletBox widgets markdownSource widget",
+    "body": [
+      "source: \"# Hello\\n\\nSome **bold** text\","
+    ]
+  },
+  "FletBox widgets headingMargin": {
+    "prefix": "headingMargin",
+    "description": "Make a FletBox widgets headingMargin widget",
+    "body": [
+      "headingMargin: \"0.67em 0\","
+    ]
+  },
+  "FletBox widgets codeFontFamily": {
+    "prefix": "codeFontFamily",
+    "description": "Make a FletBox widgets codeFontFamily widget",
+    "body": [
+      "codeFontFamily: \"ui-monospace, Menlo, monospace\","
+    ]
+  },
+  "FletBox widgets markdownCodeBorderRadius": {
+    "prefix": "markdownCodeBorderRadius",
+    "description": "Make a FletBox widgets markdownCodeBorderRadius widget",
+    "body": [
+      "codeBorderRadius: 4,"
+    ]
+  },
+  "FletBox widgets codePadding": {
+    "prefix": "codePadding",
+    "description": "Make a FletBox widgets codePadding widget",
+    "body": [
+      "codePadding: \"0.2em 0.45em\","
+    ]
+  },
+  "FletBox widgets prePadding": {
+    "prefix": "prePadding",
+    "description": "Make a FletBox widgets prePadding widget",
+    "body": [
+      "prePadding: \"1em\","
+    ]
+  },
+  "FletBox widgets preMargin": {
+    "prefix": "preMargin",
+    "description": "Make a FletBox widgets preMargin widget",
+    "body": [
+      "preMargin: \"1em 0\","
+    ]
+  },
+  "FletBox widgets blockquoteColor": {
+    "prefix": "blockquoteColor",
+    "description": "Make a FletBox widgets blockquoteColor widget",
+    "body": [
+      "blockquoteColor: colors.textSecondary,"
+    ]
+  },
+  "FletBox widgets blockquoteBorderWidth": {
+    "prefix": "blockquoteBorderWidth",
+    "description": "Make a FletBox widgets blockquoteBorderWidth widget",
+    "body": [
+      "blockquoteBorderWidth: 4,"
+    ]
+  },
+  "FletBox widgets blockquotePadding": {
+    "prefix": "blockquotePadding",
+    "description": "Make a FletBox widgets blockquotePadding widget",
+    "body": [
+      "blockquotePadding: \"0 1em\","
+    ]
+  },
+  "FletBox widgets blockquoteMargin": {
+    "prefix": "blockquoteMargin",
+    "description": "Make a FletBox widgets blockquoteMargin widget",
+    "body": [
+      "blockquoteMargin: \"1em 0\","
+    ]
+  },
+  "FletBox widgets tableBorderColor": {
+    "prefix": "tableBorderColor",
+    "description": "Make a FletBox widgets tableBorderColor widget",
+    "body": [
+      "tableBorderColor: colors.gray300,"
+    ]
+  },
+  "FletBox widgets tableCellPadding": {
+    "prefix": "tableCellPadding",
+    "description": "Make a FletBox widgets tableCellPadding widget",
+    "body": [
+      "tableCellPadding: \"0.4em 0.75em\","
+    ]
+  },
+  "FletBox widgets tableHeaderBgColor": {
+    "prefix": "tableHeaderBgColor",
+    "description": "Make a FletBox widgets tableHeaderBgColor widget",
+    "body": [
+      "tableHeaderBgColor: colors.gray100,"
+    ]
+  },
+  "FletBox widgets listMargin": {
+    "prefix": "listMargin",
+    "description": "Make a FletBox widgets listMargin widget",
+    "body": [
+      "listMargin: \"0em 0\","
+    ]
+  },
+  "FletBox widgets listPadding": {
+    "prefix": "listPadding",
+    "description": "Make a FletBox widgets listPadding widget",
+    "body": [
+      "listPadding: \"0 0 0 1em\","
+    ]
+  },
+  "FletBox widgets listItemMargin": {
+    "prefix": "listItemMargin",
+    "description": "Make a FletBox widgets listItemMargin widget",
+    "body": [
+      "listItemMargin: \"0.0em 0\","
+    ]
+  },
+  "FletBox widgets imageMaxWidth": {
+    "prefix": "imageMaxWidth",
+    "description": "Make a FletBox widgets imageMaxWidth widget",
+    "body": [
+      "imageMaxWidth: \"100%\","
+    ]
+  },
+  "FletBox widgets imageBorderRadius": {
+    "prefix": "imageBorderRadius",
+    "description": "Make a FletBox widgets imageBorderRadius widget",
+    "body": [
+      "imageBorderRadius: 8,"
+    ]
+  },
+  "FletBox widgets adId": {
+    "prefix": "adId",
+    "description": "Make a FletBox widgets adId widget",
+    "body": [
+      "adId: \"ca-app-pub-3940256099942544/6300978111\","
+    ]
+  },
+  "FletBox widgets interstitialId": {
+    "prefix": "interstitialId",
+    "description": "Make a FletBox widgets interstitialId widget",
+    "body": [
+      "interstitialId: \"ca-app-pub-3940256099942544/4411468917\","
+    ]
+  },
+  "FletBox widgets rewardedId": {
+    "prefix": "rewardedId",
+    "description": "Make a FletBox widgets rewardedId widget",
+    "body": [
+      "rewardedId: \"ca-app-pub-3940256099942544/1751961742\","
+    ]
+  },
+  "FletBox widgets isTesting": {
+    "prefix": "isTesting",
+    "description": "Make a FletBox widgets isTesting widget",
+    "body": [
+      "isTesting: true,"
+    ]
+  },
+  "FletBox widgets autoShow": {
+    "prefix": "autoShow",
+    "description": "Make a FletBox widgets autoShow widget",
+    "body": [
+      "autoShow: false,"
+    ]
+  },
+  "FletBox widgets autoInitialize": {
+    "prefix": "autoInitialize",
+    "description": "Make a FletBox widgets autoInitialize widget",
+    "body": [
+      "autoInitialize: true,"
+    ]
+  },
+  "FletBox widgets admobPlugin": {
+    "prefix": "admobPlugin",
+    "description": "Make a FletBox widgets admobPlugin widget",
+    "body": [
+      "plugin: window.Capacitor?.Plugins?.AdMob,"
+    ]
+  },
+  "FletBox widgets onLoaded": {
+    "prefix": "onLoaded",
+    "description": "Make a FletBox widgets onLoaded widget",
+    "body": [
+      "onLoaded: (widget) => console.log(\"banner ready\"),"
+    ]
+  },
+  "FletBox widgets onFailed": {
+    "prefix": "onFailed",
+    "description": "Make a FletBox widgets onFailed widget",
+    "body": [
+      "onFailed: (error) => console.error(error.message),"
+    ]
+  },
+  "FletBox widgets onDismissed": {
+    "prefix": "onDismissed",
+    "description": "Make a FletBox widgets onDismissed widget",
+    "body": [
+      "onDismissed: () => console.log(\"ad dismissed\"),"
+    ]
+  },
+  "FletBox widgets adsenseClient": {
+    "prefix": "adsenseClient",
+    "description": "Make a FletBox widgets adsenseClient widget",
+    "body": [
+      "client: \"ca-pub-1234567890123456\","
+    ]
+  },
+  "FletBox widgets adsenseSlot": {
+    "prefix": "adsenseSlot",
+    "description": "Make a FletBox widgets adsenseSlot widget",
+    "body": [
+      "slot: \"1234567890\","
+    ]
+  },
+  "FletBox widgets adsenseResponsive": {
+    "prefix": "adsenseResponsive",
+    "description": "Make a FletBox widgets adsenseResponsive widget",
+    "body": [
+      "responsive: false,"
+    ]
+  },
+  "FletBox widgets adsenseTest": {
+    "prefix": "adsenseTest",
+    "description": "Make a FletBox widgets adsenseTest widget",
+    "body": [
+      "test: true,"
+    ]
+  },
+  "FletBox widgets applyStripes": {
+    "prefix": "applyStripes",
+    "description": "Make a FletBox widgets applyStripes widget",
+    "body": [
+      "const bar = ProgressBar({ value: 60 });",
+      "applyStripes(bar, { color: \"rgba(255, 255, 255, 0.15)\", size: 10, angle: 45, animated: true, duration: \"0.5s\" });"
+    ]
+  },
+  "FletBox widgets removeStripes": {
+    "prefix": "removeStripes",
+    "description": "Make a FletBox widgets removeStripes widget",
+    "body": [
+      "const bar = ProgressBar({ value: 60 });",
+      "applyStripes(bar, { animated: true });",
+      "removeStripes(bar);"
+    ]
+  },
+  "FletBox widgets applyShimmer": {
+    "prefix": "applyShimmer",
+    "description": "Make a FletBox widgets applyShimmer widget",
+    "body": [
+      "const placeholder = Skeleton({ variant: \"text\" });",
+      "applyShimmer(placeholder, { highlightColor: \"rgba(255, 255, 255, 0.35)\", baseColor: \"rgba(0, 0, 0, 0.05)\", duration: \"1.5s\" });"
+    ]
+  },
+  "FletBox widgets applyGlow": {
+    "prefix": "applyGlow",
+    "description": "Make a FletBox widgets applyGlow widget",
+    "body": [
+      "const payButton = Button({ text: \"Pay\" });",
+      "applyGlow(payButton, { color: \"rgba(0, 122, 255, 0.5)\", intensity: 12, duration: \"2s\" });"
+    ]
+  },
+  "FletBox widgets applyIndeterminate": {
+    "prefix": "applyIndeterminate",
+    "description": "Make a FletBox widgets applyIndeterminate widget",
+    "body": [
+      "const track = Container({ height: 4 });",
+      "applyIndeterminate(track, { duration: \"1.5s\", width: \"50%\" });"
+    ]
+  },
+  "FletBox widgets applyPulse": {
+    "prefix": "applyPulse",
+    "description": "Make a FletBox widgets applyPulse widget",
+    "body": [
+      "const dot = Icon({ name: \"circle\" });",
+      "applyPulse(dot, { scale: 1.05, duration: \"0.3s\" });"
+    ]
+  },
+  "FletBox widgets injectKeyframes": {
+    "prefix": "injectKeyframes",
+    "description": "Make a FletBox widgets injectKeyframes widget",
+    "body": [
+      "injectKeyframes(\"float\", \"0% { transform: translateY(0); } 100% { transform: translateY(-8px); }\");"
+    ]
+  },
+  "FletBox widgets stackPosition": {
+    "prefix": "stackPosition",
+    "description": "Make a FletBox widgets stackPosition widget",
+    "body": [
+      "// The public helper only records the offsets on the dataset; the parent Stack reads them.",
+      "const badge = Text({ text: \"3\" });",
+      "stackPosition(badge, { top: 8, right: 8 });"
+    ]
+  },
+  "FletBox widgets stopAnimation": {
+    "prefix": "stopAnimation",
+    "description": "Make a FletBox widgets stopAnimation widget",
+    "body": [
+      "const box = Container({ width: 100, height: 100 });",
+      "animate(box, \"opacity\", 1, 0.2, 400);",
+      "stopAnimation(box, \"opacity\");"
+    ]
+  },
+  "FletBox widgets insertBy": {
+    "prefix": "insertBy",
+    "description": "Make a FletBox widgets insertBy widget",
+    "body": [
+      "insertBy(Text({ text: \"Mounted\" }), \"root\");"
+    ]
+  },
+  "FletBox widgets prependBy": {
+    "prefix": "prependBy",
+    "description": "Make a FletBox widgets prependBy widget",
+    "body": [
+      "prependBy(Text({ text: \"First\" }), \"root\");"
+    ]
+  },
+  "FletBox widgets insertBefore": {
+    "prefix": "insertBefore",
+    "description": "Make a FletBox widgets insertBefore widget",
+    "body": [
+      "insertBefore(Text({ text: \"Before\" }), \"target-id\");"
+    ]
+  },
+  "FletBox widgets insertAfter": {
+    "prefix": "insertAfter",
+    "description": "Make a FletBox widgets insertAfter widget",
+    "body": [
+      "insertAfter(Text({ text: \"After\" }), \"target-id\");"
+    ]
+  },
+  "FletBox widgets replaceBy": {
+    "prefix": "replaceBy",
+    "description": "Make a FletBox widgets replaceBy widget",
+    "body": [
+      "replaceBy(Text({ text: \"Replaced\" }), \"target-id\");"
+    ]
+  },
+  "FletBox widgets mountAll": {
+    "prefix": "mountAll",
+    "description": "Make a FletBox widgets mountAll widget",
+    "body": [
+      "mountAll(Card({ children: [Text({ text: \"Shared\" })] }), [\"header\", \"footer\"]);"
+    ]
+  },
+  "FletBox widgets addNavigation": {
+    "prefix": "addNavigation",
+    "description": "Make a FletBox widgets addNavigation widget",
+    "body": [
+      "const box = Container({ width: 100, height: 100 });",
+      "addNavigation(box);",
+      "console.log(box.depth, box.path);"
+    ]
+  },
+  "FletBox widgets isPWAInstalled": {
+    "prefix": "isPWAInstalled",
+    "description": "Make a FletBox widgets isPWAInstalled widget",
+    "body": [
+      "if (isPWAInstalled()) console.log(\"running as installed app\");"
+    ]
+  },
+  "FletBox widgets installPWA": {
+    "prefix": "installPWA",
+    "description": "Make a FletBox widgets installPWA widget",
+    "body": [
+      "const btn = Button({ text: \"Install\", onPress: installPWA });"
+    ]
+  },
+  "FletBox widgets updatePWA": {
+    "prefix": "updatePWA",
+    "description": "Make a FletBox widgets updatePWA widget",
+    "body": [
+      "const btn = Button({ text: \"Update\", onPress: updatePWA });"
+    ]
+  },
+  "FletBox widgets removePWA": {
+    "prefix": "removePWA",
+    "description": "Make a FletBox widgets removePWA widget",
+    "body": [
+      "const btn = Button({ text: \"Uninstall\", onPress: removePWA });"
+    ]
+  },
+  "FletBox widgets initHMR": {
+    "prefix": "initHMR",
+    "description": "Make a FletBox widgets initHMR widget",
+    "body": [
+      "initHMR();"
+    ]
+  },
+  "FletBox widgets getHMR": {
+    "prefix": "getHMR",
+    "description": "Make a FletBox widgets getHMR widget",
+    "body": [
+      "const socket = getHMR();"
+    ]
+  },
+  "FletBox widgets getBasePath": {
+    "prefix": "getBasePath",
+    "description": "Make a FletBox widgets getBasePath widget",
+    "body": [
+      "const base = getBasePath();"
+    ]
+  },
+  "FletBox widgets print": {
+    "prefix": "print",
+    "description": "Make a FletBox widgets print widget",
+    "body": [
+      "print(\"Saved\", \"success\", { timestamp: true, label: \"sync\" });"
+    ]
+  },
+  "FletBox widgets palettes": {
+    "prefix": "palettes",
+    "description": "Make a FletBox widgets palettes widget",
+    "body": [
+      "const brand = palettes.light.primary;"
+    ]
+  },
+  "FletBox widgets highlightColors": {
+    "prefix": "highlightColors",
+    "description": "Make a FletBox widgets highlightColors widget",
+    "body": [
+      "const keywordColor = highlightColors.keyword;"
+    ]
+  },
+  "FletBox widgets tokenize": {
+    "prefix": "tokenize",
+    "description": "Make a FletBox widgets tokenize widget",
+    "body": [
+      "const tokens = tokenize(\"const x = 1;\");"
+    ]
+  },
+  "FletBox widgets parseMarkdown": {
+    "prefix": "parseMarkdown",
+    "description": "Make a FletBox widgets parseMarkdown widget",
+    "body": [
+      "const raw = parseMarkdown(\"# Hello\");",
+      "Markdown({ text: raw });"
+    ]
+  },
+  "FletBox widgets parseInlineMarkdown": {
+    "prefix": "parseInlineMarkdown",
+    "description": "Make a FletBox widgets parseInlineMarkdown widget",
+    "body": [
+      "const raw = parseInlineMarkdown(\"**bold**\");",
+      "Text({ text: raw });"
+    ]
+  },
   "FletBox widgets Container.basic": {
     "prefix": "Container.basic",
     "description": "Make a FletBox widgets Container.basic widget",
@@ -5150,6 +6488,10 @@
     "prefix": "Column.full",
     "description": "Make a FletBox widgets Column.full widget",
     "body": [
+      "const items = [\"Note 1\", \"Note 2\", \"Note 3\"];",
+      "const Header = () => Text({ text: \"Sidebar\", fontWeight: \"bold\" });",
+      "const Footer = () => Text({ text: \"3 notes\", fontSize: 12 });",
+      "",
       "Column({",
       "    width: \"100%\",",
       "    height: \"100%\",",
@@ -5824,7 +7166,7 @@
       "    padding: \"14px 20px\",",
       "    margin: 20,",
       "    elevation: 4,",
-      "    onShow: () => analytics.log(\"snackbar_shown\"),",
+      "    onShow: () => console.log(\"snackbar shown\"),",
       "    onClose: () => console.log(\"closed\")",
       "})"
     ]
@@ -6302,6 +7644,7 @@
     "prefix": "ListView.normal",
     "description": "Make a FletBox widgets ListView.normal widget",
     "body": [
+      "const users = [{ name: \"Ada\" }, { name: \"Linus\" }];",
       "ListView({ data: users, renderItem: (user) => ListTile({ title: user.name }), itemSize: 70 })"
     ]
   },
@@ -6309,6 +7652,10 @@
     "prefix": "ListView.full",
     "description": "Make a FletBox widgets ListView.full widget",
     "body": [
+      "const products = [{ name: \"Keyboard\" }, { name: \"Mouse\" }];",
+      "const isLoading = false;",
+      "const hasMore = true;",
+      "",
       "ListView({",
       "    data: products,",
       "    renderItem: (item, idx) => Card({ child: Text({ text: item.name }) }),",
@@ -6341,6 +7688,7 @@
     "prefix": "GridView.normal",
     "description": "Make a FletBox widgets GridView.normal widget",
     "body": [
+      "const images = [\"/a.png\", \"/b.png\", \"/c.png\"];",
       "GridView({ data: images, renderItem: (img) => Image({ src: img }), columns: 3, spacing: 8 })"
     ]
   },
@@ -6348,6 +7696,8 @@
     "prefix": "GridView.full",
     "description": "Make a FletBox widgets GridView.full widget",
     "body": [
+      "const gallery = [{ url: \"/a.png\" }, { url: \"/b.png\" }];",
+      "",
       "GridView({",
       "    data: gallery,",
       "    renderItem: (item) => Card({ child: Image({ src: item.url, fit: \"cover\" }) }),",
@@ -6371,6 +7721,7 @@
     "prefix": "DataTable.normal",
     "description": "Make a FletBox widgets DataTable.normal widget",
     "body": [
+      "const users = [{ id: 1, name: \"Ada\" }, { id: 2, name: \"Linus\" }];",
       "DataTable({ columns: [{ key: \"id\", label: \"ID\" }, { key: \"name\", label: \"Name\" }], rows: users, onRowClick: (row) => console.log(row) })"
     ]
   },
@@ -6378,6 +7729,8 @@
     "prefix": "DataTable.full",
     "description": "Make a FletBox widgets DataTable.full widget",
     "body": [
+      "const userList = [{ id: 1, name: \"Ada\", status: \"open\" }];",
+      "",
       "DataTable({",
       "    columns: [",
       "        { key: \"id\", label: \"#\", align: \"center\" },",
@@ -6486,6 +7839,7 @@
     "prefix": "CodeViewer.normal",
     "description": "Make a FletBox widgets CodeViewer.normal widget",
     "body": [
+      "const jsCode = \"const a = 1;\\nconsole.log(a);\";",
       "CodeViewer({ code: jsCode, title: \"app.js\", showLineNumbers: true })"
     ]
   },
@@ -7002,6 +8356,7 @@
     "prefix": "TreeView.normal",
     "description": "Make a FletBox widgets TreeView.normal widget",
     "body": [
+      "const treeData = [{ id: \"1\", label: \"src\", children: [{ id: \"2\", label: \"index.js\" }] }];",
       "TreeView({ nodes: treeData, onSelect: (node) => console.log(node), selectable: true })"
     ]
   },
@@ -7233,6 +8588,7 @@
     "prefix": "Markdown.normal",
     "description": "Make a FletBox widgets Markdown.normal widget",
     "body": [
+      "const mdSource = \"# Title\\n\\nA [link](https://fletbox.dev) with **bold** text.\";",
       "Markdown({ text: mdSource, fontSize: 14, linkColor: colors.primary })"
     ]
   },
@@ -7289,14 +8645,16 @@
     "prefix": "Inspector.full",
     "description": "Make a FletBox widgets Inspector.full widget",
     "body": [
-      "inspectWidget(container) ; // logs to console"
+      "// inspectWidget walks the tree and logs every node.",
+      "const panel = Column({ children: [Text({ text: \"Hello\" })] });",
+      "inspectWidget(panel);"
     ]
   },
   "FletBox widgets InstallButton.basic": {
     "prefix": "InstallButton.basic",
     "description": "Make a FletBox widgets InstallButton.basic widget",
     "body": [
-      "InstallButton()"
+      "InstallButton({ text: \"\ud83d\udcf2 Install\" })"
     ]
   },
   "FletBox widgets InstallButton.normal": {
@@ -7542,6 +8900,256 @@
       "    onHover: (slice, idx) => console.log(slice, idx),",
       "    onComplete: () => console.log(\"done\")",
       "})"
+    ]
+  },
+  "FletBox widgets App.basic": {
+    "prefix": "App.basic",
+    "description": "Make a FletBox widgets App.basic widget",
+    "body": [
+      "App(Text({ text: \"Hello\" }))"
+    ]
+  },
+  "FletBox widgets App.normal": {
+    "prefix": "App.normal",
+    "description": "Make a FletBox widgets App.normal widget",
+    "body": [
+      "App(",
+      "    Column({",
+      "        padding: padding(24),",
+      "        gap: 12,",
+      "        children: [",
+      "            Text({ text: \"Dashboard\", type: \"h1\" }),",
+      "            Button({ text: \"Start\", onPress: () => console.log(\"go\") })",
+      "        ]",
+      "    })",
+      ")"
+    ]
+  },
+  "FletBox widgets App.full": {
+    "prefix": "App.full",
+    "description": "Make a FletBox widgets App.full widget",
+    "body": [
+      "const notes = [{ title: \"Groceries\" }, { title: \"Ideas\" }];",
+      "",
+      "const screen = Scaffold({",
+      "    appBar: AppBar({ title: \"Notes\" }),",
+      "    body: ListView({ data: notes, renderItem: (note) => Text({ text: note.title }) })",
+      "});",
+      "",
+      "// App() resets #root and stretches the widget; runApp() owns the lifecycle.",
+      "App(screen);"
+    ]
+  },
+  "FletBox widgets WidgetFactory.basic": {
+    "prefix": "WidgetFactory.basic",
+    "description": "Make a FletBox widgets WidgetFactory.basic widget",
+    "body": [
+      "const el = WidgetFactory(\"div\", { widgetName: \"Panel\", text: \"Hello\" });"
+    ]
+  },
+  "FletBox widgets WidgetFactory.tag": {
+    "prefix": "WidgetFactory.tag",
+    "description": "Make a FletBox widgets WidgetFactory.tag widget",
+    "body": [
+      "WidgetFactory({ tag: \"section\", widgetName: \"Section\", padding: 16, children: [Text({ text: \"Inside\" })] })"
+    ]
+  },
+  "FletBox widgets WidgetFactory.full": {
+    "prefix": "WidgetFactory.full",
+    "description": "Make a FletBox widgets WidgetFactory.full widget",
+    "body": [
+      "const card = WidgetFactory(\"article\", {",
+      "    widgetName: \"CardShell\",",
+      "    class: \"card\",",
+      "    padding: 16,",
+      "    borderRadius: 12,",
+      "    bgColor: colors.surface,",
+      "    children: [Text({ text: \"Title\", weight: \"bold\" })],",
+      "    onPress: () => console.log(\"pressed\"),",
+      "    onUnmount: () => console.log(\"removed\")",
+      "});",
+      "document.body.appendChild(card);"
+    ]
+  },
+  "FletBox widgets AdMob.basic": {
+    "prefix": "AdMob.basic",
+    "description": "Make a FletBox widgets AdMob.basic widget",
+    "body": [
+      "AdMob({ adId: \"ca-app-pub-3940256099942544/6300978111\" })"
+    ]
+  },
+  "FletBox widgets AdMob.normal": {
+    "prefix": "AdMob.normal",
+    "description": "Make a FletBox widgets AdMob.normal widget",
+    "body": [
+      "AdMob({",
+      "    adId: \"ca-app-pub-3940256099942544/6300978111\",",
+      "    isTesting: true,",
+      "    position: \"bottom\",",
+      "    size: \"ADAPTIVE_BANNER\",",
+      "    margin: 0,",
+      "    placeholder: true,",
+      "    label: \"AdMob banner\",",
+      "    onLoaded: (widget) => console.log(\"banner shown\"),",
+      "    onFailed: (error) => console.error(error.message)",
+      "})"
+    ]
+  },
+  "FletBox widgets AdMob.full": {
+    "prefix": "AdMob.full",
+    "description": "Make a FletBox widgets AdMob.full widget",
+    "body": [
+      "const banner = AdMob({",
+      "    adId: \"ca-app-pub-3940256099942544/6300978111\",",
+      "    interstitialId: \"ca-app-pub-3940256099942544/4411468917\",",
+      "    rewardedId: \"ca-app-pub-3940256099942544/1751961742\",",
+      "    autoInitialize: true,",
+      "    autoShow: false,",
+      "    width: \"100%\",",
+      "    height: 90,",
+      "    bgColor: colors.surface,",
+      "    borderColor: colors.border,",
+      "    onDismissed: () => console.log(\"full-screen ad closed\")",
+      "});",
+      "",
+      "banner.show();",
+      "banner.showInterstitial();",
+      "banner.showRewarded();"
+    ]
+  },
+  "FletBox widgets AdSense.basic": {
+    "prefix": "AdSense.basic",
+    "description": "Make a FletBox widgets AdSense.basic widget",
+    "body": [
+      "AdSense({ client: \"ca-pub-1234567890123456\", slot: \"1234567890\" })"
+    ]
+  },
+  "FletBox widgets AdSense.normal": {
+    "prefix": "AdSense.normal",
+    "description": "Make a FletBox widgets AdSense.normal widget",
+    "body": [
+      "AdSense({",
+      "    client: \"ca-pub-1234567890123456\",",
+      "    slot: \"1234567890\",",
+      "    format: \"fluid\",",
+      "    responsive: true,",
+      "    test: true,",
+      "    onLoad: (widget) => console.log(\"filled\"),",
+      "    onError: (error) => console.error(error.message)",
+      "})"
+    ]
+  },
+  "FletBox widgets AdSense.full": {
+    "prefix": "AdSense.full",
+    "description": "Make a FletBox widgets AdSense.full widget",
+    "body": [
+      "const unit = AdSense({",
+      "    client: \"ca-pub-1234567890123456\",",
+      "    slot: \"1234567890\",",
+      "    width: \"100%\",",
+      "    height: 250,",
+      "    placeholder: true,",
+      "    label: \"Advertisement\",",
+      "    bgColor: colors.surface,",
+      "    color: colors.textSecondary,",
+      "    borderColor: colors.border",
+      "});",
+      "",
+      "unit.refresh();"
+    ]
+  },
+  "FletBox widgets RamStore.basic": {
+    "prefix": "RamStore.basic",
+    "description": "Make a FletBox widgets RamStore.basic widget",
+    "body": [
+      "RamStore.saveRam(\"user\", { name: \"Ana\" });",
+      "RamStore.updateRam(\"user\", { name: \"Ana\", vip: true });",
+      "console.log(RamStore.getRam(\"user\"), RamStore.hasRam(\"user\"));"
+    ]
+  },
+  "FletBox widgets RamStore.all": {
+    "prefix": "RamStore.all",
+    "description": "Make a FletBox widgets RamStore.all widget",
+    "body": [
+      "console.log(RamStore.getAllRam(), RamStore.getAllRamKeys(), RamStore.getRamItemCount(), RamStore.isRamAvailable());"
+    ]
+  },
+  "FletBox widgets RamStore.subscribe": {
+    "prefix": "RamStore.subscribe",
+    "description": "Make a FletBox widgets RamStore.subscribe widget",
+    "body": [
+      "const unsubscribe = RamStore.subscribeRam((key, newValue, oldValue) => console.log(key, newValue, oldValue));"
+    ]
+  },
+  "FletBox widgets RamStore.clear": {
+    "prefix": "RamStore.clear",
+    "description": "Make a FletBox widgets RamStore.clear widget",
+    "body": [
+      "RamStore.deleteRam(\"user\");",
+      "RamStore.clearAllRam();"
+    ]
+  },
+  "FletBox widgets Session.basic": {
+    "prefix": "Session.basic",
+    "description": "Make a FletBox widgets Session.basic widget",
+    "body": [
+      "Session.saveSession(\"token\", \"abc123\");",
+      "const token = Session.getSession(\"token\");",
+      "console.log(Session.hasSession(\"token\"), Session.getSessionItemCount());"
+    ]
+  },
+  "FletBox widgets Session.all": {
+    "prefix": "Session.all",
+    "description": "Make a FletBox widgets Session.all widget",
+    "body": [
+      "console.log(Session.getAllSessionKeys(), Session.getAllSessionData(), Session.getSessionSize(), Session.isSessionAvailable());"
+    ]
+  },
+  "FletBox widgets Session.sync": {
+    "prefix": "Session.sync",
+    "description": "Make a FletBox widgets Session.sync widget",
+    "body": [
+      "const token = Session.getSessionSync(\"token\");"
+    ]
+  },
+  "FletBox widgets Session.cleanup": {
+    "prefix": "Session.cleanup",
+    "description": "Make a FletBox widgets Session.cleanup widget",
+    "body": [
+      "Session.deleteSessionByPrefix(\"draft_\");",
+      "Session.deleteSessionBySuffix(\"_temp\");",
+      "Session.clearAllSession();"
+    ]
+  },
+  "FletBox widgets Storage.basic": {
+    "prefix": "Storage.basic",
+    "description": "Make a FletBox widgets Storage.basic widget",
+    "body": [
+      "Storage.saveData(\"settings\", { theme: \"dark\" });",
+      "const settings = Storage.getData(\"settings\");",
+      "console.log(Storage.hasData(\"settings\"), Storage.getItemCount());"
+    ]
+  },
+  "FletBox widgets Storage.all": {
+    "prefix": "Storage.all",
+    "description": "Make a FletBox widgets Storage.all widget",
+    "body": [
+      "console.log(Storage.getAllKeys(), Storage.getAllData(), Storage.getStorageSize(), Storage.isStorageAvailable());"
+    ]
+  },
+  "FletBox widgets Storage.sync": {
+    "prefix": "Storage.sync",
+    "description": "Make a FletBox widgets Storage.sync widget",
+    "body": [
+      "const settings = Storage.getDataSync(\"settings\");"
+    ]
+  },
+  "FletBox widgets Storage.cleanup": {
+    "prefix": "Storage.cleanup",
+    "description": "Make a FletBox widgets Storage.cleanup widget",
+    "body": [
+      "Storage.deleteDataBySuffix(\"_tmp\");",
+      "Storage.clearAllData();"
     ]
   },
   "FletBox modules widgets createPage.minimal": {
@@ -7831,6 +9439,297 @@
       "        })",
       "    });",
       "};"
+    ]
+  },
+  "FletBox modules widgets createModule.state": {
+    "prefix": "createModule.state",
+    "description": "Make a FletBox modules widgets createModule.state widget",
+    "body": [
+      "import { useState, useWatchState, Column, Text, Button } from 'flet-box';",
+      "",
+      "// useState() guarda la clave en RamStore, as\u00ed que sobrevive a los re-render.",
+      "const [count, setCount, onCount] = useState('counter', 0);",
+      "const label = Text({ text: '0' });",
+      "",
+      "// Pasando el widget y el nombre del prop, el label se actualiza solo.",
+      "useState('counter', 0, label, 'text');",
+      "onCount((value) => console.log('counter ->', value));",
+      "",
+      "const stop = useWatchState('counter', (value) => console.log('watched', value));",
+      "",
+      "export const Counter = () => Column({",
+      "    gap: 12,",
+      "    alignItems: 'center',",
+      "    children: [label, Button({ text: '+1', onPress: () => setCount(count + 1) })]",
+      "});"
+    ]
+  },
+  "FletBox modules widgets createModule.router": {
+    "prefix": "createModule.router",
+    "description": "Make a FletBox modules widgets createModule.router widget",
+    "body": [
+      "import { initRouter, goTo, buildUrl, useParams, useQueryParams, getCurrentPath, getBasePath, subscribe } from 'flet-box';",
+      "",
+      "const routes = {",
+      "    '/': HomeScreen,",
+      "    '/users/:id': UserScreen",
+      "};",
+      "",
+      "// `base` fija el prefijo de despliegue cuando la app se sirve desde un subpath.",
+      "initRouter(routes, window.location.pathname, { base: '/my-app' });",
+      "",
+      "const off = subscribe((route) => console.log('now on', route));",
+      "",
+      "export const goUser = (id) => goTo(buildUrl('/users/:id', { id }, { tab: 'posts' }));",
+      "export const currentId = () => useParams().id;",
+      "export const currentTab = () => useQueryParams().tab;",
+      "export const path = () => getCurrentPath();",
+      "export const base = () => getBasePath();"
+    ]
+  },
+  "FletBox modules widgets createModule.storage": {
+    "prefix": "createModule.storage",
+    "description": "Make a FletBox modules widgets createModule.storage widget",
+    "body": [
+      "import { Storage, Session, RamStore, subscribeRam } from 'flet-box';",
+      "",
+      "export const saveSettings = (settings) => Storage.saveData('settings', settings);",
+      "export const loadSettings = () => Storage.getDataSync('settings') || { theme: 'light' };",
+      "",
+      "// Session dura lo que la pesta\u00f1a; RamStore s\u00f3lo mientras la app est\u00e1 viva.",
+      "Session.saveSession('draft', { title: 'Untitled' });",
+      "RamStore.saveRam('scrollY', 0);",
+      "",
+      "const off = subscribeRam((key, newValue, oldValue) => console.log(key, newValue, oldValue));",
+      "",
+      "export const usage = () => ({",
+      "    local: Storage.getStorageSize(),",
+      "    session: Session.getSessionSize(),",
+      "    ram: RamStore.getRamItemCount()",
+      "});"
+    ]
+  },
+  "FletBox modules widgets createModule.theme": {
+    "prefix": "createModule.theme",
+    "description": "Make a FletBox modules widgets createModule.theme widget",
+    "body": [
+      "import { ThemeProvider, useTheme, setTheme, getTheme, toggleTheme, subscribeTheme, applySystemTheme, watchSystemTheme, palettes, colors, Container, Text } from 'flet-box';",
+      "",
+      "export const ThemedApp = () => ThemeProvider({",
+      "    theme: 'dark',",
+      "    children: Container({ child: Text({ text: 'Themed' }) })",
+      "});",
+      "",
+      "const { colors: liveColors, getColor } = useTheme();",
+      "",
+      "subscribeTheme((name) => console.log('theme is now', name));",
+      "setTheme(getTheme() === 'light' ? 'dark' : 'light');",
+      "applySystemTheme();",
+      "watchSystemTheme();",
+      "",
+      "export const accent = palettes.light.primary;",
+      "export const surface = colors.surface;"
+    ]
+  },
+  "FletBox modules widgets createModule.http": {
+    "prefix": "createModule.http",
+    "description": "Make a FletBox modules widgets createModule.http widget",
+    "body": [
+      "import { httpRequest, httpGet, httpPost, httpPut, httpPatch, httpDelete, buildUrl, retry, withMinDelay } from 'flet-box';",
+      "",
+      "const API = 'https://api.example.com';",
+      "",
+      "export const fetchUsers = () => httpGet(`${API}/users`, { params: { page: 1 }, timeout: 5000 });",
+      "export const createUser = (user) => httpPost(`${API}/users`, { body: user, headers: { Authorization: 'Bearer token' } });",
+      "export const updateUser = (id, user) => httpPut(buildUrl(`${API}/users/:id`, { id }), { body: user });",
+      "export const patchUser = (id, data) => httpPatch(buildUrl(`${API}/users/:id`, { id }), { body: data });",
+      "export const removeUser = (id) => httpDelete(buildUrl(`${API}/users/:id`, { id }));",
+      "",
+      "// httpRequest() es la forma expl\u00edcita cuando el verbo no es un helper.",
+      "export const search = (q) => httpRequest('GET', `${API}/search`, { params: { q } });",
+      "",
+      "export const fetchWithRetry = () => retry(() => withMinDelay(httpGet(`${API}/users`), 300), 3, 200);"
+    ]
+  },
+  "FletBox modules widgets createModule.animations": {
+    "prefix": "createModule.animations",
+    "description": "Make a FletBox modules widgets createModule.animations widget",
+    "body": [
+      "import { animate, animateAsync, fadeIn, fadeOut, pulse, stopAnimation, injectKeyframes, AnimatedBox, Container, Text, colors } from 'flet-box';",
+      "",
+      "const box = Container({ width: 120, height: 120, bgColor: colors.primary });",
+      "",
+      "animate(box, 'opacity', 1, 0.2, 400, 'ease-out');",
+      "fadeIn(box, 300);",
+      "fadeOut(box, 300);",
+      "pulse(box, 600);",
+      "",
+      "export const grow = async () => {",
+      "    await animateAsync(box, 'width', 120, 240, 500, 'ease-in');",
+      "    stopAnimation(box, 'opacity');",
+      "};",
+      "",
+      "// El keyframe se inyecta una vez y despu\u00e9s se referencia por nombre.",
+      "injectKeyframes('float', '0% { transform: translateY(0); } 100% { transform: translateY(-8px); }');",
+      "",
+      "export const Loader = () => AnimatedBox({",
+      "    child: Text({ text: 'Loading' }),",
+      "    animations: [{ effect: 'scale', from: 1, to: 1.2, duration: 500 }]",
+      "});"
+    ]
+  },
+  "FletBox modules widgets createModule.device": {
+    "prefix": "createModule.device",
+    "description": "Make a FletBox modules widgets createModule.device widget",
+    "body": [
+      "import { device, os, dimensions, clipboard, random } from 'flet-box';",
+      "",
+      "export const describe = () => ({",
+      "    mobile: device.isMobile(),",
+      "    tablet: device.isTablet(),",
+      "    desktop: device.isDesktop(),",
+      "    touch: device.isTouch(),",
+      "    orientation: device.orientation(),",
+      "    system: os.name(),",
+      "    release: os.version(),",
+      "    viewport: `${dimensions.getWidth()}x${dimensions.getHeight()}`",
+      "});",
+      "",
+      "device.onOrientationChange((next) => console.log('rotated to', next));",
+      "dimensions.addListener((size) => console.log(size.width, size.height));",
+      "",
+      "export const copyToken = async (token) => {",
+      "    await clipboard.copy(token);",
+      "    return clipboard.read();",
+      "};",
+      "",
+      "export const sampleUser = () => ({",
+      "    id: random.id(),",
+      "    name: random.fullName(),",
+      "    email: random.email(),",
+      "    color: random.hexColor()",
+      "});"
+    ]
+  },
+  "FletBox modules widgets createModule.markdown": {
+    "prefix": "createModule.markdown",
+    "description": "Make a FletBox modules widgets createModule.markdown widget",
+    "body": [
+      "import { Markdown, CodeViewer, markdownToWidgets, tokenize, generateHighlightedHtml, highlightColors, escapeHtml, colors } from 'flet-box';",
+      "",
+      "export const Article = ({ source }) => Markdown({",
+      "    text: source,",
+      "    linkColor: colors.primary,",
+      "    allowDangerousHtml: false",
+      "});",
+      "",
+      "export const Snippet = ({ code }) => CodeViewer({ code, title: 'example.js', showLineNumbers: true });",
+      "",
+      "// tokenize() es el lexer que usa CodeViewer; highlightColors mapea tipo de token a color.",
+      "export const tokens = (code) => tokenize(code);",
+      "export const html = (code) => generateHighlightedHtml(code);",
+      "export const keywordColor = highlightColors.keyword;",
+      "export const safeText = (raw) => escapeHtml(raw);",
+      "export const blocks = () => markdownToWidgets('# Title\\n\\nBody text');"
+    ]
+  },
+  "FletBox modules widgets createModule.pwa": {
+    "prefix": "createModule.pwa",
+    "description": "Make a FletBox modules widgets createModule.pwa widget",
+    "body": [
+      "import { InstallButton, Button, Column, Text, isPWAInstalled, installPWA, updatePWA, removePWA } from 'flet-box';",
+      "",
+      "if (isPWAInstalled()) console.log('running as an installed app');",
+      "",
+      "export const PwaRow = () => Column({",
+      "    gap: 8,",
+      "    children: [",
+      "        Text({ text: 'Keep the app up to date' }),",
+      "        InstallButton({ text: 'Install' }),",
+      "        Button({ text: 'Update', onPress: updatePWA }),",
+      "        Button({ text: 'Uninstall', onPress: () => installPWA() || removePWA() })",
+      "    ]",
+      "});"
+    ]
+  },
+  "FletBox modules widgets createModule.customWidget": {
+    "prefix": "createModule.customWidget",
+    "description": "Make a FletBox modules widgets createModule.customWidget widget",
+    "body": [
+      "import { WidgetFactory, useState, Column, Text, Button, colors } from 'flet-box';",
+      "",
+      "// La f\u00e1brica es el \u00fanico renderizador: props dentro, HTMLElement fuera.",
+      "export const Panel = (props) => WidgetFactory('section', {",
+      "    widgetName: 'Panel',",
+      "    padding: 16,",
+      "    borderRadius: 12,",
+      "    bgColor: colors.surface,",
+      "    ...props",
+      "});",
+      "",
+      "export const Counter = () => {",
+      "    const [count, setCount] = useState('custom-counter', 0);",
+      "    return Column({",
+      "        gap: 8,",
+      "        children: [",
+      "            Text({ text: `${count}` }),",
+      "            Button({ text: '+1', onPress: () => setCount((prev) => prev + 1) })",
+      "        ]",
+      "    });",
+      "};"
+    ]
+  },
+  "FletBox modules widgets createModule.ads": {
+    "prefix": "createModule.ads",
+    "description": "Make a FletBox modules widgets createModule.ads widget",
+    "body": [
+      "import { AdMob, AdSense, Column, Text } from 'flet-box';",
+      "",
+      "// AdMob habla con el plugin de Capacitor; sin \u00e9l, muestra el placeholder.",
+      "export const Banner = () => AdMob({",
+      "    adId: 'ca-app-pub-3940256099942544/6300978111',",
+      "    isTesting: true,",
+      "    position: 'bottom',",
+      "    size: 'ADAPTIVE_BANNER'",
+      "});",
+      "",
+      "export const WebUnit = () => AdSense({",
+      "    client: 'ca-pub-1234567890123456',",
+      "    slot: '1234567890',",
+      "    format: 'fluid',",
+      "    test: true",
+      "});",
+      "",
+      "export const AdRow = () => Column({",
+      "    gap: 16,",
+      "    children: [Text({ text: 'Sponsored' }), WebUnit(), Banner()]",
+      "});"
+    ]
+  },
+  "FletBox modules widgets createModule.dataTools": {
+    "prefix": "createModule.dataTools",
+    "description": "Make a FletBox modules widgets createModule.dataTools widget",
+    "body": [
+      "import { createList, mapList, dict, unique, chunk, sort, shuffle, memo, random } from 'flet-box';",
+      "",
+      "export const users = createList({",
+      "    id: () => random.id(),",
+      "    name: () => random.fullName(),",
+      "    age: () => random.number(18, 80),",
+      "    active: () => random.boolean()",
+      "}, 20);",
+      "",
+      "export const names = mapList(users, (user) => user.name);",
+      "export const uniqueNames = unique(names);",
+      "export const pages = chunk(uniqueNames, 5);",
+      "export const ranked = sort(users, 'name', 'asc');",
+      "export const mixed = shuffle(users);",
+      "",
+      "// dict() envuelve un objeto plano con sus helpers.",
+      "export const index = dict({ total: users.length, active: users.filter((u) => u.active).length });",
+      "",
+      "const square = memo((n) => n * n);",
+      "export const expensive = () => square(12);"
     ]
   }
 }

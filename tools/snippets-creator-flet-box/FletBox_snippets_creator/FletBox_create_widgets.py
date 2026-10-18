@@ -75,7 +75,11 @@ only_controls = {
     alignItems: "center",
     children: [Avatar({ name: "User" }), Text({ text: "Welcome" })]
 })''',
-'Column.full': '''Column({
+'Column.full': '''const items = ["Note 1", "Note 2", "Note 3"];
+const Header = () => Text({ text: "Sidebar", fontWeight: "bold" });
+const Footer = () => Text({ text: "3 notes", fontSize: 12 });
+
+Column({
     width: "100%",
     height: "100%",
     padding: padding(24),
@@ -443,7 +447,7 @@ only_controls = {
     padding: "14px 20px",
     margin: 20,
     elevation: 4,
-    onShow: () => analytics.log("snackbar_shown"),
+    onShow: () => console.log("snackbar shown"),
     onClose: () => console.log("closed")
 })''',
 
@@ -644,8 +648,12 @@ only_controls = {
 'Router.destroyDrawer': 'destroyDrawer()',
 
 'ListView.basic': 'ListView({ data: ["A", "B"], renderItem: (item) => Text({ text: item }) })',
-'ListView.normal': 'ListView({ data: users, renderItem: (user) => ListTile({ title: user.name }), itemSize: 70 })',
-'ListView.full': '''ListView({
+'ListView.normal': 'const users = [{ name: "Ada" }, { name: "Linus" }];\nListView({ data: users, renderItem: (user) => ListTile({ title: user.name }), itemSize: 70 })',
+'ListView.full': '''const products = [{ name: "Keyboard" }, { name: "Mouse" }];
+const isLoading = false;
+const hasMore = true;
+
+ListView({
     data: products,
     renderItem: (item, idx) => Card({ child: Text({ text: item.name }) }),
     height: 500,
@@ -666,8 +674,10 @@ only_controls = {
 })''',
 
 'GridView.basic': 'GridView({ data: ["A", "B"], renderItem: (item) => Text({ text: item }), columns: 2 })',
-'GridView.normal': 'GridView({ data: images, renderItem: (img) => Image({ src: img }), columns: 3, spacing: 8 })',
-'GridView.full': '''GridView({
+'GridView.normal': 'const images = ["/a.png", "/b.png", "/c.png"];\nGridView({ data: images, renderItem: (img) => Image({ src: img }), columns: 3, spacing: 8 })',
+'GridView.full': '''const gallery = [{ url: "/a.png" }, { url: "/b.png" }];
+
+GridView({
     data: gallery,
     renderItem: (item) => Card({ child: Image({ src: item.url, fit: "cover" }) }),
     columns: 4,
@@ -679,8 +689,10 @@ only_controls = {
 })''',
 
 'DataTable.basic': 'DataTable({ columns: ["Name", "Age"], rows: [{ Name: "John", Age: 30 }] })',
-'DataTable.normal': 'DataTable({ columns: [{ key: "id", label: "ID" }, { key: "name", label: "Name" }], rows: users, onRowClick: (row) => console.log(row) })',
-'DataTable.full': '''DataTable({
+'DataTable.normal': 'const users = [{ id: 1, name: "Ada" }, { id: 2, name: "Linus" }];\nDataTable({ columns: [{ key: "id", label: "ID" }, { key: "name", label: "Name" }], rows: users, onRowClick: (row) => console.log(row) })',
+'DataTable.full': '''const userList = [{ id: 1, name: "Ada", status: "open" }];
+
+DataTable({
     columns: [
         { key: "id", label: "#", align: "center" },
         { key: "name", label: "Name", format: (val) => val.toUpperCase() },
@@ -743,7 +755,7 @@ only_controls = {
 })''',
 
 'CodeViewer.basic': 'CodeViewer({ code: "console.log(\'hello\')" })',
-'CodeViewer.normal': 'CodeViewer({ code: jsCode, title: "app.js", showLineNumbers: true })',
+'CodeViewer.normal': 'const jsCode = "const a = 1;\\nconsole.log(a);";\nCodeViewer({ code: jsCode, title: "app.js", showLineNumbers: true })',
 'CodeViewer.full': '''CodeViewer({
     code: `function hello() { return "world"; }`,
     title: "example.js",
@@ -987,7 +999,7 @@ only_controls = {
 })''',
 
 'TreeView.basic': 'TreeView({ nodes: [{ id: "1", label: "Root" }] })',
-'TreeView.normal': 'TreeView({ nodes: treeData, onSelect: (node) => console.log(node), selectable: true })',
+'TreeView.normal': 'const treeData = [{ id: "1", label: "src", children: [{ id: "2", label: "index.js" }] }];\nTreeView({ nodes: treeData, onSelect: (node) => console.log(node), selectable: true })',
 'TreeView.full': '''TreeView({
     nodes: [
         { id: "1", label: "Documents", icon: "folder", children: [
@@ -1116,7 +1128,7 @@ only_controls = {
 })''',
 
 'Markdown.basic': 'Markdown({ text: "# Hello" })',
-'Markdown.normal': 'Markdown({ text: mdSource, fontSize: 14, linkColor: colors.primary })',
+'Markdown.normal': 'const mdSource = "# Title\\n\\nA [link](https://fletbox.dev) with **bold** text.";\nMarkdown({ text: mdSource, fontSize: 14, linkColor: colors.primary })',
 'Markdown.full': r'''Markdown({
     text: `
 # Main title
@@ -1149,9 +1161,9 @@ console.log("code block");
 
 'Inspector.basic': 'Inspector(widget)',
 'Inspector.normal': 'printWidgetCode(myComponent)',
-'Inspector.full': 'inspectWidget(container) ; // logs to console',
+'Inspector.full': '// inspectWidget walks the tree and logs every node.\nconst panel = Column({ children: [Text({ text: "Hello" })] });\ninspectWidget(panel);',
 
-'InstallButton.basic': 'InstallButton()',
+'InstallButton.basic': 'InstallButton({ text: "📲 Install" })',
 'InstallButton.normal': 'InstallButton({ text: "📲 Get App", variant: "filled", onInstalled: () => trackInstall() })',
 'InstallButton.full': '''InstallButton({
     text: "Install FletBox App",
@@ -1282,4 +1294,117 @@ console.log("code block");
     onHover: (slice, idx) => console.log(slice, idx),
     onComplete: () => console.log("done")
 })''',
+
+# =========================================================================
+# EXPORTACIONES SIN EJEMPLO: fábrica, montaje, monetización y stores
+# =========================================================================
+
+'App.basic': 'App(Text({ text: "Hello" }))',
+'App.normal': '''App(
+    Column({
+        padding: padding(24),
+        gap: 12,
+        children: [
+            Text({ text: "Dashboard", type: "h1" }),
+            Button({ text: "Start", onPress: () => console.log("go") })
+        ]
+    })
+)''',
+'App.full': '''const notes = [{ title: "Groceries" }, { title: "Ideas" }];
+
+const screen = Scaffold({
+    appBar: AppBar({ title: "Notes" }),
+    body: ListView({ data: notes, renderItem: (note) => Text({ text: note.title }) })
+});
+
+// App() resets #root and stretches the widget; runApp() owns the lifecycle.
+App(screen);''',
+
+'WidgetFactory.basic': 'const el = WidgetFactory("div", { widgetName: "Panel", text: "Hello" });',
+'WidgetFactory.tag': 'WidgetFactory({ tag: "section", widgetName: "Section", padding: 16, children: [Text({ text: "Inside" })] })',
+'WidgetFactory.full': '''const card = WidgetFactory("article", {
+    widgetName: "CardShell",
+    class: "card",
+    padding: 16,
+    borderRadius: 12,
+    bgColor: colors.surface,
+    children: [Text({ text: "Title", weight: "bold" })],
+    onPress: () => console.log("pressed"),
+    onUnmount: () => console.log("removed")
+});
+document.body.appendChild(card);''',
+
+'AdMob.basic': 'AdMob({ adId: "ca-app-pub-3940256099942544/6300978111" })',
+'AdMob.normal': '''AdMob({
+    adId: "ca-app-pub-3940256099942544/6300978111",
+    isTesting: true,
+    position: "bottom",
+    size: "ADAPTIVE_BANNER",
+    margin: 0,
+    placeholder: true,
+    label: "AdMob banner",
+    onLoaded: (widget) => console.log("banner shown"),
+    onFailed: (error) => console.error(error.message)
+})''',
+'AdMob.full': '''const banner = AdMob({
+    adId: "ca-app-pub-3940256099942544/6300978111",
+    interstitialId: "ca-app-pub-3940256099942544/4411468917",
+    rewardedId: "ca-app-pub-3940256099942544/1751961742",
+    autoInitialize: true,
+    autoShow: false,
+    width: "100%",
+    height: 90,
+    bgColor: colors.surface,
+    borderColor: colors.border,
+    onDismissed: () => console.log("full-screen ad closed")
+});
+
+banner.show();
+banner.showInterstitial();
+banner.showRewarded();''',
+
+'AdSense.basic': 'AdSense({ client: "ca-pub-1234567890123456", slot: "1234567890" })',
+'AdSense.normal': '''AdSense({
+    client: "ca-pub-1234567890123456",
+    slot: "1234567890",
+    format: "fluid",
+    responsive: true,
+    test: true,
+    onLoad: (widget) => console.log("filled"),
+    onError: (error) => console.error(error.message)
+})''',
+'AdSense.full': '''const unit = AdSense({
+    client: "ca-pub-1234567890123456",
+    slot: "1234567890",
+    width: "100%",
+    height: 250,
+    placeholder: true,
+    label: "Advertisement",
+    bgColor: colors.surface,
+    color: colors.textSecondary,
+    borderColor: colors.border
+});
+
+unit.refresh();''',
+
+'RamStore.basic': '''RamStore.saveRam("user", { name: "Ana" });
+RamStore.updateRam("user", { name: "Ana", vip: true });
+console.log(RamStore.getRam("user"), RamStore.hasRam("user"));''',
+'RamStore.all': 'console.log(RamStore.getAllRam(), RamStore.getAllRamKeys(), RamStore.getRamItemCount(), RamStore.isRamAvailable());',
+'RamStore.subscribe': 'const unsubscribe = RamStore.subscribeRam((key, newValue, oldValue) => console.log(key, newValue, oldValue));',
+'RamStore.clear': 'RamStore.deleteRam("user");\nRamStore.clearAllRam();',
+
+'Session.basic': '''Session.saveSession("token", "abc123");
+const token = Session.getSession("token");
+console.log(Session.hasSession("token"), Session.getSessionItemCount());''',
+'Session.all': 'console.log(Session.getAllSessionKeys(), Session.getAllSessionData(), Session.getSessionSize(), Session.isSessionAvailable());',
+'Session.sync': 'const token = Session.getSessionSync("token");',
+'Session.cleanup': 'Session.deleteSessionByPrefix("draft_");\nSession.deleteSessionBySuffix("_temp");\nSession.clearAllSession();',
+
+'Storage.basic': '''Storage.saveData("settings", { theme: "dark" });
+const settings = Storage.getData("settings");
+console.log(Storage.hasData("settings"), Storage.getItemCount());''',
+'Storage.all': 'console.log(Storage.getAllKeys(), Storage.getAllData(), Storage.getStorageSize(), Storage.isStorageAvailable());',
+'Storage.sync': 'const settings = Storage.getDataSync("settings");',
+'Storage.cleanup': 'Storage.deleteDataBySuffix("_tmp");\nStorage.clearAllData();',
 }

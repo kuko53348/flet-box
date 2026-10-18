@@ -18,7 +18,7 @@ attrs_all_placeholders_complete = {
 
     # ---------- CLIPBOARD ----------
     'clipboard.copy': 'clipboard.copy("flet-box")',
-    'clipboard.copyWithFeedback': 'clipboard.copyWithFeedback("flet-box", button)',
+    'clipboard.copyWithFeedback': '// The element shows "✓" and flashes green for a second, then restores itself.\nconst button = Button({ text: "Copy token" });\nclipboard.copyWithFeedback("flet-box", button);',
     'clipboard.read': 'await clipboard.read()',
 
     # ---------- COLOR ----------
@@ -36,13 +36,13 @@ attrs_all_placeholders_complete = {
 
     # ---------- CREATE LIST ----------
     'createList': 'createList({ id: () => random.id(), name: random.fullName() }, 10)',
-    'createList.fromData': 'createList.fromData(apiData, { id: (item) => item.userId })',
+    'createList.fromData': 'const apiData = [{ userId: 7, name: "Ada" }, { userId: 8, name: "Linus" }];\nconst rows = createList.fromData(apiData, { id: (item) => item.userId, label: (item) => item.name });',
     'createList.range': 'createList.range(1, 10)',
     'createList.repeat': 'createList.repeat({ active: true }, 5)',
-    'createList.paginate': 'createList.paginate(users, 2, 20)',
-    'createList.search': 'createList.search(users, "flet-box", ["name", "description"])',
-    'createList.sort': 'createList.sort(users, "age", "desc")',
-    'createList.groupBy': 'createList.groupBy(users, "status")',
+    'createList.paginate': 'const users = ["Ada", "Linus", "Grace", "Alan", "Edsger"];\nconst page = createList.paginate(users, 2, 2);',
+    'createList.search': 'const users = [{ name: "Ada Lovelace" }, { name: "Alan Turing" }];\nconst found = createList.search(users, "ada", ["name"]);',
+    'createList.sort': 'const users = [{ name: "Ada", age: 36 }, { name: "Linus", age: 24 }];\nconst byAge = createList.sort(users, "age", "desc");',
+    'createList.groupBy': 'const users = [{ name: "Ada", status: "open" }, { name: "Linus", status: "done" }];\nconst grouped = createList.groupBy(users, "status");',
 
     # ---------- DELAY ----------
     'delay_fn': 'await delay(1000)',
@@ -230,7 +230,7 @@ attrs_all_placeholders_complete = {
 
     # ---------- markdownParser utils ----------
     'markdownToWidgets': 'markdownToWidgets("# Hello\\n\\nThis is **bold**")',
-    'parseMarkdownToWidgets': 'parseMarkdownToWidgets(markdownText)',
+    'parseMarkdownToWidgets': 'const nodes = parseMarkdownToWidgets("# Title\\n\\n- one\\n- two");',
     'parseInlineToWidgets': 'parseInlineToWidgets("text with **bold**")',
 
     # ---------- mediaTime utils ----------
@@ -378,10 +378,6 @@ attrs_all_placeholders_complete = {
     'onMouseLeave': 'onMouseLeave: () => console.log("leave"),',
     'onWheel': 'onWheel: (e) => console.log(e.deltaY),',
 
-    # ---------- Identidad y escape hatch ----------
-    'key': 'key: item.id,',
-    'style': 'style: { marginTop: 10 },',
-
     # ---------- Estado ----------
     'disabled': 'disabled: true,',
     'readonly': 'readonly: true,',
@@ -491,7 +487,7 @@ attrs_all_placeholders_complete = {
     'poster': 'poster: "thumbnail.jpg",',
 
     # ---------- Button ----------
-    'buttonText': 'text: "Click me",',
+    'buttonLabel': 'text: "Click me",',
     'onLongPress': 'onLongPress: () => console.log("long press"),',
 
     # ---------- Switch ----------
@@ -933,4 +929,264 @@ attrs_all_placeholders_complete = {
     # ---------- Animated Box ----------
     'timing': 'timing: "ease",',
     'fillMode': 'fillMode: "forwards",',
+
+    # =========================================================================
+    # 4. COBERTURA COMPLETA DEL REGISTRO DE PROPS
+    #
+    # Cada clave de este bloque es una entrada del banco de datos de
+    # `translateProps.js` que ninguna otra snippet usaba todavía. Los valores
+    # siguen las reglas del motor: un número en un prop de unidad `rem` son
+    # píxeles sobre base 16, los props `style: none` quieren la cadena CSS
+    # exacta y los de tipo `attribute` se escriben como atributos DOM.
+    # =========================================================================
+
+    # ---------- Dimensiones (atajos) ----------
+    'w': 'w: 240,',
+    'h': 'h: 160,',
+    'minW': 'minW: 120,',
+    'maxW': 'maxW: 480,',
+    'minH': 'minH: 80,',
+    'minHeight': 'minHeight: 80,',
+    'maxH': 'maxH: 320,',
+
+    # ---------- Espaciado (atajo corto y su forma larga) ----------
+    'p': 'p: 16,',
+    'm': 'm: 12,',
+    'pt': 'pt: 8,',
+    'paddingTop': 'paddingTop: 8,',
+    'pr': 'pr: 12,',
+    'paddingRight': 'paddingRight: 12,',
+    'pb': 'pb: 16,',
+    'paddingBottom': 'paddingBottom: 16,',
+    'pl': 'pl: 12,',
+    'paddingLeft': 'paddingLeft: 12,',
+    'mt': 'mt: 8,',
+    'marginTop': 'marginTop: 8,',
+    'mr': 'mr: 8,',
+    'marginRight': 'marginRight: 8,',
+    'mb': 'mb: 16,',
+    'marginBottom': 'marginBottom: 16,',
+    'ml': 'ml: 12,',
+    'marginLeft': 'marginLeft: 12,',
+    'px': 'px: 20,',
+    'py': 'py: 12,',
+    'mx': 'mx: 24,',
+    'my': 'my: 16,',
+    'marginHorizontal': 'marginHorizontal: 24,',
+    'marginVertical': 'marginVertical: 16,',
+
+    # ---------- Posición y capa ----------
+    'pos': 'pos: "absolute",',
+    'z': 'z: 10,',
+    'inset': 'inset: 16,',
+
+    # ---------- Fondo ----------
+    'bg': 'bg: colors.surface,',
+    'bgImage': "bgImage: \"url('/assets/hero.jpg')\",",
+    'bgSize': 'bgSize: "cover",',
+    'bgPosition': 'bgPosition: "center",',
+    'bgRepeat': 'bgRepeat: "no-repeat",',
+
+    # ---------- Tipografía ----------
+    'fontWeight': 'fontWeight: "bold",',
+    'lineH': 'lineH: 1.5,',
+    'letterSpace': 'letterSpace: 1,',
+    'textDecoration': 'textDecoration: "underline",',
+    'textTransform': 'textTransform: "uppercase",',
+    'whiteSpace': 'whiteSpace: "nowrap",',
+    'wordBreak': 'wordBreak: "break-word",',
+    'textOverflow': 'textOverflow: "ellipsis",',
+    'buttonText': 'buttonText: "Save",',
+    'textContent': 'textContent: "Plain text",',
+
+    # ---------- Flex y layout ----------
+    'display': 'display: "grid",',
+    'justify': 'justify: "center",',
+    'wrap': 'wrap: "wrap",',
+    'flexGrow': 'flexGrow: 1,',
+    'flexShrink': 'flexShrink: 0,',
+    'flexBasis': 'flexBasis: 200,',
+    'boxSizing': 'boxSizing: "border-box",',
+    'overflowX': 'overflowX: "auto",',
+    'overflowY': 'overflowY: "hidden",',
+    'objectFit': 'objectFit: "cover",',
+
+    # ---------- Bordes y esquinas ----------
+    'borderTop': 'borderTop: "1px solid #e2e8f0",',
+    'borderBottom': 'borderBottom: "1px solid #e2e8f0",',
+    'borderLeft': 'borderLeft: "1px solid #e2e8f0",',
+    'borderTopLeftRadius': 'borderTopLeftRadius: 8,',
+    'borderTopRightRadius': 'borderTopRightRadius: 8,',
+    'borderBottomLeftRadius': 'borderBottomLeftRadius: 8,',
+    'borderBottomRightRadius': 'borderBottomRightRadius: 8,',
+    'roundedTop': 'roundedTop: 12,',
+    'roundedBottom': 'roundedBottom: 12,',
+    'roundedLeft': 'roundedLeft: 12,',
+    'roundedRight': 'roundedRight: 12,',
+    'borderRadiusBottom': 'borderRadiusBottom: 12,',
+    'borderRadiusLeft': 'borderRadiusLeft: 12,',
+    'borderRadiusRight': 'borderRadiusRight: 12,',
+
+    # ---------- Interacción y visibilidad ----------
+    'visibility': 'visibility: "hidden",',
+    'pointerEvents': 'pointerEvents: "none",',
+    'userSelect': 'userSelect: "none",',
+    'touchAction': 'touchAction: "none",',
+    'willChange': 'willChange: "transform",',
+
+    # ---------- Atributos DOM ----------
+    'class': 'class: "panel",',
+    'href': 'href: "https://fletbox.dev",',
+    'role': 'role: "button",',
+    'lang': 'lang: "es",',
+    'dir': 'dir: "rtl",',
+    'tabIndex': 'tabIndex: 0,',
+    'draggable': 'draggable: true,',
+    'hidden': 'hidden: true,',
+    'for': 'for: "email-input",',
+    'htmlFor': 'htmlFor: "email-input",',
+    'autofocus': 'autofocus: true,',
+    'spellcheck': 'spellcheck: false,',
+
+    # ---------- Eventos del DOM ----------
+    'onclick': 'onclick: () => console.log("clicked"),',
+    'onKeyDown': 'onKeyDown: (e) => console.log(e.key),',
+    'onKeyUp': 'onKeyUp: (e) => console.log(e.key),',
+    'onKeyPress': 'onKeyPress: (e) => console.log(e.key),',
+    'onMouseDown': 'onMouseDown: (e) => console.log(e.button),',
+    'onMouseUp': 'onMouseUp: (e) => console.log(e.button),',
+    'onMouseMove': 'onMouseMove: (e) => console.log(e.clientX, e.clientY),',
+    'onTouchStart': 'onTouchStart: (e) => console.log(e.touches[0].clientX),',
+    'onTouchMove': 'onTouchMove: (e) => console.log(e.touches[0].clientY),',
+    'onTouchEnd': 'onTouchEnd: (e) => console.log(e.changedTouches[0].clientX),',
+
+    # ---------- Posicionamiento dentro de un Stack ----------
+    # `stackPosition` sólo actúa cuando el padre declara position: "stack".
+    'stackStart': 'start: 16, // parent Stack needs position: "stack"',
+    'stackEnd': 'end: 16, // parent Stack needs position: "stack"',
+    'stackCenterX': 'centerX: true, // parent Stack needs position: "stack"',
+    'stackCenterY': 'centerY: true, // parent Stack needs position: "stack"',
+    'stackCenter': 'center: true, // parent Stack needs position: "stack"',
+    'stackFullHeight': 'fullHeight: true, // parent Stack needs position: "stack"',
+    'stackFull': 'full: true, // parent Stack needs position: "stack"',
+
+    # ---------- Despliegue ----------
+    'basePath': 'basePath: "/flet-box-docs",',
+
+    # ---------- AppBar / Card / Carousel / Image / Input ----------
+    'actionsGap': 'actionsGap: 12,',
+    'showBorder': 'showBorder: false,',
+    'buttonTop': 'buttonTop: "46%",',
+    'imageCircular': 'circular: true,',
+    'onIconPress': 'onIconPress: () => console.log("icon pressed"),',
+
+    # ---------- ListTile ----------
+    'titleProps': 'titleProps: { size: 16, weight: "bold" },',
+    'subtitleProps': 'subtitleProps: { color: colors.textSecondary },',
+    'descriptionProps': 'descriptionProps: { color: colors.textSecondary, size: 12 },',
+
+    # ---------- DroppBox (estado activo del área de soltado) ----------
+    'activeBorderStyle': 'activeBorderStyle: "dashed",',
+    'activeBorderWidth': 'activeBorderWidth: 2,',
+    'activeShadow': 'activeShadow: "0 0 12px rgba(99, 102, 241, 0.4)",',
+
+    # ---------- Circular Bar ----------
+    'gradientAngle': 'gradientAngle: 135,',
+    'customValueFormatter': 'customValueFormatter: (value, max) => `${value}/${max} MB`,',
+
+    # ---------- Circular Chart ----------
+    'startAngle': 'startAngle: 0,',
+    'endAngle': 'endAngle: Math.PI,',
+    'innerRadius': 'innerRadius: 40,',
+    'semiCircle': 'semiCircle: "top",',
+    'defaultColors': 'defaultColors: ["#6366f1", "#22c55e", "#f59e0b"],',
+    'sliceBorderColor': 'sliceBorderColor: "#ffffff",',
+    'sliceBorderWidth': 'sliceBorderWidth: 2,',
+
+    # ---------- Markdown (estilo de bloque) ----------
+    'markdownSource': 'source: "# Hello\\n\\nSome **bold** text",',
+    'headingMargin': 'headingMargin: "0.67em 0",',
+    'codeFontFamily': 'codeFontFamily: "ui-monospace, Menlo, monospace",',
+    'markdownCodeBorderRadius': 'codeBorderRadius: 4,',
+    'codePadding': 'codePadding: "0.2em 0.45em",',
+    'prePadding': 'prePadding: "1em",',
+    'preMargin': 'preMargin: "1em 0",',
+    'blockquoteColor': 'blockquoteColor: colors.textSecondary,',
+    'blockquoteBorderWidth': 'blockquoteBorderWidth: 4,',
+    'blockquotePadding': 'blockquotePadding: "0 1em",',
+    'blockquoteMargin': 'blockquoteMargin: "1em 0",',
+    'tableBorderColor': 'tableBorderColor: colors.gray300,',
+    'tableCellPadding': 'tableCellPadding: "0.4em 0.75em",',
+    'tableHeaderBgColor': 'tableHeaderBgColor: colors.gray100,',
+    'listMargin': 'listMargin: "0em 0",',
+    'listPadding': 'listPadding: "0 0 0 1em",',
+    'listItemMargin': 'listItemMargin: "0.0em 0",',
+    'imageMaxWidth': 'imageMaxWidth: "100%",',
+    'imageBorderRadius': 'imageBorderRadius: 8,',
+
+    # ---------- AdMob ----------
+    'adId': 'adId: "ca-app-pub-3940256099942544/6300978111",',
+    'interstitialId': 'interstitialId: "ca-app-pub-3940256099942544/4411468917",',
+    'rewardedId': 'rewardedId: "ca-app-pub-3940256099942544/1751961742",',
+    'isTesting': 'isTesting: true,',
+    'autoShow': 'autoShow: false,',
+    'autoInitialize': 'autoInitialize: true,',
+    'admobPlugin': 'plugin: window.Capacitor?.Plugins?.AdMob,',
+    'onLoaded': 'onLoaded: (widget) => console.log("banner ready"),',
+    'onFailed': 'onFailed: (error) => console.error(error.message),',
+    'onDismissed': 'onDismissed: () => console.log("ad dismissed"),',
+
+    # ---------- AdSense ----------
+    'adsenseClient': 'client: "ca-pub-1234567890123456",',
+    'adsenseSlot': 'slot: "1234567890",',
+    'adsenseResponsive': 'responsive: false,',
+    'adsenseTest': 'test: true,',
+
+    # =========================================================================
+    # 5. UTILIDADES DE BAJO NIVEL DEL FRAMEWORK
+    #
+    # Exportaciones públicas que ninguna snippet alcanzaba: efectos visuales,
+    # inserción en el DOM, PWA, HMR, router y utilidades de texto.
+    # =========================================================================
+
+    # ---------- Efectos visuales ----------
+    'applyStripes': 'const bar = ProgressBar({ value: 60 });\napplyStripes(bar, { color: "rgba(255, 255, 255, 0.15)", size: 10, angle: 45, animated: true, duration: "0.5s" });',
+    'removeStripes': 'const bar = ProgressBar({ value: 60 });\napplyStripes(bar, { animated: true });\nremoveStripes(bar);',
+    'applyShimmer': 'const placeholder = Skeleton({ variant: "text" });\napplyShimmer(placeholder, { highlightColor: "rgba(255, 255, 255, 0.35)", baseColor: "rgba(0, 0, 0, 0.05)", duration: "1.5s" });',
+    'applyGlow': 'const payButton = Button({ text: "Pay" });\napplyGlow(payButton, { color: "rgba(0, 122, 255, 0.5)", intensity: 12, duration: "2s" });',
+    'applyIndeterminate': 'const track = Container({ height: 4 });\napplyIndeterminate(track, { duration: "1.5s", width: "50%" });',
+    'applyPulse': 'const dot = Icon({ name: "circle" });\napplyPulse(dot, { scale: 1.05, duration: "0.3s" });',
+    'injectKeyframes': 'injectKeyframes("float", "0% { transform: translateY(0); } 100% { transform: translateY(-8px); }");',
+    'stackPosition': '// The public helper only records the offsets on the dataset; the parent Stack reads them.\nconst badge = Text({ text: "3" });\nstackPosition(badge, { top: 8, right: 8 });',
+
+    # ---------- Animaciones ----------
+    'stopAnimation': 'const box = Container({ width: 100, height: 100 });\nanimate(box, "opacity", 1, 0.2, 400);\nstopAnimation(box, "opacity");',
+
+    # ---------- Inserción en el DOM ----------
+    'insertBy': 'insertBy(Text({ text: "Mounted" }), "root");',
+    'prependBy': 'prependBy(Text({ text: "First" }), "root");',
+    'insertBefore': 'insertBefore(Text({ text: "Before" }), "target-id");',
+    'insertAfter': 'insertAfter(Text({ text: "After" }), "target-id");',
+    'replaceBy': 'replaceBy(Text({ text: "Replaced" }), "target-id");',
+    'mountAll': 'mountAll(Card({ children: [Text({ text: "Shared" })] }), ["header", "footer"]);',
+    'addNavigation': 'const box = Container({ width: 100, height: 100 });\naddNavigation(box);\nconsole.log(box.depth, box.path);',
+
+    # ---------- PWA ----------
+    'isPWAInstalled': 'if (isPWAInstalled()) console.log("running as installed app");',
+    'installPWA': 'const btn = Button({ text: "Install", onPress: installPWA });',
+    'updatePWA': 'const btn = Button({ text: "Update", onPress: updatePWA });',
+    'removePWA': 'const btn = Button({ text: "Uninstall", onPress: removePWA });',
+
+    # ---------- HMR y router ----------
+    'initHMR': 'initHMR();',
+    'getHMR': 'const socket = getHMR();',
+    'getBasePath': 'const base = getBasePath();',
+
+    # ---------- Texto y color ----------
+    'print': 'print("Saved", "success", { timestamp: true, label: "sync" });',
+    'palettes': 'const brand = palettes.light.primary;',
+    'highlightColors': 'const keywordColor = highlightColors.keyword;',
+    'tokenize': 'const tokens = tokenize("const x = 1;");',
+    'parseMarkdown': 'const raw = parseMarkdown("# Hello");\nMarkdown({ text: raw });',
+    'parseInlineMarkdown': 'const raw = parseInlineMarkdown("**bold**");\nText({ text: raw });',
 }

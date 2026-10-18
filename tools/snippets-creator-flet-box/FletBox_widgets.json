@@ -124,6 +124,10 @@
     "prefix": "Column.full",
     "description": "Make a FletBox widgets Column.full widget",
     "body": [
+      "const items = [\"Note 1\", \"Note 2\", \"Note 3\"];",
+      "const Header = () => Text({ text: \"Sidebar\", fontWeight: \"bold\" });",
+      "const Footer = () => Text({ text: \"3 notes\", fontSize: 12 });",
+      "",
       "Column({",
       "    width: \"100%\",",
       "    height: \"100%\",",
@@ -798,7 +802,7 @@
       "    padding: \"14px 20px\",",
       "    margin: 20,",
       "    elevation: 4,",
-      "    onShow: () => analytics.log(\"snackbar_shown\"),",
+      "    onShow: () => console.log(\"snackbar shown\"),",
       "    onClose: () => console.log(\"closed\")",
       "})"
     ]
@@ -1276,6 +1280,7 @@
     "prefix": "ListView.normal",
     "description": "Make a FletBox widgets ListView.normal widget",
     "body": [
+      "const users = [{ name: \"Ada\" }, { name: \"Linus\" }];",
       "ListView({ data: users, renderItem: (user) => ListTile({ title: user.name }), itemSize: 70 })"
     ]
   },
@@ -1283,6 +1288,10 @@
     "prefix": "ListView.full",
     "description": "Make a FletBox widgets ListView.full widget",
     "body": [
+      "const products = [{ name: \"Keyboard\" }, { name: \"Mouse\" }];",
+      "const isLoading = false;",
+      "const hasMore = true;",
+      "",
       "ListView({",
       "    data: products,",
       "    renderItem: (item, idx) => Card({ child: Text({ text: item.name }) }),",
@@ -1315,6 +1324,7 @@
     "prefix": "GridView.normal",
     "description": "Make a FletBox widgets GridView.normal widget",
     "body": [
+      "const images = [\"/a.png\", \"/b.png\", \"/c.png\"];",
       "GridView({ data: images, renderItem: (img) => Image({ src: img }), columns: 3, spacing: 8 })"
     ]
   },
@@ -1322,6 +1332,8 @@
     "prefix": "GridView.full",
     "description": "Make a FletBox widgets GridView.full widget",
     "body": [
+      "const gallery = [{ url: \"/a.png\" }, { url: \"/b.png\" }];",
+      "",
       "GridView({",
       "    data: gallery,",
       "    renderItem: (item) => Card({ child: Image({ src: item.url, fit: \"cover\" }) }),",
@@ -1345,6 +1357,7 @@
     "prefix": "DataTable.normal",
     "description": "Make a FletBox widgets DataTable.normal widget",
     "body": [
+      "const users = [{ id: 1, name: \"Ada\" }, { id: 2, name: \"Linus\" }];",
       "DataTable({ columns: [{ key: \"id\", label: \"ID\" }, { key: \"name\", label: \"Name\" }], rows: users, onRowClick: (row) => console.log(row) })"
     ]
   },
@@ -1352,6 +1365,8 @@
     "prefix": "DataTable.full",
     "description": "Make a FletBox widgets DataTable.full widget",
     "body": [
+      "const userList = [{ id: 1, name: \"Ada\", status: \"open\" }];",
+      "",
       "DataTable({",
       "    columns: [",
       "        { key: \"id\", label: \"#\", align: \"center\" },",
@@ -1460,6 +1475,7 @@
     "prefix": "CodeViewer.normal",
     "description": "Make a FletBox widgets CodeViewer.normal widget",
     "body": [
+      "const jsCode = \"const a = 1;\\nconsole.log(a);\";",
       "CodeViewer({ code: jsCode, title: \"app.js\", showLineNumbers: true })"
     ]
   },
@@ -1976,6 +1992,7 @@
     "prefix": "TreeView.normal",
     "description": "Make a FletBox widgets TreeView.normal widget",
     "body": [
+      "const treeData = [{ id: \"1\", label: \"src\", children: [{ id: \"2\", label: \"index.js\" }] }];",
       "TreeView({ nodes: treeData, onSelect: (node) => console.log(node), selectable: true })"
     ]
   },
@@ -2207,6 +2224,7 @@
     "prefix": "Markdown.normal",
     "description": "Make a FletBox widgets Markdown.normal widget",
     "body": [
+      "const mdSource = \"# Title\\n\\nA [link](https://fletbox.dev) with **bold** text.\";",
       "Markdown({ text: mdSource, fontSize: 14, linkColor: colors.primary })"
     ]
   },
@@ -2263,14 +2281,16 @@
     "prefix": "Inspector.full",
     "description": "Make a FletBox widgets Inspector.full widget",
     "body": [
-      "inspectWidget(container) ; // logs to console"
+      "// inspectWidget walks the tree and logs every node.",
+      "const panel = Column({ children: [Text({ text: \"Hello\" })] });",
+      "inspectWidget(panel);"
     ]
   },
   "FletBox widgets InstallButton.basic": {
     "prefix": "InstallButton.basic",
     "description": "Make a FletBox widgets InstallButton.basic widget",
     "body": [
-      "InstallButton()"
+      "InstallButton({ text: \"\ud83d\udcf2 Install\" })"
     ]
   },
   "FletBox widgets InstallButton.normal": {
@@ -2516,6 +2536,256 @@
       "    onHover: (slice, idx) => console.log(slice, idx),",
       "    onComplete: () => console.log(\"done\")",
       "})"
+    ]
+  },
+  "FletBox widgets App.basic": {
+    "prefix": "App.basic",
+    "description": "Make a FletBox widgets App.basic widget",
+    "body": [
+      "App(Text({ text: \"Hello\" }))"
+    ]
+  },
+  "FletBox widgets App.normal": {
+    "prefix": "App.normal",
+    "description": "Make a FletBox widgets App.normal widget",
+    "body": [
+      "App(",
+      "    Column({",
+      "        padding: padding(24),",
+      "        gap: 12,",
+      "        children: [",
+      "            Text({ text: \"Dashboard\", type: \"h1\" }),",
+      "            Button({ text: \"Start\", onPress: () => console.log(\"go\") })",
+      "        ]",
+      "    })",
+      ")"
+    ]
+  },
+  "FletBox widgets App.full": {
+    "prefix": "App.full",
+    "description": "Make a FletBox widgets App.full widget",
+    "body": [
+      "const notes = [{ title: \"Groceries\" }, { title: \"Ideas\" }];",
+      "",
+      "const screen = Scaffold({",
+      "    appBar: AppBar({ title: \"Notes\" }),",
+      "    body: ListView({ data: notes, renderItem: (note) => Text({ text: note.title }) })",
+      "});",
+      "",
+      "// App() resets #root and stretches the widget; runApp() owns the lifecycle.",
+      "App(screen);"
+    ]
+  },
+  "FletBox widgets WidgetFactory.basic": {
+    "prefix": "WidgetFactory.basic",
+    "description": "Make a FletBox widgets WidgetFactory.basic widget",
+    "body": [
+      "const el = WidgetFactory(\"div\", { widgetName: \"Panel\", text: \"Hello\" });"
+    ]
+  },
+  "FletBox widgets WidgetFactory.tag": {
+    "prefix": "WidgetFactory.tag",
+    "description": "Make a FletBox widgets WidgetFactory.tag widget",
+    "body": [
+      "WidgetFactory({ tag: \"section\", widgetName: \"Section\", padding: 16, children: [Text({ text: \"Inside\" })] })"
+    ]
+  },
+  "FletBox widgets WidgetFactory.full": {
+    "prefix": "WidgetFactory.full",
+    "description": "Make a FletBox widgets WidgetFactory.full widget",
+    "body": [
+      "const card = WidgetFactory(\"article\", {",
+      "    widgetName: \"CardShell\",",
+      "    class: \"card\",",
+      "    padding: 16,",
+      "    borderRadius: 12,",
+      "    bgColor: colors.surface,",
+      "    children: [Text({ text: \"Title\", weight: \"bold\" })],",
+      "    onPress: () => console.log(\"pressed\"),",
+      "    onUnmount: () => console.log(\"removed\")",
+      "});",
+      "document.body.appendChild(card);"
+    ]
+  },
+  "FletBox widgets AdMob.basic": {
+    "prefix": "AdMob.basic",
+    "description": "Make a FletBox widgets AdMob.basic widget",
+    "body": [
+      "AdMob({ adId: \"ca-app-pub-3940256099942544/6300978111\" })"
+    ]
+  },
+  "FletBox widgets AdMob.normal": {
+    "prefix": "AdMob.normal",
+    "description": "Make a FletBox widgets AdMob.normal widget",
+    "body": [
+      "AdMob({",
+      "    adId: \"ca-app-pub-3940256099942544/6300978111\",",
+      "    isTesting: true,",
+      "    position: \"bottom\",",
+      "    size: \"ADAPTIVE_BANNER\",",
+      "    margin: 0,",
+      "    placeholder: true,",
+      "    label: \"AdMob banner\",",
+      "    onLoaded: (widget) => console.log(\"banner shown\"),",
+      "    onFailed: (error) => console.error(error.message)",
+      "})"
+    ]
+  },
+  "FletBox widgets AdMob.full": {
+    "prefix": "AdMob.full",
+    "description": "Make a FletBox widgets AdMob.full widget",
+    "body": [
+      "const banner = AdMob({",
+      "    adId: \"ca-app-pub-3940256099942544/6300978111\",",
+      "    interstitialId: \"ca-app-pub-3940256099942544/4411468917\",",
+      "    rewardedId: \"ca-app-pub-3940256099942544/1751961742\",",
+      "    autoInitialize: true,",
+      "    autoShow: false,",
+      "    width: \"100%\",",
+      "    height: 90,",
+      "    bgColor: colors.surface,",
+      "    borderColor: colors.border,",
+      "    onDismissed: () => console.log(\"full-screen ad closed\")",
+      "});",
+      "",
+      "banner.show();",
+      "banner.showInterstitial();",
+      "banner.showRewarded();"
+    ]
+  },
+  "FletBox widgets AdSense.basic": {
+    "prefix": "AdSense.basic",
+    "description": "Make a FletBox widgets AdSense.basic widget",
+    "body": [
+      "AdSense({ client: \"ca-pub-1234567890123456\", slot: \"1234567890\" })"
+    ]
+  },
+  "FletBox widgets AdSense.normal": {
+    "prefix": "AdSense.normal",
+    "description": "Make a FletBox widgets AdSense.normal widget",
+    "body": [
+      "AdSense({",
+      "    client: \"ca-pub-1234567890123456\",",
+      "    slot: \"1234567890\",",
+      "    format: \"fluid\",",
+      "    responsive: true,",
+      "    test: true,",
+      "    onLoad: (widget) => console.log(\"filled\"),",
+      "    onError: (error) => console.error(error.message)",
+      "})"
+    ]
+  },
+  "FletBox widgets AdSense.full": {
+    "prefix": "AdSense.full",
+    "description": "Make a FletBox widgets AdSense.full widget",
+    "body": [
+      "const unit = AdSense({",
+      "    client: \"ca-pub-1234567890123456\",",
+      "    slot: \"1234567890\",",
+      "    width: \"100%\",",
+      "    height: 250,",
+      "    placeholder: true,",
+      "    label: \"Advertisement\",",
+      "    bgColor: colors.surface,",
+      "    color: colors.textSecondary,",
+      "    borderColor: colors.border",
+      "});",
+      "",
+      "unit.refresh();"
+    ]
+  },
+  "FletBox widgets RamStore.basic": {
+    "prefix": "RamStore.basic",
+    "description": "Make a FletBox widgets RamStore.basic widget",
+    "body": [
+      "RamStore.saveRam(\"user\", { name: \"Ana\" });",
+      "RamStore.updateRam(\"user\", { name: \"Ana\", vip: true });",
+      "console.log(RamStore.getRam(\"user\"), RamStore.hasRam(\"user\"));"
+    ]
+  },
+  "FletBox widgets RamStore.all": {
+    "prefix": "RamStore.all",
+    "description": "Make a FletBox widgets RamStore.all widget",
+    "body": [
+      "console.log(RamStore.getAllRam(), RamStore.getAllRamKeys(), RamStore.getRamItemCount(), RamStore.isRamAvailable());"
+    ]
+  },
+  "FletBox widgets RamStore.subscribe": {
+    "prefix": "RamStore.subscribe",
+    "description": "Make a FletBox widgets RamStore.subscribe widget",
+    "body": [
+      "const unsubscribe = RamStore.subscribeRam((key, newValue, oldValue) => console.log(key, newValue, oldValue));"
+    ]
+  },
+  "FletBox widgets RamStore.clear": {
+    "prefix": "RamStore.clear",
+    "description": "Make a FletBox widgets RamStore.clear widget",
+    "body": [
+      "RamStore.deleteRam(\"user\");",
+      "RamStore.clearAllRam();"
+    ]
+  },
+  "FletBox widgets Session.basic": {
+    "prefix": "Session.basic",
+    "description": "Make a FletBox widgets Session.basic widget",
+    "body": [
+      "Session.saveSession(\"token\", \"abc123\");",
+      "const token = Session.getSession(\"token\");",
+      "console.log(Session.hasSession(\"token\"), Session.getSessionItemCount());"
+    ]
+  },
+  "FletBox widgets Session.all": {
+    "prefix": "Session.all",
+    "description": "Make a FletBox widgets Session.all widget",
+    "body": [
+      "console.log(Session.getAllSessionKeys(), Session.getAllSessionData(), Session.getSessionSize(), Session.isSessionAvailable());"
+    ]
+  },
+  "FletBox widgets Session.sync": {
+    "prefix": "Session.sync",
+    "description": "Make a FletBox widgets Session.sync widget",
+    "body": [
+      "const token = Session.getSessionSync(\"token\");"
+    ]
+  },
+  "FletBox widgets Session.cleanup": {
+    "prefix": "Session.cleanup",
+    "description": "Make a FletBox widgets Session.cleanup widget",
+    "body": [
+      "Session.deleteSessionByPrefix(\"draft_\");",
+      "Session.deleteSessionBySuffix(\"_temp\");",
+      "Session.clearAllSession();"
+    ]
+  },
+  "FletBox widgets Storage.basic": {
+    "prefix": "Storage.basic",
+    "description": "Make a FletBox widgets Storage.basic widget",
+    "body": [
+      "Storage.saveData(\"settings\", { theme: \"dark\" });",
+      "const settings = Storage.getData(\"settings\");",
+      "console.log(Storage.hasData(\"settings\"), Storage.getItemCount());"
+    ]
+  },
+  "FletBox widgets Storage.all": {
+    "prefix": "Storage.all",
+    "description": "Make a FletBox widgets Storage.all widget",
+    "body": [
+      "console.log(Storage.getAllKeys(), Storage.getAllData(), Storage.getStorageSize(), Storage.isStorageAvailable());"
+    ]
+  },
+  "FletBox widgets Storage.sync": {
+    "prefix": "Storage.sync",
+    "description": "Make a FletBox widgets Storage.sync widget",
+    "body": [
+      "const settings = Storage.getDataSync(\"settings\");"
+    ]
+  },
+  "FletBox widgets Storage.cleanup": {
+    "prefix": "Storage.cleanup",
+    "description": "Make a FletBox widgets Storage.cleanup widget",
+    "body": [
+      "Storage.deleteDataBySuffix(\"_tmp\");",
+      "Storage.clearAllData();"
     ]
   }
 }
