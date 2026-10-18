@@ -65,6 +65,7 @@ ${cmd("create --adaptive", "responsive (mobile + desktop)")}
 ${cmd("create --blank", "empty project")}
 ${cmd("create --full", "AppBar+Drawer+BottomNav")}
 ${cmd("create --sidebar", "desktop (Sidebar+AppBar)")}
+${cmd("create --template <name>", "same four by name: basic|adaptive|blank|full|sidebar")}
 ${cmd("create --repo <user/repo>", "set GitHub repo for OTA updates")}
 ${cmd("screen <name|num>", "Create screen(s) (1-10)")}
 ${cmd("component <name|num>", "Create component(s) (1-10)")}
@@ -228,7 +229,7 @@ async function main() {
           console.log(
             c(
               "gray",
-              "Usage: flet-box create <project-name> [--adaptive|--blank|--full|--sidebar|--repo user/repo]",
+              "Usage: flet-box create <project-name> [--adaptive|--blank|--full|--sidebar|--template <name>|--repo user/repo]",
             ),
           );
           process.exit(1);

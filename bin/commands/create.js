@@ -52,25 +52,38 @@ const capacitorAppId = (projectName) => {
  * @returns {{ template: string, projectName: string|null, repo: string|null }}
  */
 const parseCreateArgs = (args) => {
+  const TEMPLATES = ["basic", "adaptive", "blank", "full", "sidebar"];
   let template = "basic"; // default template
   let projectName = null;
   let repo = null;
   for (let i = 0; i < args.length; i++) {
-    if (args[i] === "--adaptive") {
+    const arg = args[i];
+    if (arg === "--adaptive") {
       template = "adaptive";
-    } else if (args[i] === "--blank") {
+    } else if (arg === "--blank") {
       template = "blank";
-    } else if (args[i] === "--full") {
+    } else if (arg === "--full") {
       template = "full";
-    } else if (args[i] === "--sidebar") {
+    } else if (arg === "--sidebar") {
       template = "sidebar";
-    } else if (args[i] === "--repo") {
+    } else if (arg === "--template" || arg.startsWith("--template=")) {
+      // `--template blank` was read as a bare positional, so the value became the
+      // project name and `flet-box create myapp --template blank` built a folder
+      // called `blank` running the `basic` template.
+      const inline = arg.startsWith("--template=");
+      const value = inline ? arg.slice("--template=".length) : args[++i];
+      if (TEMPLATES.includes(value)) template = value;
+      else if (value !== undefined)
+        console.warn(c("yellow", `⚠️ Unknown template "${value}", using ${template}`));
+    } else if (arg === "--repo") {
       if (i + 1 < args.length && !args[i + 1].startsWith("--")) {
         repo = args[i + 1];
         i++;
       }
-    } else if (!args[i].startsWith("--")) {
-      projectName = args[i];
+    } else if (!arg.startsWith("--") && projectName === null) {
+      // The FIRST positional is the name. A later one is an unclaimed flag value
+      // and must not silently rename the project.
+      projectName = arg;
     }
   }
   return { template, projectName, repo };
