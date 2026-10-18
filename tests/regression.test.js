@@ -381,6 +381,33 @@ async function run() {
     }
   });
 
+  // ------------------------------------------------------------- AppBar title
+  await t("AppBar: centerTitle:false keeps an auto-width title flush left", () => {
+    // Two bugs stacked here. The title zone is a Container, so it inherited
+    // `flex-direction: column`: `align-items: center` centred the title
+    // HORIZONTALLY while `justify-content` — the prop that carries
+    // `centerTitle` — went vertical, so an auto-width widget title was always
+    // centred (a string title hid it because its Text spans the full width).
+    // The empty leading zone then added its 48px balance width on top, pushing
+    // even a correctly left-aligned title off the bar's own padding.
+    const title = () => W.Container({ width: "auto", child: W.Text({ text: "Nuevo Milenio" }) });
+    const leftOf = (bar) =>
+      Math.round(
+        bar.children[1].firstElementChild.getBoundingClientRect().left -
+          bar.getBoundingClientRect().left,
+      );
+    const flush = mount(AppBar({ title: title(), centerTitle: false, paddingLeft: 20, actions: [W.Text({ text: "cta" })] }));
+    const centered = mount(AppBar({ title: title(), centerTitle: true, paddingLeft: 20, actions: [W.Text({ text: "cta" })] }));
+    ok(
+      Math.abs(leftOf(flush) - 20) <= 1,
+      `centerTitle:false put the title ${leftOf(flush)}px from the edge, expected 20 (its paddingLeft)`,
+    );
+    ok(
+      leftOf(centered) > leftOf(flush) + 20,
+      `centerTitle:true did not move the title (${leftOf(centered)} vs ${leftOf(flush)})`,
+    );
+  });
+
   // --------------------------------------------------- introspection surfaces
   await t("AnimatedText: letters inherit the source Text styles", async () => {
     // It read `child._props`, which nothing ever assigns, so every letter fell
@@ -482,6 +509,34 @@ async function run() {
       ok(document.body.children.length <= baseBody, "drawer nodes stayed in document.body");
     } finally {
       dimensions.addListener = origAdd;
+    }
+  });
+
+  await t("Drawer: body rows keep content height instead of being squeezed", async () => {
+    // The scrollable body is a `flex: 1` column inside a fixed-height panel and
+    // every widget defaults to `flex-shrink: 1`, so as soon as the rows did not
+    // fit, each one was crushed toward its own padding instead of the body
+    // overflowing and scrolling.
+    const rows = Array.from({ length: 30 }, (_, i) =>
+      W.Container({ height: 48, child: W.Text({ text: `item ${i}` }) }),
+    );
+    const d = Drawer({ body: rows });
+    d.open();
+    await wait(30);
+    try {
+      ok(
+        rows.every((r) => getComputedStyle(r).flexShrink === "0"),
+        `a body child still shrinks (${getComputedStyle(rows[0]).flexShrink})`,
+      );
+      const shortest = Math.min(...rows.map((r) => r.offsetHeight));
+      ok(shortest >= 40, `rows collapsed to ${shortest}px, expected their 48px content height`);
+      const bodyColumn = d.element.lastElementChild.firstElementChild.firstElementChild;
+      ok(
+        bodyColumn.scrollHeight > bodyColumn.clientHeight,
+        "the body never overflowed, so the squeeze was not exercised",
+      );
+    } finally {
+      d.destroy();
     }
   });
 

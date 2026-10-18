@@ -189,15 +189,20 @@ export const AppBar = (props) => {
 
   // ========== LEFT SECTION ==========
   // Fixed minimum width ensures the center title stays visually centered
-  // even when no leading widget is present.
+  // even when no leading widget is present. That balance is only meaningful
+  // for a centered title: with `centerTitle: false` the title is flush-left,
+  // so reserving the empty 48px zone would push it past the page's content
+  // edge. Same reasoning for the title zone's 8px gutter.
+  const hasLeading = finalLeading instanceof HTMLElement;
+  const balanceZones = centerTitle || hasLeading;
   const leftSection = Container({
     display: "flex",
     alignItems: "center",
     bgColor: "transparent",
     justifyContent: "flex-start",
-    minWidth: 48,
+    minWidth: balanceZones ? 48 : 0,
     flexShrink: 0,
-    child: finalLeading instanceof HTMLElement ? finalLeading : null,
+    child: hasLeading ? finalLeading : null,
   });
   appBar.appendChild(leftSection);
 
@@ -224,9 +229,15 @@ export const AppBar = (props) => {
     // pushes the actions past the viewport edge on narrow screens.
     flex: 1,
     display: "flex",
+    // Container defaults to `flex-direction: column`, which silently rewrites
+    // the two axes: `alignItems: center` becomes horizontal centring and
+    // `justifyContent` (the flag that carries `centerTitle`) becomes vertical.
+    // A string title hid this because its Text fills the width; an
+    // auto-width widget title got centred no matter what `centerTitle` said.
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: centerTitle ? "center" : "flex-start",
-    padding: "0 8px",
+    padding: balanceZones ? "0 8px" : "0",
     bgColor: "transparent",
     overflow: "hidden",
     minWidth: 0,

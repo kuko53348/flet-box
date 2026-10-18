@@ -173,7 +173,15 @@ export const Drawer = (props = {}) => {
           paddingBottom: 8,
           overflow: "auto",
           backgroundColor: bgColor,
-          children: body,
+          // This body is a scroll container inside a fixed-height flex column,
+          // and every child defaults to `flex-shrink: 1`. Left alone, a short
+          // drawer squeezed its rows down to their own padding (a DrawerItem
+          // collapsed to ~24px) instead of overflowing. Pinning the children
+          // keeps them at content height so the body scrolls as intended.
+          children: body.map((child) => {
+            if (child && child.style) child.style.flexShrink = "0";
+            return child;
+          }),
         }),
 
       footer &&
