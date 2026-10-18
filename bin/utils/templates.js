@@ -711,6 +711,7 @@ export const packageJson = (name) => `{
   "scripts": {
     "dev": "bash run.sh",
     "check": "node scripts/check-app.mjs",
+    "fix": "flet-box audit-fix",
     "build": "flet-box createBundle www",
     "start": "npm run dev",
     "android:init": "npm run build && cap add android",
@@ -1348,6 +1349,7 @@ framework from scratch:
 npm run check                      # scan src/ for invented widgets, props, imports
 npm run check -- --props Button    # print the real props of one widget
 npm run check -- --list            # print every public export
+npm run fix                        # rewrite typos it can prove (imports, prop keys)
 \`\`\`
 
 \`npm run check\` exits non-zero on a real error and also runs in CI. If you upgrade
@@ -2021,6 +2023,13 @@ export const agentsMd = (appName, template, version) =>
     'It reads the installed package, so it is always in sync with what runs. A',
     'warning is allowed to stay only when you can justify it in one sentence.',
     '',
+    'When the error is a mistyped name, `npm run fix` rewrites it for you — a',
+    'relative path that does not resolve, a name the target module never exports,',
+    'an identifier used without its `import`, and a prop key the API does not know',
+    '(`chilldren` → `children`, `bgColr` → `bgColor`). It only rewrites when exactly',
+    'one real name is close enough; anything ambiguous is printed untouched for you',
+    'to decide. Run `npm run check` again after it, and read the diff.',
+    '',
     '## 5. Memory — do not relearn the same thing',
     '',
     'At the start of every session read `.fletbox/memory/MEMORY.md` and any entry it',
@@ -2042,6 +2051,7 @@ export const agentsMd = (appName, template, version) =>
     '| --- | --- |',
     '| `npm run dev` | static dev server on port 8000 |',
     '| `npm run check` | anti-hallucination gate over `src/` |',
+    '| `npm run fix` | rewrite mistyped imports and prop names it can prove |',
     '| `npm run check -- --props Button` | print the real props of a widget |',
     '| `npm run build` | esbuild bundle into `dist/` |',
     '| `flet-box build android` / `ios` | Capacitor native build |',

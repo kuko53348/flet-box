@@ -101,11 +101,21 @@ flet-box check-api                      # scan src/ for invented widgets/props
 flet-box check-api --props Button       # print the real props of one widget
 flet-box check-api --list               # print every public export
 flet-box check-api --emit-api           # (re)generate .fletbox/api/cheatsheet.md
+
+# Repair (writes files; run `npm run check` afterwards to confirm)
+flet-box audit-fix                      # fix imports and prop typos in one pass
+flet-box audit-fix --only imports       # just the import wiring
+flet-box audit-fix --only props         # just `chilldren` → `children`
 ```
 
 In a generated app these are also `npm run check` (and `npm run check -- --props Button`),
 because `flet-box create` writes `scripts/check-app.mjs` plus the `AGENTS.md` contract
-that points any AI assistant at the real API.
+that points any AI assistant at the real API. `npm run fix` runs `audit-fix`.
+
+`audit-fix` only rewrites a name when exactly one real name is close enough to be
+certain — a wrong "fix" that happens to be a valid prop changes the UI silently and
+silences the gate, which is worse than the error it replaced. Anything ambiguous is
+printed under *Left for you to decide* and the file is not touched.
 
 ## Android and iOS
 

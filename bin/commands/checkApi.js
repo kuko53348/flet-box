@@ -42,7 +42,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const CLI_PACKAGE_DIR = path.join(__dirname, "..", "..");
 
 /** Keys the factory itself reads, so they are never "invented props". */
-const STRUCTURAL_PROPS = new Set([
+export const STRUCTURAL_PROPS = new Set([
   "child",
   "children",
   "tag",
@@ -129,7 +129,7 @@ const resolvePackage = (projectRoot) => {
  * @param {string} projectRoot
  * @returns {Promise<object>}
  */
-const loadApi = async (projectRoot) => {
+export const loadApi = async (projectRoot) => {
   const { dir, pkg } = resolvePackage(projectRoot);
   const barrel = await import(pathToFileURL(path.join(dir, "src", "index.js")).href);
   const registry = await import(
@@ -153,7 +153,7 @@ const loadApi = async (projectRoot) => {
  * @param {string} b
  * @returns {number}
  */
-const distance = (a, b) => {
+export const distance = (a, b) => {
   if (a === b) return 0;
   const m = a.length;
   const n = b.length;
@@ -180,7 +180,7 @@ const distance = (a, b) => {
  * @param {Iterable<string>} candidates
  * @returns {string | null}
  */
-const nearest = (value, candidates) => {
+export const nearest = (value, candidates) => {
   let best = null;
   let bestScore = 4; // never suggest for names that are simply unrelated
   const lower = value.toLowerCase();
@@ -200,7 +200,7 @@ const nearest = (value, candidates) => {
  * @param {string} projectRoot
  * @returns {string[]}
  */
-const collectSources = (projectRoot) => {
+export const collectSources = (projectRoot) => {
   const files = [];
   const walk = (dir) => {
     let entries;

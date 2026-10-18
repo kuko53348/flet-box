@@ -14,6 +14,7 @@ import fs from "fs";
 import path from "path";
 import { createProject } from "./commands/create.js";
 import { checkApi } from "./commands/checkApi.js";
+import { auditFix } from "./commands/auditFix.js";
 import { packageManager } from "./commands/package.js";
 import { createBundle } from "./commands/createBundle.js";
 import { buildAndroid } from "./commands/buildAndroid.js";
@@ -76,6 +77,9 @@ ${cmd("   └─ --props <Widget>", "print one widget's real props")}
 ${cmd("   └─ --list", "list every widget")}
 ${cmd("   └─ --emit-api", "write .fletbox/api/cheatsheet.md")}
 ${cmd("   └─ alias", "check | checkApi | doctor")}
+${cmd("audit-fix", "Rewrite broken imports, missing imports and misspelled props")}
+${cmd("   └─ --only imports|props", "run one repair instead of both")}
+${cmd("   └─ alias", "fix-imports | fix-path-imports | auditFix")}
 ${cmd("build android", "Build Android debug APK")}
 ${cmd("build android --release", "Build unsigned release APK/AAB to sign yourself")}
 ${cmd("build ios", "Build iOS Simulator app (macOS + Xcode)")}
@@ -270,6 +274,15 @@ async function main() {
       case "check":
       case "doctor": {
         const { exitCode } = await checkApi(args.slice(1));
+        if (exitCode) process.exit(exitCode);
+        break;
+      }
+
+      case "audit-fix":
+      case "auditFix":
+      case "fix-imports":
+      case "fix-path-imports": {
+        const { exitCode } = await auditFix(args.slice(1));
         if (exitCode) process.exit(exitCode);
         break;
       }
