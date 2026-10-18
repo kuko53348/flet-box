@@ -1582,6 +1582,8 @@ export const ProfileScreen = () => {
         })
     });
 };
+
+export default ProfileScreen;
 `;
 
 // Screens index for easier imports. ProfileScreen only exists in the adaptive
@@ -2010,7 +2012,8 @@ export const agentsMd = (appName, template, version) =>
     '',
     '```bash',
     'npm run check          # static gate: invented widgets/props, positional args,',
-    '                       # foreign framework imports, wrong file extensions',
+    '                       # foreign imports, and broken imports between your own',
+    '                       # modules (a name a file never exports)',
     'npm run dev            # serve on :8000 — check the UI actually renders',
     '```',
     '',

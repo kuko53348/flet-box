@@ -34,6 +34,8 @@ import {
   resolveInterfaceProps,
 } from "../utils/dtsProps.js";
 import { c, banner, section } from "../utils/colors.js";
+import { neutralise } from "../utils/neutralise.js";
+import { resolveLocalModule, readModuleExports } from "../utils/moduleExports.js";
 
 const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -228,66 +230,6 @@ const collectSources = (projectRoot) => {
 };
 
 /**
- * Strip comments, and optionally string bodies, keeping character offsets.
- *
- * Two passes are needed: imports must read their module specifier, while the
- * call-site scanner must not see braces inside string literals. String contents
- * are replaced by an equal-length filler so line numbers stay correct.
- *
- * @param {string} code
- * @param {{ keepStrings?: boolean }} [options]
- * @returns {string}
- */
-const neutralise = (code, { keepStrings = false } = {}) => {
-  let out = "";
-  let i = 0;
-  while (i < code.length) {
-    const ch = code[i];
-    const next = code[i + 1];
-    if (ch === "/" && next === "/") {
-      while (i < code.length && code[i] !== "\n") {
-        out += " ";
-        i++;
-      }
-      continue;
-    }
-    if (ch === "/" && next === "*") {
-      while (i < code.length && !(code[i] === "*" && code[i + 1] === "/")) {
-        out += code[i] === "\n" ? "\n" : " ";
-        i++;
-      }
-      out += "  ";
-      i += 2;
-      continue;
-    }
-    if (ch === '"' || ch === "'" || ch === "`") {
-      const quote = ch;
-      out += ch;
-      i++;
-      while (i < code.length) {
-        if (code[i] === "\\") {
-          out += keepStrings ? code.slice(i, i + 2) : "  ";
-          i += 2;
-          continue;
-        }
-        if (code[i] === quote) {
-          out += quote;
-          i++;
-          break;
-        }
-        const fill = keepStrings ? code[i] : code[i] === "\n" ? "\n" : " ";
-        out += fill;
-        i++;
-      }
-      continue;
-    }
-    out += ch;
-    i++;
-  }
-  return out;
-};
-
-/**
  * Read the keys of an object literal starting at its opening brace.
  *
  * @param {string} code Comment/string-free source.
@@ -396,6 +338,49 @@ const checkFile = (file, api) => {
         "import from 'flet-box' instead",
       );
       continue;
+    } else if (source.startsWith(".") || source.startsWith("/")) {
+      // The app's own wiring. A name that is not exported here is `undefined`
+      // at runtime, which renders a blank screen and throws no error the checker
+      // could catch later, so it is verified against the target file's exports.
+      const target = resolveLocalModule(file, source);
+      if (!target) {
+        add(
+          index,
+          "MODULE_NOT_FOUND",
+          `"${source}" does not resolve to a file`,
+          "fix the path, or create the module",
+        );
+        continue;
+      }
+      const surface = readModuleExports(target, api.moduleCache);
+      const braces = /\{([^}]*)\}/.exec(clause);
+      const head = clause.replace(/\{[^}]*\}/g, "").replace(/\*[\s\S]*$/, "").trim();
+      const defaultName = /^([A-Za-z_$][\w$]*)\s*,?\s*$/.exec(head);
+      if (defaultName && !surface.hasDefault && !surface.opaque) {
+        const first = surface.named.values().next().value;
+        add(
+          index,
+          "MISSING_EXPORT",
+          `"${source}" has no default export, so ${defaultName[1]} is undefined at runtime`,
+          first ? `import { ${first} } from '${source}'` : null,
+        );
+      }
+      if (braces) {
+        for (const part of braces[1].split(",")) {
+          const token = part.trim();
+          if (!token) continue;
+          const aliased = /^(\S+)\s+as\s+(\S+)$/.exec(token);
+          const wanted = aliased ? aliased[1] : token;
+          if (surface.opaque || surface.named.has(wanted)) continue;
+          add(
+            index,
+            "MISSING_EXPORT",
+            `"${wanted}" is not exported by ${source}`,
+            nearest(wanted, [...surface.named]),
+          );
+        }
+      }
+      continue;
     } else {
       continue;
     }
@@ -425,6 +410,40 @@ const checkFile = (file, api) => {
           nearest(n.exported, api.exports),
         );
       }
+    }
+  }
+
+  // ---- local re-exports ----------------------------------------------------
+  // `export { NewScreen } from './screens/NewScreen.js'` in a barrel is how an
+  // agent adds a screen; a typo there is invisible until the route renders blank.
+  const reExportRe = /export\s*\{([^}]*)\}\s*from\s*['"]([^'"]+)['"]/g;
+  let reExport;
+  while ((reExport = reExportRe.exec(importCode))) {
+    const source = reExport[2];
+    if (!source.startsWith(".") && !source.startsWith("/")) continue;
+    const target = resolveLocalModule(file, source);
+    if (!target) {
+      add(
+        reExport.index,
+        "MODULE_NOT_FOUND",
+        `"${source}" does not resolve to a file`,
+        "fix the path, or create the module",
+      );
+      continue;
+    }
+    const surface = readModuleExports(target, api.moduleCache);
+    for (const part of reExport[1].split(",")) {
+      const token = part.trim();
+      if (!token) continue;
+      const aliased = /^(\S+)\s+as\s+(\S+)$/.exec(token);
+      const wanted = aliased ? aliased[1] : token;
+      if (wanted === "default" || surface.opaque || surface.named.has(wanted)) continue;
+      add(
+        reExport.index,
+        "MISSING_EXPORT",
+        `cannot re-export "${wanted}" — ${source} does not export it`,
+        nearest(wanted, [...surface.named]),
+      );
     }
   }
 
@@ -501,6 +520,8 @@ const ERROR_CODES = new Set([
   "UNKNOWN_EXPORT",
   "UNKNOWN_PROP",
   "POSITIONAL_ARG",
+  "MODULE_NOT_FOUND",
+  "MISSING_EXPORT",
 ]);
 
 const SEVERITY = {
@@ -508,6 +529,8 @@ const SEVERITY = {
   UNKNOWN_EXPORT: "error",
   UNKNOWN_PROP: "error",
   POSITIONAL_ARG: "error",
+  MODULE_NOT_FOUND: "error",
+  MISSING_EXPORT: "error",
   UNDOCUMENTED_PROP: "warn",
   DEEP_IMPORT: "warn",
 };
@@ -622,6 +645,9 @@ export const checkApi = async (argv = [], io = {}) => {
     return i >= 0 && argv[i + 1] ? path.resolve(argv[i + 1]) : process.cwd();
   })();
   const api = await loadApi(root);
+  // Shared across files so a barrel imported by ten screens is parsed once, and
+  // so a module cycle terminates on the cached (possibly partial) surface.
+  api.moduleCache = new Map();
   const wanted = (flag) => {
     const i = argv.indexOf(flag);
     return i >= 0 ? argv[i + 1] : null;
