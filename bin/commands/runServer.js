@@ -3,7 +3,7 @@ import http from "http";
 import fs from "fs";
 import path from "path";
 import readline from "readline";
-import { WebSocketServer } from "ws";
+import { WebSocketServer, WebSocket } from "ws";
 import chokidar from "chokidar";
 import { c, banner, rainbow, dot, typewriter } from "../utils/colors.js";
 import { spinner } from "../utils/spinner.js";
@@ -59,7 +59,12 @@ export const runDevServer = async (options = {}) => {
   let watcher = null;
   let PORT = Number(port) || 8000;
 
-  console.log(banner("📡 FletBox Server", spaMode ? "SPA + Hot Reload" : "Static"));
+  console.log(
+    banner(
+      "📡 FletBox Server",
+      `${spaMode ? "SPA" : "Static"}${hotReload ? " + Hot Reload" : ""}`,
+    ),
+  );
 
   // Interactive port: if no --port was passed and there is a TTY, ask
   if (options.askPort && process.stdin.isTTY) {
@@ -89,8 +94,11 @@ export const runDevServer = async (options = {}) => {
 
   const broadcast = (message) => {
     const msg = typeof message === "string" ? message : JSON.stringify(message);
+    // `readyState` is a `WebSocket` constant, not a `WebSocketServer` one:
+    // comparing against `WebSocketServer.OPEN` (undefined) matched no client and
+    // silently disabled hot reload for everybody.
     clients.forEach((client) => {
-      if (client.readyState === WebSocketServer.OPEN) {
+      if (client.readyState === WebSocket.OPEN) {
         client.send(msg);
       }
     });
@@ -195,29 +203,40 @@ export const runDevServer = async (options = {}) => {
                   c("blue", "🔧 Framework mode: using direct HMR import"),
                 );
             } else {
-              // ✅ Normal project: import from the npm module
+              // A static import, not `import('flet-box').then(...)`: the client
+              // restores the state snapshot and that must run before the app's
+              // own `useState` call. A `.then()` is a microtask later, so the
+              // app would already have booted with defaults.
               hmrScript = `
                                 <script type="module">
-                                    import('flet-box').then(({ initHMR }) => {
-                                        if (typeof initHMR === 'function') {
-                                            initHMR();
-                                        }
-                                    }).catch(e => console.warn('HMR not available:', e));
+                                    import { initHMR } from 'flet-box';
+                                    initHMR();
                                 </script>
                             `;
             }
 
             if (!html.includes("initHMR")) {
-              if (html.includes("</body>")) {
+              // Inserted before the app's module tag, so module execution order
+              // puts the restore first; `</head>` and `</body>` are the fallbacks
+              // for a page that has no module script yet.
+              const anchor = /<script[^>]*type=["']module["'][^>]*>/i.exec(html);
+              if (anchor)
+                html = html.slice(0, anchor.index) + hmrScript + html.slice(anchor.index);
+              else if (html.includes("</head>"))
+                html = html.replace("</head>", `${hmrScript}</head>`);
+              else if (html.includes("</body>"))
                 html = html.replace("</body>", `${hmrScript}</body>`);
-              } else {
-                html += hmrScript;
-              }
+              else html += hmrScript;
               content = html;
             }
           }
 
-          res.writeHead(200, { "Content-Type": contentType });
+          // A dev server that lets the browser cache a module is a hot reload
+          // that "does nothing": the page reloads and re-gets the old code.
+          res.writeHead(200, {
+            "Content-Type": contentType,
+            "Cache-Control": "no-store, no-cache, must-revalidate",
+          });
           res.end(content);
         });
       });
@@ -296,11 +315,21 @@ export const runDevServer = async (options = {}) => {
   // WebSocket para HMR
   if (hotReload) {
     const wss = new WebSocketServer({ server });
-    wss.on("error", onServerError);
+
+    // A browser tab that vanishes mid-flight (a tunnel closing an idle socket is
+    // enough) makes `ws` emit "error". With no listener that is an uncaught
+    // exception and the dev server dies with the tab — the usual reason hot
+    // reload "crashes" during a live demo.
+    wss.on("error", (err) => {
+      console.warn(c("yellow", `⚠️  HMR socket error: ${err && err.message}`));
+    });
 
     wss.on("connection", (ws) => {
       clients.add(ws);
-      console.log(c("green", "🔌 HMR client connected"));
+      if (logRequests) console.log(c("green", "🔌 HMR client connected"));
+      ws.on("error", () => {
+        // The peer is already gone; `close` follows and drops it from the set.
+      });
       ws.send(JSON.stringify({ type: "request-modules" }));
       ws.on("message", (data) => {
         try {
@@ -317,16 +346,16 @@ export const runDevServer = async (options = {}) => {
       });
       ws.on("close", () => {
         clients.delete(ws);
-        console.log(c("gray", "🔌 HMR client disconnected"));
+        if (logRequests) console.log(c("gray", "🔌 HMR client disconnected"));
       });
     });
 
-    const watchPaths = [
-      "src/**/*.js",
-      "src/**/*.mjs",
-      "src/**/*.css",
-      "index.html",
-    ];
+    // chokidar 4 removed glob support: `src/**/*.js` is watched as a literal
+    // path that never exists, so the watcher silently reported "Watching…" and
+    // never fired once. Watch the real roots and filter by extension instead.
+    const watchPaths = ["src", "index.html"];
+    const isWatched = (filePath) =>
+      /\.(js|mjs|css)$/.test(filePath) || filePath === "index.html";
     const moduleVersions = new Map();
 
     watcher = chokidar.watch(watchPaths, {
@@ -334,22 +363,32 @@ export const runDevServer = async (options = {}) => {
       persistent: true,
       cwd: projectRoot,
       ignoreInitial: true,
+      // An editor saves in two or three writes (write, rename, chmod). Firing on
+      // each one reloads the page several times per Ctrl+S.
+      awaitWriteFinish: { stabilityThreshold: 150, pollInterval: 25 },
     });
 
+    const lastSent = new Map();
+
     watcher.on("change", async (filePath) => {
+      if (!isWatched(filePath)) return;
       const fullPath = path.join(projectRoot, filePath);
       try {
         const newContent = fs.readFileSync(fullPath, "utf-8");
         const oldContent = moduleVersions.get(filePath);
         const changeType = getChangeType(filePath, oldContent, newContent);
         moduleVersions.set(filePath, newContent);
+        const key = `${filePath}:${changeType}`;
+        const now = Date.now();
+        if (now - (lastSent.get(key) || 0) < 700) return;
+        lastSent.set(key, now);
         console.log(c("yellow", `📝 Changed: ${filePath} (${changeType})`));
         broadcast(
           JSON.stringify({
             type: "hmr",
             file: filePath,
             changeType,
-            timestamp: Date.now(),
+            timestamp: now,
           }),
         );
       } catch (err) {
@@ -358,11 +397,13 @@ export const runDevServer = async (options = {}) => {
     });
 
     watcher.on("add", (filePath) => {
+      if (!isWatched(filePath)) return;
       console.log(c("green", `➕ Added: ${filePath}`));
       broadcast(JSON.stringify({ type: "reload", reason: "file-added" }));
     });
 
     watcher.on("unlink", (filePath) => {
+      if (!isWatched(filePath)) return;
       console.log(c("red", `➖ Removed: ${filePath}`));
       broadcast(JSON.stringify({ type: "reload", reason: "file-removed" }));
     });

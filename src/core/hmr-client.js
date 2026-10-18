@@ -1,4 +1,5 @@
 // src/core/hmr-client.js
+import { getAllRam, saveRam } from "../services/RamStore.js";
 
 /** @type {WebSocket|null} Active WebSocket connection to the HMR server. */
 let ws = null;
@@ -10,6 +11,83 @@ let ws = null;
  * @type {Map<string, Object>}
  */
 let modules = new Map();
+
+/** sessionStorage key that carries `useState` RAM across a hot reload. */
+const STATE_KEY = "__fletbox_hmr_state";
+
+/** How many seconds to keep retrying after the server drops the socket. */
+const MAX_RETRIES = 30;
+
+let retries = 0;
+let everOpened = false;
+let retryTimer = null;
+
+/**
+ * The live state, JSON-safe.
+ *
+ * `useState` lives in a plain Map, so a value that cannot cross a page reload
+ * (a DOM node, a circular graph, a function) is skipped rather than poisoning
+ * the whole snapshot.
+ *
+ * @returns {Object}
+ */
+const snapshotRam = () => {
+  const snapshot = {};
+  for (const [key, value] of Object.entries(getAllRam())) {
+    try {
+      JSON.stringify(value);
+      snapshot[key] = value;
+    } catch (e) {
+      // Not serialisable: this key starts from its default on the next page.
+    }
+  }
+  return snapshot;
+};
+
+/**
+ * Reload the page without losing the developer's place: state is written to
+ * sessionStorage first and put back by `initHMR` on the next load.
+ *
+ * @returns {void}
+ */
+const reloadKeepingState = () => {
+  try {
+    sessionStorage.setItem(STATE_KEY, JSON.stringify(snapshotRam()));
+  } catch (e) {
+    // Private mode, quota, no sessionStorage: reload anyway.
+  }
+  window.location.reload();
+};
+
+/**
+ * Push a previous snapshot back into the RAM store.
+ *
+ * Runs after the app module has already rendered, which is fine: `saveRam`
+ * notifies subscribers, so every `useState` binding repaints with the value it
+ * had before the reload.
+ *
+ * @returns {number} keys restored
+ */
+const restoreRam = () => {
+  let raw = null;
+  try {
+    raw = sessionStorage.getItem(STATE_KEY);
+  } catch (e) {
+    return 0;
+  }
+  if (!raw) return 0;
+  let saved;
+  try {
+    saved = JSON.parse(raw);
+  } catch (e) {
+    return 0;
+  }
+  let restored = 0;
+  for (const [key, value] of Object.entries(saved)) {
+    if (saveRam(key, value)) restored++;
+  }
+  return restored;
+};
 
 /**
  * Initialises the Hot Module Replacement (HMR) client.
@@ -23,19 +101,44 @@ let modules = new Map();
  * - `hmr` — a file changed; delegates to `handleHMR`.
  * - `reload` — the server requests a full page reload.
  *
- * On disconnect the client waits 500 ms then reloads the page so the
- * developer always sees a fresh state.
+ * A dropped socket is retried, not reloaded: reloading into a server that is
+ * still restarting (or a tunnel that closed an idle socket) produced an error
+ * page and then a reload loop. When the connection *re*-establishes, the code
+ * the page runs is stale and the page reloads — with its state.
+ *
+ * @returns {void}
  */
 export const initHMR = () => {
+  const restored = restoreRam();
+  if (restored) console.log(`♻️ HMR restored ${restored} state key(s)`);
+  connect();
+};
+
+/**
+ * @returns {void}
+ */
+const connect = () => {
   const protocol = location.protocol === "https:" ? "wss:" : "ws:";
   ws = new WebSocket(`${protocol}//${location.host}`);
 
   ws.onopen = () => {
+    retries = 0;
+    if (everOpened) {
+      console.log("🔥 HMR reconnected — the page is stale, reloading");
+      reloadKeepingState();
+      return;
+    }
+    everOpened = true;
     console.log("🔥 HMR connected");
   };
 
   ws.onmessage = (event) => {
-    const data = JSON.parse(event.data);
+    let data;
+    try {
+      data = JSON.parse(event.data);
+    } catch (e) {
+      return; // a proxy or tunnel injecting a non-JSON frame must not kill the client
+    }
 
     if (data.type === "request-modules") {
       // Send the list of registered module URLs back to the server.
@@ -50,14 +153,19 @@ export const initHMR = () => {
     }
 
     if (data.type === "reload") {
-      console.log("🔄 Full reload triggered");
-      window.location.reload();
+      console.log("🔄 Reload triggered by the server");
+      reloadKeepingState();
     }
   };
 
   ws.onclose = () => {
-    console.log("🔄 HMR disconnected, reloading...");
-    setTimeout(() => window.location.reload(), 500);
+    if (retries >= MAX_RETRIES) {
+      console.warn("🔌 HMR gave up: the dev server is unreachable. Refresh to retry.");
+      return;
+    }
+    retries++;
+    clearTimeout(retryTimer);
+    retryTimer = setTimeout(connect, 1000);
   };
 };
 
@@ -68,16 +176,13 @@ export const initHMR = () => {
  *
  * - `css` — hot-reloads matching `<link>` stylesheets by appending a cache-
  *   busting timestamp to their `href`, avoiding a full page reload.
- * - `exports-changed` — the module's public API changed in a way that cannot
- *   be patched in-place; triggers a full reload.
- * - anything else — re-imports the changed module via a dynamic `import()` and
- *   dispatches an `hmr:update` CustomEvent so components can react. Falls back
- *   to a full reload if the import fails.
+ * - anything else — the module graph cannot be rebound in place, so the page
+ *   reloads and the `useState` RAM is restored from the snapshot.
  *
  * @param {{ file: string, changeType: string }} data - The HMR payload from the server.
  * @param {string} data.file - Relative path of the changed file.
- * @param {string} data.changeType - The kind of change (`"css"`,
- *   `"exports-changed"`, or any other string for a JS hot-swap).
+ * @param {string} data.changeType - The kind of change (`"css"`, or any other
+ *   string for a reload with the state kept).
  */
 const handleHMR = (data) => {
   const { file, changeType } = data;
@@ -97,26 +202,16 @@ const handleHMR = (data) => {
     return;
   }
 
-  if (changeType === "exports-changed") {
-    console.log(`📦 Exports changed in ${file}, reloading...`);
-    window.location.reload();
-    return;
-  }
-
-  // JS code change — attempt a hot swap via dynamic import.
-  console.log(`🔥 Hot reloading: ${file}`);
-  const url = `/${file}?t=${Date.now()}`;
-  import(url)
-    .then((module) => {
-      // Notify any listening components that the module was updated.
-      window.dispatchEvent(
-        new CustomEvent("hmr:update", { detail: { file, module } }),
-      );
-    })
-    .catch((err) => {
-      console.error("HMR import failed:", err);
-      window.location.reload();
-    });
+  if (changeType === "exports-changed") console.log(`📦 Exports changed in ${file}`);
+  // A JS change reloads the page and puts the state back.
+  //
+  // Re-importing the file is not a swap: a widget that already closed over the
+  // old function keeps the old function, and the fresh module instance nobody
+  // references changes nothing on screen. What the developer should see is the
+  // new code, so the module graph is re-fetched — and because `useState` RAM
+  // survives the reload, that is not paid for with the form you were filling.
+  console.log(`🔥 Reload with state: ${file}`);
+  reloadKeepingState();
 };
 
 /**
