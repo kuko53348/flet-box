@@ -161,9 +161,11 @@ export const runDevServer = async (options = {}) => {
 
       fs.access(filePath, fs.constants.F_OK, (err) => {
         // SPA fallback: if the file doesn't exist and has no extension, serve index.html
+        let isFallback = false;
         if (err && spaMode && (!ext || ext === "")) {
           filePath = path.join(projectRoot, "index.html");
           ext = ".html";
+          isFallback = true;
         }
 
         fs.readFile(filePath, (err2, content) => {
@@ -177,6 +179,18 @@ export const runDevServer = async (options = {}) => {
           }
 
           const contentType = mimeTypes[ext] || "text/plain";
+
+          // A rewritten deep link is served from `index.html`, but the browser
+          // still resolves `./loader.js` against `/demo/forms/`, so the page came
+          // up blank on every shared link. Anchoring the page at the served root
+          // keeps the app's relative URLs working whatever the route is.
+          if (isFallback && ext === ".html") {
+            let html = content.toString("utf-8");
+            if (!/<base [^>]*href=/i.test(html)) {
+              html = html.replace(/<head(\s[^>]*)?>/i, (m) => `${m}\n<base href="/">`);
+            }
+            content = html;
+          }
 
           if (logRequests) {
             const sizeKB = (content.length / 1024).toFixed(1);

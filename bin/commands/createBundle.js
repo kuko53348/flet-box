@@ -191,6 +191,20 @@ export const createBundle = async (targetArg) => {
     console.log(c("green", "✅ Copied: src/assets (fonts + PWA icons)"));
   }
 
+  // The icon font is a stylesheet, not a bundle input, so it is copied as
+  // written. A generated app keeps it in src/assets/fonts (covered above); the
+  // framework root keeps it in src/fonts, which is the path its own index.html
+  // links — without this the bundled demo 404s the font and every <Icon/> is
+  // spelled as text.
+  if (fs.existsSync(path.join(srcDir, "fonts"))) {
+    fs.cpSync(
+      path.join(srcDir, "fonts"),
+      path.join(targetDir, "src", "fonts"),
+      { recursive: true },
+    );
+    console.log(c("green", "✅ Copied: src/fonts (icon font)"));
+  }
+
   // Copy global CSS (loaded directly by index.html, not bundled by esbuild).
   const globalCss = path.join(srcDir, "styles", "global.css");
   if (fs.existsSync(globalCss)) {

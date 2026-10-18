@@ -95,7 +95,7 @@ ${cmd("   └─ --livereload", "hot reload on the device")}
 ${cmd("run", "Static file server")}
 ${cmd("run --hot", "Dev server with hot reload")}
 ${cmd("run-spa", "SPA + hot reload")}
-${cmd("cloudflare", "Serve demo on a public Cloudflare HTTPS tunnel")}
+${cmd("cloudflare [dir]", "Build the bundle, then tunnel it: public HTTPS demo link")}
 ${cmd("   └─ alias", "cf | demo | tunnel")}
 ${cmd("run-bundle [dir]", "Build & serve the bundle (single app.js)")}
 ${cmd("pkg", "Open the package manager")}
@@ -175,6 +175,16 @@ const parseFlags = () => {
 
   return flags;
 };
+
+/**
+ * The bundle directory a command works on: the second argument when it is a
+ * plain name, `www` otherwise. Flags never reach here, so `flet-box cloudflare
+ * --port 9000` cannot mistake `--port` for a target.
+ *
+ * @returns {string}
+ */
+const bundleTarget = () =>
+  args[1] && /^[a-zA-Z0-9_][a-zA-Z0-9_-]*$/.test(args[1]) ? args[1] : "www";
 
 /**
  * Guards commands that must run inside a FletBox project directory.
@@ -363,16 +373,8 @@ async function main() {
       case "runBundle":
       case "preview": {
         ensureProject();
-        // Accept an explicit target directory as the second argument, but reject
-        // anything that looks like a flag (starts with "-") to avoid misparses.
-        const targetDir =
-          args[1] &&
-          /^[a-zA-Z0-9_][a-zA-Z0-9_-]*$/.test(args[1]) &&
-          !args[1].startsWith("-")
-            ? args[1]
-            : "www";
         await (await import("./commands/runBundle.js")).runBundle({
-          target: targetDir,
+          target: bundleTarget(),
           port: flags.port,
           askPort: !flags.portExplicit,
           logRequests: flags.logRequests,
@@ -399,6 +401,7 @@ async function main() {
       case "tunnel":
         ensureProject();
         await (await import("./commands/runCloudflare.js")).runCloudflareDemo({
+          target: bundleTarget(),
           port: flags.port,
           logRequests: flags.logRequests,
         });
