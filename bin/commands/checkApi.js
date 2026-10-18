@@ -31,6 +31,7 @@ import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import {
   parseInterfaces,
+  parseSignatures,
   resolveInterfaceProps,
 } from "../utils/dtsProps.js";
 import { c, banner, section } from "../utils/colors.js";
@@ -143,6 +144,7 @@ export const loadApi = async (projectRoot) => {
     PROP_MAP: registry.PROP_MAP,
     ALL_PROPS: registry.ALL_PROPS,
     interfaces: parseInterfaces(dts),
+    signatures: parseSignatures(dts),
   };
 };
 

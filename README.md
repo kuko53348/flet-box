@@ -102,6 +102,12 @@ flet-box check-api --props Button       # print the real props of one widget
 flet-box check-api --list               # print every public export
 flet-box check-api --emit-api           # (re)generate .fletbox/api/cheatsheet.md
 
+# Read one widget from every surface at once (offline)
+flet-box unpack Text                    # each prop, where it goes, and what is dead
+flet-box unpack Text --example          # a paste-ready call, built only from verified props
+flet-box unpack Modal --diff            # where types, engine, docs and code disagree
+flet-box unpack --all --md              # every widget, as .fletbox/api/api.json + api.md
+
 # Repair (writes files; run `npm run check` afterwards to confirm)
 flet-box audit-fix                      # fix imports and prop typos in one pass
 flet-box audit-fix --only imports       # just the import wiring
@@ -116,6 +122,17 @@ that points any AI assistant at the real API. `npm run fix` runs `audit-fix`.
 certain — a wrong "fix" that happens to be a valid prop changes the UI silently and
 silences the gate, which is worse than the error it replaced. Anything ambiguous is
 printed under *Left for you to decide* and the file is not touched.
+
+`flet-box unpack` answers the question the types alone cannot: a prop can be declared,
+documented and still reach nothing. It cross-checks the four places a prop lives —
+`src/index.d.ts`, the `ALL_PROPS` translation table, the widget's own source, its doc
+page — and labels each disagreement: **DEAD** (typed, read by nothing), **INVENTED**
+(read by the widget, declared nowhere), **UNDOCUMENTED** (the engine routes it, the
+interface hides it), **DOC-ONLY** and **CODE-ONLY** (the page and the code each promise
+something the other never heard of). `--example` uses only that verified set, so what it
+prints is the whole API you can safely paste; `unpack --all --json` writes the same facts
+as `.fletbox/api/api.json` for the AI agent inside an app, which is the surface it should
+invent against.
 
 ## Android and iOS
 

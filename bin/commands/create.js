@@ -18,6 +18,7 @@ import { createFile, copyFile, makeExecutable } from "../utils/helpers.js";
 import * as templates from "../utils/templates.js";
 import { parseGithubRepo } from "../utils/bundleConfig.js";
 import { checkApi } from "../commands/checkApi.js";
+import { unpack } from "../commands/unpack.js";
 import { c, banner, gradient } from "../utils/colors.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -417,6 +418,17 @@ export const createProject = async (projectName, rawArgs = []) => {
   await checkApi(["--emit-api", "--root", projectPath], {
     print: (line) => console.log(line),
   });
+
+  // The machine-readable twin of the cheatsheet: one entry per widget per prop,
+  // each with the engine route, the default and a sample value that the types
+  // prove. The agent inside the app writes calls from this file.
+  const dump = await unpack(["--all", "--md", "--root", projectPath], { print: () => {} });
+  if (dump.exitCode !== 0)
+    console.warn(
+      c("yellow", "⚠️  Could not generate .fletbox/api/api.json — run `npm run api` after installing."),
+    );
+  else
+    console.log(`   ${c("gray", ".fletbox/api/api.json + api.md — the verified surface, for the agent")}`);
 
   makeExecutable(path.join(projectPath, "run.sh"));
 

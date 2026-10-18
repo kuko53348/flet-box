@@ -712,6 +712,7 @@ export const packageJson = (name) => `{
     "dev": "bash run.sh",
     "check": "node scripts/check-app.mjs",
     "fix": "flet-box audit-fix",
+    "api": "flet-box unpack --all --md",
     "build": "flet-box createBundle www",
     "start": "npm run dev",
     "android:init": "npm run build && cap add android",
@@ -1341,6 +1342,8 @@ framework from scratch:
   Claude Code and Cursor.
 - \`.fletbox/api/cheatsheet.md\` — every widget and its real props, generated from the
   installed package. This is the lookup an agent reads instead of the framework.
+- \`.fletbox/api/api.json\` — the same surface as data: per prop its engine target,
+  default, aliases and a \`sample\` value the types prove works. Write calls from this.
 - \`.fletbox/memory/\` — notes the agent keeps between sessions, so it does not
   rediscover the same thing twice.
 - \`scripts/check-app.mjs\` — the gate that catches hallucinated APIs.
@@ -1350,10 +1353,15 @@ npm run check                      # scan src/ for invented widgets, props, impo
 npm run check -- --props Button    # print the real props of one widget
 npm run check -- --list            # print every public export
 npm run fix                        # rewrite typos it can prove (imports, prop keys)
+npm run api                        # regenerate .fletbox/api/api.json and api.md
+flet-box unpack Button             # each prop, where it really goes, and what is dead
+flet-box unpack Button --example   # a paste-ready call using only verified props
+flet-box unpack Modal --diff       # where types, engine, docs and code disagree
 \`\`\`
 
 \`npm run check\` exits non-zero on a real error and also runs in CI. If you upgrade
-\`flet-box\`, regenerate the cheatsheet with \`flet-box check-api --emit-api\`.
+\`flet-box\`, regenerate the cheatsheet with \`flet-box check-api --emit-api\` and the
+machine-readable surface with \`npm run api\`.
 
 ## Android
 
@@ -1909,8 +1917,11 @@ export const agentsMd = (appName, template, version) =>
     '| --- | --- |',
     '| Which widgets exist and which props each accepts | `.fletbox/api/cheatsheet.md` (generated, covers every widget) |',
     '| Everything for one widget | `npm run check -- --props <Widget>` |',
+    '| Whether a prop actually reaches the DOM, or is typed but dead | `flet-box unpack <Widget>` |',
+    '| A call that is safe to paste | `flet-box unpack <Widget> --example` |',
     '| Prose, types and a worked example | `node_modules/flet-box/docs/widget/<Widget>.md` |',
     '| Every public export of the package | `npm run check -- --list` |',
+    '| The whole surface as data, to build calls from | `.fletbox/api/api.json` |',
     '',
     '**If a name is not in those files, it does not exist.** A prop that silently',
     'does nothing is worse than a compile error: it renders as a broken layout and',
@@ -1919,6 +1930,10 @@ export const agentsMd = (appName, template, version) =>
     '- Do not edit `node_modules/flet-box`. It is a dependency, not source.',
     '- The cheatsheet is generated output. Regenerate it with',
     '  `flet-box check-api --emit-api` after upgrading the package; never hand-edit it.',
+    '- `.fletbox/api/api.json` and `api.md` are generated the same way:',
+    '  `npm run api`. They carry one entry per prop with its engine target, default,',
+    '  aliases and a `sample` value, so a call can be written from data instead of',
+    '  memory.',
     '',
     '## 2. FletBox syntax only — no other framework',
     '',

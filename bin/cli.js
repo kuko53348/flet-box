@@ -15,6 +15,7 @@ import path from "path";
 import { createProject } from "./commands/create.js";
 import { checkApi } from "./commands/checkApi.js";
 import { auditFix } from "./commands/auditFix.js";
+import { unpack } from "./commands/unpack.js";
 import { packageManager } from "./commands/package.js";
 import { createBundle } from "./commands/createBundle.js";
 import { buildAndroid } from "./commands/buildAndroid.js";
@@ -77,6 +78,10 @@ ${cmd("   └─ --props <Widget>", "print one widget's real props")}
 ${cmd("   └─ --list", "list every widget")}
 ${cmd("   └─ --emit-api", "write .fletbox/api/cheatsheet.md")}
 ${cmd("   └─ alias", "check | checkApi | doctor")}
+${cmd("unpack <Widget>", "Everything one widget really accepts, and what works")}
+${cmd("   └─ --example", "paste-ready call using only verified props")}
+${cmd("   └─ --diff", "what the docs or types claim that the code ignores")}
+${cmd("   └─ unpack --all", "every widget; --json / --md write .fletbox/api/")}
 ${cmd("audit-fix", "Rewrite broken imports, missing imports and misspelled props")}
 ${cmd("   └─ --only imports|props", "run one repair instead of both")}
 ${cmd("   └─ alias", "fix-imports | fix-path-imports | auditFix")}
@@ -114,6 +119,8 @@ ${section("✨", "EXAMPLES")}
   ${c("gray", "cd my-app && flet-box run-spa")}
   ${c("gray", "flet-box run-bundle            # build & preview production")}
   ${c("gray", "flet-box cloudflare            # public HTTPS demo link in console")}
+  ${c("gray", "flet-box unpack Text --example # what Text really accepts, as code")}
+  ${c("gray", "flet-box unpack --all --json   # dump the verified API for your AI agent")}
   ${c("gray", "flet-box kill-server 8000      # kill the parasite server")}
 
 ${divider("", "#3730a3")}
@@ -274,6 +281,12 @@ async function main() {
       case "check":
       case "doctor": {
         const { exitCode } = await checkApi(args.slice(1));
+        if (exitCode) process.exit(exitCode);
+        break;
+      }
+
+      case "unpack": {
+        const { exitCode } = await unpack(args.slice(1));
         if (exitCode) process.exit(exitCode);
         break;
       }

@@ -173,6 +173,153 @@ export const resolveInterfaceProps = (interfaces, name, seen = new Set()) => {
 };
 
 /**
+ * Index of the character closing the pair opened at `open`, or -1.
+ *
+ * @param {string} text
+ * @param {number} open
+ * @param {string} left
+ * @param {string} right
+ * @returns {number}
+ */
+const matching = (text, open, left, right) => {
+  if (text[open] !== left) return -1;
+  let depth = 0;
+  for (let i = open; i < text.length; i++) {
+    if (text[i] === left) depth++;
+    else if (text[i] === right) {
+      depth--;
+      if (depth === 0) return i;
+    }
+  }
+  return -1;
+};
+
+/**
+ * Read one type expression starting at `from`: balanced brackets keep nested
+ * object types whole, and the type ends at the first `;` or newline outside them.
+ *
+ * @param {string} code
+ * @param {number} from
+ * @returns {string}
+ */
+const readType = (code, from) => {
+  let depth = 0;
+  let text = "";
+  for (let i = from; i < code.length; i++) {
+    const ch = code[i];
+    if (ch === "=" && code[i + 1] === ">") {
+      text += "=>";
+      i++;
+      continue;
+    }
+    if (ch === "{" || ch === "[" || ch === "(" || ch === "<") depth++;
+    else if (ch === "}" || ch === "]" || ch === ")" || ch === ">") {
+      if (depth === 0) break;
+      depth--;
+    } else if (depth === 0 && (ch === ";" || ch === "\n")) break;
+    text += ch;
+  }
+  return text.trim().replace(/\s+/g, " ");
+};
+
+/**
+ * Split a declared parameter list into `{ name, type, optional }` fields.
+ *
+ * Commas only separate parameters at depth 0, so
+ * `(name: string, options?: { a: number, b: number })` stays two parameters.
+ *
+ * @param {string} params Text between the declaration's parentheses.
+ * @returns {Array<{ name: string, type: string, optional: boolean }>}
+ */
+const parseParams = (params) => {
+  const parts = [];
+  let depth = 0;
+  let current = "";
+  for (const ch of params) {
+    if (ch === "{" || ch === "[" || ch === "(" || ch === "<") depth++;
+    else if (ch === "}" || ch === "]" || ch === ")" || ch === ">") depth--;
+    if (ch === "," && depth === 0) {
+      parts.push(current);
+      current = "";
+      continue;
+    }
+    current += ch;
+  }
+  parts.push(current);
+  return parts
+    .map((part) =>
+      /^\s*([A-Za-z_$][\w$]*)\s*(\??)\s*:\s*([\s\S]+)$/.exec(part.trim()),
+    )
+    .filter(Boolean)
+    .map((m) => ({ name: m[1], optional: m[2] === "?", type: m[3].trim() }));
+};
+
+/**
+ * Read how each exported function is called and what it produces.
+ *
+ * Props say what a widget receives; the signature says what you hand it and what
+ * you get back, and that is the difference between `App({ … })`, `Modal({ … }).open()`
+ * and `Inspector(element, 2)`. Both declaration shapes in `index.d.ts` work:
+ *
+ *   export function Modal(props: ModalProps): { open(): void };
+ *   export const ThemeProvider: (props: { … }) => Widget;
+ *
+ * @param {string} source Full `.d.ts` text.
+ * @returns {Map<string, { params: Array<{ name: string, type: string, optional: boolean }>, returns: string }>}
+ */
+export const parseSignatures = (source) => {
+  const signatures = new Map();
+  const code = source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
+  for (const m of code.matchAll(/export\s+function\s+([A-Za-z_$][\w$]*)\s*\(/g)) {
+    const open = m.index + m[0].length - 1;
+    const close = matching(code, open, "(", ")");
+    if (close < 0) continue;
+    let after = close + 1;
+    while (after < code.length && /\s/.test(code[after])) after++;
+    if (code[after] !== ":") continue;
+    signatures.set(m[1], {
+      params: parseParams(code.slice(open + 1, close)),
+      returns: readType(code, after + 1),
+    });
+  }
+  for (const m of code.matchAll(/export\s+(?:declare\s+)?const\s+([A-Za-z_$][\w$]*)\s*:\s*/g)) {
+    const type = readType(code, m.index + m[0].length);
+    if (!type.startsWith("(")) continue; // a constant, not a factory
+    const close = matching(type, 0, "(", ")");
+    if (close < 0) continue;
+    const rest = type.slice(close + 1);
+    const arrow = rest.indexOf("=>");
+    if (arrow < 0) continue;
+    signatures.set(m[1], {
+      params: parseParams(type.slice(1, close)),
+      returns: rest.slice(arrow + 2).trim(),
+    });
+  }
+  return signatures;
+};
+
+/**
+ * List the members of a returned object type: `open()` means a method,
+ * `isOpen: boolean` a property. Empty for plain types like `Widget`.
+ *
+ * @param {string} type A return type produced by `parseSignatures`.
+ * @returns {string[]}
+ */
+export const membersOf = (type) => {
+  const open = type?.indexOf("{");
+  if (open === undefined || open < 0 || !type.trim().endsWith("}")) return [];
+  const body = type.slice(open + 1, type.lastIndexOf("}"));
+  return splitMembers(body)
+    .map((member) => {
+      const method = /^([A-Za-z_$][\w$]*)\s*(\??)\s*\(/.exec(member);
+      if (method) return `${method[1]}()`;
+      const field = /^([A-Za-z_$][\w$]*)\s*(\??)\s*:/.exec(member);
+      return field ? field[1] : null;
+    })
+    .filter(Boolean);
+};
+
+/**
  * Find the declaration that types a widget's props object.
  *
  * `AppBar` is typed by `AppBarProps`; a few widgets reuse another widget's

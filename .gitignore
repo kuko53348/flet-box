@@ -63,3 +63,6 @@ __pycache__/
 # Temporary files
 *.tmp
 *.temp
+
+# Generated API dumps — `flet-box unpack --all` writes these in any repo
+.fletbox/
