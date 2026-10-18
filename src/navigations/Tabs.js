@@ -67,7 +67,11 @@ export const Tabs = (props) => {
     size = "medium",
     color = colors.primary,
     textColor = colors.text,
-    activeTextColor = colors.white,
+    // FIX: `colors.white` no existe en themes.js → caía a `undefined`
+    // y el tab activo no se distinguía visualmente. Uso `colors.background`
+    // (que es "#ffffff" en el tema claro y "#0f172a" en el oscuro, que es
+    // lo correcto: contraste sobre el fondo del tab activo).
+    activeTextColor = colors.background,
     bgColor = colors.gray100,
     buttonColor = colors.secondary,
     alignment = "left",

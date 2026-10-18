@@ -13,12 +13,14 @@ const record = (name, ok, err) => {
 };
 
 // Minimal props per widget so each can build without throwing.
+// These are the names the widgets actually read — see tests/props-full.test.js
+// for the full documented prop set of every component.
 const fixtures = {
   Container: () => ({}),
   Row: () => ({ children: [] }),
   Column: () => ({ children: [] }),
   Stack: () => ({ children: [] }),
-  ListView: () => ({ children: [] }),
+  ListView: () => ({ data: [], renderItem: (item) => W.Text({ text: String(item) }) }),
   GridView: () => ({ children: [] }),
   Text: () => ({ text: "hi" }),
   Button: () => ({ text: "btn" }),
@@ -30,9 +32,9 @@ const fixtures = {
   ProgressBar: () => ({ value: 50 }),
   Rating: () => ({ value: 3 }),
   Chip: () => ({ label: "chip" }),
-  Badge: () => ({ count: 1, child: W.Text({ text: "b" }) }),
+  Badge: () => ({ value: 1, child: W.Text({ text: "b" }) }),
   Divider: () => ({}),
-  Accordion: () => ({ title: "a", child: W.Text({ text: "x" }) }),
+  Accordion: () => ({ title: "a", children: [W.Text({ text: "x" })] }),
   AdSense: () => ({}),
   AdMob: () => ({
     plugin: {
@@ -48,7 +50,7 @@ const fixtures = {
   Dropdown: () => ({ options: [{ label: "o", value: "1" }] }),
   SnackBar: () => ({ message: "m" }),
   Modal: () => ({ title: "m" }),
-  BottomSheet: () => ({ child: W.Text({ text: "s" }) }),
+  BottomSheet: () => ({ content: W.Text({ text: "s" }) }),
   AlertDialog: () => ({ title: "d" }),
   FloatingActionButton: () => ({}),
   CodeViewer: () => ({ code: "let a=1;" }),
@@ -58,12 +60,14 @@ const fixtures = {
   DataTable: () => ({ columns: ["a"], rows: [["1"]] }),
   Carousel: () => ({ items: [W.Text({ text: "1" })] }),
   Tooltip: () => ({ text: "tip", child: W.Text({ text: "hover" }) }),
-  Pagination: () => ({ total: 10, current: 1 }),
-  TreeView: () => ({ data: [] }),
+  Pagination: () => ({ totalItems: 57, pageSize: 10, currentPage: 1, onPageChange: () => {} }),
+  TreeView: () => ({
+    nodes: [{ id: "a", label: "a", children: [{ id: "b", label: "b" }] }],
+  }),
   Stepper: () => ({ steps: [{ label: "s1" }] }),
   Skeleton: () => ({}),
   Chart: () => ({ data: [1, 2, 3] }),
-  QRCode: () => ({ text: "qr" }),
+  QRCode: () => ({ value: "qr" }),
   Slider: () => ({ min: 0, max: 10, value: 5 }),
   InstallButton: () => ({}),
   Video: () => ({ src: "" }),

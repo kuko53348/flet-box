@@ -43,9 +43,9 @@ export const ProgressBar = (props) => {
     position: "relative",
     ...(striped || indeterminate
       ? {
-          backgroundImage: `repeating-linear-gradient(45deg, rgba(255,255,255,0.15) 0px, rgba(255,255,255,0.15) 10px, transparent 10px, transparent 20px)`,
-          backgroundSize: "28px 28px",
-        }
+        backgroundImage: `repeating-linear-gradient(45deg, rgba(255,255,255,0.15) 0px, rgba(255,255,255,0.15) 10px, transparent 10px, transparent 20px)`,
+        backgroundSize: "28px 28px",
+      }
       : {}),
   });
 
@@ -115,9 +115,15 @@ export const ProgressBar = (props) => {
     );
   }
 
-  // Value percentage
+  // Value percentage.
+  // FIX: guardo referencia directa al span del valor (`valueElRef`) en vez de
+  // buscarlo con `querySelector("span:last-child")` — la versión anterior
+  // podía escribir el porcentaje dentro del label (si el label estaba a la
+  // derecha, era el último span) y el check `valueEl !== label` nunca fallaba
+  // porque `label` era un string.
+  let valueElRef = null;
   if (showValue && !indeterminate) {
-    const valueEl = WidgetFactory({
+    valueElRef = WidgetFactory({
       tag: "span",
       textContent: `${Math.round(percentage)}%`,
       fontSize: "12px",
@@ -129,9 +135,9 @@ export const ProgressBar = (props) => {
     });
 
     if (valuePosition === "left" || valuePosition === "top") {
-      children.unshift(valueEl);
+      children.unshift(valueElRef);
     } else {
-      children.push(valueEl);
+      children.push(valueElRef);
     }
   }
 
@@ -154,11 +160,8 @@ export const ProgressBar = (props) => {
     percentage = (progressValue / max) * 100;
     fill.style.width = `${percentage}%`;
 
-    if (showValue) {
-      const valueEl = container.querySelector("span:last-child");
-      if (valueEl && valueEl !== label) {
-        valueEl.textContent = `${Math.round(percentage)}%`;
-      }
+    if (valueElRef) {
+      valueElRef.textContent = `${Math.round(percentage)}%`;
     }
   };
 

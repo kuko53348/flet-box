@@ -1,19 +1,16 @@
 // src/tools/useState.js
 import { saveRam, getRam, subscribeRam } from "../services/RamStore.js";
-import { createReactiveValue, setImperativeReadListener } from "../widget-factory/reactiveValue.js";
+import {
+  createReactiveValue,
+  isStructuralRead,
+  resetStructuralReads,
+} from "../widget-factory/reactiveValue.js";
 
 // Store callbacks for each state key
 const subscribers = new Map();
 
 // 🔥 Store widgets by state key for automatic updates
 const widgetsByKey = new Map();
-
-// Keys the component reads *structurally* — inside a template literal, a
-// conditional, a list. Those need the app render even when a widget is bound to
-// the key, because a surgical prop patch cannot change what the component
-// computes. A key passed straight into a prop is never listed here.
-const imperativeKeys = new Set();
-setImperativeReadListener((key) => imperativeKeys.add(key));
 
 // Global render function (set by runApp)
 let globalRender = null;
@@ -81,10 +78,10 @@ const ensureRamDispatcher = () => {
     // 2. Notify the manual subscribers.
     callbacks.forEach((callback) => callback(newValue, oldValue));
 
-    // 3. Re-render the app when nothing was bound, or when the component also
-    // reads this key structurally (a template literal, a conditional, a list):
-    // the surgical patch above cannot change what the component computes.
-    if (handled === 0 || imperativeKeys.has(changedKey)) triggerRender();
+    // 3. Re-render the app when nothing was bound, or when the last render pass
+    // also read this key structurally (a template literal, a conditional, a
+    // list): the surgical patch above cannot change what the component computes.
+    if (handled === 0 || isStructuralRead(changedKey)) triggerRender();
   });
 
   if (typeof window !== "undefined") {
@@ -131,38 +128,21 @@ export const registerWidget = (key, widget, propName) => {
   if (already) return;
 
   // Release the binding through `onUnmount`, which the framework fires on BOTH
-  // teardown paths. Patching `_cleanup` here (the previous approach) leaked: the
+  // teardown paths. Patching `_cleanup` (the previous approach) leaked: the
   // lifecycle observer never calls `_cleanup`, so a widget removed without a full
   // app rebuild stayed registered forever and kept receiving updates.
   const release = () => {
-    const map = widgetsByKey.get(key);
-    const props = map && map.get(widget);
+    const perWidget = widgetsByKey.get(key);
+    const props = perWidget && perWidget.get(widget);
     if (!props) return;
     props.delete(propName);
-    if (props.size === 0) map.delete(widget);
+    if (props.size === 0) perWidget.delete(widget);
+    if (perWidget.size === 0) widgetsByKey.delete(key);
   };
 
-  if (typeof widget.onUnmount === "function") {
-    widget.onUnmount(release);
-  } else {
-    const originalCleanup = widget._cleanup;
-    widget._cleanup = () => {
-      release();
-      if (originalCleanup) originalCleanup();
-    };
-  }
-};
-
-/**
- * Removes a specific widget from the automatic-update registry for a given key.
- *
- * @param {string} key - The state key the widget was registered under.
- * @param {Object} widget - The widget instance to unregister.
- * @returns {void}
- */
-export const unregisterWidget = (key, widget) => {
-  const perWidget = widgetsByKey.get(key);
-  if (perWidget) perWidget.delete(widget);
+  // The factory installs lifecycle hooks before it binds reactive props, so a
+  // widget reaching this point always owns `onUnmount`.
+  widget.onUnmount(release);
 };
 
 /**
@@ -184,11 +164,12 @@ export const unregisterWidget = (key, widget) => {
  */
 export const useState = (key, initialState, widget = null, propName = null) => {
   // Initialize the state in RamStore if it does not exist yet
-  let currentValue = getRam(key);
-  if (currentValue === undefined || currentValue === null) {
-    currentValue =
-      typeof initialState === "function" ? initialState() : initialState;
-    saveRam(key, currentValue);
+  const existing = getRam(key);
+  if (existing === undefined || existing === null) {
+    saveRam(
+      key,
+      typeof initialState === "function" ? initialState() : initialState,
+    );
   }
 
   // Register the key so the shared dispatcher knows it has listeners. Previously
@@ -212,19 +193,18 @@ export const useState = (key, initialState, widget = null, propName = null) => {
    * @returns {void}
    */
   const setState = (newValueOrUpdater) => {
-    const oldValue = currentValue;
-    let newValue;
+    // Read the store rather than a value captured when the hook ran: a setter
+    // kept across renders would otherwise compare against a stale `oldValue` and
+    // skip the dispatch when an external `saveState` had already moved the key to
+    // the value being set — leaving the store, the widgets and the callbacks
+    // disagreeing about what the state is.
+    const oldValue = getRam(key);
+    const newValue =
+      typeof newValueOrUpdater === "function"
+        ? newValueOrUpdater(oldValue)
+        : newValueOrUpdater;
 
-    if (typeof newValueOrUpdater === "function") {
-      newValue = newValueOrUpdater(oldValue);
-    } else {
-      newValue = newValueOrUpdater;
-    }
-
-    if (oldValue !== newValue) {
-      currentValue = newValue;
-      saveRam(key, currentValue);
-    }
+    if (oldValue !== newValue) saveRam(key, newValue);
   };
 
   /**
@@ -239,9 +219,7 @@ export const useState = (key, initialState, widget = null, propName = null) => {
     }
     subscribers.get(key).add(callback);
     return () => {
-      if (subscribers.has(key)) {
-        subscribers.get(key).delete(callback);
-      }
+      subscribers.get(key)?.delete(callback);
     };
   };
 
@@ -268,7 +246,9 @@ export const useWatchState = (key, callback) => {
     subscribers.set(key, new Set());
   }
   subscribers.get(key).add(callback);
-  return () => subscribers.get(key).delete(callback);
+  return () => {
+    subscribers.get(key)?.delete(callback);
+  };
 };
 
 /**
@@ -286,7 +266,7 @@ export const cleanupUseState = () => {
   }
   subscribers.clear();
   widgetsByKey.clear();
-  imperativeKeys.clear();
+  resetStructuralReads();
   // The dispatcher was unsubscribed above, so a later call must reinstall it.
   ramDispatcherReady = false;
   globalRender = null;
@@ -297,12 +277,23 @@ export const cleanupUseState = () => {
  * Returns diagnostic statistics about the current state of the useState module.
  * Useful for debugging subscription leaks or widget registration issues.
  *
- * @returns {{ subscribersCount: number, widgetsCount: number, globalRender: boolean }}
+ * @returns {{ stateKeys: number, boundWidgets: number, watchers: number, globalRender: boolean }}
  */
 export const getUseStateStats = () => {
+  // `widgetsByKey` maps key -> widget -> prop names, so its size is the number of
+  // watched *keys*, not of widgets. Count one per widget.
+  let boundWidgets = 0;
+  let watchers = 0;
+  widgetsByKey.forEach((perWidget) => {
+    boundWidgets += perWidget.size;
+  });
+  subscribers.forEach((callbacks) => {
+    watchers += callbacks.size;
+  });
   return {
-    subscribersCount: subscribers.size,
-    widgetsCount: widgetsByKey.size,
+    stateKeys: subscribers.size,
+    boundWidgets,
+    watchers,
     globalRender: !!globalRender,
   };
 };

@@ -2,51 +2,150 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>flet-box — prop scan</title>
+    <title>flet-box — prop contract</title>
     <script>
-      // Capture every "UNKNOWN PROP" the framework's own widgets emit.
-      window.__UNKNOWN = new Map(); // prop -> Set(widgets)
-      const grab = (args) => {
-        try {
-          const joined = args.map((a) => (typeof a === "string" ? a : "")).join(" ");
-          if (joined.indexOf("📦 Prop") !== -1) {
-            const m = joined.match(/"([A-Za-z0-9_]+)"/);
-            if (m) {
-              const prop = m[1];
-              if (!window.__UNKNOWN.has(prop)) window.__UNKNOWN.set(prop, new Set());
-              window.__PENDING = prop;
-            }
-          } else if (joined.indexOf("🧩 Widget") !== -1 && window.__PENDING) {
-            const m = joined.match(/Widget:\s*(?:%c\s*)*"?([A-Za-z0-9_]+)"?/);
-            if (m) window.__UNKNOWN.get(window.__PENDING).add(m[1]);
-            window.__PENDING = null;
+      // Captures every diagnostic the engine prints while the page builds its
+      // widgets. A warning block is a console group whose lines are printf-style
+      // (`%c📦 Prop: %c"name"`), so each label is matched after its `%c` runs.
+      window.__PROP_WARNINGS = { unknown: [], invalidType: [] };
+      (function () {
+        let current = null;
+        const text = (args) => args.map((a) => (typeof a === "string" ? a : "")).join(" ");
+        const commit = () => {
+          if (current && current.prop) window.__PROP_WARNINGS[current.kind].push(current);
+          current = null;
+        };
+        const read = (joined) => {
+          if (!current) return;
+          let m = joined.match(/📦 Prop:[^"]*"([A-Za-z0-9_$]+)"/);
+          if (m) current.prop = m[1];
+          m = joined.match(/📍 Error at:\s*%c([\w.-]+:\d+)/);
+          if (m) current.at = m[1];
+          m = joined.match(/🧩 Widget:\s*%c([A-Za-z0-9_$-]+)/);
+          if (m) current.widget = m[1];
+          m = joined.match(/📊 Expected:\s*%c(\S+)[\s\S]*?📊 Got:\s*%c(\S+)/);
+          if (m) {
+            current.expected = m[1];
+            current.got = m[2];
           }
-        } catch (e) {}
-      };
-      const _log = console.log;
-      console.log = function (...a) { grab(a); return _log.apply(console, a); };
+        };
+        // Capture the originals before rebinding, or the wrappers recurse.
+        const orig = {
+          group: console.group.bind(console),
+          groupEnd: console.groupEnd.bind(console),
+          log: console.log.bind(console),
+        };
+        console.group = function (...args) {
+          commit();
+          const joined = text(args);
+          if (joined.indexOf("FLETBOX: UNKNOWN PROP") !== -1) {
+            current = { kind: "unknown" };
+          } else if (joined.indexOf("FLETBOX: INVALID PROP TYPE") !== -1) {
+            current = { kind: "invalidType" };
+          }
+          return orig.group(...args);
+        };
+        console.groupEnd = function (...args) {
+          commit();
+          return orig.groupEnd(...args);
+        };
+        console.log = function (...args) {
+          read(text(args));
+          return orig.log(...args);
+        };
+      })();
     </script>
   </head>
   <body>
     <div id="summary">scanning…</div>
     <ul id="out"></ul>
-    <script type="module" src="./widget-smoke.test.js"></script>
     <script type="module">
-      // After smoke finishes, report the unknown-prop set.
-      setTimeout(() => {
-        const obj = {};
-        for (const [k, v] of window.__UNKNOWN) obj[k] = [...v];
-        window.__UNKNOWN_REPORT = obj;
-        const keys = Object.keys(obj).sort();
-        document.getElementById("summary").textContent =
-          "UNKNOWN props emitted by framework widgets: " + keys.length;
-        const out = document.getElementById("out");
-        for (const k of keys) {
-          const li = document.createElement("li");
-          li.textContent = k + "  ←  " + obj[k].join(", ");
-          out.appendChild(li);
-        }
-      }, 1500);
+      // The minimal fixtures prove the default props are clean; the full-prop
+      // pass proves the documented props are clean. Both feed the same check.
+      import "./widget-smoke.test.js";
+      import "./props-full.test.js";
+
+      const wait = (fn, tries = 120) =>
+        new Promise((resolve, reject) => {
+          const tick = (left) => {
+            if (fn()) return resolve();
+            if (left <= 0) return reject(new Error("harness timed out"));
+            setTimeout(() => tick(left - 1), 50);
+          };
+          tick(tries);
+        });
+
+      const start = Date.now();
+      wait(() => window.__FULLPROPS_DONE === true)
+        .then(() => {
+          // Give the lifecycle observer one more frame to drain teardown logs.
+          return new Promise((r) => setTimeout(r, 250));
+        })
+        .then(() => {
+          const warnings = window.__PROP_WARNINGS;
+          const full = window.__FULLPROPS || { mounted: [], errors: [] };
+          const smoke = window.__SMOKE || { pass: 0, fail: 0, results: [] };
+
+          const results = [];
+          const ok = (name) => results.push({ name, ok: true });
+          const bad = (name, detail) => results.push({ name, ok: false, detail });
+
+          // The deliberate typo mounted by props-full.test.js proves the capture
+          // works; it is a control, not a finding.
+          const PROBE = "__fletboxProbeProp";
+          const probeSeen = warnings.unknown.some((w) => w.prop === PROBE);
+          const real = warnings.unknown.filter((w) => w.prop !== PROBE);
+
+          if (!probeSeen) {
+            bad("detector", "the probe prop was not captured — this run proves nothing");
+          }
+          for (const w of real) {
+            bad(`unknown prop: ${w.prop}`, `${w.widget || "?"} @ ${w.at || "?"}`);
+          }
+          for (const w of warnings.invalidType) {
+            bad(`invalid type: ${w.prop}`, `${w.widget || "?"} @ ${w.at || "?"}`);
+          }
+          for (const e of full.errors) {
+            bad(`mount ${e.name}`, e.detail);
+          }
+          for (const r of (smoke.results || []).filter((x) => !x.ok)) {
+            bad(`smoke ${r.name}`, r.err || "failed");
+          }
+          if (real.length === 0 && probeSeen) {
+            ok(`every documented prop is registered (${full.mounted.length} mounts, ${smoke.pass} defaults)`);
+          }
+          if (full.errors.length === 0) ok("full-prop configs build without throwing");
+
+          const fail = results.filter((r) => !r.ok).length;
+          const pass = results.length - fail;
+          window.__PROPSCAN = { pass, fail, results, unknown: real };
+          console.log(
+            `[prop-contract] ${pass} OK / ${fail} fail — ${full.mounted.length} full-prop mounts, ${smoke.pass} default fixtures, probe ${probeSeen ? "seen" : "MISSED"}`,
+          );
+
+          const summary = document.getElementById("summary");
+          summary.textContent = fail
+            ? `PROP CONTRACT: ${fail} problem(s) — ${real.map((w) => w.prop).join(", ") || "detector not armed"}`
+            : `PROP CONTRACT: ${pass} checks OK — no unknown props`;
+          summary.style.color = fail ? "#ff6b6b" : "#4ec9b0";
+
+          const out = document.getElementById("out");
+          for (const r of results) {
+            const li = document.createElement("li");
+            li.style.color = r.ok ? "#4ec9b0" : "#ff6b6b";
+            li.textContent = `${r.ok ? "PASS" : "FAIL"} ${r.name}${r.detail ? " — " + r.detail : ""}`;
+            out.appendChild(li);
+          }
+        })
+        .catch((err) => {
+          window.__PROPSCAN = {
+            pass: 0,
+            fail: 1,
+            results: [{ name: "harness", ok: false, detail: err.message }],
+          };
+          document.getElementById("summary").textContent = "PROP CONTRACT: " + err.message;
+          document.getElementById("summary").style.color = "#ff6b6b";
+        });
     </script>
   </body>
 </html>

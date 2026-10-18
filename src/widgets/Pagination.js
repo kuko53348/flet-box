@@ -72,7 +72,10 @@ export const Pagination = (props) => {
 
   const createPageButton = (page, isActive = false) => {
     const buttonVariant = isActive ? "filled" : variant;
-    const buttonColor = isActive ? color : colors.textSecondary;
+    // FIX: antes `isActive ? color : colors.textSecondary` — pero bgColor también
+    // es `color`, así que texto y fondo eran el mismo tono → número invisible.
+    // Uso blanco para el activo (texto sobre fondo de color).
+    const buttonColor = isActive ? "#ffffff" : colors.textSecondary;
 
     return Button({
       text: String(page),
@@ -98,7 +101,7 @@ export const Pagination = (props) => {
       ...buttonBase,
       onPress: onClick,
       disabled: disabled || isDisabled,
-      disableNativeEffects: true,
+      disableTransform: true,
     });
   };
 

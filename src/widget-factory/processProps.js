@@ -1,5 +1,5 @@
 // core/processProps.js
-import { getPropDefinition, ATTRIBUTE_DOM_SET } from "./translateProps.js";
+import { getPropDefinition, ATTRIBUTE_DOM_SET, PASSTHROUGH_PREFIXES } from "./translateProps.js";
 import { toREM } from "./remTool.js"; // Centralized REM conversion utility
 import { resolveReactive } from "./reactiveValue.js";
 
@@ -84,7 +84,7 @@ export const processProps = (props, tag = "div", widgetName = null) => {
       }
     } else {
       // Unknown prop → intelligent fallback
-      if (key.startsWith("data-") || key.startsWith("aria-")) {
+      if (PASSTHROUGH_PREFIXES.some((prefix) => key.startsWith(prefix))) {
         attributes[key] = value;
       } else if (key.startsWith("on") && typeof value === "function") {
         const eventName = key.slice(2).toLowerCase();

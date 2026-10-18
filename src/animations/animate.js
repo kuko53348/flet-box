@@ -3,10 +3,15 @@
  *
  * Provides two tiers of animation helpers:
  * - **Fire-and-forget** (`animate`, `fadeOut`, `fadeIn`, `pulse`): start an
- *   animation and move on — no way to await completion.
+ *   animation and move on — each returns a cancel function instead of awaiting.
  * - **Async/awaitable** (`animateAsync`, `fadeOutAsync`, `fadeInAsync`,
  *   `pulseAsync`): return a Promise that resolves when the animation finishes,
  *   allowing sequential composition with `await`.
+ *
+ * Every loop is registered per widget and property, so starting a second
+ * animation on the same property replaces the first (two loops writing one style
+ * fight each other), and {@link stopAnimation} ends whatever is still running on
+ * a widget — the usual cleanup an unmount needs when the caller kept no handle.
  *
  * All functions drive the browser's `requestAnimationFrame` loop directly and
  * do not rely on CSS transitions or the Web Animations API.
@@ -162,6 +167,151 @@ const writeAnimatedValue = (widget, property, value) => {
   widget[property] = value;
 };
 
+// ========== ACTIVE LOOP REGISTRY ==========
+
+/**
+ * Live loops by widget and property.
+ *
+ * Two loops writing the same style property fight each other: the older one keeps
+ * overwriting the newer value on every frame and neither can be stopped. The
+ * registry lets a fresh animation replace whatever already animates that
+ * property, and lets {@link stopAnimation} end loops whose caller never kept the
+ * handle — the usual case for a widget that unmounts mid-fade.
+ *
+ * @type {WeakMap<object, Map<string, { raf: number, running: boolean, cancel: () => boolean }>>}
+ */
+const activeLoops = new WeakMap();
+
+const isTrackable = (widget) =>
+  widget !== null &&
+  (typeof widget === "object" || typeof widget === "function");
+
+const registerLoop = (widget, property, state) => {
+  if (!isTrackable(widget)) return;
+  let byProperty = activeLoops.get(widget);
+  if (!byProperty) {
+    byProperty = new Map();
+    activeLoops.set(widget, byProperty);
+  }
+  byProperty.set(property, state);
+};
+
+const unregisterLoop = (widget, property, state) => {
+  if (!isTrackable(widget)) return;
+  const byProperty = activeLoops.get(widget);
+  if (byProperty && byProperty.get(property) === state) byProperty.delete(property);
+};
+
+/**
+ * Stops the animation currently running on a widget.
+ *
+ * @param {HTMLElement|object} widget - The animated widget or DOM element.
+ * @param {string} [property] - Stop only this property; every animated property when omitted.
+ * @returns {boolean} True when at least one loop was stopped.
+ */
+export const stopAnimation = (widget, property) => {
+  if (!isTrackable(widget)) return false;
+  const byProperty = activeLoops.get(widget);
+  if (!byProperty) return false;
+
+  if (property !== undefined) {
+    const state = byProperty.get(property);
+    if (!state) return false;
+    return state.cancel();
+  }
+
+  const loops = Array.from(byProperty.values());
+  loops.forEach((state) => state.cancel());
+  return loops.length > 0;
+};
+
+/**
+ * Runs one property animation and returns its cancel function.
+ *
+ * Shared engine behind `animate`, `animateAsync` and `pulse`, so all three get
+ * the same guarantees: the loop is bounded by a sanitised duration, it replaces
+ * any animation already driving that property, and it stops the moment its
+ * handle is called.
+ *
+ * @param {HTMLElement|object} widget
+ * @param {string} property
+ * @param {number|string} from - Starting value; reads the widget when `undefined`.
+ * @param {number|string} to
+ * @param {number} duration
+ * @param {string} easing
+ * @param {(progress: number) => number|string} [valueAt] - Custom value curve,
+ *   receiving eased progress in `[0, 1]`. Used by `pulse` to keep the whole
+ *   up-and-down gesture inside a single cancelable loop.
+ * @param {(progress: number) => number|string} [valueAt] - Custom value curve,
+ *   receiving eased progress in `[0, 1]`. Used by `pulse` to keep the whole
+ *   up-and-down gesture inside a single cancelable loop.
+ * @param {(widget: HTMLElement|object) => void} [onDone] - Called when the loop
+ *   ends — also when it is cancelled or replaced, so awaiting code never hangs.
+ * @returns {() => boolean} Cancel function; true when it stopped a live loop.
+ */
+const runAnimation = (
+  widget,
+  property,
+  from,
+  to,
+  duration,
+  easing,
+  valueAt,
+  onDone,
+) => {
+  // A negative duration makes elapsed/duration increasingly negative, so progress
+  // never reaches 1 and the loop re-arms forever (and `animateAsync` never
+  // resolves). Clamping the progress is not enough — it just sits at 0 and
+  // `0 < 1` stays true — so sanitise the duration itself. `0` collapses to one frame.
+  const safeDuration = Math.max(0, Number(duration) || 0);
+  const startValue = from !== undefined ? from : readAnimatedValue(widget, property);
+
+  // Replace the loop already animating this property instead of racing it.
+  stopAnimation(widget, property);
+
+  const startTime = performance.now();
+  const state = { raf: 0, running: true, cancel: null };
+
+  const finish = () => {
+    if (!state.running) return;
+    state.running = false;
+    unregisterLoop(widget, property, state);
+    if (onDone) onDone(widget);
+  };
+
+  state.cancel = () => {
+    if (!state.running) return false;
+    cancelAnimationFrame(state.raf);
+    finish();
+    return true;
+  };
+
+  registerLoop(widget, property, state);
+
+  const step = (currentTime) => {
+    if (!state.running) return;
+    const progress = Math.max(
+      0,
+      Math.min(1, (currentTime - startTime) / safeDuration),
+    );
+    const easedProgress = getEasing(easing, progress);
+    const currentValue = valueAt
+      ? valueAt(easedProgress)
+      : interpolate(startValue, to, easedProgress);
+
+    writeAnimatedValue(widget, property, currentValue);
+
+    if (progress < 1) {
+      state.raf = requestAnimationFrame(step);
+      return;
+    }
+    finish();
+  };
+
+  state.raf = requestAnimationFrame(step);
+  return state.cancel;
+};
+
 // ========== FIRE AND FORGET (No Promise) ==========
 
 /**
@@ -176,7 +326,9 @@ const writeAnimatedValue = (widget, property, value) => {
  * @param {number|string}      to            - Ending value.
  * @param {number}             [duration=300] - Animation duration in milliseconds.
  * @param {string}             [easing="linear"] - Easing curve name (see {@link getEasing}).
- * @returns {void}
+ * @returns {() => boolean} Cancel function — true if it stopped a loop still running.
+ *   The animation also stops on its own when a new animation takes the same property,
+ *   or via {@link stopAnimation}.
  */
 export const animate = (
   widget,
@@ -185,34 +337,7 @@ export const animate = (
   to,
   duration = 300,
   easing = "linear",
-) => {
-  // A negative duration makes elapsed/duration increasingly negative, so the
-  // loop re-armed forever and the property was driven backwards. Clamping the
-  // progress is not enough (it just sits at 0 and `0 < 1` stays true), so
-  // sanitise the duration itself. `0` collapses to a single frame.
-  duration = Math.max(0, Number(duration) || 0);
-  const startTime = performance.now();
-  const startValue = from !== undefined ? from : readAnimatedValue(widget, property);
-  const endValue = to;
-
-  const step = (currentTime) => {
-    const elapsed = currentTime - startTime;
-    // Clamp both ends. A negative `duration` makes elapsed/duration increasingly
-    // negative, so `progress` never reached 1 and the loop re-armed forever (and
-    // `animateAsync` never resolved). `duration: 0` yields Infinity, clamped to 1.
-    const progress = Math.max(0, Math.min(1, elapsed / duration));
-    const easedProgress = getEasing(easing, progress);
-    const currentValue = interpolate(startValue, endValue, easedProgress);
-
-    writeAnimatedValue(widget, property, currentValue);
-
-    if (progress < 1) {
-      requestAnimationFrame(step);
-    }
-  };
-
-  requestAnimationFrame(step);
-};
+) => runAnimation(widget, property, from, to, duration, easing, null);
 
 // ========== ASYNC ANIMATION (Returns Promise) ==========
 
@@ -228,7 +353,8 @@ export const animate = (
  * @param {number|string}      to            - Ending value.
  * @param {number}             [duration=300] - Animation duration in milliseconds.
  * @param {string}             [easing="linear"] - Easing curve name (see {@link getEasing}).
- * @returns {Promise<HTMLElement|object>} Resolves with `widget` when the animation finishes.
+ * @returns {Promise<HTMLElement|object>} Resolves with `widget` when the animation
+ *   finishes — or as soon as it is cancelled or replaced, so `await` never hangs.
  */
 export const animateAsync = (
   widget,
@@ -237,35 +363,12 @@ export const animateAsync = (
   to,
   duration = 300,
   easing = "linear",
-) => {
-  // See `animate`: a negative duration would keep the loop alive forever and this
-  // promise would never resolve.
-  duration = Math.max(0, Number(duration) || 0);
-  return new Promise((resolve) => {
-    const startTime = performance.now();
-    const startValue = from !== undefined ? from : readAnimatedValue(widget, property);
-    const endValue = to;
-
-    const step = (currentTime) => {
-      const elapsed = currentTime - startTime;
-      // Same clamp as `animate`: a negative `duration` would otherwise never
-      // reach progress 1 and this promise would never resolve.
-      const progress = Math.max(0, Math.min(1, elapsed / duration));
-      const easedProgress = getEasing(easing, progress);
-      const currentValue = interpolate(startValue, endValue, easedProgress);
-
-      writeAnimatedValue(widget, property, currentValue);
-
-      if (progress < 1) {
-        requestAnimationFrame(step);
-      } else {
-        resolve(widget);
-      }
-    };
-
-    requestAnimationFrame(step);
+) =>
+  new Promise((resolve) => {
+    // `resolve` runs on completion AND when the loop is cancelled or replaced, so
+    // an `await` chain cannot hang on an animation that never got to finish.
+    runAnimation(widget, property, from, to, duration, easing, null, resolve);
   });
-};
 
 // ========== HELPER FUNCTIONS (Fire and Forget) ==========
 
@@ -275,10 +378,10 @@ export const animateAsync = (
  *
  * @param {HTMLElement|object} widget        - The target widget.
  * @param {number}             [duration=300] - Fade duration in milliseconds.
- * @returns {void}
+ * @returns {() => boolean} Cancel function (see {@link animate}).
  */
 export const fadeOut = (widget, duration = 300) => {
-  animate(widget, "opacity", 1, 0, duration);
+  return animate(widget, "opacity", 1, 0, duration);
 };
 
 /**
@@ -287,10 +390,10 @@ export const fadeOut = (widget, duration = 300) => {
  *
  * @param {HTMLElement|object} widget        - The target widget.
  * @param {number}             [duration=300] - Fade duration in milliseconds.
- * @returns {void}
+ * @returns {() => boolean} Cancel function (see {@link animate}).
  */
 export const fadeIn = (widget, duration = 300) => {
-  animate(widget, "opacity", 0, 1, duration);
+  return animate(widget, "opacity", 0, 1, duration);
 };
 
 /**
@@ -301,14 +404,21 @@ export const fadeIn = (widget, duration = 300) => {
  * @param {HTMLElement|object} widget        - The target widget.
  * @param {number}             [duration=300] - Total pulse duration in milliseconds
  *   (split evenly between scale-up and scale-down).
- * @returns {void}
+ * @returns {() => boolean} Cancel function (see {@link animate}).
  */
-export const pulse = (widget, duration = 300) => {
-  animate(widget, "scale", 1, 1.1, duration / 2);
-  setTimeout(() => {
-    animate(widget, "scale", 1.1, 1, duration / 2);
-  }, duration / 2);
-};
+export const pulse = (widget, duration = 300) =>
+  runAnimation(
+    widget,
+    "scale",
+    1,
+    1,
+    duration,
+    "linear",
+    // One loop with a triangular curve instead of an animation plus a
+    // `setTimeout`: the timer used to start phase two on a widget that had
+    // already been removed from the DOM, and nothing could cancel it.
+    (progress) => interpolate(1, 1.1, progress < 0.5 ? progress * 2 : 2 - progress * 2),
+  );
 
 // ========== ASYNC HELPER FUNCTIONS (Returns Promise) ==========
 

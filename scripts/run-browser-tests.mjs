@@ -48,6 +48,7 @@ const HARNESSES = [
   { page: "tests/regression.html", global: "__REGRESSION", label: "regression guards (audit fixes)" },
   { page: "tests/index.html", global: "__TESTS", label: "widget-factory contract" },
   { page: "tests/widget-contract.html", global: "__CONTRACT", label: "widget runtime contract" },
+  { page: "tests/propscan.html", global: "__PROPSCAN", label: "prop contract (no unknown props)" },
   { page: "tests/doccheck-all.html", global: "__DOCCHECK", label: "documented behavior (ch. 3-7)" },
   { page: "tests/doccheck.html", global: "__DOCCHECK", label: "documented behavior (ch. 1-2)" },
 ];

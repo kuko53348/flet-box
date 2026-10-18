@@ -81,7 +81,10 @@ export const AdaptiveScaffold = (props) => {
       // button to drawerInstance.open().
       drawerInstance = Drawer({
         header: null,
-        body: [content],
+        // `body` is an array of widgets, and `leftNavBar` may itself be one, so
+        // the content is flattened here. A nested array would reach `children`
+        // as a single item and break the append.
+        body: Array.isArray(content) ? content : [content],
         footer: null,
         position: "left",
         width: leftNavBarWidth,
@@ -125,6 +128,12 @@ export const AdaptiveScaffold = (props) => {
       widthExpanded: rightNavBarWidth,
       widthCollapsed: 50,
       bgColor: colors.surface,
+      // FIX: CollapsibleSideBar aplica `borderRight` por defecto (default
+      // `1px solid ${colors.border}`), así que un sidebar derecho acababa
+      // con doble borde: `borderRight` (heredado del default) + `borderLeft`
+      // (el que pedimos aquí). Forzamos `borderRight: "none"` para que solo
+      // tenga el borde izquierdo (el que da al contenido central).
+      borderRight: "none",
       borderLeft: `1px solid ${colors.border}`,
       children: content,
     });

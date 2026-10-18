@@ -375,6 +375,12 @@ declare module 'flet-box' {
     title?: string | Widget;
     subtitle?: string | Widget;
     description?: string | Widget;
+    /** Text props merged into the title, e.g. `{ size: 16, weight: "700" }`. */
+    titleProps?: Partial<TextProps>;
+    /** Text props merged into the subtitle. */
+    subtitleProps?: Partial<TextProps>;
+    /** Text props merged into the description line. */
+    descriptionProps?: Partial<TextProps>;
     rightItem?: Widget;
     onPress?: (widget: Widget) => void;
     selected?: boolean;
@@ -544,6 +550,9 @@ declare module 'flet-box' {
     animatedStripes?: boolean;
     stripeColor?: string;
     glow?: boolean;
+    /** Canonical press/change callback, like every other FletBox widget. */
+    onPress?: (value: number) => void;
+    /** @deprecated Alias of `onPress`. */
     onChanged?: (value: number) => void;
     onChangeEnd?: (value: number) => void;
   }
@@ -857,6 +866,7 @@ declare module 'flet-box' {
     navSideBarWidth?: number;
     navSideBarPosition?: 'left' | 'right';
     routes?: Record<string, any>;
+    basePath?: string;
     backgroundColor?: Color;
     closeDrawerOnNavigate?: boolean;
   }
@@ -1141,7 +1151,8 @@ declare module 'flet-box' {
     to: any,
     duration?: number,
     easing?: string
-  ): void;
+  ): () => boolean;
+  export function stopAnimation(widget: Widget, property?: string): boolean;
   export function animateAsync(
     widget: Widget,
     property: string,
@@ -1150,9 +1161,9 @@ declare module 'flet-box' {
     duration?: number,
     easing?: string
   ): Promise<Widget>;
-  export function fadeOut(widget: Widget, duration?: number): void;
-  export function fadeIn(widget: Widget, duration?: number): void;
-  export function pulse(widget: Widget, duration?: number): void;
+  export function fadeOut(widget: Widget, duration?: number): () => boolean;
+  export function fadeIn(widget: Widget, duration?: number): () => boolean;
+  export function pulse(widget: Widget, duration?: number): () => boolean;
   export function fadeOutAsync(widget: Widget, duration?: number): Promise<Widget>;
   export function fadeInAsync(widget: Widget, duration?: number): Promise<Widget>;
   export function pulseAsync(widget: Widget, duration?: number): Promise<Widget>;

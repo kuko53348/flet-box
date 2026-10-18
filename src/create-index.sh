@@ -32,7 +32,7 @@ export {
     useState, useWatchState,
     tokenize, generateHighlightedHtml, highlightColors,
     parseMarkdown, parseInlineMarkdown, escapeHtml, wrapListItems,
-    animate, fadeOut, fadeIn, pulse,
+    animate, stopAnimation, fadeOut, fadeIn, pulse,
     applyStripes, removeStripes, applyShimmer, applyGlow,
     applyIndeterminate, applyPulse, injectKeyframes,
     Gradient, Shadow, rgba, stackPosition,

@@ -128,6 +128,9 @@ export const ListView = (props) => {
   let visibleStart = 0,
     visibleEnd = 0; // current render window (avoids redundant re-renders when nothing changed)
   let ticking = false; // requestAnimationFrame guard for the scroll handler
+  let scrollRaf = 0; // id of the frame the scroll handler queued, so unmount can cancel it
+  let mountRaf = 0; // id of the first-render frame
+  let disposed = false; // after unmount no queued frame may touch the DOM or call back
   let headerElement = null,
     footerElement = null,
     emptyElement = null;
@@ -140,27 +143,35 @@ export const ListView = (props) => {
   /** @returns {number} Total number of rows (accounting for grid columns). */
   const getTotalRows = () => Math.ceil(_data.length / cols);
 
+  /** @returns {number} Height the header occupies inside the scroll container. */
+  const getHeaderHeight = () => headerElement?.offsetHeight || 0;
+
   /**
-   * Calculates the absolute top offset of an item, accounting for the header height.
+   * Calculates the absolute top offset of an item inside `innerContainer`.
+   *
+   * The header is a SIBLING placed above `innerContainer`, so the browser already
+   * pushes every row down by the header's height. Adding it here counted it twice:
+   * rows sat one header below where the window math expected them, and
+   * `scrollToIndex` overshot by the same amount.
+   *
    * @param {number} index - Zero-based item index.
    * @returns {number} Top position in pixels.
    */
   const getItemTop = (index) => {
     const row = Math.floor(index / cols);
-    const headerHeight = headerElement?.offsetHeight || 0;
-    return headerHeight + row * (itemSize + gap);
+    return row * (itemSize + gap);
   };
 
   /**
-   * Calculates the total logical height of the list including header and footer.
-   * This value is set on `innerContainer` so the scrollbar reflects the full list size.
+   * Calculates the logical height of the virtual item area. Header and footer are
+   * siblings of `innerContainer` and contribute to the scrollbar through their own
+   * layout boxes, so they must not be added here.
    * @returns {number} Total height in pixels.
    */
   const getTotalHeight = () => {
     const rows = getTotalRows();
-    const headerH = headerElement?.offsetHeight || 0;
-    const footerH = footerElement?.offsetHeight || 0;
-    return headerH + (rows * (itemSize + gap) - gap) + footerH;
+    if (rows === 0) return 0;
+    return Math.max(0, rows * (itemSize + gap) - gap);
   };
 
   /** Applies the correct logical height to the inner container. */
@@ -178,15 +189,17 @@ export const ListView = (props) => {
   const renderVisibleItems = () => {
     if (!scrollContainer) return;
 
-    const scrollTop = scrollContainer.scrollTop;
     const viewportH = scrollContainer.clientHeight;
     const itemTotalH = itemSize + gap;
+    // Convert the scroll position into ITEM space: rows start below the header, so
+    // the first rows are still on screen while `scrollTop` is inside the header.
+    const itemsTop = Math.max(0, scrollContainer.scrollTop - getHeaderHeight());
 
     // Clamp start/end rows to valid range, including the buffer zone
-    let startRow = Math.max(0, Math.floor(scrollTop / itemTotalH) - bufferSize);
+    let startRow = Math.max(0, Math.floor(itemsTop / itemTotalH) - bufferSize);
     let endRow = Math.min(
       getTotalRows(),
-      Math.ceil((scrollTop + viewportH) / itemTotalH) + bufferSize,
+      Math.ceil((itemsTop + viewportH) / itemTotalH) + bufferSize,
     );
 
     let start = startRow * cols;
@@ -247,24 +260,39 @@ export const ListView = (props) => {
    * Scroll event handler. Uses `requestAnimationFrame` throttling so the handler
    * runs at most once per frame even during rapid scroll events. Also checks
    * whether the user has scrolled close to the bottom and triggers `onEndReached`.
+   *
+   * The queued frame is tracked so unmounting can cancel it: an untracked frame
+   * rendered into a detached DOM and called `onEndReached` on a widget nobody owns
+   * anymore — which, for an infinite-scroll handler that appends data, is an
+   * unbounded fetch loop.
    */
   const handleScroll = () => {
-    if (!ticking) {
-      requestAnimationFrame(() => {
-        renderVisibleItems();
-        const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
-        if (
-          onEndReached &&
-          _data.length &&
-          scrollHeight - (scrollTop + clientHeight) <=
-            clientHeight * onEndReachedThreshold
-        ) {
-          onEndReached();
-        }
-        ticking = false;
-      });
-      ticking = true;
-    }
+    if (ticking || disposed) return;
+    ticking = true;
+    scrollRaf = requestAnimationFrame(() => {
+      scrollRaf = 0;
+      ticking = false;
+      if (disposed) return;
+      renderVisibleItems();
+      const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
+      if (
+        onEndReached &&
+        _data.length &&
+        scrollHeight - (scrollTop + clientHeight) <=
+          clientHeight * onEndReachedThreshold
+      ) {
+        onEndReached();
+      }
+    });
+  };
+
+  /**
+   * Recomputes the render window when the viewport itself changes size (window
+   * resize, a collapsing panel above the list). Without this, more rows becoming
+   * visible never triggered a render because no scroll event fired.
+   */
+  const handleViewportResize = () => {
+    if (!disposed) renderVisibleItems();
   };
 
   // ---- Header / footer / empty-state ----
@@ -424,7 +452,8 @@ export const ListView = (props) => {
    */
   const scrollToIndex = (index, animated = true) => {
     if (index < 0 || index >= _data.length) return;
-    const top = getItemTop(index);
+    // Back to SCROLL space: the header's height sits in front of the item area.
+    const top = getItemTop(index) + getHeaderHeight();
     scrollContainer.scrollTo({ top, behavior: animated ? "smooth" : "auto" });
   };
 
@@ -475,6 +504,8 @@ export const ListView = (props) => {
   });
 
   // ---- Lifecycle hooks ----
+  let resizeObserver = null;
+
   element.onMount(() => {
     renderHeader();
     renderFooter();
@@ -482,13 +513,21 @@ export const ListView = (props) => {
 
     // Defer the first actual render to the next animation frame so the header/footer
     // have already been measured and their heights are available.
-    requestAnimationFrame(() => {
+    mountRaf = requestAnimationFrame(() => {
+      mountRaf = 0;
+      if (disposed) return;
       updateInnerHeight(); // Recalculate total height now that header/footer are in the DOM
       renderVisibleItems(); // Render the initially visible rows
     });
 
     renderEmpty();
     scrollContainer.addEventListener("scroll", handleScroll);
+    if (typeof ResizeObserver !== "undefined") {
+      resizeObserver = new ResizeObserver(handleViewportResize);
+      resizeObserver.observe(scrollContainer);
+    } else {
+      window.addEventListener("resize", handleViewportResize);
+    }
     if (onRefresh) setupPullToRefresh();
 
     // Inject the spinner keyframes once, globally, so pull-to-refresh has its animation
@@ -499,6 +538,11 @@ export const ListView = (props) => {
   });
 
   element.onUnmount(() => {
+    disposed = true;
+    if (scrollRaf) cancelAnimationFrame(scrollRaf);
+    if (mountRaf) cancelAnimationFrame(mountRaf);
+    if (resizeObserver) resizeObserver.disconnect();
+    else window.removeEventListener("resize", handleViewportResize);
     scrollContainer.removeEventListener("scroll", handleScroll);
     itemCache.clear();
   });

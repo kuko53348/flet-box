@@ -43,6 +43,7 @@ const volume = Slider({
 | `animatedStripes` | `boolean` | Animates the stripes on the bar. |
 | `stripeColor` | `string` | Color used for the stripe. |
 | `glow` | `boolean` | Adds a glow around the widget. |
+| `onPress` | `(value: number) => void` | Callback fired when the widget is pressed. Alias: `onClick`. |
 | `onChanged` | `(value: number) => void` | Event handler for the `onChanged` event. |
 | `onChangeEnd` | `(value: number) => void` | Event handler for the `onChangeEnd` event. |
 

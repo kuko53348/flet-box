@@ -38,28 +38,48 @@ let resolving = false;
  */
 let renderPassDepth = 0;
 
-/** Called with the state key when the component reads a reactive value. */
-let onImperativeRead = null;
-
 /**
- * Registers the listener told about structural reads. The state module uses it to
- * know which keys still need the app render in addition to the surgical patch.
+ * Keys the component read structurally during the pass that just finished.
  *
- * @param {(key: string) => void} listener
- * @returns {void}
+ * Rebuilt by every render pass: a component re-reads everything it consumes, so
+ * what the last pass saw is the complete picture. Keeping the keys of *earlier*
+ * passes instead would pin the app to full re-renders forever after one
+ * conditional read, which is exactly what the surgical binding exists to avoid.
  */
-export const setImperativeReadListener = (listener) => {
-  onImperativeRead = listener;
-};
+let structuralKeys = new Set();
+
+/** The keys collected by the pass currently running, or `null` between passes. */
+let passKeys = null;
 
 /** Marks the start of a component-render pass. */
 export const beginRenderPass = () => {
+  if (renderPassDepth === 0) passKeys = new Set();
   renderPassDepth++;
 };
 
-/** Marks the end of a component-render pass. */
+/** Marks the end of a component-render pass and publishes what it observed. */
 export const endRenderPass = () => {
-  if (renderPassDepth > 0) renderPassDepth--;
+  if (renderPassDepth === 0) return;
+  renderPassDepth--;
+  if (renderPassDepth === 0) {
+    if (passKeys) structuralKeys = passKeys;
+    passKeys = null;
+  }
+};
+
+/**
+ * True when the last render pass consumed `key` structurally, so a change to it
+ * needs an app render on top of the surgical prop patch.
+ *
+ * @param {string} key
+ * @returns {boolean}
+ */
+export const isStructuralRead = (key) => structuralKeys.has(key);
+
+/** Forgets every observed key. Used by hot-reload teardown. */
+export const resetStructuralReads = () => {
+  structuralKeys = new Set();
+  passKeys = renderPassDepth > 0 ? new Set() : null;
 };
 
 /**
@@ -90,11 +110,15 @@ export const reactiveKeyOf = (val) => (isReactive(val) ? val._stateKey ?? null :
  */
 export const resolveReactive = (val) => {
   if (typeof val === "function" && val._isReactive) {
+    // Save and restore instead of clearing: a reactive whose `valueOf` reads
+    // another one would otherwise leave the inner read flagged as the factory's
+    // and the outer one reported as a structural read.
+    const wasResolving = resolving;
     resolving = true;
     try {
       return val();
     } finally {
-      resolving = false;
+      resolving = wasResolving;
     }
   }
   if (val && typeof val === "object" && val._isReactive === true) {
@@ -111,9 +135,9 @@ export const resolveReactive = (val) => {
  * arithmetic work) and a `_value` getter (so the legacy `state._value` read
  * keeps working — now live instead of frozen).
  *
- * Every read that the component itself performs during a render pass is reported
- * through `onImperativeRead`, because such a read means the value is consumed
- * structurally and the app must re-render too.
+ * Every read that the component itself performs during a render pass is recorded
+ * in the pass's structural-key set, because such a read means the value is
+ * consumed structurally and the app must re-render too.
  *
  * @param {() => *} read - Reads the current value from the store.
  * @param {string} key - The state key this value is bound to.
@@ -122,7 +146,7 @@ export const resolveReactive = (val) => {
 export const createReactiveValue = (read, key) => {
   const live = () => {
     const value = read();
-    if (!resolving && renderPassDepth > 0 && onImperativeRead) onImperativeRead(key);
+    if (!resolving && passKeys) passKeys.add(key);
     return value;
   };
   live._isReactive = true;
@@ -141,7 +165,8 @@ export default {
   reactiveKeyOf,
   resolveReactive,
   createReactiveValue,
-  setImperativeReadListener,
+  isStructuralRead,
+  resetStructuralReads,
   beginRenderPass,
   endRenderPass,
 };

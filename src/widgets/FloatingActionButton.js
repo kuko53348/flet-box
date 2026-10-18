@@ -2,11 +2,6 @@
  * @file FloatingActionButton.js
  * @description Circular floating action button anchored to a corner.
  */
-/**
- * FloatingActionButton Component
- * @module widgets/FloatingActionButton
- */
-
 import { Container } from "./Container.js";
 import { Row } from "./Row.js";
 import { Text } from "./Text.js";
@@ -45,7 +40,9 @@ export const FloatingActionButton = (props) => {
   if (extended && label) {
     children.push(
       Text({
-        value: label,
+        // FIX: `value` es special y `applySpecial` solo lo aplica en inputs
+        // → en un <span> no hacía nada y el label quedaba vacío.
+        text: label,
         size: 14,
         fontWeight: "500",
         color: foregroundColor,

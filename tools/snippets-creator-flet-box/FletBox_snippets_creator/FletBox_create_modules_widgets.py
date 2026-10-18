@@ -47,7 +47,7 @@ const App = () => {
         appBar: AppBar({
             title: "My App",
             centerTitle: true,
-            leading: Icon({ name: "menu", onclick: () => openDrawer() })
+            leading: Icon({ name: "menu", onPress: () => openDrawer() })
         }),
         drawer: Drawer({
             header: Text({ text: "Menu", size: 20, weight: "bold", padding: 20 }),
@@ -151,7 +151,7 @@ const App = () => {
         appBar: AppBar({
             title: "Full App",
             centerTitle: true,
-            leading: Icon({ name: "menu", onclick: () => openDrawer() })
+            leading: Icon({ name: "menu", onPress: () => openDrawer() })
         }),
         drawer: Drawer({
             header: Text({ text: "Menu", size: 20, weight: "bold", padding: 20 }),
@@ -179,7 +179,7 @@ runApp(App, 'root');''',
     # =========================================================================
     # COMPONENT TEMPLATES (createComponent)
     # =========================================================================
-    'createComponent.basic': '''import { Container, Text } from 'flet-box';
+    'createComponent.basic': '''import { Container, Text, colors } from 'flet-box';
 
 export const MyComponent = ({ title, onPress }) => {
     return Container({
@@ -190,7 +190,7 @@ export const MyComponent = ({ title, onPress }) => {
     });
 };''',
 
-    'createComponent.listview': '''import { ListView, ListTile, Text, createList, random } from 'flet-box';
+    'createComponent.listview': '''import { ListView, ListTile, Avatar, Text, createList, random } from 'flet-box';
 
 // Generate sample data using createList and random
 const generateData = () => {
@@ -206,7 +206,7 @@ export const MyList = ({ data = generateData(), onSelect }) => {
     return ListView({
         data: data,
         renderItem: (item, index) => ListTile({
-            leading: Avatar({ name: item.avatar, size: 40 }),
+            leftItem: Avatar({ name: item.avatar, size: 40 }),
             title: item.title,
             subtitle: item.subtitle,
             onPress: () => onSelect(item)
@@ -214,7 +214,7 @@ export const MyList = ({ data = generateData(), onSelect }) => {
     });
 };''',
 
-    'createComponent.gridview': '''import { GridView, Card, Image, Text, createList, random } from 'flet-box';
+    'createComponent.gridview': '''import { GridView, Card, Image, Column, Text, createList, random } from 'flet-box';
 
 // Generate sample image data
 const generateImages = () => {

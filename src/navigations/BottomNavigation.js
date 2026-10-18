@@ -214,8 +214,11 @@ export const BottomNavigation = (props) => {
 
     let labelWidget = null;
     if (showLabels && item.label) {
+      // FIX: `value` es una prop `special` que `applySpecial` solo maneja
+      // en <input>/<textarea>. En un <span> no hace nada → el label quedaba
+      // vacío. La prop correcta para contenido de texto es `text`.
       labelWidget = Text({
-        value: item.label,
+        text: item.label,
         size: 11,
         color: isActive ? selectedColor : unselectedColor,
         fontWeight: isActive ? "500" : "400",

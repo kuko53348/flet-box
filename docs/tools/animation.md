@@ -1,28 +1,33 @@
 # Animation helpers
 
 ## Overview
-Two ways to animate in FletBox: `animate`/`fadeIn`/`fadeOut`/`pulse` (and their `Async` variants) run animations on existing elements, while the widgets `AnimatedBox`, `AnimatedText`, `MatrixRain`, and `ParallaxBox` give you animated UI out of the box.
+Two ways to animate in FletBox: `animate`/`fadeIn`/`fadeOut`/`pulse` (and their `Async` variants) run animations on existing elements, while the widgets `AnimatedBox`, `AnimatedText`, `MatrixRain`, and `ParallaxBox` give you animated UI out of the box. Every helper-driven animation is cancelable — through the function it returns or later with `stopAnimation(widget)`.
 
 ## When to use
 - Animate an element when something happens: fade a panel in, pulse a button, animate a value change.
+- Stop an animation the element no longer needs: `onUnmount(() => stopAnimation(el))`.
 - Add moving backgrounds (`MatrixRain`, `ParallaxBox`).
 
 ## Import
 
 ```javascript
-import { animate, fadeIn, fadeOut, pulse, AnimatedBox } from "flet-box";
+import { animate, fadeIn, fadeOut, pulse, stopAnimation, AnimatedBox } from "flet-box";
 ```
 
 ## Functions
 
 | Function | Signature | Returns | Description |
 | --- | --- | --- | --- |
-| `animate` | `animate(widget, property, from, to, duration?, easing?)` | — | Animate one CSS `property` of a widget from `from` to `to` (both numbers or colors). `duration` is ms, `easing` defaults to `"linear"`. |
-| `animateAsync` | `animateAsync(widget, property, from, to, duration?, easing?)` | `Promise` | Same, resolves when the animation finishes. |
-| `fadeIn` | `fadeIn(widget, duration?)` | — | Fade the widget in (default 300 ms). |
-| `fadeOut` | `fadeOut(widget, duration?)` | — | Fade it out. |
-| `pulse` | `pulse(widget, duration?)` | — | A quick scale pulse. |
+| `animate` | `animate(widget, property, from, to, duration?, easing?)` | cancel `() => boolean` | Animate one CSS `property` of a widget from `from` to `to` (both numbers or colors). `duration` is ms, `easing` defaults to `"linear"`. Calling the returned function stops the loop and returns `true` if it was still running. |
+| `animateAsync` | `animateAsync(widget, property, from, to, duration?, easing?)` | `Promise` | Same, resolves with the widget when the animation finishes — or as soon as it is cancelled or replaced, so `await` never hangs. |
+| `stopAnimation` | `stopAnimation(widget, property?)` | `boolean` | Stop what is animating `widget` — one `property`, or every animated property when it is omitted. Use it in `onUnmount` when you did not keep the cancel function. |
+| `fadeIn` | `fadeIn(widget, duration?)` | cancel `() => boolean` | Fade the widget in (default 300 ms). |
+| `fadeOut` | `fadeOut(widget, duration?)` | cancel `() => boolean` | Fade it out. |
+| `pulse` | `pulse(widget, duration?)` | cancel `() => boolean` | A quick scale pulse: up for the first half, back down for the second. |
 | `fadeInAsync` / `fadeOutAsync` / `pulseAsync` | same, `Async` suffix | `Promise` | Promise variants that resolve on completion. |
+
+Starting a second animation on the same widget and property **replaces** the first one; two loops writing
+one style would otherwise fight, and the older animation would resume after the newer had finished.
 
 ## Widgets
 

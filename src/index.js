@@ -280,6 +280,7 @@ export {
   ParallaxBox,
   animate,
   animateAsync,
+  stopAnimation,
   fadeIn,
   fadeOut,
   pulse,

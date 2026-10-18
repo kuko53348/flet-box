@@ -274,12 +274,13 @@ export const Stepper = (props) => {
     overflow: "auto",
   });
 
-  // Navigation container
-  navContainer = Container({ width: "100%" });
+  // Navigation container — only built when the stepper is allowed to drive itself.
+  // `updateUI()` below skips the whole nav branch while `navContainer` is null.
+  navContainer = showNavigation ? Container({ width: "100%" }) : null;
 
   container.appendChild(stepsWrapper);
   container.appendChild(contentContainer);
-  container.appendChild(navContainer);
+  if (navContainer) container.appendChild(navContainer);
 
   // Initial render
   updateUI();

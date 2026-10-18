@@ -104,7 +104,18 @@ export const CircularBar = (props) => {
     if (!gradient) return color;
     if (typeof gradient === "string") return gradient;
     if (Array.isArray(gradient)) {
-      const grad = ctx.createLinearGradient(0, 0, currentWidth, currentWidth);
+      // CSS angle convention: 0deg points up and angles grow clockwise, so the
+      // default 135deg keeps the historical top-left to bottom-right sweep.
+      const rad = (gradientAngle * Math.PI) / 180;
+      const centre = currentWidth / 2;
+      const dx = Math.sin(rad) * centre;
+      const dy = -Math.cos(rad) * centre;
+      const grad = ctx.createLinearGradient(
+        centre - dx,
+        centre - dy,
+        centre + dx,
+        centre + dy,
+      );
       gradient.forEach((c, i) => {
         grad.addColorStop(i / (gradient.length - 1), c);
       });

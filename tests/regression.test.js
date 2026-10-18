@@ -16,8 +16,9 @@ import { WidgetFactory } from "../src/widget-factory/index.js";
 import { AnimatedBox } from "../src/animations/AnimatedBox.js";
 import { AnimatedText } from "../src/animations/AnimatedText.js";
 import { MatrixRain } from "../src/animations/MatrixRain.js";
+import { animate, pulse, stopAnimation } from "../src/animations/animate.js";
 import { runApp } from "../src/core/runApp.js";
-import { useState } from "../src/tools/useState.js";
+import { useState, saveState, getState } from "../src/tools/useState.js";
 
 const results = [];
 let pass = 0;
@@ -860,6 +861,302 @@ async function run() {
       window.requestAnimationFrame = origRaf;
       window.cancelAnimationFrame = origCaf;
     }
+  });
+
+  // -------------------------------------------------- animate: cancelable loops
+  await t("animate: cancel() freezes the property and stopAnimation ends the loop", async () => {
+    const box = document.createElement("div");
+    host.appendChild(box);
+    const cancel = animate(box, "opacity", 0, 1, 600);
+    await wait(80);
+    const mid = box.style.opacity;
+    ok(mid !== "" && Number(mid) > 0 && Number(mid) < 1, `not animating (style.opacity="${mid}")`);
+    ok(cancel() === true, "cancel() did not report a live loop");
+    await wait(100);
+    ok(box.style.opacity === mid, `the loop kept writing after cancel (${mid} → ${box.style.opacity})`);
+    ok(cancel() === false, "cancel() is not idempotent");
+
+    const other = document.createElement("div");
+    host.appendChild(other);
+    animate(other, "opacity", 0, 1, 600);
+    await wait(40);
+    ok(stopAnimation(other) === true, "stopAnimation found nothing to stop");
+    const frozen = other.style.opacity;
+    await wait(100);
+    ok(other.style.opacity === frozen, `stopAnimation left the loop running (${frozen} → ${other.style.opacity})`);
+    box.remove();
+    other.remove();
+  });
+
+  await t("animate: a second animation on a property replaces the first", async () => {
+    // Two loops writing one style fight: the older one resumed after the newer had
+    // finished and drove the property back to ITS target.
+    const box = document.createElement("div");
+    host.appendChild(box);
+    animate(box, "opacity", 0, 1, 300);
+    await wait(40);
+    animate(box, "opacity", 1, 0, 60);
+    await wait(240);
+    ok(
+      Number(box.style.opacity) === 0,
+      `the replaced animation resumed: opacity=${box.style.opacity}`,
+    );
+    box.remove();
+  });
+
+  await t("pulse: cancel() stops phase two (no leftover setTimeout)", async () => {
+    const box = document.createElement("div");
+    host.appendChild(box);
+    const cancel = pulse(box, 400);
+    await wait(90);
+    const scaled = box.style.transform;
+    const value = Number((scaled.match(/scale\(([\d.]+)/) || [])[1]);
+    ok(value > 1, `pulse never scaled up (transform="${scaled}")`);
+    cancel();
+    await wait(260); // the phase-two timer used to fire inside this window
+    ok(
+      box.style.transform === scaled,
+      `pulse kept animating after cancel (${scaled} → ${box.style.transform})`,
+    );
+    box.remove();
+  });
+
+  // --------------------------------------------- ListView: frames and geometry
+  await t("ListView: unmount cancels the scroll frame (no onEndReached after detach)", async () => {
+    let ended = 0;
+    const list = W.ListView({
+      data: Array.from({ length: 60 }, (_, i) => i),
+      itemSize: 20,
+      height: 100,
+      expand: false,
+      renderItem: (i) => W.Text({ text: `row ${i}` }),
+      onEndReached: () => {
+        ended++;
+      },
+    });
+    host.appendChild(list);
+    await wait(80);
+
+    const scroller = list.firstElementChild;
+    ok(scroller !== null, "the scroll container was not built");
+
+    // Queue the throttled frame while still attached, then unmount before it runs.
+    scroller.dispatchEvent(new Event("scroll"));
+    list.remove();
+    const atDispatch = ended;
+    await wait(150);
+    ok(
+      ended === atDispatch,
+      `onEndReached fired ${ended - atDispatch} time(s) on a detached list`,
+    );
+  });
+
+  await t("ListView: the header height is not counted twice", async () => {
+    const header = document.createElement("div");
+    header.style.height = "50px";
+    header.textContent = "HEADER";
+
+    const list = W.ListView({
+      data: Array.from({ length: 20 }, (_, i) => i),
+      itemSize: 40,
+      gap: 0,
+      height: 200,
+      expand: false,
+      ListHeaderComponent: header,
+      renderItem: (i) => W.Text({ text: `row ${i}` }),
+    });
+    host.appendChild(list);
+    await wait(80);
+
+    const scroller = list.firstElementChild;
+    const inner = Array.from(scroller.children).find((child) => child !== header);
+    ok(inner !== undefined, "the virtual container was not found");
+
+    const innerHeight = parseFloat(inner.style.height);
+    ok(
+      innerHeight === 20 * 40,
+      `inner height ${innerHeight}px for 20×40px rows — header/footer are siblings, not part of it`,
+    );
+    const firstRow = inner.firstElementChild.firstElementChild;
+    ok(
+      parseFloat(firstRow.style.top) === 0,
+      `row 0 sits at ${firstRow.style.top} inside the item area (expected 0px)`,
+    );
+    list.remove();
+  });
+
+  await t("ListView: growing the viewport renders the newly visible rows", async () => {
+    const list = W.ListView({
+      data: Array.from({ length: 100 }, (_, i) => i),
+      itemSize: 20,
+      gap: 0,
+      height: 60,
+      expand: false,
+      renderItem: (i) => W.Text({ text: `row ${i}` }),
+    });
+    host.appendChild(list);
+    await wait(80);
+
+    const visible = list.firstElementChild.firstElementChild.firstElementChild;
+    const before = visible.children.length;
+    ok(before > 0, "the list rendered nothing");
+
+    list.style.height = "400px";
+    await wait(120);
+    const after = visible.children.length;
+    ok(
+      after > before,
+      `rows stayed at ${before} after the list grew from 60px to 400px — nothing re-measured the viewport`,
+    );
+    list.remove();
+  });
+
+  // ------------------------------------------- Slider: thumb retry loop
+  await t("Slider: the thumb retry loop stops when the widget unmounts", async () => {
+    const origRaf = window.requestAnimationFrame;
+    let frames = 0;
+    window.requestAnimationFrame = (cb) =>
+      origRaf((time) => {
+        frames++;
+        return cb(time);
+      });
+    try {
+      // `frames` counts every rAF callback in the page, so the background rate has
+      // to be measured with the same window length as the assertion. The slider's
+      // own loop shows up as a doubling of that rate.
+      host.replaceChildren();
+      const WINDOW = 180;
+      await wait(WINDOW);
+      const noise = frames;
+
+      // A hidden track measures 0, so positioning retries every frame until the
+      // widget can be measured. That retry used to be an untracked recursive rAF.
+      const hidden = document.createElement("div");
+      hidden.style.display = "none";
+      host.appendChild(hidden);
+      const slider = W.Slider({ min: 0, max: 10, value: 5 });
+      hidden.appendChild(slider);
+      await wait(WINDOW);
+      const whileUnmeasurable = frames - noise;
+      ok(
+        whileUnmeasurable > noise + 3,
+        `the retry loop never ran (${whileUnmeasurable} frames vs ${noise} background) — the guard proves nothing`,
+      );
+
+      slider.remove();
+      hidden.remove();
+      const atRemoval = frames;
+      await wait(WINDOW);
+      const afterUnmount = frames - atRemoval;
+      ok(
+        afterUnmount <= noise + 3,
+        `${afterUnmount} frames ran after unmount (background ${noise}) — the loop never stops`,
+      );
+    } finally {
+      window.requestAnimationFrame = origRaf;
+    }
+  });
+
+  // ------------------------------------------------- Stepper: showNavigation
+  await t("Stepper: showNavigation:false renders no navigation", () => {
+    const steps = [{ label: "One" }, { label: "Two" }];
+    const withNav = mount(W.Stepper({ steps, activeStep: 0 }));
+    const noNav = mount(W.Stepper({ steps, activeStep: 0, showNavigation: false }));
+
+    ok(withNav.textContent.includes("Next"), "the default stepper lost its navigation");
+    ok(
+      !noNav.textContent.includes("Next") && !noNav.textContent.includes("Back"),
+      "showNavigation:false still rendered the nav buttons",
+    );
+    ok(
+      noNav.children.length === 2,
+      `expected steps + content only, got ${noNav.children.length} sections`,
+    );
+  });
+
+  // ------------------------------------------- useState: surgical vs structural
+  await t("useState: a key stops forcing full renders once the component no longer reads it structurally", async () => {
+    // The reactivity model has two halves: a key passed straight into a prop is
+    // patched surgically, a key the component *computes with* needs the app render.
+    // Flagging the second half forever — because one earlier render used it in a
+    // template literal — silently disables the first half for good.
+    let renders = 0;
+    let setN = null;
+    let setMode = null;
+    const root = document.createElement("div");
+    root.id = "sticky-root";
+    document.body.appendChild(root);
+
+    saveState("stickyN", 0);
+    saveState("stickyMode", true);
+
+    const App = () => {
+      renders++;
+      const [n, setNV] = useState("stickyN", 0);
+      const [asText, setAsText] = useState("stickyMode", true);
+      setN = setNV;
+      setMode = setAsText;
+      const showLabel = asText.valueOf();
+      return W.Column({
+        children: [
+          showLabel
+            ? W.Text({ text: "count=" + n }) // computed with `n` → app render
+            : W.Text({ id: "bound-text", text: n }), // passed as a prop → surgical
+        ],
+      });
+    };
+
+    runApp(App, "sticky-root");
+    await wait(80);
+    ok(renders === 1, `expected 1 render, got ${renders}`);
+    ok(root.textContent.includes("count=0"), `initial content: ${root.textContent}`);
+
+    setN(1);
+    await wait(80);
+    ok(renders === 2, `a structurally-read key must re-render the app (${renders})`);
+
+    setMode(false); // rebuild so `n` only ever reaches a prop
+    await wait(80);
+    ok(renders === 3, `the mode switch did not re-render (${renders})`);
+
+    const bound = root.querySelector("#bound-text");
+    ok(bound !== null, "the prop-bound text was not built");
+    const before = renders;
+    setN(7);
+    await wait(80);
+    ok(renders === before, `the app re-rendered ${renders - before} time(s) for a bound-only key`);
+    ok(
+      bound.textContent === "7",
+      `the surgical update never reached the widget: "${bound.textContent}"`,
+    );
+
+    setMode(true);
+    await wait(80);
+    setN(9);
+    await wait(80);
+    ok(
+      root.textContent.includes("count=9"),
+      `the structural path stopped tracking the key: ${root.textContent}`,
+    );
+    root.remove();
+  });
+
+  await t("useState: setState compares against the store, not the value captured at render", () => {
+    const seen = [];
+    const [, setN, onN] = useState("desyncN", 1);
+    onN((value) => seen.push(value));
+
+    saveState("desyncN", 2); // someone else moved the key
+    setN(1); // this setter still believes the value is 1
+    ok(getState("desyncN") === 1, `dispatch skipped — store=${getState("desyncN")}`);
+    ok(seen.length === 2, `expected 2 notifications, got ${seen.length}`);
+
+    saveState("desyncN", 10);
+    setN((prev) => prev + 1);
+    ok(
+      getState("desyncN") === 11,
+      `the updater received a stale value: store=${getState("desyncN")}`,
+    );
   });
 
   // ------------------------------------------------------------------ report

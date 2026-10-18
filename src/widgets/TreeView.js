@@ -104,7 +104,6 @@ export const TreeView = (props) => {
         typeof borderRadius === "number" ? `${borderRadius}px` : borderRadius,
       marginLeft: `${level * indent}px`,
       transition: `background-color ${transitionDuration} ease`,
-      hoverBackgroundColor: hoverBgColor,
     });
 
     // Add hover effect

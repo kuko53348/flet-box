@@ -18,7 +18,7 @@ import { useState, useWatchState, memo, ref } from "flet-box";
 
 | Function | Signature | Returns | Description |
 | --- | --- | --- | --- |
-| `useState` | `useState(key, initialState, widget?, propName?)` | `[value, setValue, subscribe]` | Reactive state stored under `key`. Optional `widget` + `propName` re-render that widget's prop on change. |
+| `useState` | `useState(key, initialState, widget?, propName?)` | `[value, setValue, subscribe]` | Reactive state stored under `key`. `value` is live: pass it straight into a prop and the factory binds that widget to the key, so `setValue` patches only it. Optional `widget` + `propName` binds an existing widget explicitly. |
 | `useWatchState` | `useWatchState(key, callback)` | `() => void` | Watch a state key; returns an unsubscribe function. |
 | `memo` | `memo(fn)` | `T & { cache? }` | Cache a function by its arguments. |
 | `memoWithKey` | `memoWithKey(fn, keyFn)` | `T` | Cache using a custom result key. |
@@ -36,7 +36,8 @@ const [count, setCount] = useState("counter", 0);
 
 Column({
   children: [
-    Text({ text: `Count: ${count}` }),
+    Text({ text: `Count: ${count}` }),   // derived here → app render
+    Text({ text: count }),               // passed as a prop → surgical
     Button({
       text: "Add one",
       onPress: () => setCount((previous) => previous + 1),
@@ -75,6 +76,13 @@ const second = parseMemo(jsonText); // cached, fast
 
 - Read the full [State guide](../guides/state.md) for the complete `useState` rules: stable keys, updater functions, immutability, and widget binding.
 - `useState` returns `[value, setValue, subscribe]` — `subscribe(cb)` returns an unsubscribe function.
+- The returned value is **live**: passing it as a prop (`Text({ text: count })`) binds that
+  widget to the key and `setValue` patches it alone, with no app render. Computing with it
+  inside a component (`` `Count: ${count}` ``, a ternary, a `.map()`) is a structural read,
+  and that does re-render the app — see
+  [Reactivity in FletBox](reactivity.md).
+- Reads inside an event handler or a `subscribe` callback are never structural, so they
+  never cost an app render.
 - `memo` caches by serialized arguments; use `memoWithKey` when you want to control the cache key yourself, and `clearMemo` to free memory when the cache grows too large.
 - `ref()` returns a function for a widget's `ref` prop; the handle gives you `update(props)` to push new props into the widget.
 

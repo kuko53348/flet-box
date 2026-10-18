@@ -16,6 +16,7 @@ export { MatrixRain } from "./MatrixRain.js";
 export {
 	animate,
 	animateAsync,
+	stopAnimation,
 	fadeOut,
 	fadeIn,
 	pulse,

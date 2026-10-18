@@ -50,8 +50,8 @@ export const Slider = (props) => {
     stripeColor = "rgba(255,255,255,0.25)",
     glow = false,
     // Events
+    /** @deprecated Alias of `onPress`. */
     onChanged,
-    /** @deprecated Use onPress instead */
     onPress: onPressProp,
     onChangeEnd,
     // Rest
@@ -76,6 +76,13 @@ export const Slider = (props) => {
   let trackLengthPx =
     typeof trackSizePx === "number" ? `${trackSizePx}px` : trackSizePx;
   let thumbSizeNum = typeof thumbSize === "number" ? thumbSize : 20;
+
+  // Positioning retries while the track still measures 0 (hidden parent, not laid
+  // out yet). Both handles are tracked so unmounting can stop them: an untracked
+  // recursive rAF outlived the widget and re-armed itself every frame, forever.
+  let thumbRaf = 0;
+  let initTimer = 0;
+  let disposed = false;
 
   injectKeyframes(
     "slider-stripes",
@@ -329,10 +336,16 @@ export const Slider = (props) => {
   }
 
   function updateThumbPosition() {
-    if (!track || !thumb) return;
+    if (disposed || !track || !thumb) return;
     const trackRect = track.getBoundingClientRect();
     if (trackRect.width === 0 && trackRect.height === 0) {
-      requestAnimationFrame(updateThumbPosition);
+      // Not measurable yet: wait one frame for layout, keeping a single pending
+      // frame instead of stacking one retry per caller.
+      if (thumbRaf) cancelAnimationFrame(thumbRaf);
+      thumbRaf = requestAnimationFrame(() => {
+        thumbRaf = 0;
+        updateThumbPosition();
+      });
       return;
     }
     if (isHorizontal) {
@@ -506,6 +519,9 @@ export const Slider = (props) => {
 
   // ---------- Cleanup ----------
   const cleanup = () => {
+    disposed = true;
+    if (thumbRaf) cancelAnimationFrame(thumbRaf);
+    if (initTimer) clearTimeout(initTimer);
     if (resizeObserver) {
       resizeObserver.disconnect();
     } else {
@@ -523,7 +539,10 @@ export const Slider = (props) => {
   container.onUnmount(cleanup);
 
   // Initialize position
-  setTimeout(() => updateThumbPosition(), 0);
+  initTimer = setTimeout(() => {
+    initTimer = 0;
+    updateThumbPosition();
+  }, 0);
   return container;
 };
 

@@ -26,6 +26,9 @@ const tile = ListTile({
 | `title` | `string \| Widget` | Title text shown in the header. |
 | `subtitle` | `string \| Widget` | The `subtitle` value for the widget. |
 | `description` | `string \| Widget` | The `description` value for the widget. |
+| `titleProps` | `Partial<TextProps>` | The `titleProps` value for the widget. |
+| `subtitleProps` | `Partial<TextProps>` | The `subtitleProps` value for the widget. |
+| `descriptionProps` | `Partial<TextProps>` | The `descriptionProps` value for the widget. |
 | `rightItem` | `Widget` | The `rightItem` value for the widget. |
 | `onPress` | `(widget: Widget) => void` | Callback fired when the widget is pressed. Alias: `onClick`. |
 | `selected` | `boolean` | Current selected state. |

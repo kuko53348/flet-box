@@ -40,7 +40,7 @@ export const AlertDialog = (props) => {
     onConfirm,
     onCancel,
     onClose,
-    variant = "normal", // 'normal', 'danger', 'warning', 'success'
+    variant = "normal",
     showCancel = true,
     confirmText = "Accept",
     cancelText = "Cancel",
@@ -83,14 +83,16 @@ export const AlertDialog = (props) => {
     children: [
       icon,
       Text({
-        value: title,
+        // FIX: `value` no aplica a <span> → título quedaba vacío. Usar `text`.
+        text: title,
         size: 24,
         fontWeight: "bold",
         color: colors.text,
         textAlign: "center",
       }),
       Text({
-        value: message,
+        // FIX: idem para el mensaje.
+        text: message,
         size: 18,
         fontWeight: "bold",
         color: colors.textSecondary,
@@ -134,7 +136,7 @@ export const AlertDialog = (props) => {
 
   let modal = null;
   // Placeholder until the modal is created below — avoids a temporal dead-zone
-  let closeModal = () => {};
+  let closeModal = () => { };
 
   // Delegate to the base Modal widget, passing our content and actions
   modal = Modal({

@@ -342,13 +342,6 @@
       "fromEntries([[\"a\", 1], [\"b\", 2]])"
     ]
   },
-  "FletBox widgets Dict": {
-    "prefix": "Dict",
-    "description": "Make a FletBox widgets Dict widget",
-    "body": [
-      "new Dict({ name: \"flet-box\" })"
-    ]
-  },
   "FletBox widgets filter_fn": {
     "prefix": "filter_fn",
     "description": "Make a FletBox widgets filter_fn widget",
@@ -388,7 +381,7 @@
     "prefix": "repeat",
     "description": "Make a FletBox widgets repeat widget",
     "body": [
-      "repeat(5, (i) => Button({ text: f\"Item {i}\" }))"
+      "repeat(5, (i) => Button({ text: `Item ${i}` }))"
     ]
   },
   "FletBox widgets range": {
@@ -409,7 +402,7 @@
     "prefix": "memoWithKey",
     "description": "Make a FletBox widgets memoWithKey widget",
     "body": [
-      "memoWithKey(expensiveFunction, (a, b) => f\"{a}-{b}\")"
+      "memoWithKey(expensiveFunction, (a, b) => `${a}-${b}`)"
     ]
   },
   "FletBox widgets clearMemo": {
@@ -1378,20 +1371,6 @@
       "className: \"my-class\","
     ]
   },
-  "FletBox widgets style": {
-    "prefix": "style",
-    "description": "Make a FletBox widgets style widget",
-    "body": [
-      "style: { marginTop: 10 },"
-    ]
-  },
-  "FletBox widgets key": {
-    "prefix": "key",
-    "description": "Make a FletBox widgets key widget",
-    "body": [
-      "key: item.id,"
-    ]
-  },
   "FletBox widgets ref": {
     "prefix": "ref",
     "description": "Make a FletBox widgets ref widget",
@@ -1403,14 +1382,14 @@
     "prefix": "children",
     "description": "Make a FletBox widgets children widget",
     "body": [
-      "children: [Text(\"A\"), Text(\"B\")],"
+      "children: [Text({ text: \"A\" }), Text({ text: \"B\" })],"
     ]
   },
   "FletBox widgets child": {
     "prefix": "child",
     "description": "Make a FletBox widgets child widget",
     "body": [
-      "child: Text(\"Hello\"),"
+      "child: Text({ text: \"Hello\" }),"
     ]
   },
   "FletBox widgets padding": {
@@ -1424,7 +1403,7 @@
     "prefix": "padding.only",
     "description": "Make a FletBox widgets padding.only widget",
     "body": [
-      "padding: padding: { top: 20, right: 50, bottom: 50, left: 50 },"
+      "padding: padding({ top: 20, right: 50, bottom: 50, left: 50 }),"
     ]
   },
   "FletBox widgets padding.all": {
@@ -1448,6 +1427,13 @@
       "padding: padding({ vertical: 12, horizontal: 24 }),"
     ]
   },
+  "FletBox widgets padding_fn": {
+    "prefix": "padding_fn",
+    "description": "Make a FletBox widgets padding_fn widget",
+    "body": [
+      "padding({ horizontal: 20, vertical: 10 })"
+    ]
+  },
   "FletBox widgets margin": {
     "prefix": "margin",
     "description": "Make a FletBox widgets margin widget",
@@ -1466,7 +1452,7 @@
     "prefix": "margin.only",
     "description": "Make a FletBox widgets margin.only widget",
     "body": [
-      "margin: margin: { top: 20, right: 50, bottom: 50, left: 50 },"
+      "margin: margin({ top: 20, right: 50, bottom: 50, left: 50 }),"
     ]
   },
   "FletBox widgets margin.horizontal": {
@@ -1481,6 +1467,13 @@
     "description": "Make a FletBox widgets margin.vertical widget",
     "body": [
       "margin: margin({ vertical: 12, horizontal: 24 }),"
+    ]
+  },
+  "FletBox widgets margin_fn": {
+    "prefix": "margin_fn",
+    "description": "Make a FletBox widgets margin_fn widget",
+    "body": [
+      "margin({ top: 8, bottom: 8 })"
     ]
   },
   "FletBox widgets gap": {
@@ -1501,7 +1494,7 @@
     "prefix": "height",
     "description": "Make a FletBox widgets height widget",
     "body": [
-      "height: \"auto\","
+      "height: \"auto\", // \"100vh\""
     ]
   },
   "FletBox widgets minWidth": {
@@ -1585,7 +1578,7 @@
     "prefix": "border",
     "description": "Make a FletBox widgets border widget",
     "body": [
-      "border: border(1, \"solid\" ,\"#ccc\"),"
+      "border: border(1, \"solid\", \"#ccc\"),"
     ]
   },
   "FletBox widgets borderRadius": {
@@ -1627,14 +1620,14 @@
     "prefix": "shadow",
     "description": "Make a FletBox widgets shadow widget",
     "body": [
-      "shadow: shadow(0, 4, 8, 0, rgba(0,0,0,0.1),"
+      "shadow: shadow(0, 4, 8, 0, rgba(0,0,0,0.1)),"
     ]
   },
   "FletBox widgets boxShadow": {
     "prefix": "boxShadow",
     "description": "Make a FletBox widgets boxShadow widget",
     "body": [
-      "boxShadow: shadow(0, 4, 8, 0, rgba(0,0,0,0.1),"
+      "boxShadow: shadow(0, 4, 8, 0, rgba(0,0,0,0.1)),"
     ]
   },
   "FletBox widgets position": {
@@ -1718,7 +1711,7 @@
     "prefix": "size",
     "description": "Make a FletBox widgets size widget",
     "body": [
-      "size: \"medium\","
+      "size: 16,"
     ]
   },
   "FletBox widgets weight": {
@@ -1805,18 +1798,18 @@
       "onRightClick: () => console.log(\"right click\"),"
     ]
   },
-  "FletBox widgets onMouseEnter": {
-    "prefix": "onMouseEnter",
-    "description": "Make a FletBox widgets onMouseEnter widget",
+  "FletBox widgets onHover": {
+    "prefix": "onHover",
+    "description": "Make a FletBox widgets onHover widget",
     "body": [
-      "onMouseEnter: () => console.log(\"enter\"),"
+      "onHover: () => console.log(\"hover\"),"
     ]
   },
-  "FletBox widgets onMouseLeave": {
-    "prefix": "onMouseLeave",
-    "description": "Make a FletBox widgets onMouseLeave widget",
+  "FletBox widgets onHoverEnd": {
+    "prefix": "onHoverEnd",
+    "description": "Make a FletBox widgets onHoverEnd widget",
     "body": [
-      "onMouseLeave: () => console.log(\"leave\"),"
+      "onHoverEnd: () => console.log(\"hover end\"),"
     ]
   },
   "FletBox widgets onScroll": {
@@ -1826,18 +1819,18 @@
       "onScroll: (e) => console.log(e.target.scrollTop),"
     ]
   },
-  "FletBox widgets onWheel": {
-    "prefix": "onWheel",
-    "description": "Make a FletBox widgets onWheel widget",
-    "body": [
-      "onWheel: (e) => console.log(e.deltaY),"
-    ]
-  },
   "FletBox widgets onChange": {
     "prefix": "onChange",
     "description": "Make a FletBox widgets onChange widget",
     "body": [
       "onChange: (val) => console.log(val),"
+    ]
+  },
+  "FletBox widgets onChanged": {
+    "prefix": "onChanged",
+    "description": "Make a FletBox widgets onChanged widget",
+    "body": [
+      "onChanged: (val) => console.log(val),"
     ]
   },
   "FletBox widgets onInput": {
@@ -1861,11 +1854,39 @@
       "onBlur: (e) => console.log(\"blur\"),"
     ]
   },
-  "FletBox widgets onHover": {
-    "prefix": "onHover",
-    "description": "Make a FletBox widgets onHover widget",
+  "FletBox widgets onMouseEnter": {
+    "prefix": "onMouseEnter",
+    "description": "Make a FletBox widgets onMouseEnter widget",
     "body": [
-      "onHover: () => console.log(\"hover\"),"
+      "onMouseEnter: () => console.log(\"enter\"),"
+    ]
+  },
+  "FletBox widgets onMouseLeave": {
+    "prefix": "onMouseLeave",
+    "description": "Make a FletBox widgets onMouseLeave widget",
+    "body": [
+      "onMouseLeave: () => console.log(\"leave\"),"
+    ]
+  },
+  "FletBox widgets onWheel": {
+    "prefix": "onWheel",
+    "description": "Make a FletBox widgets onWheel widget",
+    "body": [
+      "onWheel: (e) => console.log(e.deltaY),"
+    ]
+  },
+  "FletBox widgets key": {
+    "prefix": "key",
+    "description": "Make a FletBox widgets key widget",
+    "body": [
+      "key: item.id,"
+    ]
+  },
+  "FletBox widgets style": {
+    "prefix": "style",
+    "description": "Make a FletBox widgets style widget",
+    "body": [
+      "style: { marginTop: 10 },"
     ]
   },
   "FletBox widgets disabled": {
@@ -2008,6 +2029,13 @@
       "fullWidth: true,"
     ]
   },
+  "FletBox widgets sizeMedium": {
+    "prefix": "sizeMedium",
+    "description": "Make a FletBox widgets sizeMedium widget",
+    "body": [
+      "size: \"medium\","
+    ]
+  },
   "FletBox widgets validation": {
     "prefix": "validation",
     "description": "Make a FletBox widgets validation widget",
@@ -2106,11 +2134,11 @@
       "step: 1,"
     ]
   },
-  "FletBox widgets onChanged": {
-    "prefix": "onChanged",
-    "description": "Make a FletBox widgets onChanged widget",
+  "FletBox widgets onChangeSlider": {
+    "prefix": "onChangeSlider",
+    "description": "Make a FletBox widgets onChangeSlider widget",
     "body": [
-      "onChanged: (val) => console.log(val),"
+      "onChange: (val) => console.log(val),"
     ]
   },
   "FletBox widgets onChangeEnd": {
@@ -2348,7 +2376,7 @@
     "prefix": "subtitle",
     "description": "Make a FletBox widgets subtitle widget",
     "body": [
-      "subtitle: \"Completed\","
+      "subtitle: \"Secondary text\","
     ]
   },
   "FletBox widgets description": {
@@ -2852,7 +2880,7 @@
     "prefix": "childrenAccordion",
     "description": "Make a FletBox widgets childrenAccordion widget",
     "body": [
-      "children: Text(\"Content\"),"
+      "children: Text({ text: \"Content\" }),"
     ]
   },
   "FletBox widgets expandedColor": {
@@ -2866,7 +2894,7 @@
     "prefix": "steps",
     "description": "Make a FletBox widgets steps widget",
     "body": [
-      "steps: [{ label: \"Step 1\", content: Text(\"Step 1 content\") }],"
+      "steps: [{ label: \"Step 1\", content: Text({ text: \"Step 1 content\" }) }],"
     ]
   },
   "FletBox widgets activeStep": {
@@ -3406,6 +3434,13 @@
     "description": "Make a FletBox widgets valueDecimals widget",
     "body": [
       "valueDecimals: 0,"
+    ]
+  },
+  "FletBox widgets subtitleCircular": {
+    "prefix": "subtitleCircular",
+    "description": "Make a FletBox widgets subtitleCircular widget",
+    "body": [
+      "subtitle: \"Completed\","
     ]
   },
   "FletBox widgets onComplete": {
@@ -4287,7 +4322,7 @@
     "prefix": "childrenTabs",
     "description": "Make a FletBox widgets childrenTabs widget",
     "body": [
-      "children: [Text(\"Content 1\"), Text(\"Content 2\")],"
+      "children: [Text({ text: \"Content 1\" }), Text({ text: \"Content 2\" })],"
     ]
   },
   "FletBox widgets activeIndex": {
@@ -4357,7 +4392,7 @@
     "prefix": "drawerHeader",
     "description": "Make a FletBox widgets drawerHeader widget",
     "body": [
-      "header: Text(\"Menu\"),"
+      "header: Text({ text: \"Menu\" }),"
     ]
   },
   "FletBox widgets drawerBody": {
@@ -4371,7 +4406,7 @@
     "prefix": "drawerFooter",
     "description": "Make a FletBox widgets drawerFooter widget",
     "body": [
-      "footer: Text(\"v1.0\"),"
+      "footer: Text({ text: \"v1.0\" }),"
     ]
   },
   "FletBox widgets drawerWidth": {
@@ -4525,7 +4560,7 @@
     "prefix": "body",
     "description": "Make a FletBox widgets body widget",
     "body": [
-      "body: Text(\"Content\"),"
+      "body: Text({ text: \"Content\" }),"
     ]
   },
   "FletBox widgets bottomBar": {
@@ -4672,28 +4707,28 @@
     "prefix": "onRefresh",
     "description": "Make a FletBox widgets onRefresh widget",
     "body": [
-      "onRefresh: (done) => { refresh(), done(), },"
+      "onRefresh: (done) => { refresh(); done(); },"
     ]
   },
   "FletBox widgets ListHeaderComponent": {
     "prefix": "ListHeaderComponent",
     "description": "Make a FletBox widgets ListHeaderComponent widget",
     "body": [
-      "ListHeaderComponent: () => Text(\"Header\"),"
+      "ListHeaderComponent: () => Text({ text: \"Header\" }),"
     ]
   },
   "FletBox widgets ListFooterComponent": {
     "prefix": "ListFooterComponent",
     "description": "Make a FletBox widgets ListFooterComponent widget",
     "body": [
-      "ListFooterComponent: () => Text(\"Footer\"),"
+      "ListFooterComponent: () => Text({ text: \"Footer\" }),"
     ]
   },
   "FletBox widgets ListEmptyComponent": {
     "prefix": "ListEmptyComponent",
     "description": "Make a FletBox widgets ListEmptyComponent widget",
     "body": [
-      "ListEmptyComponent: () => Text(\"No data\"),"
+      "ListEmptyComponent: () => Text({ text: \"No data\" }),"
     ]
   },
   "FletBox widgets columns": {

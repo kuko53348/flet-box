@@ -1,6 +1,6 @@
 only_controls = {
 
-'Container.basic': 'Container({ child: Text("Hello") })',
+'Container.basic': 'Container({ child: Text({ text: "Hello" }) })',
 'Container.normal': '''Container({
     padding: padding(16),
     bgColor: colors.surface,
@@ -41,7 +41,7 @@ only_controls = {
     child: Text({ text: "Complex Container" })
 })''',
 
-'Row.basic': 'Row({ children: [Text("A"), Text("B")] })',
+'Row.basic': 'Row({ children: [Text({ text: "A" }), Text({ text: "B" })] })',
 'Row.normal': '''Row({
     gap: 12,
     justifyContent: "space-between",
@@ -68,7 +68,7 @@ only_controls = {
     ]
 })''',
 
-'Column.basic': 'Column({ children: [Text("A"), Text("B")] })',
+'Column.basic': 'Column({ children: [Text({ text: "A" }), Text({ text: "B" })] })',
 'Column.normal': '''Column({
     gap: 16,
     justifyContent: "center",
@@ -90,7 +90,7 @@ only_controls = {
     id: "sidebar",
     children: [
         Header(),
-        ListView({ data: items, renderItem: (item) => Text({ text: item }) }),
+        Container({ flex: 1, child: ListView({ data: items, renderItem: (item) => Text({ text: item }) }) }),
         Footer()
     ]
 })''',
@@ -100,7 +100,7 @@ only_controls = {
     position: "relative",
     children: [
         Container({ width: 100, height: 100, bgColor: colors.primary }),
-        Container({ width: 50, height: 50, bgColor: colors.secondary, style: { position: "absolute", top: 25, left: 25 } })
+        Container({ width: 50, height: 50, bgColor: colors.secondary, position: "absolute", top: 25, left: 25 })
     ]
 })''',
 'Stack.full': '''Stack({
@@ -167,7 +167,7 @@ only_controls = {
     color: colors.textSecondary,
     onPress: () => openSettings(),
     className: "icon-spin",
-    style: { transition: "transform 0.2s" },
+    transition: "transform 0.2s",
     id: "settings-icon"
 })''',
 
@@ -202,7 +202,7 @@ only_controls = {
     id: "user-avatar"
 })''',
 
-'Card.basic': 'Card({ child: Text("Card content") })',
+'Card.basic': 'Card({ child: Text({ text: "Card content" }) })',
 'Card.normal': 'Card({ elevation: 2, padding: 16, child: Text({ text: "Card title", weight: "bold" }) })',
 'Card.full': '''Card({
     width: 320,
@@ -361,10 +361,10 @@ only_controls = {
     id: "product-rating"
 })''',
 
-'Modal.basic': 'Modal({ content: Text("Modal content") })',
+'Modal.basic': 'Modal({ content: Text({ text: "Modal content" }) })',
 'Modal.normal': '''Modal({
     title: "Confirmation",
-    content: Text("Are you sure?"),
+    content: Text({ text: "Are you sure?" }),
     actions: [Button({ text: "OK", onPress: () => modal.close() })]
 })''',
 'Modal.full': '''Modal({
@@ -388,7 +388,7 @@ only_controls = {
     headerTextColor: "#fff"
 })''',
 
-'BottomSheet.basic': 'BottomSheet({ content: Text("Sheet content") })',
+'BottomSheet.basic': 'BottomSheet({ content: Text({ text: "Sheet content" }) })',
 'BottomSheet.normal': 'BottomSheet({ title: "Options", content: Column({ children: [Button({ text: "Option 1" })] }) })',
 'BottomSheet.full': '''BottomSheet({
     title: "Select action",
@@ -469,19 +469,36 @@ only_controls = {
     disabled: false
 })''',
 
-'Scaffold.basic': 'Scaffold({ body: Text("Hello") })',
+'Scaffold.basic': 'Scaffold({ body: Text({ text: "Hello" }) })',
 'Scaffold.normal': 'Scaffold({ appBar: AppBar({ title: "Home" }), body: HomeScreen(), drawer: DrawerMenu() })',
 'Scaffold.full': '''Scaffold({
     appBar: AppBar({ title: "Dashboard", actions: [Icon({ name: "search" }), Icon({ name: "more_vert" })] }),
     body: HomeScreen(),
     bottomBar: BottomNavigation({ items: [{ icon: "home", label: "Home", route: "/" }, { icon: "person", label: "Profile", route: "/profile" }] }),
-    drawer: Drawer({ header: Text("Menu"), body: [DrawerItem({ label: "Home", route: "/" }), DrawerItem({ label: "Settings", route: "/settings" })] }),
+    drawer: Drawer({ header: Text({ text: "Menu" }), body: [DrawerItem({ label: "Home", route: "/" }), DrawerItem({ label: "Settings", route: "/settings" })] }),
     fab: FloatingActionButton({ icon: "add", onPress: () => addItem() }),
     leftNavBar: CollapsibleSideBar({ children: NavMenu() }),
     rightNavBar: null,
     routes: { "/": HomeScreen, "/profile": ProfileScreen, "/settings": SettingsScreen },
     backgroundColor: colors.background,
     closeDrawerOnNavigate: false
+})''',
+
+'AdaptiveScaffold.basic': 'AdaptiveScaffold({ body: Text({ text: "Hello" }) })',
+'AdaptiveScaffold.normal': 'AdaptiveScaffold({ appBar: AppBar({ title: "Home" }), body: HomeScreen(), leftNavBar: NavMenu() })',
+'AdaptiveScaffold.full': '''AdaptiveScaffold({
+    appBar: AppBar({ title: "Responsive App", centerTitle: true }),
+    body: HomeScreen(),
+    bottomBar: BottomNavigation({ items: [{ icon: "home", label: "Home", route: "/" }, { icon: "person", label: "Profile", route: "/profile" }], useRouter: true }),
+    fab: FloatingActionButton({ icon: "add", onPress: () => addItem() }),
+    leftNavBar: CollapsibleSideBar({ children: NavMenu() }),
+    rightNavBar: CollapsibleSideBar({ children: WikiMenu() }),
+    leftNavBarWidth: 280,
+    rightNavBarWidth: 320,
+    routes: { "/": HomeScreen, "/profile": ProfileScreen },
+    backgroundColor: colors.background,
+    forceMobile: false,
+    forceDesktop: false
 })''',
 
 'AppBar.basic': 'AppBar({ title: "Title" })',
@@ -505,7 +522,7 @@ only_controls = {
     borderRadius: 0
 })''',
 
-'Drawer.basic': 'Drawer({ header: Text("Menu"), body: [DrawerItem({ label: "Home" })] })',
+'Drawer.basic': 'Drawer({ header: Text({ text: "Menu" }), body: [DrawerItem({ label: "Home" })] })',
 'Drawer.normal': 'Drawer({ header: Avatar({ name: "User" }), body: [DrawerItem({ label: "Home", route: "/" }), DrawerItem({ label: "About", route: "/about" })] })',
 'Drawer.full': '''Drawer({
     header: Column({ children: [Avatar({ size: 80, name: "John Doe" }), Text({ text: "john@example.com" })] }),
@@ -549,7 +566,7 @@ only_controls = {
     useRouter: true
 })''',
 
-'Tabs.basic': 'Tabs({ tabs: ["Tab1", "Tab2"], children: [Text("Content1"), Text("Content2")] })',
+'Tabs.basic': 'Tabs({ tabs: ["Tab1", "Tab2"], children: [Text({ text: "Content1" }), Text({ text: "Content2" })] })',
 'Tabs.normal': 'Tabs({ tabs: [{ label: "Details", icon: "info" }, { label: "Reviews", icon: "comment" }], children: [DetailsTab(), ReviewsTab()], activeIndex: 0, onChange: setTab })',
 'Tabs.full': '''Tabs({
     tabs: ["Overview", "Technical", "Support"],
@@ -573,7 +590,7 @@ only_controls = {
     alignment: "center"
 })''',
 
-'CollapsibleSideBar.basic': 'CollapsibleSideBar({ children: Text("Menu") })',
+'CollapsibleSideBar.basic': 'CollapsibleSideBar({ children: Text({ text: "Menu" }) })',
 'CollapsibleSideBar.normal': 'CollapsibleSideBar({ expanded: true, children: Column({ children: [DrawerItem({ label: "Home" }), DrawerItem({ label: "Settings" })] }) })',
 'CollapsibleSideBar.full': '''CollapsibleSideBar({
     expanded: isSidebarOpen,
@@ -609,8 +626,22 @@ only_controls = {
 'Router.init': 'initRouter({ "/": HomeScreen, "/user/:id": UserScreen })',
 'Router.goTo': 'goTo("/user/123", { from: "home" })',
 'Router.goBack': 'goBack()',
+'Router.goForward': 'goForward()',
+'Router.replace': 'replace("/profile", { from: "login" })',
+'Router.getCurrentPath': 'getCurrentPath()',
+'Router.getCurrentRoute': 'getCurrentRoute()',
+'Router.getCurrentRouteConfig': 'getCurrentRouteConfig()',
+'Router.getRoute': 'getRoute("/user/:id")',
+'Router.isActive': 'isActive("/home", true)',
+'Router.subscribe': 'subscribe((route, params, query) => console.log(route, params))',
+'Router.buildUrl': 'buildUrl("/user/:id", { id: 123 }, { page: 2 })',
+'Router.clearRouter': 'clearRouter()',
 'Router.useParams': 'const { id } = useParams()',
 'Router.useQueryParams': 'const { page } = useQueryParams()',
+'Router.openDrawer': 'openDrawer()',
+'Router.closeDrawer': 'closeDrawer()',
+'Router.toggleDrawer': 'toggleDrawer()',
+'Router.destroyDrawer': 'destroyDrawer()',
 
 'ListView.basic': 'ListView({ data: ["A", "B"], renderItem: (item) => Text({ text: item }) })',
 'ListView.normal': 'ListView({ data: users, renderItem: (user) => ListTile({ title: user.name }), itemSize: 70 })',
@@ -626,9 +657,9 @@ only_controls = {
     onEndReachedThreshold: 0.3,
     onRefresh: (done) => refreshData(done),
     refreshing: isLoading,
-    ListHeaderComponent: () => Text("Top Products"),
+    ListHeaderComponent: () => Text({ text: "Top Products" }),
     ListFooterComponent: () => (hasMore ? ProgressBar({ indeterminate: true }) : null),
-    ListEmptyComponent: () => Text("No products"),
+    ListEmptyComponent: () => Text({ text: "No products" }),
     showsScrollIndicator: true,
     bufferSize: 10,
     expand: true
@@ -644,7 +675,7 @@ only_controls = {
     itemHeight: 180,
     onEndReached: () => fetchMore(),
     onRefresh: (done) => refresh(done),
-    ListHeaderComponent: () => Text("Gallery")
+    ListHeaderComponent: () => Text({ text: "Gallery" })
 })''',
 
 'DataTable.basic': 'DataTable({ columns: ["Name", "Age"], rows: [{ Name: "John", Age: 30 }] })',
@@ -790,8 +821,8 @@ only_controls = {
     onIndexChange: (idx) => setActiveSlide(idx)
 })''',
 
-'AnimatedBox.basic': 'AnimatedBox({ animations: [{ effect: "scale", from: 1, to: 1.2 }], child: Text("Animate") })',
-'AnimatedBox.normal': 'AnimatedBox({ animations: [{ effect: "opacity", from: 0, to: 1, duration: 500 }], child: Card({ child: Text("Fade in") }) })',
+'AnimatedBox.basic': 'AnimatedBox({ animations: [{ effect: "scale", from: 1, to: 1.2 }], child: Text({ text: "Animate" }) })',
+'AnimatedBox.normal': 'AnimatedBox({ animations: [{ effect: "opacity", from: 0, to: 1, duration: 500 }], child: Card({ child: Text({ text: "Fade in" }) }) })',
 'AnimatedBox.full': '''AnimatedBox({
     animations: [
         { effect: "scale", from: 0.8, to: 1, duration: 400 },
@@ -831,7 +862,7 @@ only_controls = {
 })''',
 
 'ParallaxBox.basic': 'ParallaxBox({ child: Image({ src: "bg.jpg" }) })',
-'ParallaxBox.normal': 'ParallaxBox({ child: Card({ child: Text("Scroll me") }), type: "scroll", speed: 0.3 })',
+'ParallaxBox.normal': 'ParallaxBox({ child: Card({ child: Text({ text: "Scroll me" }) }), type: "scroll", speed: 0.3 })',
 'ParallaxBox.full': '''ParallaxBox({
     child: Column({ children: [Image({ src: "hero.jpg", height: 300 }), Text({ text: "Content" })] }),
     type: "mouse",
@@ -850,39 +881,43 @@ only_controls = {
     'animate.pulse': 'pulse(widget, 500)',
     'animate.custom': 'animate(widget, "width", 100, 200, 500, "easeOut")',
 
-    'useState': 'const [count, setCount] = useState("counter", 0)',
-    'httpGet': 'const data = await httpGet("/api/users")',
-    'httpPost': 'const res = await httpPost("/api/users", { body: { name: "John" } })',
-    'saveData': 'saveData("theme", "dark")',
-    'getData': 'const theme = getData("theme")',
-    'saveSession': 'saveSession("token", "abc123")',
-    'saveRam': 'saveRam("cart", items)',
-    'colors': 'colors.primary',
-    'setTheme': 'setTheme("dark")',
-    'toggleTheme': 'toggleTheme()',
+    # Helpers live in the attributes dictionary (one snippet per prefix, so the
+    # editor never has to pick between two files). Only triggers that dictionary
+    # does not offer belong here.
     'random.name': 'random.fullName()',
-    'random.email': 'random.email()',
-    'delay': 'await delay(1000)',
-    'clipboard.copy': 'clipboard.copy("text")',
     'dimensions': 'dimensions.width',
-    'device.isMobile': 'device.isMobile()',
-    'toREM': 'toREM(16)',
-    'padding': 'padding({ horizontal: 20, vertical: 10 })',
-    'margin': 'margin({ top: 8, bottom: 8 })',
-    'border': 'border(1, "solid", "#ccc")',
-    'shadow': 'shadow(0, 2, 4, 0, "rgba(0,0,0,0.1)")',
-    'rgba': 'rgba(99, 102, 241, 0.8)',
-    'gradient': 'gradient("linear", ["red", "blue"], 90)',
-    'mapList': 'mapList(products, (p, i) => Text({ text: p.name }))',
-    'uuid': 'const id = uuid()',
-    'ref': 'const inputRef = ref()',
-# =========================================================================
-# WIDGETS FALTANTES (Accordion, Stepper, Pagination, TreeView, Skeleton,
-# ProgressBar, CircularBar, Divider, Chip, Markdown, Inspector, InstallButton)
-# =========================================================================
+    'createApp': 'const app = createApp(routes, { rootId: "root" })',
+    'customWidget.basic': '''const Card = ({ title }) => Container({
+    padding: 16,
+    child: Text({ text: title })
+})''',
+    'customWidget.props': '''const Field = ({ label, onPress }) => Row({
+    gap: 8,
+    children: [Text({ text: label }), Button({ text: "Edit", onPress })]
+})''',
+    'customWidget.stateful': '''const Counter = () => {
+    const [count, setCount] = useState("counter", 0);
+    return Column({
+        gap: 12,
+        children: [
+            Text({ text: `Count: ${count}` }),
+            Button({ text: "Add one", onPress: () => setCount((previous) => previous + 1) })
+        ]
+    })
+}''',
+    'httpRequest': 'const res = await httpRequest("POST", "/api/users", { body: { name: "John" } })',
+    'useTheme': 'const { colors, toggleTheme } = useTheme()',
+    'ThemeProvider.basic': 'ThemeProvider({ theme: "dark", children: App() })',
+    'ThemeProvider.normal': 'ThemeProvider({ theme: "light", children: MyApp({ toggle }) })',
+    'ThemeProvider.full': '''ThemeProvider({
+    theme: "dark",
+    children: Container({
+        child: Button({ text: "Toggle", onPress: () => toggleTheme() })
+    })
+})''',
 
-'Accordion.basic': 'Accordion({ title: "Section", children: Text("Content") })',
-'Accordion.normal': 'Accordion({ title: "Details", children: Text("Hidden info"), expanded: false, onToggle: (exp) => console.log(exp) })',
+'Accordion.basic': 'Accordion({ title: "Section", children: Text({ text: "Content" }) })',
+'Accordion.normal': 'Accordion({ title: "Details", children: Text({ text: "Hidden info" }), expanded: false, onToggle: (exp) => console.log(exp) })',
 'Accordion.full': '''Accordion({
     title: "Advanced settings",
     children: Column({ children: [Input({ placeholder: "API Key" }), Slider({})] }),
@@ -908,7 +943,7 @@ only_controls = {
     elevation: 2
 })''',
 
-'Stepper.basic': 'Stepper({ steps: [{ label: "Step 1", content: Text("Content") }] })',
+'Stepper.basic': 'Stepper({ steps: [{ label: "Step 1", content: Text({ text: "Content" }) }] })',
 'Stepper.normal': 'Stepper({ steps: [{ label: "Info", content: InfoForm() }, { label: "Confirm", content: ConfirmForm() }], activeStep: 0, onStepChange: setStep })',
 'Stepper.full': '''Stepper({
     steps: [
@@ -1061,7 +1096,7 @@ only_controls = {
 
 'Divider.basic': 'Divider()',
 'Divider.normal': 'Divider({ margin: 16, thickness: 1, color: colors.border })',
-'Divider.full': 'Divider({ orientation: "horizontal", thickness: 2, margin: { top: 8, bottom: 8 }, color: "#e2e8f0", style: { opacity: 0.8 } })',
+'Divider.full': 'Divider({ orientation: "horizontal", thickness: 2, margin: { top: 8, bottom: 8 }, color: "#e2e8f0", opacity: 0.8 })',
 
 'Chip.basic': 'Chip({ label: "Tag" })',
 'Chip.normal': 'Chip({ label: "React", icon: "star", onDelete: () => removeTag() })',
@@ -1082,7 +1117,7 @@ only_controls = {
 
 'Markdown.basic': 'Markdown({ text: "# Hello" })',
 'Markdown.normal': 'Markdown({ text: mdSource, fontSize: 14, linkColor: colors.primary })',
-'Markdown.full': '''Markdown({
+'Markdown.full': r'''Markdown({
     text: `
 # Main title
 ## Subtitle
@@ -1125,7 +1160,7 @@ console.log("code block");
     borderRadius: 32,
     padding: "12px 24px",
     bottom: 24,
-    onInstalled: () => showSnackBar("Installed!"),
+    onInstalled: () => SnackBar({ message: "Installed!", type: "success" }).show(),
     onClick: () => analytics.track("install_click")
 })''',
 'Badge.basic': 'Badge({ value: 3, child: Icon({ name: "notifications" }) })',
@@ -1178,7 +1213,7 @@ console.log("code block");
     margin: 16
 })''',
 
-'DraggBox.basic': 'DraggBox({ child: Card({ child: Text("Drag me") }) })',
+'DraggBox.basic': 'DraggBox({ child: Card({ child: Text({ text: "Drag me" }) }) })',
 'DraggBox.normal': 'DraggBox({ child: Chip({ label: "Task #1" }), group: "tasks", data: { id: 1 }, onDragStart: (event, data) => console.log("started", data) })',
 'DraggBox.full': '''DraggBox({
     child: ListTile({ title: "Drag item", subtitle: "Move me" }),
@@ -1192,8 +1227,8 @@ console.log("code block");
     onDragEnd: (event, data) => log("end", data)
 })''',
 
-'DroppBox.basic': 'DroppBox({ child: Text("Drop here") })',
-'DroppBox.normal': 'DroppBox({ child: Text("Drop tasks here"), acceptGroups: ["tasks"], onDrop: (data, group) => console.log(data, group) })',
+'DroppBox.basic': 'DroppBox({ child: Text({ text: "Drop here" }) })',
+'DroppBox.normal': 'DroppBox({ child: Text({ text: "Drop tasks here" }), acceptGroups: ["tasks"], onDrop: (data, group) => console.log(data, group) })',
 'DroppBox.full': '''DroppBox({
     child: Column({
         children: [

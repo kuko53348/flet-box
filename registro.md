@@ -6,9 +6,11 @@
 
 - **Repo:** `flet-box` (framework puro). El backend `flet-box-server` está **fuera de alcance** por decisión del autor.
 - **Branch:** `refactory`
-- **Estado:** `npm test` verde · `npm run test:browser` **460 OK / 0 fallos** (34 guards)
-- **Nada está commiteado.** Todo vive en el árbol de trabajo.
-- **Rondas completadas:** 6
+- **Estado:** `npm test` verde · `npm run test:browser` **470 OK / 0 fallos** (44 guards)
+- **Commits:** las rondas 1–6 están commiteadas y subidas (`refactory` → `065a3c9`, v1.0.4).
+  **La ronda 7 está sin commitear** (13 ficheros modificados + `scripts/check-router-base.mjs`);
+  `flet-box-docs` también tiene los deep links sin commitear. Lo decide el autor.
+- **Rondas completadas:** 7
 
 ---
 
@@ -16,8 +18,11 @@
 
 ```bash
 cd flet-box
-npm test                # 2 chequeos estáticos (contrato de widgets + acoplamiento de API)
-npm run test:browser    # suite real en Chrome headless (448 aserciones)
+npm test                # 3 chequeos estáticos: contrato de widgets + acoplamiento de API
+                        # + base path del Router (9 casos, sin navegador)
+npm run test:browser    # suite real en Chrome headless (470 aserciones, 6 harnesses)
+npm run test:browser regression   # un solo harness (filtro por substring del nombre)
+npm run test:browser --verbose    # consola de la página + cada aserción fallida con detalle
 node --check <fichero>  # valida sintaxis de un fichero suelto
 ```
 
@@ -50,7 +55,8 @@ con aviso (exit 0), no rompe nada.
 | Fichero | Qué hace |
 |---|---|
 | `scripts/run-browser-tests.mjs` | Runner headless: sirve el repo, lanza Chrome vía puppeteer, recoge el global de cada harness. **Opcional** (no añade dependencias). `npm run test:browser` |
-| `tests/regression.html` + `tests/regression.test.js` | **22 guards** de regresión, uno por bug corregido. Publica `window.__REGRESSION`. Añade aquí cada arreglo nuevo |
+| `tests/regression.html` + `tests/regression.test.js` | **44 guards** de regresión, uno por bug corregido. Publica `window.__REGRESSION`. Añade aquí cada arreglo nuevo |
+| `scripts/check-router-base.mjs` | El deep-link fix de GitHub Pages (base path auto-detectado, `options.base`, hosting en raíz, ruta desconocida → `/`) **no tenía cobertura automatizada**: 9 casos en Node puro, sin navegador. Integrado en `npm test` |
 | `scripts/check-api-surface.mjs` | Verifica que las 3 superficies coinciden (runtime / `index.js` / `index.d.ts`). Integrado en `npm test` |
 | `src/tools/dimensions.js` (fix) | El paquete **no se podía importar en Node** (`window` en ámbito de módulo) → SSR/tests/tooling rotos |
 
@@ -59,7 +65,7 @@ Harnesses existentes que **ninguna CI ejecutaba**: `/tests/smoke.html` (51), `/t
 
 ---
 
-## 3. CORREGIDOS (29 bugs)
+## 3. CORREGIDOS (36 bugs)
 
 ### 3.1 Motor — el más grave de todos
 
@@ -116,7 +122,52 @@ Harnesses existentes que **ninguna CI ejecutaba**: `/tests/smoke.html` (51), `/t
 | **[AUDIO-2]** | `Audio`: `AudioContext.close()` solo en la rama de éxito → si fallaba el decode se filtraba el contexto (límite ~6 por página; los siguientes ya no arrancan) | `try { decode } finally { close() }` |
 | **[PARALLAX-1]** | `ParallaxBox`: listener de `window scroll` + timers solo en el `_cleanup` parcheado, que el observer nunca llama | 0 → 3 al crear → **0** tras desmontaje por DOM plano |
 
-### 3.4 Tests corregidos (fijaban bugs)
+### 3.4 Ronda 7 — los 4 altos de ciclos y reactividad (eram §4.1)
+
+| ID | Bug | Verificación (guard en `tests/regression.test.js`) |
+|---|---|---|
+| **[ANIM-1]** | `animate.js`: bucles **incancelables**; dos animaciones sobre la misma prop se pisaban (la vieja reanudaba después de que la nueva terminara) y `pulse()` dejaba un `setTimeout` que lanzaba la 2ª fase sobre un widget **ya retirado** | registry `WeakMap<widget, Map<prop, loopState>>`; la nueva reemplaza a la vieja; `animate`/`fadeIn`/`fadeOut`/`pulse` devuelven función cancel; **`stopAnimation(widget, prop?)`** (nueva API, 3 superficies + `docs/tools/animation.md`); `pulse` es **un solo bucle** con curva triangular (sin timer); `animateAsync` resuelve también al cancelarse → ningún `await` queda colgado. Guards: `opacity` congelada tras `cancel()` y tras `stopAnimation`; la segunda animación gana (antes acababa en **1**, no en **0**); pulse no escala 260 ms después de cancelar |
+| **[LV-2]** | `ListView`: rAF de scroll y de montaje **sin cancelar** (`onEndReached` se disparaba sobre un list desmontado → en scroll infinito, bucle de `fetch` sin fin); la altura del header estaba **contada dos veces** | `getItemTop` ya no suma el header (es HERMANO de `innerContainer`, no vive dentro) → fila 0 en `top: 0px` (antes `50px`) y `inner.height` = 20×40 = **800px** (antes **850px**: la lista se deslizaba un header + un footer de más). La ventana se calcula en espacio de items (`scrollTop − headerHeight`) y `scrollToIndex` vuelve a sumarlo. ids guardados + `cancelAnimationFrame` + flag `disposed` en `onUnmount`. **`ResizeObserver`** (fallback: `window resize`) re-renderiza al crecer el viewport. Guards: `onEndReached` **0** veces tras desmontar; geometría 800px/0px; filas **8 → 25** al pasar de 60px a 400px (antes se quedaba en 8) |
+| **[SLIDER-2]** | `Slider`: `updateThumbPosition` se re-armaba con rAF **mientras el track midiera 0** — desmontado o nunca insertado, el bucle era de por vida | `thumbRaf` + `disposed` + `initTimer`, una sola cola pendiente por slider, todo cancelado en `onUnmount`. Guard con ventanas de igual duración (180 ms): bucle vivo ≈ 2× el ruido de fondo, y **0** frames atribuibles tras desmontar |
+| **[STEPPER-1]** | `Stepper`: `showNavigation` declarado, tipado y documentado pero **nunca leído** → la navegación se renderizaba siempre | el contenedor de nav solo se construye si `showNavigation`; `updateUI()` ya se salta la rama cuando es `null`. Guard: sin nav → **2** secciones y ni "Next" ni "Back"; por defecto "Next" sigue presente |
+
+### 3.5 `useState` / `reactiveValue` — auditoría y endurecimiento
+
+Lo que **ya estaba bien** (verificado leyendo el flujo completo): un único dispatcher de RamStore
+(O(1) por clave en vez de O(claves) por cambio), registro en dos niveles `clave → widget → props`
+(idempotente, O(1) con 1.600 widgets), liberación por `onUnmount`, valor vivo con
+`valueOf`/`toString`/`_value` para que `${count}` y `count + 1` funcionen, y las lecturas
+estructurales acotadas a la pasada de render. **No hay import circular**: `reactiveValue.js`
+no importa nada.
+
+Defectos encontrados y corregidos:
+
+1. **Claves estructurales pegajosas** (`reactiveValue.js`). El `Set` de claves leídas
+   estructuralmente solo se vaciaba en `cleanupUseState`, así que **una** lectura en un template
+   literal condenaba esa clave a rehacer toda la app **para siempre**, aunque después se pasara
+   solo por props: la reactividad quirúrgica se apagaba sola y sin avisar. Ahora cada pasada abre
+   su propio conjunto y `endRenderPass` lo publica (la pasada anterior vuelve a detectarlo todo).
+   Guard: `useState: a key stops forcing full renders…` → con la clave ya solo en props:
+   **0** rebuilds y el nodo se actualiza a `7` en el mismo elemento.
+2. **`resolving` no era reentrante**: `resolveReactive` lo ponía a `false` en el `finally`, así que
+   un valor reactivo que lee otro reactivo desmarcaba la lectura exterior y se contaba como
+   estructural (rebuild gratis para el framework, coste para la app). Ahora guarda y restaura.
+3. **`setState` comparaba contra el valor capturado** cuando corrió `useState`, no contra el store:
+   si un `saveState` externo ya había movido la clave al valor que se quería poner, el setter
+   **se saltaba el dispatch** y store, widgets y callbacks quedaban en desacuerdo. Ahora lee
+   `getRam(key)` (y el updater `prev => …` recibe el valor actual, no el viejo).
+   Guard: store 1 → 2 (externo) → `setN(1)` = **2** notificaciones y store en **1** (antes: 1 y seguía en 2).
+4. **Fuga de registro**: la entrada de `widgetsByKey` sobrevivía cuando se liberaba el último widget.
+   Ahora se borra la clave al quedar vacía.
+5. **Código muerto o contradictorio**: fuera `unregisterWidget` (0 call sites y semántica errónea —
+   borraba todas las props del widget); fuera el parche de `_cleanup` en `registerWidget`, que el
+   propio comentario del fichero dice que el observer de lifecycle **nunca** llama (y es verdad:
+   `addLifecycle` corre antes de `bindReactiveProps`, así que `onUnmount` siempre existe);
+   `getUseStateStats()` informaba `widgetsCount` = número de **claves** (ahora `stateKeys` /
+   `boundWidgets` / `watchers`); `subscribe` y `useWatchState` devolvían el `true/false` de
+   `Set.delete` como si fuera el resultado del unsubscribe.
+
+### 3.6 Tests corregidos (fijaban bugs)
 
 - **`tests/doccheck-ch4.js`**: dos aserciones hardcodeaban el color del **tema claro**;
   en un Mac en modo oscuro fallaban. Ahora usan `rgbOf(colors.*)` como el resto del fichero.
@@ -130,22 +181,23 @@ Harnesses existentes que **ninguna CI ejecutaba**: `/tests/smoke.html` (51), `/t
 
 ### 4.1 Altos — siguiente ronda
 
+Los 4 altos de la ronda 7 (`[ANIM-1]`, `[LV-2]`, `[SLIDER-2]`, `[STEPPER-1]`) ya están
+corregidos y con guard → ver **§3.4**. Promovidos desde §4.2 para la próxima ronda:
+
 | ID | Bug | Dónde | Arreglo sugerido |
 |---|---|---|---|
-| **[ANIM-1]** | `animate.js`: bucles **incancelables** → una animación vieja pisa a una nueva ya completada; `pulse()` deja un `setTimeout` sin limpiar | `animate.js:187-200, 232-248, 289-291` | `WeakMap<Element, Map<prop, rafId>>`, cancelar el anterior, devolver handle |
-| **[LV-2]** | `ListView`: rAF de scroll sin cancelar (`onEndReached` se dispara tras desmontar); altura del header **contada dos veces**; sin re-render al crecer el viewport | `ListView.js:151,163,253,485` | guardar el id y cancelar en `onUnmount`; quitar el término header de `getItemTop`; `ResizeObserver` |
-| **[SLIDER-2]** | `Slider`: bucle rAF recursivo sin cancelar mientras el track mide 0 (hidden / no insertado / desmontado) | `Slider.js:330-334, 505-519, 523` | guardar `rafId` + flag `disposed` + `cancelAnimationFrame` |
-| **[STEPPER-1]** | `Stepper`: `showNavigation` declarado y tipado pero **nunca usado** | `Stepper.js:22` | envolver la construcción de la nav en `if (showNavigation)` |
+| **[LIST-1]** | `Accordion`: timers de animación (~310 ms) sin limpiar → `onPress`/`onToggle` se disparan **tras** el desmontaje; además `update({expanded})` es **no-op** (la API pública no puede colapsar un panel) | `Accordion.js:288-298, 318-329, 467-533` | guardar el id y cancelarlo en `onUnmount`; implementar `expanded` en `update()` (misma ruta que el toggle interno) |
+| **[CAROUSEL-1]** | `Carousel`: el `setInterval` de autoplay arranca en **construcción**; si el widget nunca se monta, el orphan-prune de lifecycle lo retira del registro **sin** ejecutar unmount → el timer corre para siempre | `Carousel.js:281-285` | arrancarlo desde `onMount` y pararlo en `onUnmount` (patrón ya usado en `MatrixRain`) |
+| **[INPUT-2]** | `Input`: `validation="safe"` **escapa el propio texto** del usuario (`a=b` → `a&#x3D;b`); la UI de validación inicial nunca se renderiza; `clearable`, `passwordToggle` y `onEnter` documentados y **sin implementar** | `Input.js:189-205, 216` | validar sin HTML-escapear el `value`, pintar el estado inicial en construcción, e implementar (o documentar como no-existentes) los 3 props muertos |
+| **[MAX0-1]** | `ProgressBar` con `max:0` → `NaN%`; `CircularBar` con `max:0` pinta literalmente `"Infinity"` en el canvas | `ProgressBar.js:28`, `CircularBar.js:118-122,186,236,254` | guarda `max > 0 ? … : 0` compartida; un solo guard cubre ambos |
 
 ### 4.2 Medios
 
-- **[LIST-1]** `Accordion`: timers de animación (~310 ms) sin limpiar → `onPress`/`onToggle` se disparan tras el desmontaje (`Accordion.js:288-298, 318-329`). También `update({expanded})` es **no-op** (`Accordion.js:467-533`).
-- **[CAROUSEL-1]** `Carousel`: el `setInterval` de autoplay arranca en construcción; si el widget **nunca se monta**, el orphan-prune de lifecycle lo quita del registro **sin** ejecutar unmount → el timer corre para siempre. Arrancarlo desde `onMount` (`Carousel.js:281-285`).
-- **[MAX0-1]** `ProgressBar` (`max:0` → `NaN%`, `ProgressBar.js:28`) y `CircularBar` (`max:0` → pinta literalmente `"Infinity"` en el canvas, `CircularBar.js:118-122,186,236,254`).
+(List-1 / CAROUSEL-1 / INPUT-2 / MAX0-1 promovidos a §4.1)
+
 - **[DROPBOX-1]** `DroppBox`: `activeBgColor`/`activeBorderColor` **muertos**; `invalidBgColor`/`invalidBorderColor` **inalcanzables** (`isValidDrag()` protege el único call site) (`DroppBox.js:28-29,105-113,139`).
 - **[DRAGBOX-1]** `DraggBox`: el clon de arrastre se añade a `document.body` y solo se quita en su propio `dragend` → si el widget se desmonta en medio de un drag, queda huérfano (`DraggBox.js:43-59,94-110`).
 - **[INSTALL-1]** `InstallButton`: `onPress` documentado **anula el instalador** (`...rest` se esparce después de `onPress: handleClick`); `onInstalled` se dispara **dos veces** en Chromium; un `beforeinstallprompt` anterior al montaje es **irrecuperable** (usa su propio `deferredPrompt` en vez del compartido de `src/core/pwa.js`).
-- **[INPUT-2]** `Input`: `validation="safe"` **escapa el propio texto** (`a=b` → `a&#x3D;b`, `Input.js:189-205`); la UI de validación inicial nunca se renderiza (`Input.js:216`); `clearable`, `passwordToggle` y `onEnter` están documentados pero **sin implementar**.
 - **[SLIDER-3]** `Slider`: el snapping ignora `min` (`Math.round(raw/step)*step` en vez de relativo a `min`, `Slider.js:360`); casi todas las props propias salvo min/max/step/value se las traga `update()` (`Slider.js:15-22 vs 459-481`).
 - **[DROPDOWN-2]** `Dropdown`: `width`/`portal` aceptados pero ignorados por `update()`; `clearable` solo se evalúa en construcción; `onChange` nunca recibe el 2º argumento `label` documentado (`Dropdown.js:352`).
 - **[TEXT-1]** `Text`: `italic` y `decoration` documentados e **ignorados**; `styles: null` → `TypeError` durante el render (`Text.js:19-32,62`).
@@ -223,7 +275,7 @@ código rebuildaba siempre.)
 | Condicional: `n > 2 ? Text("MUCHO") : null` | **sí rebuilda** y aparece `MUCHO` ✅ |
 | Forma de 4 argumentos `useState(k, v, widget, p)` | sigue funcionando ✅ |
 | Desmontar el widget y cambiar la clave | el nodo desconectado **ya no se actualiza** ✅ |
-| `npm test` + suite | **460 OK / 0 fallos** (34 guards) |
+| `npm test` + suite | **470 OK / 0 fallos** (44 guards; los 8 guards de la ronda 7 incluyen los 2 nuevos de `useState` de §3.5) |
 
 Guards nuevos en `tests/regression.test.js`: quirúrgico (0 rebuilds + mismo nodo) · derivado
 sigue rebuildando · el desmontaje libera el vínculo.
@@ -440,6 +492,26 @@ M  tests/doccheck-ch6.js                 aserciones que fijaban el bug de Inspec
 ?? tests/regression.test.js
 ```
 
+### Ronda 7 (sin commitear)
+
+```
+M  src/animations/animate.js             [ANIM-1] registry WeakMap + runAnimation + stopAnimation
+M  src/animations/index.js               re-exporta stopAnimation
+M  src/index.js                          superficie pública: stopAnimation
+M  src/index.d.ts                        tipos: stopAnimation + retorno cancelable
+M  src/create-index.sh                   plantilla de animaciones (estaba desactualizada)
+M  src/widget-factory/reactiveValue.js   §3.5: passKeys por pasada, resolving reentrante
+M  src/tools/useState.js                 §3.5: dispatcher, registro, setState contra el store
+M  src/widgets/ListView.js               [LV-2] + ResizeObserver + geometría del header
+M  src/widgets/Slider.js                 [SLIDER-2] thumbRaf / initTimer / disposed
+M  src/widgets/Stepper.js                [STEPPER-1] showNavigation
+M  docs/tools/animation.md               stopAnimation + regla de reemplazo
+M  package.json                          npm test suma check-router-base.mjs
+M  tests/regression.test.js              10 guards nuevos (34 → 44)
+M  registro.md                           este documento
+?? scripts/check-router-base.mjs         base path del Router, 9 casos en Node
+```
+
 **Implementación quirúrgica (§5) — ficheros concretos:**
 
 ```
@@ -501,4 +573,4 @@ Uso típico: `const W = await import("/src/index.js"); const el = W.Chart({...})
 | 4 | `[DRAWER-1]` (`Scaffold` llama a `drawer.destroy()`), `[MODAL-1]`+`[MODAL-2]` (timer de cierre y listener de `keydown` en `Modal`/`BottomSheet`), `[ANIM-NAN]`, `[ANIM-DUR]`. Guards: 23 → 26 | **452 OK** |
 | 5 | `[AUDIO-1]`+`[AUDIO-2]` (timer de respaldo de 2 s y `AudioContext` sin `close()`), `[PARALLAX-1]` (`onUnmount` para el listener de scroll). Guards: 26 → 28 | **454 OK** |
 | 6 | **FEATURE (§5): reactividad quirúrgica con sintaxis React** — `useState` devuelve un valor vivo, el factory auto-registra el vínculo, y el rebuild se salta cuando la clave está ligada. Ficheros: `reactiveValue.js` (nuevo), `useState.js`, `widgetFactory.js`, `processProps.js`, `assignProps.js`, `warnings.js`, `runApp.js`, `docs/tools/reactivity.md`. Guards: 28 → 34 | **457 OK** |
-| 7 | *pendiente: `[ANIM-1]` cancelación de bucles, `[LV-2]` ListView, `[SLIDER-2]` rAF del Slider, `[STEPPER-1]`; y el Nivel 2 (reutilizar elementos)* | |
+| 7 | **Los 4 altos de ciclos** (`[ANIM-1]` con la nueva API `stopAnimation` en las 3 superficies + `docs/tools/animation.md`, `[LV-2]` con `ResizeObserver` y geometría del header corregida, `[SLIDER-2]`, `[STEPPER-1]`) **y la auditoría de `useState`/`reactiveValue`** (§3.5): claves estructurales ahora acotadas a cada pasada, `resolving` reentrante, `setState` comparando contra el store, fuga de registro vacío y código muerto fuera. Además: deep links de GitHub Pages asegurados en CI con `scripts/check-router-base.mjs` (9 casos). Guards: 34 → 44 | **470 OK / 0 fallos** |
