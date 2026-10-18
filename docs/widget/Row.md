@@ -29,7 +29,7 @@ const row = Row({
 | `gap` | `number \| string` | Space between children along the layout axis. |
 | `justifyContent` | `ContainerProps['justifyContent']` | Aligns children along the main axis (CSS `justify-content`). |
 | `alignItems` | `ContainerProps['alignItems']` | Aligns children across the cross axis (CSS `align-items`). |
-| `wrap` | `boolean` | Lets children wrap onto multiple lines. |
+| `wrap` | `boolean \| 'wrap' \| 'nowrap' \| 'wrap-reverse'` | Lets children wrap onto multiple lines. |
 | `children` | `Widget[]` | An array of child widgets. Alias: `child` for a single child. |
 | `onPress` | `(widget: Widget) => void` | Callback fired when the widget is pressed. Alias: `onClick`. |
 
@@ -41,7 +41,7 @@ Every widget also accepts these shared props — see [common props](COMMON_PROPS
 | --- | --- | --- |
 | `width` | `Size` | Width of the widget. A number is pixels; a string uses any CSS unit. |
 | `height` | `Size` | Height of the widget. A number is pixels; a string uses any CSS unit. |
-| `size` | `number` | Overall size preset or pixel value, depending on the widget. |
+| `size` | `Size` | Overall size preset or pixel value, depending on the widget. |
 | `padding` | `Padding` | Space inside the widget, between its content and its border. |
 | `margin` | `Margin` | Space outside the widget, between it and its neighbors. |
 | `bgColor` | `Color` | Background color. Alias: `backgroundColor`. |

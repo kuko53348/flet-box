@@ -59,6 +59,28 @@ const applySpecial = (widget, key, value) => {
     case "variant":
       widget.dataset.variant = val;
       break;
+    case "visible": {
+      // Hiding must not destroy the `display` the widget's own styles chose
+      // (`flex` for a Row, `inline-flex` for an Input…), so the previous inline
+      // value is stashed and handed back on show. The stash is only reused while
+      // we are still the reason the element is hidden: if an update set a new
+      // `display` in the meantime, that value is the truth and is left alone.
+      if (val) {
+        if (
+          widget._hiddenByVisibleProp !== undefined &&
+          widget.style.display === "none"
+        ) {
+          widget.style.display = widget._hiddenByVisibleProp;
+        }
+        delete widget._hiddenByVisibleProp;
+      } else if (widget.style.display !== "none") {
+        if (widget._hiddenByVisibleProp === undefined) {
+          widget._hiddenByVisibleProp = widget.style.display;
+        }
+        widget.style.display = "none";
+      }
+      break;
+    }
   }
 };
 
@@ -72,7 +94,7 @@ const applySpecial = (widget, key, value) => {
  *    `click` is assigned via `onclick` for reliable override behaviour.
  * 4. **attributes** – applied with `setAttribute`, with special handling for
  *    `className` and boolean attributes (`disabled`, `readOnly`, `hidden`, …).
- * 5. **special** – delegated to `applySpecial` (e.g. `value`, `variant`).
+ * 5. **special** – delegated to `applySpecial` (`value`, `variant`, `visible`).
  *
  * Any keys not in the known set are handled as a flat-prop fallback: `on*`
  * functions become event listeners, common HTML attributes are set directly, and

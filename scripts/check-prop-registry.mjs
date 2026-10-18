@@ -55,6 +55,7 @@ const ENGINE_HANDLED = new Set([
   "disableTransform",
   "value",
   "variant",
+  "visible",
 ]);
 
 // ---------------------------------------------------------------------------

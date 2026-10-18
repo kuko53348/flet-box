@@ -1581,6 +1581,13 @@
       "opacity: 0.8,"
     ]
   },
+  "FletBox widgets visible": {
+    "prefix": "visible",
+    "description": "Make a FletBox widgets visible widget",
+    "body": [
+      "visible: false,"
+    ]
+  },
   "FletBox widgets border": {
     "prefix": "border",
     "description": "Make a FletBox widgets border widget",

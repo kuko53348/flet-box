@@ -26,6 +26,9 @@ import { composeUpdate } from "../utils/composeUpdate.js";
  * @property {string} [iconColor] - Color of the icons.
  * @property {number} [iconSize=20] - Size of the icons in pixels.
  * @property {Function} [onIconPress] - Called when either icon is pressed.
+ * @property {boolean} [clearable=false] - Shows a trailing button that empties the field.
+ * @property {boolean} [passwordToggle=false] - Shows a trailing button that reveals or hides the value.
+ * @property {Function} [onEnter] - Called with (value, event) when the user presses Enter in the field.
  * @property {"none"|"letters"|"numbers"|"email"|"alphanumeric"|"safe"|"custom"} [validation="none"] - Validation mode applied on each keystroke and on blur.
  * @property {number} [maxLength] - Maximum number of characters allowed.
  * @property {boolean} [required=false] - Marks the field as required; validation fails on empty values.
@@ -38,6 +41,9 @@ import { composeUpdate } from "../utils/composeUpdate.js";
  * @property {Function} [onFocus] - Called when the input receives focus.
  * @property {Function} [onBlur] - Called when the input loses focus and final validation runs.
  */
+
+/** Suffix for generated field ids, so two Inputs never share one. */
+let inputIdSeed = 0;
 
 /**
  * A fully-featured text input widget with built-in validation, icons, and theme support.
@@ -78,6 +84,9 @@ export const Input = (props) => {
     iconSize = 20,
     onIconPress,
 
+    clearable = false,
+    passwordToggle = false,
+
     validation = "none",
     maxLength,
     required = false,
@@ -90,6 +99,7 @@ export const Input = (props) => {
     onChange,
     onFocus,
     onBlur,
+    onEnter,
     ...rest
   } = props;
 
@@ -98,12 +108,22 @@ export const Input = (props) => {
   let isValid = true;
   let validationMessage = "";
 
+  // The `<label>` needs a `for` that matches the native input's `id`, otherwise
+  // assistive tech never hears the field's name — the click-to-focus handler is
+  // not an association. Deriving it from the caller's `id` keeps the generated
+  // DOM predictable when the field is inside a form.
+  const fieldId =
+    typeof rest.id === "string" && rest.id
+      ? `${rest.id}-input`
+      : `fletbox-input-${++inputIdSeed}`;
+
   // DOM element references — populated during the build phase below
   let inputElement = null;
   let validationIcon = null;
   let errorMessageElement = null;
   let inputWrapper = null;
   let container = null;
+  let clearButton = null;
 
   // Whether the native input currently holds focus. Used to keep the focus
   // ring (a box-shadow) in sync with validation colors without ever changing
@@ -286,6 +306,7 @@ export const Input = (props) => {
     if (inputElement) {
       inputElement.value = filtered;
     }
+    if (clearButton) clearButton.style.display = filtered ? "flex" : "none";
 
     const result = validateValue(filtered);
     isValid = result.valid;
@@ -324,6 +345,7 @@ export const Input = (props) => {
     if (!text) return;
     labelEl = WidgetFactory({
       tag: "label",
+      for: fieldId,
       text,
       fontSize: 12,
       fontWeight: 500,
@@ -406,6 +428,7 @@ export const Input = (props) => {
   //   - Accessibility (label association, screen readers)
   //   - Browser autofill support
   inputElement = document.createElement("input");
+  inputElement.id = fieldId;
   inputElement.type = type;
   inputElement.placeholder = placeholder || "";
   inputElement.disabled = disabled || false;
@@ -467,6 +490,75 @@ export const Input = (props) => {
   });
 
   inputWrapper.appendChild(inputElement);
+
+  inputElement.addEventListener("keydown", (e) => {
+    // Enter is not a DOM event of its own: the callback receives the value the
+    // user just confirmed, after the same filtering `onChange` applies.
+    if (e.key === "Enter" && onEnter) onEnter(currentValue, e);
+  });
+
+  // --- Trailing controls (clear / reveal) ---
+  // Real `<button type="button">` elements: they are keyboard-reachable, and the
+  // `type` keeps them from submitting a form the input happens to live in.
+  const makeTrailingButton = (glyph, label, onPress) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = glyph;
+    btn.setAttribute("aria-label", label);
+    btn.style.width = "28px";
+    btn.style.height = "28px";
+    btn.style.flexShrink = "0";
+    btn.style.marginRight = "6px";
+    btn.style.padding = "0";
+    btn.style.border = "none";
+    btn.style.background = "transparent";
+    btn.style.color = colors.textSecondary;
+    btn.style.fontSize = "15px";
+    btn.style.lineHeight = "1";
+    btn.style.cursor = disabled ? "not-allowed" : "pointer";
+    btn.style.display = "flex";
+    btn.style.alignItems = "center";
+    btn.style.justifyContent = "center";
+    btn.addEventListener("click", (e) => {
+      // The wrapper focuses the input on any click; a trailing control must not
+      // steal that, and it must stay out of the form's submit path.
+      e.preventDefault();
+      e.stopPropagation();
+      if (disabled || readonly) return;
+      onPress(e);
+    });
+    inputWrapper.appendChild(btn);
+    return btn;
+  };
+
+  if (clearable) {
+    clearButton = makeTrailingButton("✕", "Clear", () => {
+      handleInput("", null);
+      inputElement.focus();
+    });
+    clearButton.style.display = currentValue ? "flex" : "none";
+  }
+
+  if (passwordToggle) {
+    let revealed = type !== "password";
+    const paint = (btn) => {
+      btn.textContent = revealed ? "🙈" : "👁";
+      btn.setAttribute("aria-label", revealed ? "Hide value" : "Show value");
+    };
+    const btn = makeTrailingButton("👁", "Show value", () => {
+      revealed = !revealed;
+      inputElement.type = revealed ? "text" : "password";
+      paint(btn);
+      // Keep the caret where the user left it: swapping the type recreates the
+      // native field's rendering, so refocusing without restoring the selection
+      // would jump the cursor to the end.
+      const end = inputElement.value.length;
+      inputElement.setSelectionRange?.(end, end);
+      inputElement.focus();
+    });
+    paint(btn);
+    // `inputElement.type` was already set from `type`; the button only mirrors it.
+  }
 
   // --- Inline validation icon (✓ / ✗) shown inside the input on the right ---
   if (showValidationIcon && validation !== "none") {

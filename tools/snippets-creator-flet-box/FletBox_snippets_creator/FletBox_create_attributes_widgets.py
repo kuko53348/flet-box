@@ -322,6 +322,7 @@ attrs_all_placeholders_complete = {
     'textColor': 'textColor: colors.primary,',
     'gradient': 'gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",',
     'opacity': 'opacity: 0.8,',
+    'visible': 'visible: false,',
 
     # ---------- Bordes y sombras ----------
     'border': 'border: border(1, "solid", "#ccc"),',

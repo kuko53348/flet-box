@@ -13,6 +13,10 @@ import { warnUnknownProp, setPropNames } from "./warnings.js";
  *   unit      : (optional) 'rem' | 'px' | 'none' – style props only
  *   reactive  : (optional) true – whether the prop is reactive
  *   targets   : (optional) list of CSS DOM props a shorthand expands to
+ *   boolValues: (optional) { true, false } – CSS values a boolean prop maps to.
+ *               Without it, `true`/`false` reach the stylesheet as `1`/`0`, which
+ *               is right for `opacity` but invalid for keyword-valued props like
+ *               `flex-wrap`.
  *
  * Props typed as `special` are consumed by widget implementations via
  * `composeUpdate` / `_originalProps`. They are registered here so that:
@@ -133,8 +137,8 @@ export const ALL_PROPS = [
   { prop: "justify", domProp: "justifyContent", type: "style", unit: "none", reactive: true },
   { prop: "justifyContent", domProp: "justifyContent", type: "style", unit: "none", reactive: true },
   { prop: "alignItems", domProp: "alignItems", type: "style", unit: "none", reactive: true },
-  { prop: "wrap", domProp: "flexWrap", type: "style", unit: "none", reactive: true },
-  { prop: "flexWrap", domProp: "flexWrap", type: "style", unit: "none", reactive: true },
+  { prop: "wrap", domProp: "flexWrap", type: "style", unit: "none", reactive: true, boolValues: { true: "wrap", false: "nowrap" } },
+  { prop: "flexWrap", domProp: "flexWrap", type: "style", unit: "none", reactive: true, boolValues: { true: "wrap", false: "nowrap" } },
   { prop: "flex", domProp: "flex", type: "style", unit: "none", reactive: true },
   { prop: "flexGrow", domProp: "flexGrow", type: "style", unit: "none", reactive: true },
   { prop: "flexShrink", domProp: "flexShrink", type: "style", unit: "none", reactive: true },
@@ -241,8 +245,15 @@ export const ALL_PROPS = [
   { prop: "tabIndex", domProp: "tabIndex", type: "attribute" },
   { prop: "draggable", domProp: "draggable", type: "attribute" },
   { prop: "hidden", domProp: "hidden", type: "attribute" },
-  { prop: "for", domProp: "htmlFor", type: "attribute" },
-  { prop: "htmlFor", domProp: "htmlFor", type: "attribute" },
+  // Handled by `applySpecial`, not by CSS: `visible: false` has to hide the
+  // widget without overwriting the `display` its own styles set, and `visible:
+  // true` must give that value back. `hidden` stays the plain HTML form.
+  { prop: "visible", domProp: "visible", type: "special", reactive: true },
+  // The DOM attribute is `for`; `htmlFor` is its React-style alias. Writing
+  // `setAttribute("htmlFor")` would create a junk attribute and leave the label
+  // unassociated, so both names target the real one.
+  { prop: "for", domProp: "for", type: "attribute" },
+  { prop: "htmlFor", domProp: "for", type: "attribute" },
   { prop: "autofocus", domProp: "autofocus", type: "attribute" },
   { prop: "autocomplete", domProp: "autocomplete", type: "attribute" },
   { prop: "spellcheck", domProp: "spellcheck", type: "attribute" },
@@ -485,7 +496,10 @@ export const ALL_PROPS = [
   { prop: "ListEmptyComponent", domProp: "ListEmptyComponent", type: "special" },
   { prop: "showsScrollIndicator", domProp: "showsScrollIndicator", type: "special" },
   { prop: "bufferSize", domProp: "bufferSize", type: "special" },
-  { prop: "expand", domProp: "expand", type: "special" },
+  // Same rule ListView applies internally: a flex child that grows to fill the
+  // free space. `false` restores the CSS default instead of leaving a stale
+  // `flex: 1` behind after an update.
+  { prop: "expand", domProp: "flex", type: "style", unit: "none", reactive: true, boolValues: { true: 1, false: "0 1 auto" } },
   { prop: "spacing", domProp: "spacing", type: "special" },
   { prop: "columns", domProp: "columns", type: "special" },
   { prop: "wrapItems", domProp: "wrapItems", type: "special" },
@@ -613,8 +627,11 @@ export const ALL_PROPS = [
   { prop: "muted", domProp: "muted", type: "special" },
   { prop: "poster", domProp: "poster", type: "special" },
   { prop: "volume", domProp: "volume", type: "special" },
-  { prop: "onLoad", domProp: "onLoad", type: "special" },
-  { prop: "onError", domProp: "onError", type: "special" },
+  // Real DOM events, so every element that fires them gets them for free
+  // (`img`, `video`, `audio`, `iframe`). Audio/AdSense destructure their own
+  // `onLoad`/`onError` before the factory sees them, so they never double-bind.
+  { prop: "onLoad", domProp: "load", type: "event" },
+  { prop: "onError", domProp: "error", type: "event" },
   { prop: "onPlay", domProp: "onPlay", type: "special" },
   { prop: "onPause", domProp: "onPause", type: "special" },
   { prop: "onEnd", domProp: "onEnd", type: "special" },

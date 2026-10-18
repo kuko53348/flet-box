@@ -53,6 +53,7 @@ export const processProps = (props, tag = "div", widgetName = null) => {
           // Shorthands may fan out to several CSS props (e.g. `px` →
           // paddingLeft + paddingRight). Everything else writes to its domProp.
           const cssValue = applyUnit(def, value);
+          if (cssValue === undefined) break;
           const targets = def.targets || [def.domProp];
           for (const target of targets) style[target] = cssValue;
           break;
@@ -103,6 +104,9 @@ export const processProps = (props, tag = "div", widgetName = null) => {
 /**
  * Applies the correct CSS unit to a numeric value based on the prop definition.
  *
+ * - A prop with `boolValues` maps `true`/`false` to the CSS the property
+ *   actually accepts (e.g. `wrap: true` → `flex-wrap: wrap`); an `undefined`
+ *   mapping skips the assignment.
  * - `true` / `false` are coerced to `1` / `0` (unitless).
  * - Non-numeric values pass through unchanged.
  * - `unit: "none"` returns the raw number without a suffix.
@@ -111,9 +115,12 @@ export const processProps = (props, tag = "div", widgetName = null) => {
  *
  * @param {Object} def - Prop definition from the prop database (see `translateProps.js`).
  * @param {*} value - The value to convert.
- * @returns {string|number} Value with the correct CSS unit applied.
+ * @returns {string|number|undefined} Value with the correct CSS unit applied.
  */
 function applyUnit(def, value) {
+  if (def.boolValues && typeof value === "boolean") {
+    return def.boolValues[String(value)];
+  }
   if (value === true) return 1;
   if (value === false) return 0;
   if (typeof value !== "number") return value;

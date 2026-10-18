@@ -46,6 +46,7 @@ const app = Scaffold({
 | `navSideBarWidth` | number | `260` | Legacy width for `navSideBar`. |
 | `navSideBarPosition` | `'left'`/`'right'` | `'left'` | Legacy side for `navSideBar`. |
 | `routes` | object | — | `{ path: route }` map. Enables router mode (same as passing the map as `body`). |
+| `basePath` | string | auto | Deployment prefix the router prepends to every route, e.g. `"/flet-box-docs"`. Detected from the current URL when omitted. |
 | `backgroundColor` | Color | `colors.background` | Background of the shell. |
 | `closeDrawerOnNavigate` | boolean | `false` | When router mode navigates, close the drawer automatically. |
 

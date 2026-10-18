@@ -36,7 +36,9 @@ declare module 'flet-box' {
   export interface CommonProps {
     width?: Size;
     height?: Size;
-    size?: number;
+    // `Size`, not `number`: for a Text this is a font size and for a Button it is
+    // the `small | medium | large` preset — the widget decides which it reads.
+    size?: Size;
     padding?: Padding;
     margin?: Margin;
     bgColor?: Color;
@@ -203,10 +205,10 @@ declare module 'flet-box' {
     gap?: number | string;
     justifyContent?: 'flex-start' | 'center' | 'flex-end' | 'space-between' | 'space-around' | 'space-evenly';
     alignItems?: 'flex-start' | 'center' | 'flex-end' | 'stretch';
-    wrap?: boolean;
+    wrap?: boolean | 'wrap' | 'nowrap' | 'wrap-reverse';
     child?: Widget;
     children?: Widget[];
-    expand?: boolean;
+    expand?: boolean | number;
     flex?: number;
     minHeight?: Size;
     maxHeight?: Size;
@@ -220,7 +222,7 @@ declare module 'flet-box' {
     gap?: number | string;
     justifyContent?: ContainerProps['justifyContent'];
     alignItems?: ContainerProps['alignItems'];
-    wrap?: boolean;
+    wrap?: boolean | 'wrap' | 'nowrap' | 'wrap-reverse';
     children?: Widget[];
     onPress?: (widget: Widget) => void;
   }
@@ -259,7 +261,7 @@ declare module 'flet-box' {
     ListEmptyComponent?: (() => Widget) | Widget;
     showsScrollIndicator?: boolean;
     bufferSize?: number;
-    expand?: boolean;
+    expand?: boolean | number;
   }
   export function ListView(props: ListViewProps): Widget & {
     data: any[];
@@ -528,7 +530,7 @@ declare module 'flet-box' {
     updateValue(newValue: string | number): void;
   };
 
-  export interface SliderProps extends CommonProps {
+  export interface SliderProps extends Omit<CommonProps, 'onPress'> {
     value?: number;
     min?: number;
     max?: number;
@@ -597,7 +599,7 @@ declare module 'flet-box' {
     update(props: Partial<AccordionProps>): void;
   };
 
-  export interface DividerProps extends CommonProps {
+  export interface DividerProps extends Omit<CommonProps, 'margin'> {
     color?: Color;
     thickness?: number;
     margin?: number | { top?: number; right?: number; bottom?: number; left?: number };
@@ -903,7 +905,7 @@ declare module 'flet-box' {
     closeDrawer?(): void;
   };
 
-  export interface AppBarProps extends CommonProps {
+  export interface AppBarProps extends Omit<CommonProps, 'shadow'> {
     title?: string | Widget;
     leading?: Widget;
     actions?: Widget[];
@@ -925,7 +927,7 @@ declare module 'flet-box' {
     margin?: Margin;
     padding?: Padding;
     borderRadius?: number;
-    shadow?: boolean;
+    shadow?: boolean | string;
   }
   export function AppBar(props: AppBarProps): Widget & {
     setTitle(title: string): void;
@@ -981,7 +983,7 @@ declare module 'flet-box' {
   export function toggleDrawer(): void;
   export function destroyDrawer(): void;
 
-  export interface BottomNavigationProps extends CommonProps {
+  export interface BottomNavigationProps extends Omit<CommonProps, 'shadow'> {
     items: Array<{ icon: string; label?: string; route?: string; onPress?: () => void }>;
     currentIndex?: number;
     onTabChange?: (index: number) => void;
@@ -994,7 +996,7 @@ declare module 'flet-box' {
     margin?: Margin;
     borderRadius?: number;
     padding?: Padding;
-    shadow?: boolean;
+    shadow?: boolean | string;
     elevation?: number;
     useRouter?: boolean;
   }
@@ -1203,7 +1205,7 @@ declare module 'flet-box' {
     updateColumns(columns: DataTableColumn[]): void;
   };
 
-  export interface ChartProps extends CommonProps {
+  export interface ChartProps extends Omit<CommonProps, 'padding'> {
     type?: 'bar' | 'line' | 'area' | 'candle';
     data: number[] | Array<{ open: number; high: number; low: number; close: number }>;
     labels?: string[];
@@ -1505,7 +1507,7 @@ declare module 'flet-box' {
   }
   export function InstallButton(props: InstallButtonProps): Widget;
 
-  export interface VideoProps extends CommonProps {
+  export interface VideoProps extends Omit<CommonProps, 'ref'> {
     src: string;
     width?: number | string;
     height?: number | string;
@@ -1527,7 +1529,7 @@ declare module 'flet-box' {
     unmuteVideo(): void;
   };
 
-  export interface AudioProps extends CommonProps {
+  export interface AudioProps extends Omit<CommonProps, 'ref'> {
     src: string;
     autoplay?: boolean;
     controls?: boolean;
@@ -1558,7 +1560,7 @@ declare module 'flet-box' {
     isPlaying(): boolean;
   };
 
-  export interface CircularBarProps extends CommonProps {
+  export interface CircularBarProps extends Omit<CommonProps, 'onClick' | 'ref'> {
     value?: number;
     max?: number;
     size?: number;
@@ -1608,7 +1610,7 @@ declare module 'flet-box' {
     color?: Color;
   }
 
-  export interface CircularChartProps extends CommonProps {
+  export interface CircularChartProps extends Omit<CommonProps, 'onClick' | 'ref'> {
     data?: CircularChartSlice[];
     size?: number;
     strokeWidth?: number;
@@ -1931,7 +1933,12 @@ declare module 'flet-box' {
   export function padding(value: number | string | { all?: number; horizontal?: number; vertical?: number; top?: number; right?: number; bottom?: number; left?: number }): string;
   export function gradient(type: 'linear' | 'circle' | 'conic', colors: string[], angle?: number): string;
   export function shadow(x: number, y: number, blur: number, spread: number, color: string): string;
-  export const color: (value: string) => {
+  /**
+   * Fluent color instance returned by `color()`. The chained methods mutate this
+   * very instance and return it, which is why their type is `this` and not a
+   * fixed interface name.
+   */
+  export interface ColorInstance {
     hex(): string;
     rgb(): string;
     rgba(): string;
@@ -1942,7 +1949,9 @@ declare module 'flet-box' {
     isDark(): boolean;
     isLight(): boolean;
     contrast(): string;
-  };
+  }
+
+  export const color: (value: string) => ColorInstance;
   export function rgba(r: number, g: number, b: number, a?: number): string;
   export function stackPosition(widget: Widget, props: { top?: any; right?: any; bottom?: any; left?: any }): Widget;
   export function flex(grow: number | { grow?: number; shrink?: number; basis?: string }, shrink?: number, basis?: string): string;

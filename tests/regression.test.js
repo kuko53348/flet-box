@@ -1159,6 +1159,136 @@ async function run() {
     );
   });
 
+  // ------------------------------------------------- documented-but-dead props
+  await t("engine: `visible` hides the widget and restores its own display", async () => {
+    // `visible` was in CommonProps and every doc page, but no registry entry and
+    // no handler existed, so it was silently dropped and the widget always showed.
+    const row = mount(W.Row({ visible: false, children: [W.Text({ text: "x" })] }));
+    ok(getComputedStyle(row).display === "none", `display=${getComputedStyle(row).display}`);
+    row.visible = true;
+    await wait(20);
+    ok(getComputedStyle(row).display === "flex", "the flex display was not restored");
+    const inline = mount(WidgetFactory({ tag: "div", display: "inline", visible: false }));
+    ok(getComputedStyle(inline).display === "none", "boolean false did not hide");
+    inline.visible = true;
+    ok(getComputedStyle(inline).display === "inline", "the original display was lost");
+  });
+
+  await t("engine: `wrap: true` and `expand: true` write valid CSS", async () => {
+    // Both were plain style props, so `applyUnit` turned `true` into `1`:
+    // `flex-wrap: 1` and `flex: 1`-as-a-string are invalid and did nothing.
+    const wrapped = mount(W.Row({ wrap: true, width: 100, children: [W.Text({ text: "a" })] }));
+    ok(getComputedStyle(wrapped).flexWrap === "wrap", `flex-wrap=${getComputedStyle(wrapped).flexWrap}`);
+    const nowrap = mount(W.Row({ wrap: false }));
+    ok(getComputedStyle(nowrap).flexWrap === "nowrap", `false must map to nowrap, got ${getComputedStyle(nowrap).flexWrap}`);
+    const keyword = mount(W.Row({ wrap: "wrap-reverse" }));
+    ok(getComputedStyle(keyword).flexWrap === "wrap-reverse", "the string form must still pass through");
+
+    const grown = mount(W.Container({ expand: true }));
+    ok(/^1\s/.test(getComputedStyle(grown).flexGrow + " ") || getComputedStyle(grown).flexGrow === "1",
+      `flex-grow=${getComputedStyle(grown).flexGrow}`);
+    const still = mount(W.Container({ expand: false }));
+    ok(getComputedStyle(still).flexBasis !== "", `expand:false left no flex shorthand: ${getComputedStyle(still).flex}`);
+  });
+
+  await t("engine: `for`/`htmlFor` bind a <label> instead of writing a junk attribute", async () => {
+    // `setAttribute("htmlFor", …)` creates a literal `htmlfor`-ish attribute the
+    // browser ignores, so the label never pointed at its control.
+    const viaFor = mount(WidgetFactory({ tag: "label", text: "A", for: "field-a" }));
+    const viaAlias = mount(WidgetFactory({ tag: "label", text: "B", htmlFor: "field-b" }));
+    ok(viaFor.getAttribute("for") === "field-a", `for did not land: ${viaFor.outerHTML}`);
+    ok(viaFor.htmlFor === "field-a", `label.for did not reflect: "${viaFor.htmlFor}"`);
+    ok(viaAlias.htmlFor === "field-b", `htmlFor did not map to for: "${viaAlias.htmlFor}"`);
+  });
+
+  await t("Image: onLoad and onError are real DOM events", async () => {
+    // Registered as `special`, which nothing handled: the callbacks were consumed
+    // by the engine and never reached the <img>, so neither ever fired.
+    const png =
+      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFAAH/q842iQAAAABJRU5ErkJggg==";
+    const loaded = [];
+    const okImg = mount(W.Image({ src: png, onLoad: (e) => loaded.push(e.target.naturalWidth), onError: () => loaded.push("error") }));
+    const failed = [];
+    W.Image({ src: "/definitely-not-an-image.png", onError: () => failed.push("error"), onLoad: () => failed.push("load") });
+    await wait(500);
+    ok(loaded[0] === 1, `onLoad did not fire: ${JSON.stringify(loaded)}`);
+    ok(failed[0] === "error", `onError did not fire: ${JSON.stringify(failed)}`);
+    ok(okImg.tagName === "IMG", "Image stopped rendering an <img>");
+  });
+
+  await t("Input: clearable, passwordToggle and onEnter do what Input.md says", async () => {
+    // All three were documented in Input.md and declared in InputProps, and were
+    // dead registry entries: no trailing control appeared and Enter never fired.
+    const entered = [];
+    const clear = mount(W.Input({ label: "Search", clearable: true, value: "abc", onEnter: (v, e) => entered.push(`${v}:${e.key}`) }));
+    const btn = clear.querySelector("button");
+    ok(btn !== null, "clearable rendered no trailing control");
+    ok(clear._input.value === "abc", "the initial value was lost");
+    btn.click();
+    ok(clear.getValue() === "", `clear left "${clear.getValue()}"`);
+
+    const field = clear._input;
+    field.value = "typed";
+    field.dispatchEvent(new Event("input", { bubbles: true }));
+    field.dispatchEvent(new KeyboardEvent("keydown", { key: "a", bubbles: true }));
+    ok(entered.length === 0, "onEnter fired for a non-Enter key");
+    field.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    ok(entered.length === 1 && entered[0].startsWith("typed:"), `onEnter: ${JSON.stringify(entered)}`);
+
+    const reveal = mount(W.Input({ type: "password", passwordToggle: true, value: "s3cret" }));
+    const eye = reveal.querySelector("button");
+    ok(eye !== null, "passwordToggle rendered no reveal button");
+    ok(reveal._input.type === "password", "the field is not a password field to begin with");
+    eye.click();
+    ok(reveal._input.type === "text", "clicking reveal did not show the value");
+    reveal.querySelector("button").click();
+    ok(reveal._input.type === "password", "clicking again did not hide the value");
+    ok(reveal.getValue() === "s3cret", `the value was cleared by toggling: "${reveal.getValue()}"`);
+
+    const off = mount(W.Input({ value: "plain" }));
+    ok(off.querySelector("button") === null, "a plain Input grew a trailing control");
+  });
+
+  await t("Checkbox/Radio/Switch: activeColor paints the active state", async () => {
+    // The three controls hardcoded the theme color when active, so the documented
+    // `activeColor` prop changed nothing.
+    const box = mount(W.Checkbox({ checked: true, activeColor: "rgb(37, 99, 235)" }));
+    ok(box.style.backgroundColor === "rgb(37, 99, 235)", `Checkbox bg=${box.style.backgroundColor}`);
+    const untoggled = mount(W.Checkbox({ activeColor: "rgb(37, 99, 235)" }));
+    untoggled.setChecked(true);
+    ok(untoggled.style.backgroundColor === "rgb(37, 99, 235)", `after setChecked: ${untoggled.style.backgroundColor}`);
+
+    const radio = mount(W.Radio({ activeColor: "rgb(22, 163, 74)" }));
+    radio.select();
+    ok(radio.style.backgroundColor === "rgb(22, 163, 74)", `Radio after select(): ${radio.style.backgroundColor}`);
+
+    const sw = mount(W.Switch({ value: true, activeColor: "rgb(124, 58, 237)" }));
+    ok(sw.style.backgroundColor === "rgb(124, 58, 237)", `Switch bg=${sw.style.backgroundColor}`);
+    sw.updateValue(false);
+    ok(sw.style.backgroundColor !== "rgb(124, 58, 237)", "the off state kept the active color");
+
+    const themed = mount(W.Checkbox({ checked: true }));
+    ok(themed.style.backgroundColor !== "", "the default theme color disappeared");
+  });
+
+  await t("Stack: alignment anchors children at the documented nine points", async () => {
+    // `alignment` was in StackProps, Stack.md and three examples, and Stack never
+    // read it: every preset rendered a plain block with children at the top-left.
+    const read = (alignment, extra = {}) => {
+      const s = mount(W.Stack({ alignment, width: 120, height: 80, ...extra }));
+      const cs = getComputedStyle(s);
+      return `${cs.display}/${cs.justifyContent}/${cs.alignItems}`;
+    };
+    ok(read("center") === "flex/center/center", `center → ${read("center")}`);
+    ok(read("bottom-right") === "flex/flex-end/flex-end", `bottom-right → ${read("bottom-right")}`);
+    ok(read("top-left") === "flex/flex-start/flex-start", `top-left → ${read("top-left")}`);
+    ok(read("top-center") === "flex/flex-start/center", `top-center → ${read("top-center")}`);
+    ok(read("bottom-center") === "flex/flex-end/center", `bottom-center → ${read("bottom-center")}`);
+    // an explicit axis must win over the preset, and no alignment keeps the block
+    ok(read("center", { justifyContent: "flex-end" }) === "flex/flex-end/center", "explicit justifyContent ignored");
+    ok(getComputedStyle(mount(W.Stack({ width: 40, height: 40 }))).display === "block", "a plain Stack stopped being a block");
+  });
+
   // ------------------------------------------------------------------ report
   window.__REGRESSION = { pass, fail, total: pass + fail, results };
 

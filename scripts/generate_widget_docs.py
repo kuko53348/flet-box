@@ -104,15 +104,22 @@ def extract_props(source: str, name: str) -> list[tuple[str, str]]:
     header, block = result
     own = _parse_props(block)
     # Merge the parent interface only when it is not CommonProps (common props
-    # are rendered in their own section). Handles `Omit<Parent, 'a' | 'b'>`.
+    # are rendered in their own section). Handles `Omit<Parent, 'a' | 'b'>`,
+    # including its exclusion list: `GridViewProps` deliberately drops the
+    # `crossAxisCount`/`wrapItems` it derives from `columns`, and documenting
+    # them again would advertise knobs the widget overwrites.
     target = re.search(r"extends\s+(.+)", header)
     base = None
+    excluded: set[str] = set()
     if target:
         extends = target.group(1).strip()
         if extends.startswith("Omit<"):
             match = re.search(r"Omit<\s*([A-Za-z_$][\w$]*)", extends)
             if match:
                 base = match.group(1)
+            keys = re.search(r",\s*([^>]*)>", extends)
+            if keys:
+                excluded = set(re.findall(r"['\"]([^'\"]+)['\"]", keys.group(1)))
         else:
             match = re.search(r"[A-Za-z_$][\w$]*", extends)
             if match:
@@ -120,8 +127,9 @@ def extract_props(source: str, name: str) -> list[tuple[str, str]]:
     if base and base != "CommonProps":
         inherited = extract_props(source, base)
         for prop, kind in inherited:
-            if prop not in {p for p, _ in own}:
-                own.insert(0, (prop, kind))
+            if prop in excluded or prop in {p for p, _ in own}:
+                continue
+            own.insert(0, (prop, kind))
     return own
 
 

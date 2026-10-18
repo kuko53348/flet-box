@@ -12,6 +12,7 @@ export const Checkbox = (props) => {
     onPress: onPressProp,
     disabled = false,
     size = 20,
+    activeColor = colors.primary,
     ...rest
   } = props;
 
@@ -25,10 +26,8 @@ export const Checkbox = (props) => {
 
   const updateUI = (newChecked) => {
     if (checkboxRef) {
-      checkboxRef.style.backgroundColor = newChecked
-        ? colors.primary
-        : "transparent";
-      checkboxRef.style.border = `2px solid ${newChecked ? colors.primary : colors.border}`;
+      checkboxRef.style.backgroundColor = newChecked ? activeColor : "transparent";
+      checkboxRef.style.border = `2px solid ${newChecked ? activeColor : colors.border}`;
     }
     if (checkMarkRef) {
       checkMarkRef.style.display = newChecked ? "inline-block" : "none";
@@ -51,9 +50,9 @@ export const Checkbox = (props) => {
     widgetName: "Checkbox",
     width: size,
     height: size,
-    border: `2px solid ${disabled ? colors.border : internalChecked ? colors.primary : colors.border}`,
+    border: `2px solid ${disabled ? colors.border : internalChecked ? activeColor : colors.border}`,
     borderRadius: 6,
-    backgroundColor: internalChecked ? colors.primary : "transparent",
+    backgroundColor: internalChecked ? activeColor : "transparent",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -84,7 +83,10 @@ export const Checkbox = (props) => {
     // Hover effect
     checkbox.addEventListener("mouseenter", () => {
       if (!disabled && !internalChecked) {
-        checkbox.style.backgroundColor = colors.primary + "20";
+        // `color-mix` rather than `activeColor + "20"`: that string concat only
+        // produced a valid color for `#rrggbb` hexes and silently broke on
+        // `rgba()`, named colors and 3-digit hex `activeColor` values.
+        checkbox.style.backgroundColor = `color-mix(in srgb, ${activeColor} 12%, transparent)`;
       }
     });
 

@@ -23,7 +23,7 @@ const grid = GridView({
 
 | Prop | Type | Description |
 | --- | --- | --- |
-| `expand` | `boolean` | Lets a flex child grow to fill available space. |
+| `expand` | `boolean \| number` | Lets a flex child grow to fill available space. |
 | `bufferSize` | `number` | How many extra items to render beyond the viewport. |
 | `showsScrollIndicator` | `boolean` | Shows the native scrollbar. |
 | `ListEmptyComponent` | `(() => Widget) \| Widget` | Widget or builder shown when there is no data. |
@@ -32,8 +32,6 @@ const grid = GridView({
 | `onRefresh` | `(done: () => void) => void` | Pull-to-refresh handler; call the provided `done()` when finished. |
 | `onEndReachedThreshold` | `number` | How close to the end (in items or px) triggers `onEndReached`. |
 | `onEndReached` | `() => void` | Fired when the list scrolls near its end, for infinite loading. |
-| `crossAxisCount` | `number` | Number of items per row when wrapping. |
-| `wrapItems` | `boolean` | Enables grid wrapping of list items. |
 | `gap` | `number` | Space between children along the layout axis. |
 | `itemSize` | `number` | Height of each list item. |
 | `width` | `number \| string` | Width of the widget. A number is pixels; a string uses any CSS unit. |
@@ -52,7 +50,7 @@ Every widget also accepts these shared props — see [common props](COMMON_PROPS
 | --- | --- | --- |
 | `width` | `Size` | Width of the widget. A number is pixels; a string uses any CSS unit. |
 | `height` | `Size` | Height of the widget. A number is pixels; a string uses any CSS unit. |
-| `size` | `number` | Overall size preset or pixel value, depending on the widget. |
+| `size` | `Size` | Overall size preset or pixel value, depending on the widget. |
 | `padding` | `Padding` | Space inside the widget, between its content and its border. |
 | `margin` | `Margin` | Space outside the widget, between it and its neighbors. |
 | `bgColor` | `Color` | Background color. Alias: `backgroundColor`. |

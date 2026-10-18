@@ -12,6 +12,7 @@ export const Switch = (props) => {
     onPress: onPressProp,
     disabled = false,
     size = "medium",
+    activeColor = colors.success,
     ...rest
   } = props;
 
@@ -33,9 +34,7 @@ export const Switch = (props) => {
 
   const updateUI = (newValue) => {
     if (switchRef) {
-      switchRef.style.backgroundColor = newValue
-        ? colors.success
-        : colors.gray300;
+      switchRef.style.backgroundColor = newValue ? activeColor : colors.gray300;
     }
     if (knobRef) {
       knobRef.style.transform = newValue
@@ -63,7 +62,7 @@ export const Switch = (props) => {
     widgetName: "Switch",
     width: sz.width,
     height: sz.height,
-    backgroundColor: internalValue ? colors.success : colors.gray300,
+    backgroundColor: internalValue ? activeColor : colors.gray300,
     borderRadius: sz.height / 2,
     display: "flex",
     alignItems: "center",

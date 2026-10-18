@@ -10,6 +10,7 @@ FletBox: zero-runtime-dependency vanilla-JS UI framework with a Flet-like declar
 - `npm test` — runs static checkers, in order:
   - `node scripts/check-widgets.mjs` — widget-structure contract against `scripts/widget-contract-baseline.json`.
   - `node scripts/check-prop-registry.mjs` — the `ALL_PROPS` registry vs what widgets/navigations actually read.
+  - `node scripts/check-docs-props.mjs` — the `docs/widget/*.md` prop tables vs the registry, the implementations and `src/index.d.ts`. Blocks `DEAD` (a documented prop nothing routes or reads) and `BOOL_STYLE` (a documented `boolean` that reaches CSS as `1` because its registry entry has no `boolValues`).
   - `node scripts/check-api-surface.mjs` — API coupling across the three surfaces. It imports `src/index.js` for real, so it also fails when the barrel re-exports a name that no longer exists, or when the package stops being importable in Node (module-scope `window`/`document`).
   - `node scripts/check-router-base.mjs` — deployment base path.
   - `python3 tools/snippets-creator-flet-box/build_snippets.py --check` + `node scripts/check-snippets.mjs` — the VSCode snippet library (see Snippets below).

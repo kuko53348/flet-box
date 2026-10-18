@@ -39,7 +39,7 @@ const list = ListView({
 | `ListEmptyComponent` | `(() => Widget) \| Widget` | Widget or builder shown when there is no data. |
 | `showsScrollIndicator` | `boolean` | Shows the native scrollbar. |
 | `bufferSize` | `number` | How many extra items to render beyond the viewport. |
-| `expand` | `boolean` | Lets a flex child grow to fill available space. |
+| `expand` | `boolean \| number` | Lets a flex child grow to fill available space. |
 
 ### Common props
 
@@ -49,7 +49,7 @@ Every widget also accepts these shared props — see [common props](COMMON_PROPS
 | --- | --- | --- |
 | `width` | `Size` | Width of the widget. A number is pixels; a string uses any CSS unit. |
 | `height` | `Size` | Height of the widget. A number is pixels; a string uses any CSS unit. |
-| `size` | `number` | Overall size preset or pixel value, depending on the widget. |
+| `size` | `Size` | Overall size preset or pixel value, depending on the widget. |
 | `padding` | `Padding` | Space inside the widget, between its content and its border. |
 | `margin` | `Margin` | Space outside the widget, between it and its neighbors. |
 | `bgColor` | `Color` | Background color. Alias: `backgroundColor`. |

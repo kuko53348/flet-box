@@ -13,6 +13,7 @@ export const Radio = (props) => {
     disabled = false,
     size = 20,
     name,
+    activeColor = colors.primary,
     ...rest
   } = props;
 
@@ -26,10 +27,8 @@ export const Radio = (props) => {
 
   const updateUI = (newSelected) => {
     if (radioRef) {
-      radioRef.style.backgroundColor = newSelected
-        ? colors.primary
-        : "transparent";
-      radioRef.style.border = `2px solid ${newSelected ? colors.primary : colors.border}`;
+      radioRef.style.backgroundColor = newSelected ? activeColor : "transparent";
+      radioRef.style.border = `2px solid ${newSelected ? activeColor : colors.border}`;
     }
     if (dotRef) {
       dotRef.style.display = newSelected ? "block" : "none";
@@ -51,9 +50,9 @@ export const Radio = (props) => {
     widgetName: "Radio",
     width: size,
     height: size,
-    border: `2px solid ${disabled ? colors.border : internalSelected ? colors.primary : colors.border}`,
+    border: `2px solid ${disabled ? colors.border : internalSelected ? activeColor : colors.border}`,
     borderRadius: "50%",
-    backgroundColor: internalSelected ? colors.primary : "transparent",
+    backgroundColor: internalSelected ? activeColor : "transparent",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -96,7 +95,7 @@ export const Radio = (props) => {
     // Hover effect
     radio.addEventListener("mouseenter", () => {
       if (!disabled && !internalSelected) {
-        radio.style.backgroundColor = colors.primary + "20";
+        radio.style.backgroundColor = `color-mix(in srgb, ${activeColor} 12%, transparent)`;
       }
     });
 
