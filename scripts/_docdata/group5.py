@@ -529,11 +529,11 @@ Edit the **props** and render.`,
 });''',
     },
     "Maps": {
-        "summary": "An interactive map — pan, zoom, markers — with no map library behind it. "
-                   "The Web Mercator projection and the XYZ tile grid are implemented inside the "
-                   "widget, so any provider that answers `{z}/{x}/{y}` works and nothing needs an "
-                   "API key, a CDN or a build step.",
-        "when": "Use it to show a venue, plot delivery stops, or let a picker return a coordinate.",
+        "summary": "An interactive map — pan, zoom, markers and polylines — with no map library "
+                   "behind it. The Web Mercator projection and the XYZ tile grid are implemented "
+                   "inside the widget, so any provider that answers `{z}/{x}/{y}` works and nothing "
+                   "needs an API key, a CDN or a build step.",
+        "when": "Use it to show a venue, plot delivery stops, draw a route, or let a picker return a coordinate.",
         "related": ["Card", "Button", "ListView", "Image"],
         "tips": [
             "The default tile server is OpenStreetMap and its credit line renders by default; when "
@@ -546,6 +546,19 @@ Edit the **props** and render.`,
             "`error.code` in the rejected handler instead of reporting one generic error.",
             "Give markers an id: the pin node is then reused across updates instead of rebuilt, which "
             "matters for a list that moves often.",
+            "A polyline needs two usable points; `addPolyline()` returns null for one-point input "
+            "rather than drawing a speck that looks like a broken route. Lines are stroked on a canvas "
+            "above the tiles and below the pins, so a long route costs no DOM nodes — but it also means "
+            "a line is not clickable; put an invisible marker on each stop you want tappable.",
+            "`fitBounds(pointList)` frames a route in one call: pass the coordinates and it picks the "
+            "zoom and centre. Feed it the geometry an OSRM or GraphHopper reply returns, and keep the "
+            "distance and duration from that same reply for the readout.",
+            "A track grows by re-passing `polylines` with the fixes collected so far, or by keeping one "
+            "line with an id and calling `update()`. `onUserUpdate` is the source of those fixes: it "
+            "fires for every watched position, following or not.",
+            "`followUser` is a different promise from `showUserLocation`: it recentres the view on every "
+            "fix and asks the browser for fresh high-accuracy ones, so it is the option that costs "
+            "battery. Turn it off when the user pans away to look at something else.",
             "The widget defaults to 400 tall and full width. Any size you give it is fine — a "
             "ResizeObserver repaints the tiles when the box changes.",
             "Wheel zoom is one level per gesture and follows the cursor, so a long trackpad flick "
@@ -561,6 +574,9 @@ Edit the **props** and render.`,
             "Tiles are pooled per zoom level and the previous level is kept until the new one is on "
             "screen, so a zoom step never flashes an empty grid.",
             "onMoveEnd is debounced — it fires once the view settles, not on every pan frame.",
+            "Lines are redrawn from their geographic points on every frame, so a polyline follows the "
+            "pan and the zoom instead of being pinned to the screen. A line whose bounding box misses "
+            "the viewport is skipped before any coordinate is projected.",
             "A press that moved the map more than a few pixels is a drag, so onMapClick stays quiet.",
             "A press on a pin answers onMarkerClick only; the map never reports the same press twice.",
             "Props bound with useState patch this widget alone — the map subscribes to the key and "
@@ -578,9 +594,13 @@ Edit the **props** and render.`,
   zoom: 13,
   height: 420,
   markerColor: colors.primary,
+  polylineColor: colors.primary,
   markers: [
     { position: [40.4168, -3.7038], label: "Sol" },
     { position: [40.4308, -3.693], label: "Chueca", color: "#0ea5e9" },
+  ],
+  polylines: [
+    [[40.4168, -3.7038], [40.424, -3.698], [40.4308, -3.693]],
   ],
   onMarkerClick: (marker) => pick(marker),
 });''',
@@ -598,15 +618,23 @@ Edit the **props** and render.`,
   interactive: true,
   scrollZoom: true,
   doubleClickZoom: true,
-  showUserLocation: false,
+  showUserLocation: true,
+  followUser: false,
   markers: stops.map((stop) => ({ id: stop.id, position: stop.at, label: stop.name })),
+  polylines: [
+    { id: "route", points: route.geometry, color: colors.primary, width: 5 },
+    { id: "track", points: breadcrumbs, dashed: true, opacity: 0.7 },
+  ],
   onMapClick: (point) => setPicked(point),
   onMarkerClick: (marker) => setPicked(marker.position),
   onMoveEnd: (view) => saveView(view),
+  onUserUpdate: (fix) => breadcrumbs.push([fix.lat, fix.lng]),
 });
 
-picker.fitBounds([[40.4, -3.74], [40.45, -3.68]]);
+picker.fitBounds(route.geometry);
 picker.addMarker({ position: [40.42, -3.7], label: "Dropped" });
-picker.locate();''',
+picker.addPolyline({ id: "leg", points: [picked, stop.at] });
+picker.locate();
+picker.setFollowUser(true);''',
     },
 }

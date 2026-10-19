@@ -349,6 +349,8 @@ DESC = {
     "minZoom": "Lowest zoom level the user can reach.",
     "maxZoom": "Highest zoom level the user can reach, usually the provider's last tile level.",
     "markerColor": "Colour of the pins that do not set a `color` of their own.",
+    "polylines": "Stroked paths: bare position lists or `{points, color, width, opacity, dashed, id}` records.",
+    "polylineColor": "Stroke of the lines that do not set a `color` of their own.",
     "tileUrl": "`{z}/{x}/{y}` tile template of the provider.",
     "attribution": "Credit line shown in the corner; most tile providers require one.",
     "showAttribution": "Shows the credit line.",
@@ -357,9 +359,11 @@ DESC = {
     "scrollZoom": "Zooms with the mouse wheel, centred on the cursor.",
     "doubleClickZoom": "Zooms on double-click; `Shift` + double-click zooms out.",
     "showUserLocation": "Draws the browser's position; asks for permission on the first paint.",
+    "followUser": "Keeps the view centred on the browser's position, asking for fresh high-accuracy fixes.",
     "onMapClick": "Fired with `{ lat, lng, zoom }` when the map is clicked without panning.",
     "onMarkerClick": "Fired with the clicked marker.",
     "onMoveEnd": "Fired with `{ center, zoom, bounds }` once the view stops changing.",
+    "onUserUpdate": "Fired with `{ lat, lng, accuracy }` on each position the watcher reports.",
 }
 
 # Pattern fallbacks were removed; use DESC and the automatic humanizer instead.

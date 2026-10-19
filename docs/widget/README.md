@@ -102,7 +102,7 @@ _audio, video and drag-and-drop_
 
 52. [Audio](Audio.md) — A thin wrapper around the native <audio> element with reliable duration detection, progress callbacks, and an imperative playback API
 53. [Video](Video.md) — Renders a native <video> element with proper media attributes and a convenient playback API
-54. [Maps](Maps.md) — An interactive map — pan, zoom, markers — with no map library behind it
+54. [Maps](Maps.md) — An interactive map — pan, zoom, markers and polylines — with no map library behind it
 55. [DraggBox](DraggBox.md) — Wraps a child so it can be dragged with the native drag-and-drop API
 56. [DroppBox](DroppBox.md) — A drop target for DraggBox items
 
