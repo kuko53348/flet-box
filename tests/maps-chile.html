@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>flet-box — Maps debug page (Chile, no markers)</title>
+    <style>
+      body { margin: 0; padding: 16px; background: #0f172a; color: #e2e8f0; font-family: ui-monospace, Menlo, monospace; }
+      h1 { font-size: 16px; margin: 0 0 12px; }
+      #root { display: flex; flex-direction: column; gap: 12px; max-width: 900px; }
+      #log { white-space: pre-wrap; font-size: 12px; line-height: 1.6; background: #1e293b; padding: 12px; border-radius: 8px; min-height: 96px; }
+    </style>
+  </head>
+  <body>
+    <h1>Maps — Chile, sin marcadores</h1>
+    <div id="root"></div>
+    <div id="log">waiting…</div>
+    <script type="module">
+      import { App, Maps } from "../src/index.js";
+
+      const log = document.getElementById("log");
+      const lines = [];
+      const say = (message) => {
+        lines.unshift(message);
+        log.textContent = lines.slice(0, 8).join("\n");
+      };
+
+      const map = Maps({
+        center: [-35.6, -71.2],
+        zoom: 5,
+        height: 460,
+        borderRadius: 12,
+        minZoom: 3,
+        maxZoom: 18,
+        onMoveEnd: (view) => say(`moveEnd  ${view.center.lat.toFixed(3)}, ${view.center.lng.toFixed(3)}  z${view.zoom}`),
+      });
+
+      App(map);
+
+      const stats = () => {
+        const imgs = [...map.querySelectorAll("img")];
+        const loaded = imgs.filter((i) => i.complete && i.naturalWidth > 0).length;
+        return `tiles ${loaded}/${imgs.length}  centre ${map.getCenter().lat.toFixed(3)}, ${map.getCenter().lng.toFixed(3)}  z${map.getZoom()}`;
+      };
+
+      say("mounted");
+      setTimeout(() => say(stats()), 400);
+      setTimeout(() => say(stats()), 1500);
+      setTimeout(() => say(stats()), 3500);
+
+      // The page's own console stays readable; the panel is the record.
+      window.__MAPS_DEBUG = { map, stats, say };
+    </script>
+  </body>
+</html>

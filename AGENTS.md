@@ -51,6 +51,7 @@ Tests are dependency-free JS in `tests/`. They can be run headlessly with `npm r
 - `/tests/regression.html` — guards for the bugs fixed in the widget audit (engine child-wipe, `ListView.updateData`, `DataTable` body rebuild, `SnackBar.close` idempotency, `AnimatedBox` keyframe dedupe, `MatrixRain` loop teardown). Add an assertion here for every bug you fix: each one failed before its fix.
 - `/tests/doccheck.html` and `/tests/doccheck-all.html` — assert documented behavior on the real runtime.
 - `/tests/propscan.html` — prop scanner.
+- `/tests/maps-chile.html` — manual Maps debug page: one map of Chile, no markers, with an on-page log of tiles loaded and the last `onMoveEnd`. Not an automated harness (no pass/fail globals); drive it with `window.__MAPS_DEBUG` (`{ map, stats, say }`).
 
 Each harness writes a global (`window.__TESTS`, `window.__SMOKE`, `window.__REGRESSION`, `window.__DOCCHECK`, `window.__CONTRACT`) for automation. These pages cannot open via `file://` (ESM + CORS); they must be served.
 
