@@ -1602,6 +1602,26 @@ async function run() {
     }
   });
 
+  // An app that writes onMoveEnd back into the `center` key it binds (the only
+  // way fitBounds survives a re-render) made applyProps report a view change
+  // every time, so the map invalidated and fired onMoveEnd forever.
+  await t("Maps: re-applying an unchanged center is not a view change", async () => {
+    let reports = 0;
+    const map = mount(W.Maps({ center: [10, 20], zoom: 6, onMoveEnd: () => reports++ }));
+    await wait(300);
+    const settled = reports;
+    map.update({ center: [10, 20], zoom: 6 });
+    map.update({ center: [10, 20] });
+    map.update({ center: { latitude: 10, longitude: 20 } });
+    await wait(300);
+    ok(reports === settled, `the same centre reported ${reports - settled} extra move(s)`);
+
+    map.update({ center: [41.3874, 2.1686] });
+    await wait(300);
+    ok(reports > settled, "a real centre change reported nothing");
+    ok(Math.abs(map.getState().center.lat - 41.3874) < 1e-6, "the view did not move");
+  });
+
   // ------------------------------------------------------------------ report
   window.__REGRESSION = { pass, fail, total: pass + fail, results };
 

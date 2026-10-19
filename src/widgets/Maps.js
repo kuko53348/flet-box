@@ -1093,7 +1093,14 @@ export const Maps = (inputProps = {}) => {
 
     if ("center" in next) {
       const point = normalizePosition(next.center);
-      if (point) {
+      // Only a different centre is a view change. An app that feeds `onMoveEnd`
+      // back into the key it binds — the usual controlled-map pattern — would
+      // otherwise re-invalidate on every settle tick and never stop reporting.
+      const moved = point && (
+        Math.abs(point.lat - center.lat) > 1e-9 ||
+        Math.abs(wrapLng(point.lng - center.lng)) > 1e-9
+      );
+      if (moved) {
         center = point;
         viewChanged = true;
       }
