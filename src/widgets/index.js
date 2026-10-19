@@ -43,6 +43,7 @@ export { Stepper } from "./Stepper.js";
 export { Skeleton } from "./Skeleton.js";
 export { Chart } from "./Chart.js";
 export { QRCode } from "./QRCode.js";
+export { Maps } from "./Maps.js";
 export { Slider } from "./Slider.js";
 export { InstallButton } from "./InstallButton.js";
 export { Video } from "./Video.js";

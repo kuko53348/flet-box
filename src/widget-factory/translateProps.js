@@ -748,6 +748,28 @@ export const ALL_PROPS = [
   { prop: "fgColor", domProp: "fgColor", type: "special" },
   { prop: "errorCorrection", domProp: "errorCorrection", type: "special" },
 
+  // ---- Maps ----
+  // `center` and `markers` are already registered above; the rest are Maps-only.
+  // All are inert here: Maps destructures them before the factory sees them and
+  // re-applies them through `composeUpdate`, so the registry entry only has to
+  // keep them out of the unknown-prop fallback (an invalid inline style for a
+  // `{lat, lng}` object, a bogus `mapclick` listener for `onMapClick`).
+  { prop: "zoom", domProp: "zoom", type: "special" },
+  { prop: "minZoom", domProp: "minZoom", type: "special" },
+  { prop: "maxZoom", domProp: "maxZoom", type: "special" },
+  { prop: "markerColor", domProp: "markerColor", type: "special" },
+  { prop: "tileUrl", domProp: "tileUrl", type: "special" },
+  { prop: "attribution", domProp: "attribution", type: "special" },
+  { prop: "showAttribution", domProp: "showAttribution", type: "special" },
+  { prop: "showZoomControl", domProp: "showZoomControl", type: "special" },
+  { prop: "interactive", domProp: "interactive", type: "special" },
+  { prop: "scrollZoom", domProp: "scrollZoom", type: "special" },
+  { prop: "doubleClickZoom", domProp: "doubleClickZoom", type: "special" },
+  { prop: "showUserLocation", domProp: "showUserLocation", type: "special" },
+  { prop: "onMapClick", domProp: "onMapClick", type: "special" },
+  { prop: "onMarkerClick", domProp: "onMarkerClick", type: "special" },
+  { prop: "onMoveEnd", domProp: "onMoveEnd", type: "special" },
+
   // ---- Image fit ----
   { prop: "fit", domProp: "objectFit", type: "style", unit: "none", reactive: true },
   { prop: "objectFit", domProp: "objectFit", type: "style", unit: "none", reactive: true },

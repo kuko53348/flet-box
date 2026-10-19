@@ -175,6 +175,7 @@ export {
   TreeView,
   Chart,
   QRCode,
+  Maps,
   DraggBox,
   DroppBox,
   DataTable,

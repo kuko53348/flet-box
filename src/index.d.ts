@@ -1701,6 +1701,83 @@ declare module 'flet-box' {
   };
 
   // =========================================================================
+  // Maps
+  // =========================================================================
+
+  /** A point on the map: `[lat, lng]`, `{lat, lng}` or `{latitude, longitude}`. */
+  export type LatLng = [number, number] | { lat: number; lng: number } | { latitude: number; longitude: number };
+
+  /** `[[south, west], [north, east]]`, a named box, or the points to enclose. */
+  export type MapBounds = [[number, number], [number, number]] | { south: number; west: number; north: number; east: number } | LatLng[];
+
+  /** A pin. A bare `LatLng` is also accepted wherever a marker is expected. */
+  export interface MapMarker {
+    position: LatLng;
+    label?: string;
+    color?: Color;
+    /** Keeps the pooled pin node across updates; auto-generated when omitted. */
+    id?: string | number;
+    data?: any;
+  }
+
+  /** Payload of `onMapClick`: the geographic point under the cursor. */
+  export interface MapClick {
+    lat: number;
+    lng: number;
+    zoom: number;
+  }
+
+  /** Payload of `onMoveEnd`: the view once it stops changing. */
+  export interface MapState {
+    center: { lat: number; lng: number };
+    zoom: number;
+    bounds: { south: number; west: number; north: number; east: number };
+  }
+
+  export interface MapsProps extends CommonProps {
+    /** Initial view centre. Defaults to `[20, 0]`. */
+    center?: LatLng;
+    /** Integer zoom level, 0 = the whole world. Defaults to `2`. */
+    zoom?: number;
+    minZoom?: number;
+    maxZoom?: number;
+    /** Positions and/or `{position, label, color, id, data}` records. */
+    markers?: Array<MapMarker | LatLng>;
+    /** Colour of the pins that do not set their own. Defaults to `colors.primary`. */
+    markerColor?: Color;
+    /** `{z}/{x}/{y}` tile template. Defaults to OpenStreetMap. */
+    tileUrl?: string;
+    /** Credit line; most providers require one. */
+    attribution?: string;
+    showAttribution?: boolean;
+    showZoomControl?: boolean;
+    /** When false the view only moves through the imperative API. */
+    interactive?: boolean;
+    scrollZoom?: boolean;
+    doubleClickZoom?: boolean;
+    /** Draws the browser position; asks for permission on the first map paint. */
+    showUserLocation?: boolean;
+    onMapClick?: (point: MapClick, event: PointerEvent) => void;
+    onMarkerClick?: (marker: MapMarker, event: MouseEvent) => void;
+    onMoveEnd?: (state: MapState) => void;
+  }
+  export function Maps(props: MapsProps): Widget & {
+    setCenter(position: LatLng, zoom?: number): Widget;
+    getCenter(): { lat: number; lng: number };
+    getZoom(): number;
+    zoomTo(zoom: number): Widget;
+    panBy(dx: number, dy: number): Widget;
+    fitBounds(bounds: MapBounds, padding?: number): Widget;
+    getState(): MapState;
+    addMarker(marker: MapMarker | LatLng): MapMarker | null;
+    removeMarker(idOrMarker: string | number | MapMarker): Widget;
+    clearMarkers(): Widget;
+    getMarkers(): MapMarker[];
+    locate(settings?: { setCenter?: boolean; zoom?: number }): Promise<{ lat: number; lng: number }> | null;
+    render(): Widget;
+  };
+
+  // =========================================================================
   // Core
   // =========================================================================
   export function runApp(
