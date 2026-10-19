@@ -301,6 +301,9 @@ export const Maps = (inputProps = {}) => {
   let observer = null;
   let watcherId = null;
   let userPosition = null;
+  // "watch" while the background watcher owns the dot, "app" once something
+  // called setUserPosition()/locate() explicitly.
+  let userPositionOwner = null;
   let running = false;
   let disposed = false;
   let drag = null;
@@ -381,10 +384,13 @@ export const Maps = (inputProps = {}) => {
   zoomControl.appendChild(makeZoomButton("+", "Zoom in", () => zoomAt(zoom + 1)));
   zoomControl.appendChild(makeZoomButton("−", "Zoom out", () => zoomAt(zoom - 1)));
 
+  // Sits over the tiles, not over the app surface, so its ink is fixed rather
+  // than `colors.text`: in the dark theme that token is near-white and the
+  // credit line vanished into its own light chip.
   const creditBox = paint(
     document.createElement("div"),
     "position:absolute;right:0;bottom:0;padding:4px 8px;border-radius:8px 0 0 0;" +
-      "background:rgba(255,255,255,0.82);color:" + colors.text +
+      "background:rgba(15,23,42,0.72);color:#fff;" +
       ";font-size:12px;z-index:4;",
   );
 
@@ -849,10 +855,14 @@ export const Maps = (inputProps = {}) => {
     watcherId = navigator.geolocation.watchPosition(
       (position) => {
         userPosition = { lat: position.coords.latitude, lng: position.coords.longitude };
+        userPositionOwner = "watch";
         scheduleRender();
       },
       () => {
         // Denied or unavailable: the dot stays hidden, the map keeps working.
+        // A position the app set on purpose outlives the watcher, which keeps
+        // reporting its old failure on every retry.
+        if (userPositionOwner !== "watch") return;
         userPosition = null;
         userDot.style.display = "none";
       },
@@ -1073,8 +1083,27 @@ export const Maps = (inputProps = {}) => {
   container.getMarkers = () => markers.slice();
 
   /**
+   * Draw a position the app already holds, without asking the browser for
+   * permission: a native Capacitor fix, an IP lookup or a test fixture.
+   * Pass `null` to hide the dot, and `{ setCenter: false }` to only move the dot.
+   * @param {{lat:number, lng:number}|number[]|null} position
+   * @param {{setCenter?: boolean, zoom?: number}} [settings]
+   * @returns {Object} The widget, for chaining.
+   */
+  container.setUserPosition = (position, settings = {}) => {
+    const point = normalizePosition(position);
+    userPosition = point;
+    userPositionOwner = point ? "app" : null;
+    if (!point || settings.setCenter === false) scheduleRender();
+    else goTo(point, settings.zoom);
+    return container;
+  };
+
+  /**
    * Ask the browser for the current position once and centre on it.
-   * Pass `{ setCenter: false }` to only draw the dot.
+   * Pass `{ setCenter: false }` to only draw the dot, and `{ timeout }` /
+   * `{ maximumAge }` / `{ highAccuracy: false }` to tune the underlying
+   * `getCurrentPosition` call (defaults 10 s, 0 ms, high accuracy on).
    * @returns {Promise<{lat:number, lng:number}>|null} Null when geolocation is absent.
    */
   container.locate = (settings = {}) => {
@@ -1082,13 +1111,16 @@ export const Maps = (inputProps = {}) => {
     return new Promise((resolve, reject) => {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          userPosition = { lat: position.coords.latitude, lng: position.coords.longitude };
-          if (settings.setCenter === false) scheduleRender();
-          else goTo(userPosition, settings.zoom);
-          resolve(userPosition);
+          const point = { lat: position.coords.latitude, lng: position.coords.longitude };
+          container.setUserPosition(point, settings);
+          resolve(point);
         },
         reject,
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+        {
+          enableHighAccuracy: settings.highAccuracy !== false,
+          timeout: typeof settings.timeout === "number" ? settings.timeout : 10000,
+          maximumAge: typeof settings.maximumAge === "number" ? settings.maximumAge : 0,
+        },
       );
     });
   };

@@ -1773,7 +1773,8 @@ declare module 'flet-box' {
     removeMarker(idOrMarker: string | number | MapMarker): Widget;
     clearMarkers(): Widget;
     getMarkers(): MapMarker[];
-    locate(settings?: { setCenter?: boolean; zoom?: number }): Promise<{ lat: number; lng: number }> | null;
+    locate(settings?: { setCenter?: boolean; zoom?: number; timeout?: number; maximumAge?: number; highAccuracy?: boolean }): Promise<{ lat: number; lng: number }> | null;
+    setUserPosition(position: LatLng | number[] | null, settings?: { setCenter?: boolean; zoom?: number }): Widget;
     render(): Widget;
   };
 

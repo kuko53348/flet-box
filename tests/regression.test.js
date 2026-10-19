@@ -1380,6 +1380,106 @@ async function run() {
     clearRouter();
   });
 
+  // -------------------------------------------------------------------- Maps
+  // locate() used to hardcode { timeout: 10000, maximumAge: 0,
+  // enableHighAccuracy: true }, so a caller could not widen the window for a
+  // slow desktop fix and an app could not tell a timeout from a denial.
+  await t("Maps: locate() forwards timeout/maximumAge/highAccuracy to the browser", async () => {
+    const real = navigator.geolocation;
+    let seen = null;
+    Object.defineProperty(navigator, "geolocation", {
+      configurable: true,
+      value: {
+        getCurrentPosition: (onSuccess, onError, options) => {
+          seen = options;
+          onError({ code: 3, message: "timed out" });
+        },
+        watchPosition: () => 1,
+        clearWatch: () => {},
+      },
+    });
+    try {
+      const map = mount(W.Maps({}));
+      const error = await map
+        .locate({ timeout: 20000, maximumAge: 5000, highAccuracy: false })
+        .catch((e) => e);
+      ok(seen && seen.timeout === 20000, `timeout reached as ${seen && seen.timeout}`);
+      ok(seen.maximumAge === 5000, `maximumAge reached as ${seen && seen.maximumAge}`);
+      ok(seen.enableHighAccuracy === false, `enableHighAccuracy reached as ${seen && seen.enableHighAccuracy}`);
+      ok(error && error.code === 3, `rejection kept error.code (${error && error.code})`);
+
+      seen = null;
+      await map.locate().catch(() => {});
+      ok(
+        seen.timeout === 10000 && seen.maximumAge === 0 && seen.enableHighAccuracy === true,
+        `defaults changed: ${JSON.stringify(seen)}`,
+      );
+    } finally {
+      Object.defineProperty(navigator, "geolocation", { configurable: true, value: real });
+    }
+  });
+
+  // setUserPosition() is the permission-free path (a native fix, or an embedded
+  // webview that answers code 1 in 0 ms), so it must never touch geolocation.
+  await t("Maps: setUserPosition() centres and draws the dot without geolocation", async () => {
+    const real = navigator.geolocation;
+    let asked = 0;
+    Object.defineProperty(navigator, "geolocation", {
+      configurable: true,
+      value: {
+        getCurrentPosition: () => { asked++; },
+        // Mounting with showUserLocation already watches, which is not what
+        // this guard is about: only a one-shot getCurrentPosition would be.
+        watchPosition: () => 1,
+        clearWatch: () => {},
+      },
+    });
+    try {
+      const map = mount(W.Maps({ showUserLocation: true }));
+      map.setUserPosition([41.3874, 2.1686], { zoom: 14 });
+      await wait(30);
+      ok(asked === 0, `asked the browser ${asked} time(s)`);
+      const state = map.getState();
+      ok(Math.abs(state.center.lat - 41.3874) < 1e-6, `centre lat is ${state.center.lat}`);
+      ok(state.zoom === 14, `zoom is ${state.zoom}`);
+
+      map.setUserPosition(null);
+      await wait(30);
+      ok(Math.abs(map.getState().center.lat - 41.3874) < 1e-6, "null moved the view");
+    } finally {
+      Object.defineProperty(navigator, "geolocation", { configurable: true, value: real });
+    }
+  });
+
+  // The background watcher keeps re-reporting its denial on every retry, and its
+  // error handler used to clear userPosition unconditionally — so an IP-based or
+  // native position set by the app vanished a frame after it was drawn.
+  await t("Maps: a watcher error keeps the position set by the app", async () => {
+    const real = navigator.geolocation;
+    let watchError = null;
+    Object.defineProperty(navigator, "geolocation", {
+      configurable: true,
+      value: {
+        getCurrentPosition: () => {},
+        watchPosition: (_ok, onError) => { watchError = onError; return 7; },
+        clearWatch: () => {},
+      },
+    });
+    try {
+      const map = mount(W.Maps({ showUserLocation: true }));
+      const dot = Array.from(map.children).find((el) => el.style.borderRadius.includes("50%"));
+      ok(dot, "no user dot layer found");
+      map.setUserPosition([41.3874, 2.1686]);
+      await wait(40);
+      ok(dot.style.display !== "none", "dot missing before the watcher failed");
+      watchError();
+      await wait(40);
+      ok(dot.style.display !== "none", "the watcher error wiped the position set by the app");
+    } finally {
+      Object.defineProperty(navigator, "geolocation", { configurable: true, value: real });
+    }
+  });
+
   // ------------------------------------------------------------------ report
   window.__REGRESSION = { pass, fail, total: pass + fail, results };
 
