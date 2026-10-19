@@ -758,6 +758,8 @@ export const ALL_PROPS = [
   { prop: "minZoom", domProp: "minZoom", type: "special" },
   { prop: "maxZoom", domProp: "maxZoom", type: "special" },
   { prop: "markerColor", domProp: "markerColor", type: "special" },
+  { prop: "polylines", domProp: "polylines", type: "special" },
+  { prop: "polylineColor", domProp: "polylineColor", type: "special" },
   { prop: "tileUrl", domProp: "tileUrl", type: "special" },
   { prop: "attribution", domProp: "attribution", type: "special" },
   { prop: "showAttribution", domProp: "showAttribution", type: "special" },
@@ -766,9 +768,11 @@ export const ALL_PROPS = [
   { prop: "scrollZoom", domProp: "scrollZoom", type: "special" },
   { prop: "doubleClickZoom", domProp: "doubleClickZoom", type: "special" },
   { prop: "showUserLocation", domProp: "showUserLocation", type: "special" },
+  { prop: "followUser", domProp: "followUser", type: "special" },
   { prop: "onMapClick", domProp: "onMapClick", type: "special" },
   { prop: "onMarkerClick", domProp: "onMarkerClick", type: "special" },
   { prop: "onMoveEnd", domProp: "onMoveEnd", type: "special" },
+  { prop: "onUserUpdate", domProp: "onUserUpdate", type: "special" },
 
   // ---- Image fit ----
   { prop: "fit", domProp: "objectFit", type: "style", unit: "none", reactive: true },
