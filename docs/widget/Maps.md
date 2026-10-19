@@ -123,6 +123,7 @@ picker.locate();
 
 - The default tile server is OpenStreetMap and its credit line renders by default; when you change tileUrl, change attribution in the same breath.
 - Match maxZoom to the provider. Asking level 20 from a server that stops at 18 shows the offline notice instead of a map.
+- `locate()` takes `{ timeout, maximumAge, highAccuracy, setCenter, zoom }`. Desktop laptops can need more than the 10 s default for a first fix, and a slow fix (code 3) is not the same failure as a denied permission (code 1) — branch on `error.code` in the rejected handler instead of reporting one generic error.
 - Give markers an id: the pin node is then reused across updates instead of rebuilt, which matters for a list that moves often.
 - The widget defaults to 400 tall and full width. Any size you give it is fine — a ResizeObserver repaints the tiles when the box changes.
 - Wheel zoom is one level per gesture and follows the cursor, so a long trackpad flick does not throw the view across the world.
