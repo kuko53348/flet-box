@@ -22,6 +22,7 @@ from widget_doc_data import (  # noqa: E402
     DESC,
     BOOK,
     NEXT_AFTER_BOOK,
+    WIDGET_DESC,
     WIDGET_DOCS,
 )
 
@@ -171,7 +172,12 @@ def humanize(name: str) -> str:
     return spaced.replace("_", " ").lower().strip()
 
 
-def describe(prop: str) -> str:
+def describe(prop: str, widget: str = "") -> str:
+    # A prop name can mean two things in two widgets — `markers` are pins on a map
+    # and ticks on a progress arc — so the page that owns the difference says so.
+    override = WIDGET_DESC.get(widget, {}).get(prop)
+    if override:
+        return override
     if prop in DESC:
         return DESC[prop]
     if prop.startswith("on") and len(prop) > 2 and prop[2].isupper():
@@ -223,11 +229,11 @@ def code_block(code: str, with_imports: bool = True) -> str:
     return f"```javascript\n{prefix}{code}\n```"
 
 
-def prop_table(props: list[tuple[str, str]]) -> str:
+def prop_table(props: list[tuple[str, str]], widget: str = "") -> str:
     lines = ["| Prop | Type | Description |", "| --- | --- | --- |"]
     for prop, kind in props:
         kind = kind.replace("|", "\\|")
-        lines.append(f"| `{prop}` | `{kind}` | {describe(prop)} |")
+        lines.append(f"| `{prop}` | `{kind}` | {describe(prop, widget)} |")
     return "\n".join(lines)
 
 
@@ -327,7 +333,7 @@ def render_widget_doc(source: str, name: str) -> str:
 
 Every widget also accepts these shared props — see [common props](COMMON_PROPS.md) for the full rules and aliases.
 
-{prop_table(common)}
+{prop_table(common, name)}
 """
 
     return f"""# {name}
@@ -346,7 +352,7 @@ Every widget also accepts these shared props — see [common props](COMMON_PROPS
 
 ## Props
 
-{prop_table(props)}
+{prop_table(props, name)}
 {common_section}
 ## Examples
 

@@ -50,7 +50,7 @@ BOOK = [
     ),
     (
         "Chapter 7 · Media and drag & drop",
-        ["Audio", "Video", "DraggBox", "DroppBox"],
+        ["Audio", "Video", "Maps", "DraggBox", "DroppBox"],
     ),
 ]
 
@@ -343,8 +343,34 @@ DESC = {
     "onLoaded": "Fired when the ad loads.",
     "onFailed": "Fired when the ad fails to load.",
     "onDismissed": "Fired when the ad is dismissed.",
+    # Maps
+    "center": "View centre as `[lat, lng]`, `{lat, lng}` or `{latitude, longitude}`.",
+    "zoom": "Integer zoom level: `0` shows the whole world, each step doubles the scale.",
+    "minZoom": "Lowest zoom level the user can reach.",
+    "maxZoom": "Highest zoom level the user can reach, usually the provider's last tile level.",
+    "markerColor": "Colour of the pins that do not set a `color` of their own.",
+    "tileUrl": "`{z}/{x}/{y}` tile template of the provider.",
+    "attribution": "Credit line shown in the corner; most tile providers require one.",
+    "showAttribution": "Shows the credit line.",
+    "showZoomControl": "Shows the ± zoom buttons in the top-right corner.",
+    "interactive": "Lets the user pan and zoom. When false, only the imperative API moves the view.",
+    "scrollZoom": "Zooms with the mouse wheel, centred on the cursor.",
+    "doubleClickZoom": "Zooms on double-click; `Shift` + double-click zooms out.",
+    "showUserLocation": "Draws the browser's position; asks for permission on the first paint.",
+    "onMapClick": "Fired with `{ lat, lng, zoom }` when the map is clicked without panning.",
+    "onMarkerClick": "Fired with the clicked marker.",
+    "onMoveEnd": "Fired with `{ center, zoom, bounds }` once the view stops changing.",
 }
 
 # Pattern fallbacks were removed; use DESC and the automatic humanizer instead.
 # (kept as an empty list to avoid import errors in other files)
 DESCRIPTION_FALLBACKS = []
+
+# Same prop name, different widget meaning. `DESC` is keyed by prop alone, so a
+# shared name needs the page that disagrees to say so here — otherwise writing
+# one widget's row silently rewrites every other page that uses the name.
+WIDGET_DESC = {
+    "Maps": {
+        "markers": "Pins to draw: bare positions or `{position, label, color, id, data}` records.",
+    },
+}

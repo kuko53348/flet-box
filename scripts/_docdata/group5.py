@@ -528,4 +528,81 @@ Edit the **props** and render.`,
   onParallaxMove: (offset) => console.log(offset.x, offset.y),
 });''',
     },
+    "Maps": {
+        "summary": "An interactive map — pan, zoom, markers — with no map library behind it. "
+                   "The Web Mercator projection and the XYZ tile grid are implemented inside the "
+                   "widget, so any provider that answers `{z}/{x}/{y}` works and nothing needs an "
+                   "API key, a CDN or a build step.",
+        "when": "Use it to show a venue, plot delivery stops, or let a picker return a coordinate.",
+        "related": ["Card", "Button", "ListView", "Image"],
+        "tips": [
+            "The default tile server is OpenStreetMap and its credit line renders by default; when "
+            "you change tileUrl, change attribution in the same breath.",
+            "Match maxZoom to the provider. Asking level 20 from a server that stops at 18 shows the "
+            "offline notice instead of a map.",
+            "Give markers an id: the pin node is then reused across updates instead of rebuilt, which "
+            "matters for a list that moves often.",
+            "The widget defaults to 400 tall and full width. Any size you give it is fine — a "
+            "ResizeObserver repaints the tiles when the box changes.",
+            "Wheel zoom is one level per gesture and follows the cursor, so a long trackpad flick "
+            "does not throw the view across the world.",
+        ],
+        "accessibility": [
+            "The map is focusable and keyboard-driven: arrows pan, + and - zoom, and the ± buttons "
+            "carry aria-labels.",
+            "Each marker is a real button, so it is reachable with Tab and announced with its label.",
+            "A map cannot be read by a screen reader, so keep the same places in a list next to it.",
+        ],
+        "behavior": [
+            "Tiles are pooled per zoom level and the previous level is kept until the new one is on "
+            "screen, so a zoom step never flashes an empty grid.",
+            "onMoveEnd is debounced — it fires once the view settles, not on every pan frame.",
+            "A press that moved the map more than a few pixels is a drag, so onMapClick stays quiet.",
+            "A press on a pin answers onMarkerClick only; the map never reports the same press twice.",
+            "Props bound with useState patch this widget alone — the map subscribes to the key and "
+            "redraws without re-rendering the app.",
+            "Nothing is fetched until the widget enters the DOM; unmount cancels the frame, the "
+            "observer and the geolocation watch.",
+            "When every visible tile fails, a notice appears over the map instead of a blank panel.",
+        ],
+        "basic": '''const place = Maps({
+  center: [40.4168, -3.7038],
+  zoom: 12,
+});''',
+        "normal": '''const stops = Maps({
+  center: [40.4168, -3.7038],
+  zoom: 13,
+  height: 420,
+  markerColor: colors.primary,
+  markers: [
+    { position: [40.4168, -3.7038], label: "Sol" },
+    { position: [40.4308, -3.693], label: "Chueca", color: "#0ea5e9" },
+  ],
+  onMarkerClick: (marker) => pick(marker),
+});''',
+        "full": '''const picker = Maps({
+  center: [40.4168, -3.7038],
+  zoom: 14,
+  minZoom: 5,
+  maxZoom: 18,
+  height: 480,
+  borderRadius: 12,
+  tileUrl: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+  attribution: "© OpenStreetMap contributors",
+  showAttribution: true,
+  showZoomControl: true,
+  interactive: true,
+  scrollZoom: true,
+  doubleClickZoom: true,
+  showUserLocation: false,
+  markers: stops.map((stop) => ({ id: stop.id, position: stop.at, label: stop.name })),
+  onMapClick: (point) => setPicked(point),
+  onMarkerClick: (marker) => setPicked(marker.position),
+  onMoveEnd: (view) => saveView(view),
+});
+
+picker.fitBounds([[40.4, -3.74], [40.45, -3.68]]);
+picker.addMarker({ position: [40.42, -3.7], label: "Dropped" });
+picker.locate();''',
+    },
 }

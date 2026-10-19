@@ -61,6 +61,7 @@ Every widget also accepts these shared props — see [common props](COMMON_PROPS
 | `padding` | `Padding` | Space inside the widget, between its content and its border. |
 | `margin` | `Margin` | Space outside the widget, between it and its neighbors. |
 | `bgColor` | `Color` | Background color. Alias: `backgroundColor`. |
+| `backgroundColor` | `Color` | Background color. Alias of `bgColor`. |
 | `color` | `Color` | Foreground color, usually the text or icon color. |
 | `borderRadius` | `number \| string` | Rounds the corners of the widget. |
 | `elevation` | `number` | Shadow depth. Higher values lift the widget off the page. |
@@ -149,4 +150,4 @@ const zone = DroppBox({
 - **Next:** [Scaffold](Scaffold.md) — Chapter 8 · App navigation
 - **Index:** [Widget index](README.md) · [Start here](START_HERE.md)
 
-You are reading **Chapter 7 · Media and drag & drop** (4 of 4).
+You are reading **Chapter 7 · Media and drag & drop** (5 of 5).

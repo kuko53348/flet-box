@@ -102,21 +102,22 @@ _audio, video and drag-and-drop_
 
 52. [Audio](Audio.md) — A thin wrapper around the native <audio> element with reliable duration detection, progress callbacks, and an imperative playback API
 53. [Video](Video.md) — Renders a native <video> element with proper media attributes and a convenient playback API
-54. [DraggBox](DraggBox.md) — Wraps a child so it can be dragged with the native drag-and-drop API
-55. [DroppBox](DroppBox.md) — A drop target for DraggBox items
+54. [Maps](Maps.md) — An interactive map — pan, zoom, markers — with no map library behind it
+55. [DraggBox](DraggBox.md) — Wraps a child so it can be dragged with the native drag-and-drop API
+56. [DroppBox](DroppBox.md) — A drop target for DraggBox items
 
 ### Chapter 8 · App navigation
 
 _Build the shell of a real application and wire it to the router._
 
-56. [Scaffold](Scaffold.md) — the app shell: app bar, body, drawer, side bars
-57. [AdaptiveScaffold](AdaptiveScaffold.md) — the same shell, adapted to phone and desktop
-58. [AppBar](AppBar.md) — a top bar for titles, actions, and back navigation
-59. [Drawer](Drawer.md) — a panel that slides in from the side
-60. [DrawerItem](DrawerItem.md) — a router-aware row for a drawer or side bar
-61. [BottomNavigation](BottomNavigation.md) — a bottom tab bar synced with the router
-62. [Tabs](Tabs.md) — switch panes inside a screen
-63. [CollapsibleSideBar](CollapsibleSideBar.md) — a side panel that collapses to icons
+57. [Scaffold](Scaffold.md) — the app shell: app bar, body, drawer, side bars
+58. [AdaptiveScaffold](AdaptiveScaffold.md) — the same shell, adapted to phone and desktop
+59. [AppBar](AppBar.md) — a top bar for titles, actions, and back navigation
+60. [Drawer](Drawer.md) — a panel that slides in from the side
+61. [DrawerItem](DrawerItem.md) — a router-aware row for a drawer or side bar
+62. [BottomNavigation](BottomNavigation.md) — a bottom tab bar synced with the router
+63. [Tabs](Tabs.md) — switch panes inside a screen
+64. [CollapsibleSideBar](CollapsibleSideBar.md) — a side panel that collapses to icons
 
 Then continue with [State, Router & Services](../guides/state.md) — Chapter 9.
 
@@ -163,6 +164,7 @@ Then continue with [State, Router & Services](../guides/state.md) — Chapter 9.
 - [InstallButton](InstallButton.md)
 - [ListTile](ListTile.md)
 - [ListView](ListView.md)
+- [Maps](Maps.md)
 - [Markdown](Markdown.md)
 - [MatrixRain](MatrixRain.md)
 - [Modal](Modal.md)
