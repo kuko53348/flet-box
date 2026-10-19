@@ -1480,6 +1480,128 @@ async function run() {
     }
   });
 
+  // ---------------------------------------------------------------- polylines
+  // Maps had no vector layer at all, so a route or a track could only be faked
+  // with pins. A line must reach the canvas AND leave ink on it: a layer that
+  // normalises correctly but never paints is the failure this widget is prone to.
+  await t("Maps: polylines paint strokes over the tiles and clear with clearPolylines()", async () => {
+    const painted = (canvas) => {
+      const ctx = canvas.getContext("2d");
+      const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      for (let i = 3; i < data.length; i += 4) if (data[i] !== 0) return true;
+      return false;
+    };
+    const map = mount(
+      W.Maps({
+        center: [0, 0],
+        zoom: 3,
+        polylines: [
+          [[-20, 0], [20, 0]],
+          { id: "route", points: [[0, -40], [0, 40]], color: "#ff0000", width: 6, dashed: true },
+        ],
+      }),
+    );
+    await wait(60);
+    const canvas = Array.from(map.children).find((el) => el.tagName === "CANVAS");
+    ok(canvas, "no canvas layer was added");
+    ok(canvas.width > 0 && canvas.height > 0, `canvas backing store is ${canvas.width}x${canvas.height}`);
+    ok(painted(canvas), "the canvas holds no ink");
+    const stored = map.getPolylines();
+    ok(stored.length === 2, `${stored.length} lines stored`);
+    ok(stored[0].width === 4 && stored[0].color !== "#ff0000", "a bare line got no defaults");
+    ok(stored[1].id === "route" && stored[1].dashed === true, "record options lost");
+    ok(canvas.style.zIndex === "1", `canvas z-index is ${canvas.style.zIndex}`);
+    // Same level as the tiles, but later in the DOM: it must sit above the
+    // basemap and below the pins, without renumbering either.
+    const tileLayer = Array.from(map.children).find(
+      (el) => el !== canvas && el.style.zIndex === "1",
+    );
+    ok(
+      tileLayer && Array.from(map.children).indexOf(canvas) > Array.from(map.children).indexOf(tileLayer),
+      "the canvas is not the layer right above the tiles",
+    );
+
+    map.clearPolylines();
+    await wait(60);
+    ok(map.getPolylines().length === 0, "clearPolylines() kept lines");
+    ok(!painted(canvas), "clearPolylines() left strokes on the canvas");
+
+    const added = map.addPolyline([[10, 10], [20, 20]]);
+    ok(added, "addPolyline() returned nothing");
+    await wait(60);
+    ok(painted(canvas), "addPolyline() did not repaint");
+    ok(map.getPolylines().length === 1, "addPolyline() did not store the line");
+    ok(map.removePolyline(added) && map.getPolylines().length === 0, "removePolyline() lost nothing");
+    await wait(60);
+    ok(!painted(canvas), "removePolyline() left its stroke on the canvas");
+  });
+
+  // One coordinate has no direction. Silently drawing it as a speck is what
+  // makes a broken route look like a broken map.
+  await t("Maps: a line with fewer than two usable points is rejected", () => {
+    const map = mount(W.Maps({ polylines: [[[41.3, 2.1]], "nonsense", { points: [] }] }));
+    ok(map.getPolylines().length === 0, `${map.getPolylines().length} lines stored`);
+    ok(map.addPolyline([[41.3, 2.1]]) === null, "a one-point line was accepted");
+  });
+
+  // ------------------------------------------------------------------ follow
+  // Watching with enableHighAccuracy:false + maximumAge:60000 is right for a dot
+  // and useless while chasing a moving car: the view would lag minutes behind.
+  await t("Maps: followUser() centres on each fix, reports onUserUpdate and asks for fresh positions", async () => {
+    const real = navigator.geolocation;
+    let seenOptions = null;
+    let pushFix = null;
+    Object.defineProperty(navigator, "geolocation", {
+      configurable: true,
+      value: {
+        getCurrentPosition: () => {},
+        watchPosition: (onSuccess, _onError, options) => {
+          seenOptions = options;
+          pushFix = onSuccess;
+          return 11;
+        },
+        clearWatch: () => {},
+      },
+    });
+    try {
+      const fixes = [];
+      const map = mount(
+        W.Maps({
+          showUserLocation: true,
+          followUser: true,
+          center: [0, 0],
+          zoom: 12,
+          onUserUpdate: (fix) => fixes.push(fix),
+        }),
+      );
+      // onMount is deferred, so the watcher only opens a tick after mount().
+      await wait(40);
+      ok(seenOptions, "mount with followUser never opened a watcher");
+      ok(seenOptions.enableHighAccuracy === true, `accuracy flag is ${seenOptions.enableHighAccuracy}`);
+      ok(seenOptions.maximumAge === 0, `maximumAge is ${seenOptions.maximumAge}`);
+
+      pushFix({ coords: { latitude: 41.3874, longitude: 2.1686, accuracy: 12 } });
+      await wait(40);
+      const { center } = map.getState();
+      ok(Math.abs(center.lat - 41.3874) < 1e-6, `follow left the view at ${center.lat}`);
+      ok(Math.abs(center.lng - 2.1686) < 1e-6, `follow left the view at lng ${center.lng}`);
+      ok(fixes.length === 1, `${fixes.length} onUserUpdate call(s)`);
+      ok(fixes[0].accuracy === 12 && fixes[0].lat === 41.3874, `fix payload is ${JSON.stringify(fixes[0])}`);
+
+      // Turning it off must leave the view alone but keep the dot.
+      map.setFollowUser(false);
+      await wait(40);
+      ok(seenOptions.enableHighAccuracy === false && seenOptions.maximumAge === 60000,
+        `watcher kept the following options: ${JSON.stringify(seenOptions)}`);
+      pushFix({ coords: { latitude: -33.45, longitude: -70.66, accuracy: 30 } });
+      await wait(40);
+      ok(Math.abs(map.getState().center.lat - 41.3874) < 1e-6, "the view moved without following");
+      ok(fixes.length === 2, "the dot stopped reporting");
+    } finally {
+      Object.defineProperty(navigator, "geolocation", { configurable: true, value: real });
+    }
+  });
+
   // ------------------------------------------------------------------ report
   window.__REGRESSION = { pass, fail, total: pass + fail, results };
 

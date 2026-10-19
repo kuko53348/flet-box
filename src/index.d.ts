@@ -1734,6 +1734,30 @@ declare module 'flet-box' {
     bounds: { south: number; west: number; north: number; east: number };
   }
 
+  /**
+   * A stroked path — a route, a track, a boundary. Needs at least two usable
+   * points. A bare `LatLng[]` is also accepted wherever a polyline is expected.
+   */
+  export interface MapPolyline {
+    points: LatLng[];
+    /** Stroke colour. Defaults to `polylineColor`. */
+    color?: Color;
+    /** Stroke width in CSS pixels. Defaults to `4`. */
+    width?: number;
+    opacity?: number;
+    dashed?: boolean;
+    /** Identifies the line to `removePolyline()`; auto-generated when omitted. */
+    id?: string | number;
+  }
+
+  /** Payload of `onUserUpdate`: one fix from the watcher, in degrees and metres. */
+  export interface MapFix {
+    lat: number;
+    lng: number;
+    /** Radius of 68% confidence in metres, or null when the browser hides it. */
+    accuracy: number | null;
+  }
+
   export interface MapsProps extends CommonProps {
     /** Initial view centre. Defaults to `[20, 0]`. */
     center?: LatLng;
@@ -1745,6 +1769,10 @@ declare module 'flet-box' {
     markers?: Array<MapMarker | LatLng>;
     /** Colour of the pins that do not set their own. Defaults to `colors.primary`. */
     markerColor?: Color;
+    /** Position lists and/or `{points, color, width, opacity, dashed, id}` records. */
+    polylines?: Array<MapPolyline | LatLng[]>;
+    /** Stroke of the lines that do not set their own. Defaults to `colors.primary`. */
+    polylineColor?: Color;
     /** `{z}/{x}/{y}` tile template. Defaults to OpenStreetMap. */
     tileUrl?: string;
     /** Credit line; most providers require one. */
@@ -1757,9 +1785,16 @@ declare module 'flet-box' {
     doubleClickZoom?: boolean;
     /** Draws the browser position; asks for permission on the first map paint. */
     showUserLocation?: boolean;
+    /**
+     * Keeps the view centred on the browser position. Implies the dot and asks
+     * the browser for fresh high-accuracy fixes instead of a cached one.
+     */
+    followUser?: boolean;
     onMapClick?: (point: MapClick, event: PointerEvent) => void;
     onMarkerClick?: (marker: MapMarker, event: MouseEvent) => void;
     onMoveEnd?: (state: MapState) => void;
+    /** Fires on each watched fix, including the ones while `followUser` is off. */
+    onUserUpdate?: (fix: MapFix) => void;
   }
   export function Maps(props: MapsProps): Widget & {
     setCenter(position: LatLng, zoom?: number): Widget;
@@ -1773,6 +1808,11 @@ declare module 'flet-box' {
     removeMarker(idOrMarker: string | number | MapMarker): Widget;
     clearMarkers(): Widget;
     getMarkers(): MapMarker[];
+    addPolyline(line: MapPolyline | LatLng[]): MapPolyline | null;
+    removePolyline(idOrLine: string | number | MapPolyline): Widget;
+    clearPolylines(): Widget;
+    getPolylines(): MapPolyline[];
+    setFollowUser(on: boolean): Widget;
     locate(settings?: { setCenter?: boolean; zoom?: number; timeout?: number; maximumAge?: number; highAccuracy?: boolean }): Promise<{ lat: number; lng: number }> | null;
     setUserPosition(position: LatLng | number[] | null, settings?: { setCenter?: boolean; zoom?: number }): Widget;
     render(): Widget;

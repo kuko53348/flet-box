@@ -1,8 +1,8 @@
 /**
  * @file Maps.js
  * @description
- * Interactive slippy map — Web Mercator projection, raster tile grid, pan, zoom
- * and markers, all implemented in this file.
+ * Interactive slippy map — Web Mercator projection, raster tile grid, pan, zoom,
+ * markers and polylines, all implemented in this file.
  *
  * There is no map SDK on purpose. A Google/Mapbox dependency would need an API
  * key, a CDN and network access at import time, and `flet-box check-api` could
@@ -138,6 +138,44 @@ const normalizeMarker = (raw, fallbackColor, nextId) => {
   };
 };
 
+/** Stroke width for a line that does not ask for one. */
+const DEFAULT_LINE_WIDTH = 4;
+
+/**
+ * A line is either a bare list of positions or
+ * `{points, color, width, opacity, dashed, id}`.
+ *
+ * Two usable points is the minimum. A one-point line is dropped rather than
+ * painted as a dot: a route that silently turns into a speck is harder to
+ * debug than a call that returns `null`.
+ *
+ * @param {*} raw
+ * @param {string} fallbackColor Stroke for lines that do not set their own.
+ * @param {function(): string} nextId Supplies ids to unlabelled lines.
+ * @returns {Object|null}
+ */
+const normalizeLine = (raw, fallbackColor, nextId) => {
+  const bare = Array.isArray(raw);
+  const base = bare ? {} : raw;
+  const source = bare ? raw : base && (base.points ?? base.positions);
+  const points = (Array.isArray(source) ? source : [])
+    .map((point) => normalizePosition(point))
+    .filter(Boolean);
+  if (points.length < 2) return null;
+  const ownColor = base.color || base.strokeColor;
+  return {
+    id: base.id !== undefined && base.id !== null ? String(base.id) : nextId(),
+    points,
+    color: ownColor || fallbackColor,
+    // Without this flag a later `polylineColor` update would recolour lines
+    // that asked for a stroke of their own.
+    hasOwnColor: Boolean(ownColor),
+    width: typeof base.width === "number" && base.width > 0 ? base.width : DEFAULT_LINE_WIDTH,
+    opacity: typeof base.opacity === "number" ? clamp(base.opacity, 0, 1) : 1,
+    dashed: Boolean(base.dashed),
+  };
+};
+
 /**
  * Bounds accept `[[south, west], [north, east]]`, `{south, west, north, east}`
  * or a list of positions.
@@ -198,9 +236,11 @@ const paint = (el, text) => {
  */
 const MAPS_PROPS = [
   "center", "zoom", "minZoom", "maxZoom", "markers", "markerColor",
+  "polylines", "polylineColor",
   "tileUrl", "attribution", "showAttribution",
   "interactive", "scrollZoom", "doubleClickZoom", "showZoomControl",
-  "showUserLocation", "onMapClick", "onMarkerClick", "onMoveEnd",
+  "showUserLocation", "followUser",
+  "onMapClick", "onMarkerClick", "onMoveEnd", "onUserUpdate",
 ];
 
 // ---------------------------------------------------------------------------
@@ -217,6 +257,8 @@ const MAPS_PROPS = [
  * @param {number} [props.maxZoom=19] - Highest zoom the user can reach.
  * @param {Array} [props.markers=[]] - Positions, or `{position, label, color, id, data}`.
  * @param {string} [props.markerColor] - Colour of markers without their own one.
+ * @param {Array} [props.polylines=[]] - Position lists, or `{points, color, width, opacity, dashed, id}`.
+ * @param {string} [props.polylineColor] - Stroke for lines without their own one.
  * @param {string} [props.tileUrl] - `{z}/{x}/{y}` tile template.
  * @param {string} [props.attribution] - Credit line; most providers require it.
  * @param {boolean} [props.showAttribution=true] - Render the credit line.
@@ -225,9 +267,11 @@ const MAPS_PROPS = [
  * @param {boolean} [props.scrollZoom=true] - Allow wheel zoom.
  * @param {boolean} [props.doubleClickZoom=true] - Allow double-click zoom.
  * @param {boolean} [props.showUserLocation=false] - Draw the browser position.
+ * @param {boolean} [props.followUser=false] - Keep the view centred on it.
  * @param {function} [props.onMapClick] - `(point, event)` on a stationary click.
  * @param {function} [props.onMarkerClick] - `(marker, event)` on a pin.
  * @param {function} [props.onMoveEnd] - `(state)` once the view settles.
+ * @param {function} [props.onUserUpdate] - `(fix)` on each watched position.
  * @returns {HTMLElement} The map element, extended with the imperative map API.
  */
 export const Maps = (inputProps = {}) => {
@@ -252,6 +296,8 @@ export const Maps = (inputProps = {}) => {
     maxZoom = 19,
     markers: markersProp = [],
     markerColor = colors.primary,
+    polylines: polylinesProp = [],
+    polylineColor = colors.primary,
     tileUrl = DEFAULT_TILE_URL,
     attribution = DEFAULT_ATTRIBUTION,
     showAttribution = true,
@@ -260,9 +306,11 @@ export const Maps = (inputProps = {}) => {
     scrollZoom = true,
     doubleClickZoom = true,
     showUserLocation = false,
+    followUser = false,
     onMapClick,
     onMarkerClick,
     onMoveEnd,
+    onUserUpdate,
     ...rest
   } = props;
 
@@ -275,20 +323,28 @@ export const Maps = (inputProps = {}) => {
   let upperZoom = Math.max(lowerZoom, Math.floor(maxZoom));
   let zoom = clamp(Math.round(zoomProp), lowerZoom, upperZoom);
   let markers = [];
+  let lines = [];
   let tileTemplate = tileUrl;
   let pinColor = markerColor;
+  let lineColor = polylineColor;
   let credit = attribution;
   let showsCredit = showAttribution;
   let letsPan = interactive;
   let wheelZooms = scrollZoom;
   let dblClickZooms = doubleClickZoom;
   let showsUser = showUserLocation;
+  let followsUser = followUser;
   let clickHandler = onMapClick;
   let pinClickHandler = onMarkerClick;
   let moveEndHandler = onMoveEnd;
+  let userUpdateHandler = onUserUpdate;
 
   let idSeq = 0;
   const nextId = () => `m${++idSeq}`;
+  // A separate counter: a polyline and a pin must never share an id, since the
+  // two layers are removed from independently.
+  let lineIdSeq = 0;
+  const nextLineId = () => `l${++lineIdSeq}`;
 
   /** @type {Map<string, {el: HTMLImageElement, settled: boolean, failed: boolean}>} */
   const tiles = new Map();
@@ -336,6 +392,11 @@ export const Maps = (inputProps = {}) => {
   // would break panning the moment the cursor crossed one.
   const tileLayer = paint(
     document.createElement("div"),
+    "position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:1;",
+  );
+  const lineCanvas = document.createElement("canvas");
+  paint(
+    lineCanvas,
     "position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:1;",
   );
   const pinLayer = paint(
@@ -395,6 +456,9 @@ export const Maps = (inputProps = {}) => {
   );
 
   container.appendChild(tileLayer);
+  // Same z-index as the tiles, so DOM order decides: this paints over the
+  // basemap and under the pins. Adding a layer never renumbers the existing ones.
+  container.appendChild(lineCanvas);
   container.appendChild(pinLayer);
   container.appendChild(userDot);
   container.appendChild(notice);
@@ -644,8 +708,60 @@ export const Maps = (inputProps = {}) => {
     }
   };
 
+  const renderLines = () => {
+    const ctx = lineCanvas.getContext("2d");
+    if (!ctx) return;
+    // A canvas is drawn in device pixels, so a CSS-sized element left at its
+    // default backing store strokes every line at half the intended width on a
+    // Retina screen. Reset the transform each frame: the ratio changes when a
+    // window moves between displays.
+    const dpr = Math.max(1, Math.round((window.devicePixelRatio || 1) * 100) / 100);
+    const pw = Math.round(viewport.width * dpr);
+    const ph = Math.round(viewport.height * dpr);
+    if (lineCanvas.width !== pw) lineCanvas.width = pw;
+    if (lineCanvas.height !== ph) lineCanvas.height = ph;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, viewport.width, viewport.height);
+    if (viewport.width < 2 || viewport.height < 2 || lines.length === 0) return;
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+
+    const visible = viewState().bounds;
+    for (const line of lines) {
+      // Cull on the geographic box: a walk route is thousands of coordinates,
+      // and the ones two cities away cost the same frame time as the visible ones.
+      let minLat = line.points[0].lat, maxLat = minLat;
+      let minLng = line.points[0].lng, maxLng = minLng;
+      for (const point of line.points) {
+        if (point.lat < minLat) minLat = point.lat;
+        else if (point.lat > maxLat) maxLat = point.lat;
+        if (point.lng < minLng) minLng = point.lng;
+        else if (point.lng > maxLng) maxLng = point.lng;
+      }
+      if (
+        maxLat < visible.south || minLat > visible.north ||
+        maxLng < visible.west || minLng > visible.east
+      ) continue;
+
+      ctx.beginPath();
+      for (let i = 0; i < line.points.length; i++) {
+        const { x, y } = geoToScreen(line.points[i].lat, line.points[i].lng);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.globalAlpha = line.opacity;
+      ctx.strokeStyle = line.color;
+      ctx.lineWidth = line.width;
+      ctx.setLineDash(line.dashed ? [line.width * 3, line.width * 2] : []);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  };
+
   const renderUserDot = () => {
-    if (!showsUser || !userPosition) {
+    // Either flag needs the position on screen: `showUserLocation` draws the dot,
+    // `followUser` is pointless without it.
+    if (!(showsUser || followsUser) || !userPosition) {
       userDot.style.display = "none";
       return;
     }
@@ -663,6 +779,7 @@ export const Maps = (inputProps = {}) => {
     if (disposed || !running) return;
     measure();
     renderTiles();
+    renderLines();
     renderPins();
     renderUserDot();
   };
@@ -856,7 +973,17 @@ export const Maps = (inputProps = {}) => {
       (position) => {
         userPosition = { lat: position.coords.latitude, lng: position.coords.longitude };
         userPositionOwner = "watch";
-        scheduleRender();
+        // Following means the view chases every fix, so the frame must be painted
+        // through the view-change path, not just a repaint.
+        if (followsUser) goTo(userPosition);
+        else scheduleRender();
+        if (typeof userUpdateHandler === "function") {
+          userUpdateHandler({
+            lat: userPosition.lat,
+            lng: userPosition.lng,
+            accuracy: typeof position.coords.accuracy === "number" ? position.coords.accuracy : null,
+          });
+        }
       },
       () => {
         // Denied or unavailable: the dot stays hidden, the map keeps working.
@@ -866,7 +993,13 @@ export const Maps = (inputProps = {}) => {
         userPosition = null;
         userDot.style.display = "none";
       },
-      { enableHighAccuracy: false, maximumAge: 60000, timeout: 15000 },
+      {
+        // While following, a cached fix is the difference between a smooth chase
+        // and a dot that lags two minutes behind; the trade is battery.
+        enableHighAccuracy: followsUser,
+        maximumAge: followsUser ? 0 : 60000,
+        timeout: 15000,
+      },
     );
   };
 
@@ -874,6 +1007,31 @@ export const Maps = (inputProps = {}) => {
     if (watcherId === null || typeof navigator === "undefined" || !navigator.geolocation) return;
     navigator.geolocation.clearWatch(watcherId);
     watcherId = null;
+  };
+
+  /** Either flag needs the position stream; only when both are off, release it. */
+  const syncLocation = () => {
+    if (showsUser || followsUser) startLocation();
+    else stopLocation();
+  };
+
+  /**
+   * Chase the live position (`true`) or leave the view alone (`false`). Turning
+   * it on re-opens the watcher with fresh, high-accuracy fixes.
+   * @param {boolean} next
+   * @returns {Object} The widget, for chaining.
+   */
+  const setFollowUser = (next) => {
+    const on = Boolean(next);
+    if (on === followsUser) return container;
+    followsUser = on;
+    if (watcherId !== null) {
+      stopLocation();
+      startLocation();
+    } else syncLocation();
+    if (on && userPosition) goTo(userPosition);
+    else scheduleRender();
+    return container;
   };
 
   // -------------------------------------------------------------------------
@@ -890,7 +1048,7 @@ export const Maps = (inputProps = {}) => {
     } else if (typeof window !== "undefined") {
       window.addEventListener("resize", scheduleRender);
     }
-    if (showsUser) startLocation();
+    syncLocation();
   };
 
   const dispose = () => {
@@ -915,6 +1073,10 @@ export const Maps = (inputProps = {}) => {
 
   markers = (Array.isArray(markersProp) ? markersProp : [])
     .map((raw) => normalizeMarker(raw, pinColor, nextId))
+    .filter(Boolean);
+
+  lines = (Array.isArray(polylinesProp) ? polylinesProp : [])
+    .map((raw) => normalizeLine(raw, lineColor, nextLineId))
     .filter(Boolean);
 
   rebuildCredit();
@@ -966,6 +1128,17 @@ export const Maps = (inputProps = {}) => {
         marker.hasOwnColor ? marker : Object.assign({}, marker, { color: pinColor }),
       );
     }
+    if ("polylines" in next) {
+      lines = (Array.isArray(next.polylines) ? next.polylines : [])
+        .map((raw) => normalizeLine(raw, lineColor, nextLineId))
+        .filter(Boolean);
+    }
+    if ("polylineColor" in next && next.polylineColor) {
+      lineColor = String(next.polylineColor);
+      lines = lines.map((line) =>
+        line.hasOwnColor ? line : Object.assign({}, line, { color: lineColor }),
+      );
+    }
     if ("tileUrl" in next && next.tileUrl) {
       tileTemplate = String(next.tileUrl);
       clearTiles();
@@ -985,12 +1158,13 @@ export const Maps = (inputProps = {}) => {
     }
     if ("showUserLocation" in next) {
       showsUser = Boolean(next.showUserLocation);
-      if (showsUser) startLocation();
-      else stopLocation();
+      syncLocation();
     }
+    if ("followUser" in next) setFollowUser(next.followUser);
     if ("onMapClick" in next) clickHandler = next.onMapClick;
     if ("onMarkerClick" in next) pinClickHandler = next.onMarkerClick;
     if ("onMoveEnd" in next) moveEndHandler = next.onMoveEnd;
+    if ("onUserUpdate" in next) userUpdateHandler = next.onUserUpdate;
 
     if (needsCredit || "attribution" in next || "showAttribution" in next) rebuildCredit();
 
@@ -1081,6 +1255,40 @@ export const Maps = (inputProps = {}) => {
   };
 
   container.getMarkers = () => markers.slice();
+
+  /**
+   * Draw a line — a list of positions or `{points, color, width, opacity, dashed, id}`.
+   * @returns {Object|null} The stored line, or null when it had no usable points.
+   */
+  container.addPolyline = (raw) => {
+    const line = normalizeLine(raw, lineColor, nextLineId);
+    if (!line) return null;
+    lines = lines.concat([line]);
+    scheduleRender();
+    return line;
+  };
+
+  /** Remove a line by id or by the object `addPolyline` returned. */
+  container.removePolyline = (idOrLine) => {
+    const id =
+      idOrLine && typeof idOrLine === "object" ? idOrLine.id : String(idOrLine);
+    const before = lines.length;
+    lines = lines.filter((line) => line.id !== id);
+    if (lines.length === before) return container;
+    scheduleRender();
+    return container;
+  };
+
+  container.clearPolylines = () => {
+    lines = [];
+    scheduleRender();
+    return container;
+  };
+
+  container.getPolylines = () => lines.slice();
+
+  /** @see setFollowUser */
+  container.setFollowUser = (next) => setFollowUser(next);
 
   /**
    * Draw a position the app already holds, without asking the browser for
