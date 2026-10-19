@@ -469,6 +469,31 @@ async function run() {
     }
   });
 
+  // ------------------------------------------------------ Dropdown reactivity
+  await t("Dropdown: a reactive `value` moves the visible selection", async () => {
+    // `value` is consumed by the widget's own closure and never forwarded to the
+    // factory, so `bindReactiveProps` could not see it: a `useState` bound to the
+    // box patched nothing and the old seed stayed on screen while the app's state
+    // had moved on (demoMap's destination list, measured 2026-10-19).
+    const { useState } = await import("../src/tools/useState.js");
+    const [sel, setSel] = useState("ddBoundValue", "a");
+    const seen = [];
+    const dd = W.Dropdown({ options: ["a", "b"], value: sel, onChange: (v) => seen.push(v) });
+    mount(dd);
+    await wait(40);
+    const shown = () => dd.innerText.replace(/\s+/g, " ").trim();
+    ok(shown().startsWith("a"), `initial selection not shown: ${shown()}`);
+    setSel("b");
+    await wait(60);
+    ok(shown().startsWith("b"), `the bound value did not reach the display: ${shown()} (widget holds ${dd.value})`);
+    // Loop guard: re-applying the same value must not echo back through onChange,
+    // otherwise a state->value->onChange->state app cycle never settles.
+    const echoed = seen.length;
+    setSel("b");
+    await wait(40);
+    ok(seen.length === echoed, `an unchanged value fired onChange ${seen.length - echoed} time(s)`);
+  });
+
   // ------------------------------------------------------------ Scaffold/Drawer
   await t("Scaffold/Drawer: teardown destroys the drawer (node + listeners)", async () => {
     // Scaffold only did `removeChild` on the drawer wrapper, never `destroy()`,

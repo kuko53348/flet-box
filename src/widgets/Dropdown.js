@@ -5,6 +5,8 @@
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 import { composeUpdate } from "../utils/composeUpdate.js";
+import { isReactive, reactiveKeyOf, resolveReactive } from "../widget-factory/reactiveValue.js";
+import { registerWidget } from "../tools/useState.js";
 import { Container } from "./Container.js";
 import { Row } from "./Row.js";
 import { Column } from "./Column.js";
@@ -22,7 +24,32 @@ const DROPDOWN_PROP_KEYS = [
   "width", "portal",
 ];
 
-export const Dropdown = (props) => {
+/**
+ * The owned keys `update()` can actually apply, so they are also the ones worth
+ * subscribing. A callback is never bound: `onChange` has no branch in `update()`.
+ */
+const BINDABLE_KEYS = [
+  "options", "value", "placeholder", "disabled", "label", "error", "variant",
+  "size", "borderRadius", "color", "bgColor", "textColor", "optionHoverColor",
+  "clearable",
+];
+
+export const Dropdown = (inputProps = {}) => {
+  // The factory never receives these keys, so it can neither resolve a `useState`
+  // value for them (a live reactive is a *function*, and `findSelected()` would
+  // compare it against the option list and never match) nor subscribe this widget
+  // to the key. Both happen here instead: read once, keep the keys, bind after
+  // `composeUpdate` has routed a later patch into `update()`.
+  const boundKeys = new Map();
+  const props = { ...inputProps };
+  for (const key of BINDABLE_KEYS) {
+    const value = inputProps[key];
+    if (!isReactive(value)) continue;
+    props[key] = resolveReactive(value);
+    const stateKey = reactiveKeyOf(value);
+    if (stateKey) boundKeys.set(key, stateKey);
+  }
+
   const {
     options = [],
     value = null,
@@ -498,6 +525,11 @@ export const Dropdown = (props) => {
   container.open = openMenu;
   container.close = closeMenu;
   composeUpdate(container, DROPDOWN_PROP_KEYS, update);
+
+  // Bind after composing: `registerWidget` pushes the current store value through
+  // `update`, which must be the composed one that routes owned keys into this
+  // widget's closure. It also releases the subscription on unmount by itself.
+  for (const [propName, stateKey] of boundKeys) registerWidget(stateKey, container, propName);
 
   container.onUnmount(() => {
     closeMenu();
