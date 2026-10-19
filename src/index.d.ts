@@ -1719,6 +1719,8 @@ declare module 'flet-box' {
     id?: string | number;
     /** Degrees clockwise from north, the bearing a GPS fix reports. Turns the pin around its own tip. */
     rotation?: number;
+    /** `false` lets a tap fall through to the map: a tracked vehicle must not block picking a point. */
+    clickable?: boolean;
     data?: any;
   }
 

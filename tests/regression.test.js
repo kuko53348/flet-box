@@ -1909,6 +1909,72 @@ async function run() {
     ok(map.querySelectorAll("button").length === 3, `${map.querySelectorAll("button").length} buttons: restating a label built a second pin`);
   });
 
+  // A vehicle pin sits exactly where the rider is going to tap to choose a
+  // pick-up, and the demo proved the cost: with the drop centred on the view,
+  // every tap meant for the map landed on the car and reported "Sin rumbo".
+  // `clickable: false` has to make the pin transparent to the pointer — muting
+  // its handler would leave a dead patch of map under it.
+  await t("Maps: a marker with clickable:false lets the tap reach the map", async () => {
+    const mapClicks = [];
+    const markerClicks = [];
+    const LAT = 10;
+    const LNG = 20;
+    const map = mount(
+      W.Maps({
+        center: [LAT, LNG],
+        zoom: 5,
+        height: 300,
+        width: 400,
+        markers: [
+          { id: "car", position: [LAT, LNG], label: "Coche", clickable: false },
+          { id: "city", position: [LAT + 3, LNG], label: "Ciudad" },
+        ],
+        onMapClick: (point) => mapClicks.push(point),
+        onMarkerClick: (marker) => markerClicks.push(marker),
+      }),
+    );
+    await wait(60);
+    const car = map.querySelector('button[aria-label="Coche"]');
+    const city = map.querySelector('button[aria-label="Ciudad"]');
+    ok(car && city, `pins drawn: ${JSON.stringify([...map.querySelectorAll("button")].map((b) => b.getAttribute("aria-label")))}`);
+    ok(
+      getComputedStyle(city).pointerEvents === "auto",
+      `a tappable pin is reachable: pointer-events ${getComputedStyle(city).pointerEvents}`,
+    );
+    ok(getComputedStyle(car).pointerEvents === "none", `an unclickable pin blocks the map: pointer-events ${getComputedStyle(car).pointerEvents}`);
+    ok(car.tabIndex === -1, `an unclickable pin is still in the tab order (${car.tabIndex})`);
+
+    // Hit-test for real. Every widget the suite mounted is stacked inside the
+    // off-screen host, so this map alone has to be lifted into the viewport.
+    const held = ["position", "left", "top", "zIndex"].map((k) => [k, map.style[k]]);
+    Object.assign(map.style, { position: "fixed", left: "0px", top: "0px", zIndex: "99999" });
+    try {
+      const box = car.getBoundingClientRect();
+      // The tip, not the middle of the box: the point of the drop is the
+      // coordinate the marker carries, and that is what the tap must report.
+      const at = { x: box.left + 10, y: box.top + 10 + 10 * Math.SQRT2 };
+      const under = document.elementFromPoint(at.x, at.y);
+      ok(under === map, `the tap landed on ${(under && (under.getAttribute("aria-label") || under.tagName)) || "nothing"}, not through the pin`);
+      const sequence = (type) => {
+        const E = type.startsWith("pointer") ? PointerEvent : MouseEvent;
+        under.dispatchEvent(new E(type, {
+          bubbles: true, cancelable: true, pointerId: 9, button: 0, clientX: at.x, clientY: at.y,
+        }));
+      };
+      sequence("pointerdown");
+      sequence("mousedown");
+      sequence("pointerup");
+      sequence("mouseup");
+      sequence("click");
+      await wait(60);
+      ok(markerClicks.length === 0, `the tap woke the marker handler: ${JSON.stringify(markerClicks[0] && markerClicks[0].id)}`);
+      ok(mapClicks.length === 1, `${mapClicks.length} map clicks reported under an unclickable pin`);
+      ok(mapClicks.length === 1 && Math.abs(mapClicks[0].lat - LAT) < 0.05, `the tap reported ${JSON.stringify(mapClicks[0])}`);
+    } finally {
+      for (const [k, value] of held) map.style[k] = value;
+    }
+  });
+
   // ------------------------------------------------------------------ report
   window.__REGRESSION = { pass, fail, total: pass + fail, results };
 

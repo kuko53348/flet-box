@@ -156,6 +156,9 @@ const normalizeMarker = (raw, fallbackColor, nextId) => {
     // Kept as given: normalising 390° to 30° here would make `getMarkers()`
     // disagree with the app on every frame of a turning vehicle.
     rotation: typeof base.rotation === "number" && Number.isFinite(base.rotation) ? base.rotation : 0,
+    // A tracked vehicle is drawn exactly where a finger taps to choose a pick-up
+    // point: a pin that does not answer to taps must not swallow them either.
+    clickable: base.clickable !== false,
     data: base.data,
   };
 };
@@ -654,6 +657,17 @@ export const Maps = (inputProps = {}) => {
     return el;
   };
 
+  /**
+   * A pin that does not answer to taps must not block them either: `none` lets
+   * the pointer fall through to the map surface, and `tabIndex` keeps it out of
+   * the keyboard order, where a click handler guard would not.
+   */
+  const applyClickable = (button, clickable) => {
+    button.style.pointerEvents = clickable ? "auto" : "none";
+    button.style.cursor = clickable ? "pointer" : "default";
+    button.tabIndex = clickable ? 0 : -1;
+  };
+
   const buildPin = (marker) => {
     const button = document.createElement("button");
     button.type = "button";
@@ -666,9 +680,12 @@ export const Maps = (inputProps = {}) => {
     paint(
       button,
       `position:absolute;left:0;top:0;width:${PIN_WIDTH}px;height:${Math.ceil(PIN_TIP_Y)}px;` +
-        "padding:0;border:none;background:transparent;cursor:pointer;" +
-        "pointer-events:auto;will-change:transform;",
+        "padding:0;border:none;background:transparent;" +
+        "will-change:transform;",
     );
+    // After `paint`, whose cssText assignment wipes anything written before it.
+    button._clickable = marker.clickable;
+    applyClickable(button, marker.clickable);
 
     // Teardrop: `border-radius` leaves the bottom-left corner sharp, and
     // rotate(-45deg) swings that corner to the bottom centre — the anchor point.
@@ -706,7 +723,7 @@ export const Maps = (inputProps = {}) => {
 
     button.addEventListener("click", (event) => {
       event.stopPropagation();
-      if (disposed || typeof pinClickHandler !== "function") return;
+      if (disposed || !button._clickable || typeof pinClickHandler !== "function") return;
       // The pooled node outlives every update of its marker, so report the one
       // it is showing now rather than the one it was built from.
       pinClickHandler(button._marker, event);
@@ -745,6 +762,10 @@ export const Maps = (inputProps = {}) => {
       if (node._rotation !== marker.rotation) {
         node._head.style.transform = marker.rotation ? `rotate(${marker.rotation}deg)` : "";
         node._rotation = marker.rotation;
+      }
+      if (node._clickable !== marker.clickable) {
+        node._clickable = marker.clickable;
+        applyClickable(node, marker.clickable);
       }
       // A moving pin usually changes its caption too — "Coche · 90°" is not the
       // label it was built with. The node is pooled, so the text has to follow.
