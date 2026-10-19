@@ -885,6 +885,20 @@ export const Maps = (inputProps = {}) => {
   // 8. Interaction
   // -------------------------------------------------------------------------
 
+  /**
+   * Did this pointer land on the map itself?
+   *
+   * Every layer that only *shows* something — tiles, the line canvas, the user
+   * dot, the notice — is `pointer-events: none`, so the container is the target
+   * of any press on the map surface. Anything else is the widget's own chrome
+   * (the ± buttons, the credit link, a pin) and has its own behaviour: the
+   * bottom-right of the view is not the place the user meant when they pressed
+   * `+`, and reporting it anyway moves the app's pin there on every zoom step.
+   * @param {Event} event
+   * @returns {boolean}
+   */
+  const isMapSurface = (event) => event.target === container;
+
   container.addEventListener("pointerdown", (event) => {
     if (!letsPan || disposed || event.button !== 0) return;
     drag = { id: event.pointerId, x: event.clientX, y: event.clientY, moved: 0, captured: false };
@@ -921,8 +935,7 @@ export const Maps = (inputProps = {}) => {
       } catch (_) {}
     }
     if (gesture.moved > DRAG_CLICK_THRESHOLD) return;
-    // A pin answers the click; the map must not report the same press twice.
-    if (!clickHandler || pinLayer.contains(event.target)) return;
+    if (!clickHandler || !isMapSurface(event)) return;
     measure();
     const local = localFromClient(event.clientX, event.clientY);
     const geo = screenToGeo(local.x, local.y);
@@ -958,7 +971,7 @@ export const Maps = (inputProps = {}) => {
   );
 
   container.addEventListener("dblclick", (event) => {
-    if (!letsPan || !dblClickZooms) return;
+    if (!letsPan || !dblClickZooms || !isMapSurface(event)) return;
     event.preventDefault();
     zoomAt(zoom + (event.shiftKey ? -1 : 1), { x: event.clientX, y: event.clientY });
   });

@@ -1680,6 +1680,63 @@ async function run() {
     ok(Math.abs(map.getState().center.lat - 41.3874) < 1e-6, "the view did not move");
   });
 
+  // The ± buttons only stop the `click` event: their pointerdown/pointerup still
+  // reach the container, so every press on them also reported the coordinate
+  // hiding underneath. In demoMap that re-decoded the destination on each zoom
+  // step and the drop jumped to the corner of the view (measured 2026-10-19).
+  await t("Maps: a press on the widget's own chrome is not a click on the map", async () => {
+    const clicks = [];
+    const map = mount(
+      W.Maps({
+        center: [10, 20],
+        zoom: 5,
+        height: 300,
+        width: 400,
+        markers: [{ id: "here", position: [10, 20], label: "Ciudad" }],
+        onMapClick: (point) => clicks.push(point),
+      }),
+    );
+    await wait(60);
+    const press = (target) => {
+      const box = target.getBoundingClientRect();
+      const at = {
+        bubbles: true,
+        cancelable: true,
+        pointerId: 7,
+        button: 0,
+        clientX: box.left + box.width / 2,
+        clientY: box.top + box.height / 2,
+      };
+      // The whole sequence a real finger produces: the widget's chrome stops the
+      // `click`, but pointerdown/pointerup always reach the container.
+      target.dispatchEvent(new PointerEvent("pointerdown", { ...at, buttons: 1 }));
+      target.dispatchEvent(new MouseEvent("mousedown", at));
+      target.dispatchEvent(new PointerEvent("pointerup", { ...at, buttons: 0 }));
+      target.dispatchEvent(new MouseEvent("mouseup", { ...at, buttons: 0 }));
+      target.dispatchEvent(new MouseEvent("click", at));
+    };
+
+    const plus = map.querySelector('button[aria-label="Zoom in"]');
+    ok(plus, "no zoom button was rendered");
+    press(plus);
+    await wait(60);
+    ok(map.getZoom() === 6, `the button did not zoom: still ${map.getZoom()}`);
+    ok(clicks.length === 0, `a press on + also reported ${clicks.length} map click(s) at ${JSON.stringify(clicks[0])}`);
+
+    // A double press on the same button must zoom twice — once per click — and
+    // not a third time from the container's own dblclick handler.
+    plus.dispatchEvent(new MouseEvent("dblclick", { bubbles: true, cancelable: true }));
+    await wait(60);
+    ok(map.getZoom() === 6, `dblclick on the control zoomed it to ${map.getZoom()}`);
+
+    // The pin swallows its press too, and the bare surface still reports.
+    press(map.querySelector('button[aria-label="Ciudad"]'));
+    ok(clicks.length === 0, "a press on a pin reported a map click");
+    press(map);
+    ok(clicks.length === 1, "a press on the map surface reported nothing");
+    ok(Math.abs(clicks[0].lat - 10) < 0.5 && Math.abs(clicks[0].lng - 20) < 0.5, `surface click was ${JSON.stringify(clicks[0])}`);
+  });
+
   // ------------------------------------------------------------------ report
   window.__REGRESSION = { pass, fail, total: pass + fail, results };
 
