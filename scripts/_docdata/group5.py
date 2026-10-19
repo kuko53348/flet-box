@@ -546,6 +546,13 @@ Edit the **props** and render.`,
             "`error.code` in the rejected handler instead of reporting one generic error.",
             "Give markers an id: the pin node is then reused across updates instead of rebuilt, which "
             "matters for a list that moves often.",
+            "`setMarker({id, ...})` replaces the pin with that id instead of stacking another under it "
+            "— that is the call to make on every GPS fix, and `addMarker()` is the one that grows the "
+            "list forever. The reused node restates what it shows, so a new `label`, `color` or "
+            "`rotation` reaches the screen, the tooltip and the accessibility name.",
+            "`rotation` is degrees clockwise from north, the compass convention `onUserUpdate` reports "
+            "as `fix.heading`. The pin turns around its own tip, so the point it marks never moves, and "
+            "its caption stays upright to read.",
             "A polyline needs two usable points; `addPolyline()` returns null for one-point input "
             "rather than drawing a speck that looks like a broken route. Lines are stroked on a canvas "
             "above the tiles and below the pins, so a long route costs no DOM nodes — but it also means "
@@ -635,6 +642,7 @@ Edit the **props** and render.`,
 
 picker.fitBounds(route.geometry);
 picker.addMarker({ position: [40.42, -3.7], label: "Dropped" });
+picker.setMarker({ id: "taxi", position: [40.42, -3.7], rotation: 128 });
 picker.addPolyline({ id: "leg", points: [picked, stop.at] });
 picker.locate();
 picker.setFollowUser(true);''',

@@ -27,7 +27,7 @@ const place = Maps({
 | `zoom` | `number` | Integer zoom level: `0` shows the whole world, each step doubles the scale. |
 | `minZoom` | `number` | Lowest zoom level the user can reach. |
 | `maxZoom` | `number` | Highest zoom level the user can reach, usually the provider's last tile level. |
-| `markers` | `Array<MapMarker \| LatLng>` | Pins to draw: bare positions or `{position, label, color, id, data}` records. |
+| `markers` | `Array<MapMarker \| LatLng>` | Pins to draw: bare positions or `{position, label, color, id, rotation, data}` records. |
 | `markerColor` | `Color` | Colour of the pins that do not set a `color` of their own. |
 | `polylines` | `Array<MapPolyline \| LatLng[]>` | Stroked paths: bare position lists or `{points, color, width, opacity, dashed, id}` records. |
 | `polylineColor` | `Color` | Stroke of the lines that do not set a `color` of their own. |
@@ -130,6 +130,7 @@ const picker = Maps({
 
 picker.fitBounds(route.geometry);
 picker.addMarker({ position: [40.42, -3.7], label: "Dropped" });
+picker.setMarker({ id: "taxi", position: [40.42, -3.7], rotation: 128 });
 picker.addPolyline({ id: "leg", points: [picked, stop.at] });
 picker.locate();
 picker.setFollowUser(true);
@@ -141,6 +142,8 @@ picker.setFollowUser(true);
 - Match maxZoom to the provider. Asking level 20 from a server that stops at 18 shows the offline notice instead of a map.
 - `locate()` takes `{ timeout, maximumAge, highAccuracy, setCenter, zoom }`. Desktop laptops can need more than the 10 s default for a first fix, and a slow fix (code 3) is not the same failure as a denied permission (code 1) — branch on `error.code` in the rejected handler instead of reporting one generic error.
 - Give markers an id: the pin node is then reused across updates instead of rebuilt, which matters for a list that moves often.
+- `setMarker({id, ...})` replaces the pin with that id instead of stacking another under it — that is the call to make on every GPS fix, and `addMarker()` is the one that grows the list forever. The reused node restates what it shows, so a new `label`, `color` or `rotation` reaches the screen, the tooltip and the accessibility name.
+- `rotation` is degrees clockwise from north, the compass convention `onUserUpdate` reports as `fix.heading`. The pin turns around its own tip, so the point it marks never moves, and its caption stays upright to read.
 - A polyline needs two usable points; `addPolyline()` returns null for one-point input rather than drawing a speck that looks like a broken route. Lines are stroked on a canvas above the tiles and below the pins, so a long route costs no DOM nodes — but it also means a line is not clickable; put an invisible marker on each stop you want tappable.
 - `fitBounds(pointList)` frames a route in one call: pass the coordinates and it picks the zoom and centre. Feed it the geometry an OSRM or GraphHopper reply returns, and keep the distance and duration from that same reply for the readout.
 - A track grows by re-passing `polylines` with the fixes collected so far, or by keeping one line with an id and calling `update()`. `onUserUpdate` is the source of those fixes: it fires for every watched position, following or not.

@@ -375,6 +375,6 @@ DESCRIPTION_FALLBACKS = []
 # one widget's row silently rewrites every other page that uses the name.
 WIDGET_DESC = {
     "Maps": {
-        "markers": "Pins to draw: bare positions or `{position, label, color, id, data}` records.",
+        "markers": "Pins to draw: bare positions or `{position, label, color, id, rotation, data}` records.",
     },
 }
