@@ -39,6 +39,17 @@ const OSM_COPYRIGHT_URL = "https://www.openstreetmap.org/copyright";
 /** Movement under this many pixels still counts as a click, not a drag. */
 const DRAG_CLICK_THRESHOLD = 4;
 
+/**
+ * The teardrop is a 20 px square with `border-radius: 50% 50% 50% 0` turned
+ * -45°: its one sharp corner — the point that has to sit on the coordinate —
+ * ends up half a side right and `side/2 · (1 + √2)` down from the box. Every
+ * offset that positions a pin is derived from these two numbers, so the drop
+ * cannot drift off its own location again.
+ */
+const PIN_WIDTH = 20;
+const PIN_TIP_X = PIN_WIDTH / 2;
+const PIN_TIP_Y = PIN_WIDTH / 2 + (PIN_WIDTH / 2) * Math.SQRT2;
+
 /** Tiles kept around the viewport so a small pan does not flash empty grid. */
 const TILE_BUFFER = 1;
 
@@ -625,28 +636,34 @@ export const Maps = (inputProps = {}) => {
     button.type = "button";
     button.setAttribute("aria-label", marker.label || "Map marker");
     if (marker.label) button.title = marker.label;
+    // The box is exactly the drop, never the text under it: a button that sizes
+    // itself to its label centres the teardrop on the *label*, which slides it
+    // tens of pixels away from the point it marks — and steals every map click
+    // that lands on the caption.
     paint(
       button,
-      "position:absolute;left:0;top:0;padding:0;border:none;background:transparent;" +
-        "cursor:pointer;pointer-events:auto;display:flex;flex-direction:column;" +
-        "align-items:center;will-change:transform;",
+      `position:absolute;left:0;top:0;width:${PIN_WIDTH}px;height:${Math.ceil(PIN_TIP_Y)}px;` +
+        "padding:0;border:none;background:transparent;cursor:pointer;" +
+        "pointer-events:auto;will-change:transform;",
     );
 
     // Teardrop: `border-radius` leaves the bottom-left corner sharp, and
     // rotate(-45deg) swings that corner to the bottom centre — the anchor point.
     const head = paint(
       document.createElement("span"),
-      "position:relative;display:block;width:20px;height:22px;",
+      `position:relative;display:block;width:${PIN_WIDTH}px;height:${Math.ceil(PIN_TIP_Y)}px;`,
     );
     const pin = paint(
       document.createElement("span"),
-      "display:block;width:20px;height:20px;border-radius:50% 50% 50% 0;" +
+      `display:block;width:${PIN_WIDTH}px;height:${PIN_WIDTH}px;box-sizing:border-box;` +
+        "border-radius:50% 50% 50% 0;" +
         `background:${marker.color};border:2px solid #fff;` +
         "box-shadow:0 1px 4px rgba(0,0,0,0.4);transform:rotate(-45deg);",
     );
     const dot = paint(
       document.createElement("span"),
-      "position:absolute;left:9px;top:9px;width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,0.92);",
+      `position:absolute;left:${PIN_TIP_X - 2}px;top:${PIN_TIP_X - 2}px;width:4px;height:4px;` +
+        "border-radius:50%;background:rgba(255,255,255,0.92);",
     );
     head.appendChild(pin);
     head.appendChild(dot);
@@ -654,9 +671,13 @@ export const Maps = (inputProps = {}) => {
     button._pin = pin;
 
     if (marker.label) {
+      // Absolute and centred on the tip, so the caption can be any length without
+      // moving the drop or widening the hit box.
       const label = paint(
         document.createElement("span"),
-        "margin-top:4px;padding:2px 6px;border-radius:4px;background:rgba(15,23,42,0.82);" +
+        `position:absolute;left:${PIN_TIP_X}px;top:${Math.ceil(PIN_TIP_Y) + 2}px;` +
+          "transform:translateX(-50%);" +
+          "padding:2px 6px;border-radius:4px;background:rgba(15,23,42,0.82);" +
           "color:#fff;font-size:12px;line-height:1.3;white-space:nowrap;",
       );
       label.textContent = marker.label;
@@ -698,8 +719,9 @@ export const Maps = (inputProps = {}) => {
         node._pin.style.background = marker.color;
         node._color = marker.color;
       }
-      // -10/-22 puts the tip of the teardrop on the coordinate, not its box.
-      node.style.transform = `translate(${x - 10}px, ${y - 22}px)`;
+      // Subtracting the tip's offset — not half the box — puts the point of the
+      // teardrop on the coordinate, whatever the label next to it measures.
+      node.style.transform = `translate(${x - PIN_TIP_X}px, ${y - PIN_TIP_Y}px)`;
     }
     for (const [id, el] of Array.from(pinEls)) {
       if (live.has(id)) continue;

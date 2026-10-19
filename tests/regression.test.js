@@ -1569,6 +1569,39 @@ async function run() {
     ok(map.addPolyline([[41.3, 2.1]]) === null, "a one-point line was accepted");
   });
 
+  // ---------------------------------------------------------------- pin anchor
+  await t("Maps: the tip of a pin lands on its coordinate, whatever the label says", async () => {
+    // The pin button was a flex column sized by its own label, so a long label
+    // slid the teardrop sideways off the point it marks (measured: 54 px right of
+    // the click in demoMap on 2026-10-19), and the rotated square's real corner
+    // sits further down than the -10/-22 offset assumed.
+    const LAT = 10;
+    const LNG = 20;
+    const map = mount(
+      W.Maps({
+        center: [LAT, LNG],
+        zoom: 5,
+        height: 300,
+        markers: [{ id: "here", position: [LAT, LNG], label: "Destino · un nombre de ciudad largo" }],
+      }),
+    );
+    await wait(60);
+    const pin = map.querySelector("button[aria-label]");
+    ok(pin, "the marker was not built");
+    const head = pin.querySelector("span");
+    const box = map.getBoundingClientRect();
+    const headBox = head.getBoundingClientRect();
+    // A 20 px square rotated -45° about its centre: the sharp corner that was at
+    // its bottom-left ends up 10 px right of the head and 10 + 10√2 below its top.
+    const tipX = headBox.left + 10;
+    const tipY = headBox.top + 10 + 10 * Math.SQRT2;
+    ok(Math.abs(tipX - (box.left + box.width / 2)) <= 1, `tip x is ${(tipX - box.left - box.width / 2).toFixed(1)} px off centre`);
+    ok(Math.abs(tipY - (box.top + box.height / 2)) <= 1, `tip y is ${(tipY - box.top - box.height / 2).toFixed(1)} px off centre`);
+    // The hit box hugs the drop: the label must not widen it, or the map loses
+    // every click that happens to land on the text.
+    ok(Math.abs(pin.getBoundingClientRect().width - 20) <= 1, `the pin button is ${pin.getBoundingClientRect().width} px wide`);
+  });
+
   // ------------------------------------------------------------------ follow
   // Watching with enableHighAccuracy:false + maximumAge:60000 is right for a dot
   // and useless while chasing a moving car: the view would lag minutes behind.
