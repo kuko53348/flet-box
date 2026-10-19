@@ -1737,6 +1737,64 @@ async function run() {
     ok(Math.abs(clicks[0].lat - 10) < 0.5 && Math.abs(clicks[0].lng - 20) < 0.5, `surface click was ${JSON.stringify(clicks[0])}`);
   });
 
+  // A real finger never lands perfectly still: a press drifts a pixel per event.
+  // The pan test summed those steps, so a trembling click walked past the 4 px
+  // limit, the map claimed the pointer and *neither* handler fired while the view
+  // slid by the tremor. Measured with Chrome on 2026-10-19: a shaky press on a pin
+  // reported nothing at all.
+  await t("Maps: a press that trembles is a click, not a pan", async () => {
+    const markerClicks = [];
+    const mapClicks = [];
+    const map = mount(
+      W.Maps({
+        center: [10, 20],
+        zoom: 6,
+        height: 300,
+        width: 400,
+        markers: [{ id: "here", position: [10, 20], label: "Ciudad" }],
+        onMarkerClick: (marker) => markerClicks.push(marker.id),
+        onMapClick: (point) => mapClicks.push(point),
+      }),
+    );
+    await wait(60);
+    const before = map.getCenter();
+
+    // Every step stays 1 px from the press point; together they walk 5 px.
+    const tremble = [[1, 0], [0, 1], [1, 0], [0, 1], [1, 0]];
+    const gesture = (target, steps) => {
+      const box = target.getBoundingClientRect();
+      const at = (dx, dy, buttons) => ({
+        bubbles: true,
+        cancelable: true,
+        pointerId: 11,
+        button: 0,
+        buttons,
+        clientX: box.left + box.width / 2 + dx,
+        clientY: box.top + box.height / 2 + dy,
+      });
+      target.dispatchEvent(new PointerEvent("pointerdown", at(0, 0, 1)));
+      for (const [dx, dy] of steps) {
+        target.dispatchEvent(new PointerEvent("pointermove", at(dx, dy, 1)));
+      }
+      target.dispatchEvent(new PointerEvent("pointerup", at(0, 0, 0)));
+      target.dispatchEvent(new MouseEvent("click", at(0, 0, 0)));
+    };
+
+    gesture(map.querySelector('button[aria-label="Ciudad"]'), tremble);
+    await wait(60);
+    ok(markerClicks.length === 1, `a trembling press on a pin reported ${markerClicks.length} marker click(s)`);
+    ok(mapClicks.length === 0, "the press on the pin also reported a map click");
+
+    gesture(map, tremble);
+    await wait(60);
+    ok(mapClicks.length === 1, "a trembling press on the map surface reported nothing");
+    const after = map.getCenter();
+    ok(
+      Math.abs(after.lat - before.lat) < 1e-9 && Math.abs(after.lng - before.lng) < 1e-9,
+      `the tremor panned the view to ${after.lat}, ${after.lng}`,
+    );
+  });
+
   // ------------------------------------------------------------------ report
   window.__REGRESSION = { pass, fail, total: pass + fail, results };
 

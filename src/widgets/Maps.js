@@ -36,8 +36,14 @@ const DEFAULT_TILE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 const DEFAULT_ATTRIBUTION = "© OpenStreetMap contributors";
 const OSM_COPYRIGHT_URL = "https://www.openstreetmap.org/copyright";
 
-/** Movement under this many pixels still counts as a click, not a drag. */
-const DRAG_CLICK_THRESHOLD = 4;
+/**
+ * How far the pointer has to leave the point it went down on before the press
+ * becomes a pan. Measuring distance from the origin — not the length of the
+ * path walked — is what keeps a shaky click a click: a finger or a trackpad
+ * trembles a pixel or two per event, which adds up past any total a press can
+ * honestly make, and a gesture promoted to a pan takes the `click` with it.
+ */
+const PAN_START_SLOP = 4;
 
 /**
  * The teardrop is a 20 px square with `border-radius: 50% 50% 50% 0` turned
@@ -901,26 +907,40 @@ export const Maps = (inputProps = {}) => {
 
   container.addEventListener("pointerdown", (event) => {
     if (!letsPan || disposed || event.button !== 0) return;
-    drag = { id: event.pointerId, x: event.clientX, y: event.clientY, moved: 0, captured: false };
+    // `x`/`y` stay at the pointerdown point until the slop breaks, so the pan
+    // measures distance from the press and not the length of the path walked.
+    drag = {
+      id: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+      panning: false,
+      captured: false,
+    };
   });
 
   container.addEventListener("pointermove", (event) => {
     if (!drag || event.pointerId !== drag.id) return;
-    const dx = event.clientX - drag.x;
-    const dy = event.clientY - drag.y;
-    drag.x = event.clientX;
-    drag.y = event.clientY;
-    drag.moved += Math.abs(dx) + Math.abs(dy);
-    // Capture only once the press proved to be a pan. Capturing on pointerdown
-    // re-targets every later pointer *and* mouse event to the map, so a pin would
-    // never see the click that lands on it.
-    if (!drag.captured && drag.moved > DRAG_CLICK_THRESHOLD) {
+    // Until the press is a pan, the gesture is a click in progress: the view
+    // stays put and the anchor keeps the pointerdown point, so the first real
+    // drag step moves the map by the whole displacement and stays glued to it.
+    if (!drag.panning) {
+      const offX = event.clientX - drag.x;
+      const offY = event.clientY - drag.y;
+      if (Math.abs(offX) <= PAN_START_SLOP && Math.abs(offY) <= PAN_START_SLOP) return;
+      drag.panning = true;
       drag.captured = true;
       container.style.cursor = "grabbing";
+      // Capturing re-targets every later pointer *and* mouse event to the map,
+      // so a pin under this press stops reporting clicks — which is exactly what
+      // a pan wants, and the reason the capture waits for the slop to break.
       try {
         container.setPointerCapture(event.pointerId);
       } catch (_) {}
     }
+    const dx = event.clientX - drag.x;
+    const dy = event.clientY - drag.y;
+    drag.x = event.clientX;
+    drag.y = event.clientY;
     if (dx || dy) panByPixels(dx, dy);
   });
 
@@ -934,7 +954,7 @@ export const Maps = (inputProps = {}) => {
         container.releasePointerCapture(event.pointerId);
       } catch (_) {}
     }
-    if (gesture.moved > DRAG_CLICK_THRESHOLD) return;
+    if (gesture.panning) return;
     if (!clickHandler || !isMapSurface(event)) return;
     measure();
     const local = localFromClient(event.clientX, event.clientY);
