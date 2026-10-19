@@ -159,7 +159,7 @@ picker.setFollowUser(true);
 - Tiles are pooled per zoom level and the previous level is kept until the new one is on screen, so a zoom step never flashes an empty grid.
 - onMoveEnd is debounced — it fires once the view settles, not on every pan frame.
 - Lines are redrawn from their geographic points on every frame, so a polyline follows the pan and the zoom instead of being pinned to the screen. A line whose bounding box misses the viewport is skipped before any coordinate is projected.
-- A press that moved the map more than a few pixels is a drag, so onMapClick stays quiet.
+- Whether a press was a drag is judged by how far the pointer ended up from the point it went down on, not by the length of the path it walked: a trembling finger keeps its click and never nudges the view.
 - A press on a pin answers onMarkerClick only; the map never reports the same press twice.
 - A press on the widget's own chrome — the ± buttons or the credit link — is not a click on the map underneath, so onMapClick reports only the bare map surface.
 - Props bound with useState patch this widget alone — the map subscribes to the key and redraws without re-rendering the app.
