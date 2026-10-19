@@ -113,6 +113,7 @@ const country = Dropdown({
 
 - Pass objects with value/label when the value sent to onChange must differ from the text shown, such as an id versus a name.
 - Set clearable: true to give users an explicit way back to no selection.
+- Bind a useState value to `value` to move the selection from code, such as auto-picking a default after a lookup; pass `''` to clear it back to the placeholder.
 
 ## Accessibility
 
@@ -122,6 +123,7 @@ const country = Dropdown({
 
 - The option menu is portaled to document.body by default and repositions on scroll/resize; set portal: false to keep it inline.
 - The returned element exposes value, open(), close() and update(), and removes its listeners on unmount.
+- A value applied from outside — a bound state change or `dropdown.value = x` — re-fires onChange when it differs from the current selection, and is ignored when it is the same, so a state → value → onChange → state loop settles after one pass.
 
 ## Related widgets
 
