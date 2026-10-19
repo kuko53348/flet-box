@@ -1717,6 +1717,8 @@ declare module 'flet-box' {
     color?: Color;
     /** Keeps the pooled pin node across updates; auto-generated when omitted. */
     id?: string | number;
+    /** Degrees clockwise from north, the bearing a GPS fix reports. Turns the pin around its own tip. */
+    rotation?: number;
     data?: any;
   }
 
@@ -1756,6 +1758,8 @@ declare module 'flet-box' {
     lng: number;
     /** Radius of 68% confidence in metres, or null when the browser hides it. */
     accuracy: number | null;
+    /** Degrees clockwise from true north, or null when the device reports none. */
+    heading: number | null;
   }
 
   export interface MapsProps extends CommonProps {
@@ -1805,6 +1809,8 @@ declare module 'flet-box' {
     fitBounds(bounds: MapBounds, padding?: number): Widget;
     getState(): MapState;
     addMarker(marker: MapMarker | LatLng): MapMarker | null;
+    /** Replace the marker with the same id, or append it when that id is new. */
+    setMarker(marker: MapMarker | LatLng): MapMarker | null;
     removeMarker(idOrMarker: string | number | MapMarker): Widget;
     clearMarkers(): Widget;
     getMarkers(): MapMarker[];

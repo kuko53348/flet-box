@@ -1638,13 +1638,16 @@ async function run() {
       ok(seenOptions.enableHighAccuracy === true, `accuracy flag is ${seenOptions.enableHighAccuracy}`);
       ok(seenOptions.maximumAge === 0, `maximumAge is ${seenOptions.maximumAge}`);
 
-      pushFix({ coords: { latitude: 41.3874, longitude: 2.1686, accuracy: 12 } });
+      pushFix({ coords: { latitude: 41.3874, longitude: 2.1686, accuracy: 12, heading: 275 } });
       await wait(40);
       const { center } = map.getState();
       ok(Math.abs(center.lat - 41.3874) < 1e-6, `follow left the view at ${center.lat}`);
       ok(Math.abs(center.lng - 2.1686) < 1e-6, `follow left the view at lng ${center.lng}`);
       ok(fixes.length === 1, `${fixes.length} onUserUpdate call(s)`);
       ok(fixes[0].accuracy === 12 && fixes[0].lat === 41.3874, `fix payload is ${JSON.stringify(fixes[0])}`);
+      // The bearing is the only way an app can point a moving car at where it is
+      // going, and a desktop never gives one: null, not a fake north.
+      ok(fixes[0].heading === 275, `the fix dropped the heading: ${JSON.stringify(fixes[0].heading)}`);
 
       // Turning it off must leave the view alone but keep the dot.
       map.setFollowUser(false);
@@ -1655,6 +1658,7 @@ async function run() {
       await wait(40);
       ok(Math.abs(map.getState().center.lat - 41.3874) < 1e-6, "the view moved without following");
       ok(fixes.length === 2, "the dot stopped reporting");
+      ok(fixes[1].heading === null, `a fix without bearing reported ${JSON.stringify(fixes[1].heading)}`);
     } finally {
       Object.defineProperty(navigator, "geolocation", { configurable: true, value: real });
     }
@@ -1793,6 +1797,116 @@ async function run() {
       Math.abs(after.lat - before.lat) < 1e-9 && Math.abs(after.lng - before.lng) < 1e-9,
       `the tremor panned the view to ${after.lat}, ${after.lng}`,
     );
+  });
+
+  // A vehicle that does not point where it is going is a dot with a label, so
+  // `rotation` has to turn the drop around the very tip that sits on its
+  // coordinate — and the caption has to stay readable while it does.
+  await t("Maps: a rotated marker turns on its tip and keeps its caption upright", async () => {
+    const LAT = 10;
+    const LNG = 20;
+    const map = mount(
+      W.Maps({
+        center: [LAT, LNG],
+        zoom: 5,
+        height: 300,
+        width: 400,
+        markers: [{ id: "car", position: [LAT, LNG], label: "Coche", rotation: 90 }],
+      }),
+    );
+    await wait(60);
+    const pin = map.querySelector('button[aria-label="Coche"]');
+    ok(pin, "the rotated marker was not built");
+    const head = pin.querySelector("span");
+    const box = map.getBoundingClientRect();
+    const headBox = head.getBoundingClientRect();
+    // The button never rotates, so it still says where the tip is, and that
+    // point must not have moved when the head turned.
+    const tipX = pin.getBoundingClientRect().left + 10;
+    const tipY = pin.getBoundingClientRect().top + 10 + 10 * Math.SQRT2;
+    ok(Math.abs(tipX - (box.left + box.width / 2)) <= 1, `turning moved the tip ${(tipX - box.left - box.width / 2).toFixed(1)} px sideways`);
+    ok(Math.abs(tipY - (box.top + box.height / 2)) <= 1, `turning moved the tip ${(tipY - box.top - box.height / 2).toFixed(1)} px down`);
+    ok(/10px 24\.1/.test(getComputedStyle(head).transformOrigin), `the head turns around ${getComputedStyle(head).transformOrigin}`);
+    // A 20×25 head turned 90° measures 25 wide and 20 tall: if its box did not
+    // change, the transform never reached the element.
+    ok(Math.abs(headBox.height - 20) <= 2 && Math.abs(headBox.width - 25) <= 2, `the head did not turn: its box is ${headBox.width}×${headBox.height}`);
+    const label = Array.from(pin.querySelectorAll("span")).find((s) => s.textContent);
+    ok(label, "the caption is missing");
+    const labelMatrix = getComputedStyle(label).transform;
+    ok(/matrix\(1, 0, 0, 1/.test(labelMatrix), `the caption turned with the drop: ${labelMatrix}`);
+  });
+
+  // A fix arrives every second and a bearing every frame, while `addMarker`
+  // appends: the pooled node keyed by the id kept winning on screen and the list
+  // grew without bound, so an hour of a tracked ride is 3 600 markers deep.
+  await t("Maps: setMarker() moves the pin it already drew instead of stacking one", async () => {
+    const taps = [];
+    const map = mount(
+      W.Maps({
+        center: [10, 20],
+        zoom: 5,
+        height: 300,
+        width: 400,
+        markers: [{ id: "city", position: [10, 20], label: "Ciudad" }],
+        onMarkerClick: (marker) => taps.push(marker),
+      }),
+    );
+    await wait(60);
+    ok(typeof map.setMarker === "function", "the map has no setMarker()");
+    map.setMarker({ id: "car", position: [10.2, 20.4], rotation: 45 });
+    map.setMarker({ id: "car", position: [10.4, 20.6], rotation: 120 });
+    map.setMarker({ id: "car", position: [10.6, 20.8], rotation: 200 });
+    await wait(60);
+    ok(map.getMarkers().length === 2, `the fleet holds ${map.getMarkers().length} markers after three updates`);
+    const car = map.getMarkers().find((marker) => marker.id === "car");
+    ok(Math.abs(car.position.lat - 10.6) < 1e-9, `the vehicle kept position ${car.position.lat}`);
+    ok(car.rotation === 200, `the vehicle kept bearing ${car.rotation}`);
+    // city + car + the two ± buttons.
+    ok(map.querySelectorAll("button").length === 4, `${map.querySelectorAll("button").length} buttons: the map stacked pins under the vehicle`);
+
+    // The pooled node answers with what it shows now, not with what it was built
+    // from: a stale payload makes a car tap report the position it had at mount.
+    const city = map.querySelector('button[aria-label="Ciudad"]');
+    ok(city, "the city pin disappeared");
+    city.click();
+    ok(taps.length === 1 && taps[0].id === "city", `the pin answered as ${JSON.stringify(taps[0] && taps[0].id)}`);
+    map.setMarker({ id: "city", position: [11, 21], label: "Ciudad" });
+    await wait(60);
+    city.click();
+    ok(taps.length === 2 && Math.abs(taps[1].position.lat - 11) < 1e-9, `the moved pin still answered with ${JSON.stringify(taps[1] && taps[1].position)}`);
+  });
+
+  // A bearing changes every second and the caption carries it ("Coche · 90°"),
+  // so the pooled pin has to restate its own label — otherwise the drop turns
+  // under a caption frozen at mount, and the accessibility name lies too.
+  await t("Maps: setMarker() restates the caption of the pin it moves", async () => {
+    const map = mount(
+      W.Maps({
+        center: [10, 20],
+        zoom: 5,
+        height: 300,
+        width: 400,
+        markers: [{ id: "car", position: [10, 20], label: "Coche · 0°", rotation: 0 }],
+      }),
+    );
+    await wait(60);
+    const pin = map.querySelector('button[aria-label="Coche · 0°"]');
+    ok(pin, "the vehicle pin was not built");
+    map.setMarker({ id: "car", position: [10, 20], label: "Coche · 90°", rotation: 90 });
+    await wait(60);
+    const caption = Array.from(pin.querySelectorAll("span")).find((s) => s.textContent);
+    ok(caption.textContent === "Coche · 90°", `the drop turned but the caption still reads ${caption.textContent}`);
+    ok(pin.getAttribute("aria-label") === "Coche · 90°", `screen readers still hear ${pin.getAttribute("aria-label")}`);
+    ok(pin.title === "Coche · 90°", `the tooltip still says ${pin.title}`);
+
+    map.setMarker({ id: "car", position: [10, 20] });
+    await wait(60);
+    ok(
+      !Array.from(pin.querySelectorAll("span")).find((s) => s.textContent),
+      "the caption survived a marker that lost its label",
+    );
+    ok(pin.getAttribute("aria-label") === "Map marker", `a label-less pin is named ${pin.getAttribute("aria-label")}`);
+    ok(map.querySelectorAll("button").length === 3, `${map.querySelectorAll("button").length} buttons: restating a label built a second pin`);
   });
 
   // ------------------------------------------------------------------ report

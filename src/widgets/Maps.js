@@ -642,6 +642,18 @@ export const Maps = (inputProps = {}) => {
   // 5. Markers
   // -------------------------------------------------------------------------
 
+  const buildCaption = (label) => {
+    const el = paint(
+      document.createElement("span"),
+      `position:absolute;left:${PIN_TIP_X}px;top:${Math.ceil(PIN_TIP_Y) + 2}px;` +
+        "transform:translateX(-50%);" +
+        "padding:2px 6px;border-radius:4px;background:rgba(15,23,42,0.82);" +
+        "color:#fff;font-size:12px;line-height:1.3;white-space:nowrap;",
+    );
+    el.textContent = label;
+    return el;
+  };
+
   const buildPin = (marker) => {
     const button = document.createElement("button");
     button.type = "button";
@@ -688,15 +700,8 @@ export const Maps = (inputProps = {}) => {
     if (marker.label) {
       // Absolute and centred on the tip, so the caption can be any length without
       // moving the drop or widening the hit box.
-      const label = paint(
-        document.createElement("span"),
-        `position:absolute;left:${PIN_TIP_X}px;top:${Math.ceil(PIN_TIP_Y) + 2}px;` +
-          "transform:translateX(-50%);" +
-          "padding:2px 6px;border-radius:4px;background:rgba(15,23,42,0.82);" +
-          "color:#fff;font-size:12px;line-height:1.3;white-space:nowrap;",
-      );
-      label.textContent = marker.label;
-      button.appendChild(label);
+      button._caption = buildCaption(marker.label);
+      button.appendChild(button._caption);
     }
 
     button.addEventListener("click", (event) => {
@@ -740,6 +745,24 @@ export const Maps = (inputProps = {}) => {
       if (node._rotation !== marker.rotation) {
         node._head.style.transform = marker.rotation ? `rotate(${marker.rotation}deg)` : "";
         node._rotation = marker.rotation;
+      }
+      // A moving pin usually changes its caption too — "Coche · 90°" is not the
+      // label it was built with. The node is pooled, so the text has to follow.
+      if (node._label !== marker.label) {
+        node._label = marker.label;
+        node.setAttribute("aria-label", marker.label || "Map marker");
+        node.title = marker.label || "";
+        if (!marker.label) {
+          if (node._caption) {
+            node._caption.remove();
+            node._caption = null;
+          }
+        } else if (node._caption) {
+          node._caption.textContent = marker.label;
+        } else {
+          node._caption = buildCaption(marker.label);
+          node.appendChild(node._caption);
+        }
       }
       // Subtracting the tip's offset — not half the box — puts the point of the
       // teardrop on the coordinate, whatever the label next to it measures.
@@ -1053,6 +1076,13 @@ export const Maps = (inputProps = {}) => {
             lat: userPosition.lat,
             lng: userPosition.lng,
             accuracy: typeof position.coords.accuracy === "number" ? position.coords.accuracy : null,
+            // A phone gives the direction of travel for free and a fleet view is
+            // meaningless without it. Devices that do not report it — and a
+            // standing still car — answer null rather than a bearing to guess.
+            heading:
+              typeof position.coords.heading === "number" && Number.isFinite(position.coords.heading)
+                ? position.coords.heading
+                : null,
           });
         }
       },
@@ -1304,6 +1334,27 @@ export const Maps = (inputProps = {}) => {
     const marker = normalizeMarker(raw, pinColor, nextId);
     if (!marker) return null;
     markers = markers.concat([marker]);
+    scheduleRender();
+    return marker;
+  };
+
+  /**
+   * Replace the marker with the same id, or append it when that id is new.
+   *
+   * A vehicle reports its position and bearing many times a second, and
+   * `addMarker` would stack a pin per fix: the pooled node is keyed by id, so
+   * the last one wins on screen while the list grows without bound.
+   * @returns {Object|null} The stored marker, or null when it had no usable position.
+   */
+  container.setMarker = (raw) => {
+    const marker = normalizeMarker(raw, pinColor, nextId);
+    if (!marker) return null;
+    const at = markers.findIndex((current) => current.id === marker.id);
+    if (at < 0) markers = markers.concat([marker]);
+    else {
+      markers = markers.slice();
+      markers[at] = marker;
+    }
     scheduleRender();
     return marker;
   };
