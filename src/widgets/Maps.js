@@ -130,7 +130,8 @@ const isBarePosition = (value) => {
 };
 
 /**
- * A marker is either a bare position or `{position, label, color, id, data}`.
+ * A marker is either a bare position or
+ * `{position, label, color, id, rotation, data}`.
  *
  * @param {*} raw
  * @param {string} fallbackColor Colour for markers that do not set their own.
@@ -151,6 +152,10 @@ const normalizeMarker = (raw, fallbackColor, nextId) => {
     // Without this flag a later `markerColor` update would recolour pins that
     // asked for a colour of their own.
     hasOwnColor: Boolean(ownColor),
+    // Degrees clockwise from north, the compass convention a GPS fix reports.
+    // Kept as given: normalising 390° to 30° here would make `getMarkers()`
+    // disagree with the app on every frame of a turning vehicle.
+    rotation: typeof base.rotation === "number" && Number.isFinite(base.rotation) ? base.rotation : 0,
     data: base.data,
   };
 };
@@ -655,9 +660,12 @@ export const Maps = (inputProps = {}) => {
 
     // Teardrop: `border-radius` leaves the bottom-left corner sharp, and
     // rotate(-45deg) swings that corner to the bottom centre — the anchor point.
+    // The head carries the marker's own bearing, and its origin is the tip: any
+    // other origin would swing the drop off the point it marks as it turns.
     const head = paint(
       document.createElement("span"),
-      `position:relative;display:block;width:${PIN_WIDTH}px;height:${Math.ceil(PIN_TIP_Y)}px;`,
+      `position:relative;display:block;width:${PIN_WIDTH}px;height:${Math.ceil(PIN_TIP_Y)}px;` +
+        `transform-origin:${PIN_TIP_X}px ${PIN_TIP_Y}px;`,
     );
     const pin = paint(
       document.createElement("span"),
@@ -675,6 +683,7 @@ export const Maps = (inputProps = {}) => {
     head.appendChild(dot);
     button.appendChild(head);
     button._pin = pin;
+    button._head = head;
 
     if (marker.label) {
       // Absolute and centred on the tip, so the caption can be any length without
@@ -693,7 +702,9 @@ export const Maps = (inputProps = {}) => {
     button.addEventListener("click", (event) => {
       event.stopPropagation();
       if (disposed || typeof pinClickHandler !== "function") return;
-      pinClickHandler(marker, event);
+      // The pooled node outlives every update of its marker, so report the one
+      // it is showing now rather than the one it was built from.
+      pinClickHandler(button._marker, event);
     });
     return button;
   };
@@ -721,9 +732,14 @@ export const Maps = (inputProps = {}) => {
         pinLayer.appendChild(node);
       }
       // A pooled node is reused across frames, so only touch what changed.
+      node._marker = marker;
       if (node._color !== marker.color) {
         node._pin.style.background = marker.color;
         node._color = marker.color;
+      }
+      if (node._rotation !== marker.rotation) {
+        node._head.style.transform = marker.rotation ? `rotate(${marker.rotation}deg)` : "";
+        node._rotation = marker.rotation;
       }
       // Subtracting the tip's offset — not half the box — puts the point of the
       // teardrop on the coordinate, whatever the label next to it measures.
