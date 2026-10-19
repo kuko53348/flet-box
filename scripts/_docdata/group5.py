@@ -553,6 +553,9 @@ Edit the **props** and render.`,
             "`rotation` is degrees clockwise from north, the compass convention `onUserUpdate` reports "
             "as `fix.heading`. The pin turns around its own tip, so the point it marks never moves, and "
             "its caption stays upright to read.",
+            "`clickable: false` makes a pin transparent to the pointer: the tap reaches `onMapClick` "
+            "with the coordinate under it. A vehicle drawn at the centre of the view would otherwise "
+            "cover that whole spot, and every attempt to pick a pick-up point would answer with the car.",
             "A polyline needs two usable points; `addPolyline()` returns null for one-point input "
             "rather than drawing a speck that looks like a broken route. Lines are stroked on a canvas "
             "above the tiles and below the pins, so a long route costs no DOM nodes — but it also means "
@@ -642,7 +645,7 @@ Edit the **props** and render.`,
 
 picker.fitBounds(route.geometry);
 picker.addMarker({ position: [40.42, -3.7], label: "Dropped" });
-picker.setMarker({ id: "taxi", position: [40.42, -3.7], rotation: 128 });
+picker.setMarker({ id: "taxi", position: [40.42, -3.7], rotation: 128, clickable: false });
 picker.addPolyline({ id: "leg", points: [picked, stop.at] });
 picker.locate();
 picker.setFollowUser(true);''',
