@@ -579,6 +579,8 @@ Edit the **props** and render.`,
             "the viewport is skipped before any coordinate is projected.",
             "A press that moved the map more than a few pixels is a drag, so onMapClick stays quiet.",
             "A press on a pin answers onMarkerClick only; the map never reports the same press twice.",
+            "A press on the widget's own chrome — the ± buttons or the credit link — is not a click on "
+            "the map underneath, so onMapClick reports only the bare map surface.",
             "Props bound with useState patch this widget alone — the map subscribes to the key and "
             "redraws without re-rendering the app.",
             "Nothing is fetched until the widget enters the DOM; unmount cancels the frame, the "

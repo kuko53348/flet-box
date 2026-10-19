@@ -161,6 +161,7 @@ picker.setFollowUser(true);
 - Lines are redrawn from their geographic points on every frame, so a polyline follows the pan and the zoom instead of being pinned to the screen. A line whose bounding box misses the viewport is skipped before any coordinate is projected.
 - A press that moved the map more than a few pixels is a drag, so onMapClick stays quiet.
 - A press on a pin answers onMarkerClick only; the map never reports the same press twice.
+- A press on the widget's own chrome — the ± buttons or the credit link — is not a click on the map underneath, so onMapClick reports only the bare map surface.
 - Props bound with useState patch this widget alone — the map subscribes to the key and redraws without re-rendering the app.
 - Nothing is fetched until the widget enters the DOM; unmount cancels the frame, the observer and the geolocation watch.
 - When every visible tile fails, a notice appears over the map instead of a blank panel.
