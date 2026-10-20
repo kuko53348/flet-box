@@ -423,7 +423,52 @@ Capacitor template with different slots keeps working. It:
 The script is idempotent: running it twice leaves identical files. The brand
 color `#1a1a2e` is defined at the top of the script.
 
+## Convert asset images to PNG
+
+Screens need PNG, and a `logo.jpg` dropped into `assets/` still works — until an
+Android or iOS build asks for a format the source photo cannot give it.
+`flet-box to-png` converts a folder of images to PNG using nothing but Node
+itself, so it works on a machine where no image library is installed.
+
+```bash
+flet-box to-png                 # converts ./assets, ./public/assets or ./src/assets
+flet-box to-png assets          # converts one folder
+flet-box to-png assets --dry-run
+```
+
+It recognises a file by its leading bytes, never by its extension, so a
+`logo.jpg` that is really a PNG is treated as the PNG it is. What it converts:
+
+| Format | Notes |
+| --- | --- |
+| JPEG | Baseline and extended sequential, greyscale or colour, any sampling factor (4:4:4, 4:2:2, 4:2:0, 4:1:1), restart intervals. Progressive, arithmetic-coded, lossless, 12-bit and CMYK files are refused with the reason. |
+| PNG | Colour types grey/RGB/palette/grey+alpha/RGBA at 1–16 bits, all five row filters, `tRNS` transparency. Already a PNG, so it is left alone unless you ask with `--force`. Interlaced (Adam7) files are refused. |
+| GIF | First frame, with or without interlacing and transparency. An animated file converts with a note saying how many frames were dropped. |
+| BMP | Uncompressed 1/4/8/24/32-bit, top-down or bottom-up. Run-length (RLE) files are refused. |
+
+These need a codec or a rasteriser that a zero-dependency package cannot carry,
+so they are reported as declined rather than quietly skipped: WebP, AVIF/HEIF,
+TIFF, ICO and SVG.
+
+Nothing is overwritten. `assets/logo.jpg` becomes `assets/logo.png` beside it and
+the source stays; if `logo.png` already exists the file is kept and reported as a
+name clash, because that collision usually means someone already converted it by
+hand. `--replace` deletes each source, and only after the PNG it replaces has been
+read back and checked:
+
+```bash
+flet-box to-png assets --out build/img   # write the PNGs somewhere else
+flet-box to-png assets --force           # replace an existing logo.png
+flet-box to-png assets --replace         # delete the source once its PNG is verified
+flet-box to-png assets --flat            # top level only, no sub-folders
+```
+
+The summary separates the four outcomes — converted, declined, already a PNG, and
+name clashes — and only a file whose bytes could not be decoded counts as a
+failure, which is the one case that exits non-zero.
+
 ## Command reference
+
 
 | Command | What it does |
 | --- | --- |
@@ -447,6 +492,9 @@ color `#1a1a2e` is defined at the top of the script.
 | `flet-box run-native <android\|ios>` | Compiles and launches the app on an emulator/simulator or connected device. |
 | `flet-box run-native <android\|ios> --device` | Forces a physical device instead of the emulator. |
 | `flet-box run-native <android\|ios> --livereload` | Launches the app with hot reload on the device. |
+| `flet-box to-png [dir]` | Converts JPEG, GIF, BMP and non-PNG-precision images in a folder to PNG. |
+| `flet-box to-png --dry-run` | Reports what would happen, writes nothing. |
+| `flet-box to-png --replace` | Deletes each source after its PNG was written and read back. |
 | `flet-box pkg` | Opens the package manager. |
 | `flet-box --version` | Shows the CLI version. |
 | `flet-box --help` | Shows the command list. |
