@@ -3,6 +3,7 @@
  * @description Hover/focus tooltip rendered as a fixed-position portal on `document.body`.
  */
 import { WidgetFactory } from "../widget-factory/index.js";
+import { resolveReactive } from "../widget-factory/reactiveValue.js";
 import { colors } from "../utils/themes.js";
 
 export const Tooltip = (props) => {
@@ -10,7 +11,12 @@ export const Tooltip = (props) => {
     text,
     child,
     position = "top",
-    delay = 300,
+    // Neither delay prop carries a default: `tooltipDelay` is the deprecated
+    // alias of `delay`, so a caller that only sets the alias must not have the
+    // 300 ms default of the other name win over it.
+    delay = null,
+    /** @deprecated Use `delay` instead. */
+    tooltipDelay = null,
     bgColor = colors.secondary,
     textColor = "#ffffff",
     fontSize = 12,
@@ -34,6 +40,10 @@ export const Tooltip = (props) => {
   } = props;
 
   if (!child) return null;
+
+  // The wait before the tooltip appears. A live `useState` value is a function,
+  // and `setTimeout` would coerce it to NaN — resolve it before using it.
+  const showDelay = Number(resolveReactive(delay ?? tooltipDelay) ?? 300);
 
   let tooltipElement = null;
   let timeoutId = null;
@@ -198,7 +208,7 @@ export const Tooltip = (props) => {
       resizeHandler = hideOnScrollOrResize;
       window.addEventListener("scroll", scrollHandler, true);
       window.addEventListener("resize", resizeHandler);
-    }, delay);
+    }, showDelay);
   };
 
   const hideTooltip = () => {

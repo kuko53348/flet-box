@@ -341,6 +341,8 @@ declare module 'flet-box' {
     height?: Size;
     fit?: 'cover' | 'contain' | 'fill' | 'none' | 'scale-down';
     circular?: boolean;
+    downloadable?: boolean;
+    downloadFileName?: string;
     onLoad?: (widget: Widget) => void;
     onError?: (widget: Widget) => void;
     onPress?: (widget: Widget) => void;
@@ -355,6 +357,8 @@ declare module 'flet-box' {
     bgColor?: Color;
     textColor?: Color;
     shape?: 'circle' | 'rounded' | 'square';
+    online?: boolean;
+    badgeColor?: Color;
     onPress?: (widget: Widget) => void;
   }
   export function Avatar(props: AvatarProps): Widget & {
@@ -1363,6 +1367,8 @@ declare module 'flet-box' {
     child: Widget;
     position?: 'top' | 'bottom' | 'left' | 'right';
     delay?: number;
+    /** @deprecated Alias of `delay`. */
+    tooltipDelay?: number;
     bgColor?: Color;
     textColor?: Color;
     fontSize?: number;

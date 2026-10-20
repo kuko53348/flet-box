@@ -3,15 +3,73 @@
  * @description A user avatar widget that renders an image, an icon, or
  * initials derived from a name, depending on what props are provided.
  * Falls back gracefully: image → icon → initials → generic person icon.
- * Supports circular, rounded-square, and square shapes, and exposes a method
- * to update its content without rebuilding the DOM.
+ * Supports circular, rounded-square, and square shapes, shows an optional
+ * presence dot, and applies every one of its own props again on update.
  */
 
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
+import { composeUpdate } from "../utils/composeUpdate.js";
+import {
+  isReactive,
+  reactiveKeyOf,
+  resolveReactive,
+} from "../widget-factory/reactiveValue.js";
+import { registerWidget } from "../tools/useState.js";
 import { Image } from "./Image.js";
 import { Icon } from "./Icon.js";
 import { Text } from "./Text.js";
+
+/**
+ * Props the avatar applies itself: content (image, icon, initials), the box it
+ * sits in, and the presence dot. They must never reach the factory — and the
+ * factory must not keep them in `_originalProps`, where a later update would
+ * re-apply the construction-time value over the widget's own.
+ *
+ * `bgColor` and `fontSize` are deliberately absent: the engine already routes
+ * them (`backgroundColor`, `font-size`), so it can re-apply and re-subscribe
+ * them better than this widget can.
+ */
+const AVATAR_PROPS = [
+  "src",
+  "name",
+  "icon",
+  "size",
+  "shape",
+  "textColor",
+  "online",
+  "badgeColor",
+];
+
+/** Diameter of the presence dot, as a share of the avatar. */
+const DOT_SIZE_RATIO = 0.3;
+
+/**
+ * Gap between the dot and the edge of the avatar. The dot stays inside because
+ * the avatar clips its content (`overflow: hidden`) to its own shape: a dot
+ * hung on the corner would be cut in half by a circular avatar, and a corner
+ * inset of `s·0.12` with a `s·0.3` dot is the largest one that still fits
+ * inside a circle of diameter `s`.
+ */
+const DOT_INSET_RATIO = 0.12;
+
+/** CSS length for a number of pixels; any other value is passed through. */
+const px = (value) => (typeof value === "number" ? `${value}px` : value);
+
+/**
+ * Extracts up to two initials from a full name.
+ * Single-word names return just the first letter; multi-word names use
+ * the first letter of the first and last words.
+ *
+ * @param {string} fullName - The user's full name.
+ * @returns {string} 1–2 uppercase initials, or "?" if the name is empty.
+ */
+const getInitials = (fullName) => {
+  if (!fullName) return "?";
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+};
 
 /**
  * Creates an Avatar widget.
@@ -26,15 +84,32 @@ import { Text } from "./Text.js";
  * @param {string} [props.src] - URL of a profile image.
  * @param {string} [props.name] - Full name from which initials are derived (e.g. "Jane Doe" → "JD").
  * @param {number} [props.size=40] - Diameter of the avatar in pixels.
- * @param {number} [props.fontSize=16] - Font size of initials text in pixels (overridden by the auto-computed size when `size` changes).
+ * @param {number} [props.fontSize=16] - Font size of the avatar box in pixels; initials are sized from `size`.
  * @param {'circle'|'rounded'|'square'} [props.shape='circle'] - Shape of the avatar container.
  * @param {string} [props.bgColor=colors.primary] - Background color shown behind icons or initials.
  * @param {string} [props.textColor=colors.text] - Color of icon or initials.
  * @param {string} [props.icon] - Material icon name to display instead of an image or initials.
+ * @param {boolean} [props.online=false] - Shows a presence dot in the bottom-right corner.
+ * @param {string} [props.badgeColor=colors.success] - Color of the presence dot.
  * @param {Function} [props.onPress] - Click handler. When provided, a hover scale effect is also applied.
- * @returns {HTMLElement} The avatar container element, augmented with an `updateContent` method.
+ * @returns {HTMLElement} The avatar element, augmented with an `updateContent` method.
  */
-export const Avatar = (props) => {
+export const Avatar = (inputProps = {}) => {
+  // The factory never sees these keys, so it can neither resolve a `useState`
+  // value for them (a live reactive is a *function*, and the content branches
+  // below only test them for presence) nor subscribe this widget to the key.
+  // Both happen here instead: read once, keep the keys, bind after
+  // `composeUpdate` has routed a later patch into `applyProps`.
+  const boundKeys = new Map();
+  const props = { ...inputProps };
+  for (const key of AVATAR_PROPS) {
+    const value = inputProps[key];
+    if (!isReactive(value)) continue;
+    props[key] = resolveReactive(value);
+    const stateKey = reactiveKeyOf(value);
+    if (stateKey) boundKeys.set(key, stateKey);
+  }
+
   let {
     src,
     name,
@@ -44,165 +119,187 @@ export const Avatar = (props) => {
     bgColor = colors.primary,
     textColor = colors.text,
     icon,
+    online = false,
+    badgeColor = colors.success,
     onPress,
     ...rest
   } = props;
 
-  // Map shape to a CSS border-radius value
-  let borderRadius = "50%";
-  if (shape === "rounded") borderRadius = `${size * 0.2}px`;
-  if (shape === "square") borderRadius = "0";
-
   /**
-   * Extracts up to two initials from a full name.
-   * Single-word names return just the first letter; multi-word names use
-   * the first letter of the first and last words.
-   *
-   * @param {string} fullName - The user's full name.
-   * @returns {string} 1–2 uppercase initials, or "?" if the name is empty.
+   * Border radius the current `shape` gives the current `size`. A square has to
+   * say so — it is not merely "no radius applied yet", or the radius from the
+   * previous shape would stay on the element.
    */
-  const getInitials = (fullName) => {
-    if (!fullName) return "?";
-    const parts = fullName.trim().split(/\s+/);
-    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
-    return (
-      parts[0].charAt(0) + parts[parts.length - 1].charAt(0)
-    ).toUpperCase();
+  const radiusFor = () => {
+    if (shape === "rounded") return `${size * 0.2}px`;
+    if (shape === "square") return "0";
+    return "50%";
   };
 
-  // Choose the appropriate child element based on prop priority
-  let content = null;
-  if (src) {
-    content = Image({
-      src: src,
-      width: "100%",
-      height: "100%",
-      fit: "cover",
-    });
-  } else if (icon) {
-    content = Icon({
-      name: icon,
-      size: size * 0.5,
-      color: textColor,
-    });
-  } else if (name) {
-    const initials = getInitials(name);
-    content = Text({
-      text: initials,
-      color: textColor,
-      size: size * 0.4,
-      weight: "bold",
-    });
-  } else {
+  /** Chooses the child element for the props currently held. */
+  const buildContent = () => {
+    if (src) {
+      return Image({ src, width: "100%", height: "100%", fit: "cover" });
+    }
+    if (icon) return Icon({ name: icon, size: size * 0.5, color: textColor });
+    if (name) {
+      return Text({
+        text: getInitials(name),
+        color: textColor,
+        size: size * 0.4,
+        weight: "bold",
+      });
+    }
     // Generic fallback when no content is supplied
-    content = Icon({
-      name: "person",
-      size: size * 0.5,
-      color: textColor,
-    });
-  }
+    return Icon({ name: "person", size: size * 0.5, color: textColor });
+  };
 
   const avatar = WidgetFactory({
     widgetName: "Avatar",
+    position: "relative",
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
-    width: size,
-    height: size,
-    borderRadius: borderRadius,
-    backgroundColor: bgColor,
-    color: textColor,
-    overflow: "hidden",
+    bgColor: bgColor,
+    textColor: textColor,
     fontSize: fontSize,
+    overflow: "hidden",
     fontWeight: "500",
     userSelect: "none",
     cursor: onPress ? "pointer" : "default",
     transition: "transform 0.2s ease",
-    child: content,
     onclick: onPress,
     ...rest,
   });
 
-  // Add a subtle scale-up on hover when the avatar is interactive
-  if (onPress) {
-    avatar.addEventListener("mouseenter", () => {
-      avatar.style.transform = "scale(1.05)";
-    });
-    avatar.addEventListener("mouseleave", () => {
-      avatar.style.transform = "scale(1)";
-    });
-  }
+  /**
+   * Paints the box. Geometry is set here rather than passed to the factory as
+   * `width`/`height`/`borderRadius` because the factory keeps those in
+   * `_originalProps` and re-applies them on every later update — which would
+   * snap the avatar back to its construction-time size. An explicit `width`,
+   * `height` or `borderRadius` still wins, as it always has.
+   */
+  const paintGeometry = () => {
+    avatar.style.width = px(rest.width ?? size);
+    avatar.style.height = px(rest.height ?? size);
+    avatar.style.borderRadius = rest.borderRadius ?? radiusFor();
+  };
+
+  paintGeometry();
+
+  // Both children are appended, never passed as `child`: the factory re-creates
+  // whatever it built for `child` on any update that re-passes it, which would
+  // drop the presence dot and revert the content to the construction-time node.
+  let content = buildContent();
+  const dot = WidgetFactory({
+    tag: "div",
+    position: "absolute",
+    borderRadius: "50%",
+    pointerEvents: "none",
+  });
+  avatar.appendChild(content);
+  avatar.appendChild(dot);
+
+  const paintDot = () => {
+    dot.style.width = `${Math.round(size * DOT_SIZE_RATIO)}px`;
+    dot.style.height = `${Math.round(size * DOT_SIZE_RATIO)}px`;
+    dot.style.right = `${Math.round(size * DOT_INSET_RATIO)}px`;
+    dot.style.bottom = `${Math.round(size * DOT_INSET_RATIO)}px`;
+    dot.style.backgroundColor = badgeColor;
+    dot.style.display = online ? "block" : "none";
+  };
 
   /**
-   * Updates the avatar's content and/or dimensions without recreating the element.
-   * Only the properties present in `newProps` are applied; others are left as-is.
+   * Applies the props this widget owns. Only the keys present in `next` are
+   * touched; anything absent keeps its current value, so an update that only
+   * flips `online` never reloads the image.
    *
-   * @param {Object} newProps - Partial props to apply.
-   * @param {string} [newProps.src] - New image URL.
-   * @param {string} [newProps.name] - New name (re-derives initials).
-   * @param {string} [newProps.icon] - New icon name.
-   * @param {string} [newProps.bgColor] - New background color.
-   * @param {number|string} [newProps.size] - New avatar diameter.
+   * @param {Object} next - Partial props to apply.
    */
-  avatar.updateContent = (newProps) => {
-    // Sync the mutable local variables with any supplied overrides
-    if (newProps.src !== undefined) src = newProps.src;
-    if (newProps.name !== undefined) name = newProps.name;
-    if (newProps.icon !== undefined) icon = newProps.icon;
-    if (newProps.bgColor !== undefined)
-      avatar.style.backgroundColor = newProps.bgColor;
-    if (newProps.size !== undefined) {
-      const newSize = newProps.size;
-      avatar.style.width =
-        typeof newSize === "number" ? `${newSize}px` : newSize;
-      avatar.style.height =
-        typeof newSize === "number" ? `${newSize}px` : newSize;
-      avatar.style.fontSize =
-        typeof newSize === "number" ? `${newSize * 0.4}px` : "16px";
-    }
+  const applyProps = (next = {}) => {
+    let rebuild = false;
+    let resize = false;
 
-    // Rebuild the inner content using the updated props
-    let newContent = null;
-    if (newProps.src !== undefined || src !== undefined) {
-      const finalSrc = newProps.src !== undefined ? newProps.src : src;
-      newContent = Image({
-        src: finalSrc,
-        width: "100%",
-        height: "100%",
-        fit: "cover",
-      });
-    } else if (newProps.icon !== undefined || icon !== undefined) {
-      const finalIcon = newProps.icon !== undefined ? newProps.icon : icon;
-      const finalSize = newProps.size || size;
-      newContent = Icon({
-        name: finalIcon,
-        size: finalSize * 0.5,
-        color: textColor,
-      });
-    } else if (newProps.name !== undefined || name !== undefined) {
-      const finalName = newProps.name !== undefined ? newProps.name : name;
-      const initials = getInitials(finalName);
-      const finalSize = newProps.size || size;
-      newContent = Text({
-        text: initials,
-        color: textColor,
-        size: finalSize * 0.4,
-        weight: "bold",
-      });
-    } else {
-      const finalSize = newProps.size || size;
-      newContent = Icon({
-        name: "person",
-        size: finalSize * 0.5,
-        color: textColor,
-      });
+    if ("src" in next) {
+      src = next.src;
+      rebuild = true;
     }
+    if ("icon" in next) {
+      icon = next.icon;
+      rebuild = true;
+    }
+    if ("name" in next) {
+      name = next.name;
+      rebuild = true;
+    }
+    if ("textColor" in next) {
+      textColor = next.textColor;
+      avatar.style.color = textColor;
+      rebuild = true;
+    }
+    if ("size" in next) {
+      size = next.size;
+      rebuild = true;
+      resize = true;
+    }
+    if ("shape" in next) {
+      shape = next.shape;
+      resize = true;
+    }
+    if ("online" in next) online = next.online;
+    if ("badgeColor" in next) badgeColor = next.badgeColor;
 
-    // Replace the existing child with the new content
-    while (avatar.firstChild) avatar.removeChild(avatar.firstChild);
-    avatar.appendChild(newContent);
-    avatar._child = newContent;
+    if (resize) paintGeometry();
+    if (rebuild) {
+      const nextContent = buildContent();
+      avatar.replaceChild(nextContent, content);
+      content = nextContent;
+    }
+    paintDot();
   };
+
+  paintDot();
+
+  // Add a subtle scale-up on hover when the avatar is interactive
+  const scaleUp = () => {
+    avatar.style.transform = "scale(1.05)";
+  };
+  const scaleDown = () => {
+    avatar.style.transform = "scale(1)";
+  };
+  if (onPress) {
+    avatar.addEventListener("mouseenter", scaleUp);
+    avatar.addEventListener("mouseleave", scaleDown);
+  }
+
+  let disposed = false;
+  const dispose = () => {
+    if (disposed) return;
+    disposed = true;
+    avatar.removeEventListener("mouseenter", scaleUp);
+    avatar.removeEventListener("mouseleave", scaleDown);
+  };
+  avatar.onUnmount(dispose);
+
+  composeUpdate(avatar, AVATAR_PROPS, applyProps);
+
+  /**
+   * Updates the avatar without recreating the element. This is `update()`: the
+   * keys the avatar owns are applied here, everything else — `bgColor`,
+   * `fontSize`, padding — goes through the factory, so the two public paths can
+   * never disagree about what a prop does.
+   *
+   * @param {Object} newProps - Partial props to apply: `src`, `name`, `icon`,
+   * `size`, `shape`, `textColor`, `online`, `badgeColor`, plus any style prop.
+   */
+  avatar.updateContent = (newProps = {}) => avatar.update(newProps);
+
+  // Bind after composing: `registerWidget` pushes the current store value
+  // through `update`, which must be the composed one that routes owned keys to
+  // `applyProps`. It also releases the subscription itself on unmount.
+  for (const [propName, stateKey] of boundKeys) {
+    registerWidget(stateKey, avatar, propName);
+  }
 
   return avatar;
 };

@@ -222,6 +222,51 @@ export default function run(ctx) {
     e.updateContent({ name: "Alice Smith" });
     eq(e.textContent.includes("AS"), true);
   });
+  t("Avatar: online draws a dot inset from the edge and sized from the avatar", () => {
+    const e = mount(W.Avatar({ name: "Ada Lovelace", size: 40, online: true }));
+    const dot = e.lastElementChild;
+    eq(dot.style.width, "12px");
+    eq(dot.style.height, "12px");
+    eq(dot.style.right, "5px");
+    eq(dot.style.bottom, "5px");
+    eq(cs(dot).display, "block");
+  });
+  t("Avatar: without online there is no dot to show", () => {
+    const e = mount(W.Avatar({ name: "Ada Lovelace" }));
+    eq(e.lastElementChild.style.display, "none");
+  });
+  t("Avatar: badgeColor paints the dot", () => {
+    const e = mount(W.Avatar({ name: "Ada", online: true, badgeColor: "#ff0000" }));
+    eq(cs(e.lastElementChild).backgroundColor, "rgb(255, 0, 0)");
+  });
+  t("Avatar: updateContent flips online and repaints the dot", () => {
+    const e = mount(W.Avatar({ name: "Ada", size: 40, badgeColor: "#ff0000" }));
+    e.updateContent({ online: true });
+    eq(cs(e.lastElementChild).display, "block");
+    e.updateContent({ online: false });
+    eq(cs(e.lastElementChild).display, "none");
+  });
+  t("Avatar: update() keeps the content, resizes the box and repaints the dot", () => {
+    const e = mount(W.Avatar({ src: "/a.png", name: "Ada Lovelace", size: 40 }));
+    e.update({ bgColor: "#00ff00", size: 64, online: true, badgeColor: "#ff0000" });
+    // The content used to revert to the construction-time node on any update.
+    eq(e.querySelector("img") !== null, true);
+    eq(cs(e).backgroundColor, "rgb(0, 255, 0)");
+    eq(e.style.width, "64px");
+    eq(e.style.height, "64px");
+    // 64 · 0.3 = 19px dot, 64 · 0.12 = 8px inset — inside the clipped circle.
+    eq(e.lastElementChild.style.width, "19px");
+    eq(e.lastElementChild.style.right, "8px");
+    eq(cs(e.lastElementChild).backgroundColor, "rgb(255, 0, 0)");
+  });
+  t("Avatar: dropping src falls back to initials, then to the icon", () => {
+    const e = mount(W.Avatar({ src: "/a.png", name: "Ada Lovelace" }));
+    e.update({ src: null });
+    eq(e.querySelector("img"), null);
+    eq(e.textContent.includes("AL"), true);
+    e.update({ name: null, icon: "robot" });
+    eq(e.textContent.includes("robot"), true);
+  });
 
   // ---------------- Badge ----------------
   t("Badge: with a value it wraps the child in an inline-block Stack showing the count", () => {

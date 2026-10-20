@@ -480,6 +480,7 @@ export const ALL_PROPS = [
   { prop: "widthExpanded", domProp: "widthExpanded", type: "special" },
   { prop: "widthCollapsed", domProp: "widthCollapsed", type: "special" },
   { prop: "showTooltip", domProp: "showTooltip", type: "special" },
+  // Legacy alias of `delay`, still honoured by Tooltip.
   { prop: "tooltipDelay", domProp: "tooltipDelay", type: "special" },
 
   // ---- ListView / GridView ----
@@ -702,6 +703,7 @@ export const ALL_PROPS = [
   // ---- Avatar / Badge / Icon / Chip ----
   { prop: "icon", domProp: "icon", type: "special" },
   { prop: "shape", domProp: "shape", type: "special" },
+  // Presence dot: `online` shows it on Avatar, `badgeColor` paints it.
   { prop: "online", domProp: "online", type: "special" },
   { prop: "badge", domProp: "badge", type: "special" },
   { prop: "badgeColor", domProp: "badgeColor", type: "special" },
@@ -732,9 +734,12 @@ export const ALL_PROPS = [
   { prop: "headingColor", domProp: "headingColor", type: "special" },
   { prop: "allowDangerousHtml", domProp: "allowDangerousHtml", type: "special" },
 
-  // ---- InstallButton ----
+  // ---- Image ----
+  // `downloadable` turns a click into a save, `downloadFileName` names the file.
   { prop: "downloadable", domProp: "downloadable", type: "special" },
   { prop: "downloadFileName", domProp: "downloadFileName", type: "special" },
+
+  // ---- InstallButton ----
   { prop: "onInstalled", domProp: "onInstalled", type: "special" },
 
   // ---- MatrixRain ----

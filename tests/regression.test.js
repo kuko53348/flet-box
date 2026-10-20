@@ -1975,6 +1975,110 @@ async function run() {
     }
   });
 
+  // ---------------- props that lived only in the registry (measured 2026-10-20)
+  await t("Avatar: presence bound to a state key moves the dot", async () => {
+    // `online` was a `special` registry entry no widget read, so it neither
+    // painted anything nor took part in the reactive protocol: the store moved
+    // and the avatar stayed as it was built.
+    const { useState } = await import("../src/tools/useState.js");
+    const [present, setPresent] = useState("avatarPresence", false);
+    const a = mount(W.Avatar({ name: "Ada Lovelace", size: 40, online: present }));
+    const dot = () => getComputedStyle(a.lastElementChild).display;
+    ok(dot() === "none", `the dot was painted while the store said offline`);
+    setPresent(true);
+    await wait(60);
+    ok(dot() !== "none", "the bound presence never reached the dot");
+    setPresent(false);
+    await wait(60);
+    ok(dot() === "none", "the dot stayed on after presence went offline");
+  });
+
+  await t("Avatar: update() keeps the content and moves the geometry", async () => {
+    // The old widget rebuilt its children from the construction-time props on any
+    // update, and never touched width or radius, so an image avatar reverted to
+    // initials and a size change left the box the original size.
+    const a = mount(W.Avatar({ src: "/a.png", name: "Ada Lovelace", size: 40 }));
+    a.update({ size: 64, shape: "square", padding: 8 });
+    ok(a.querySelector("img") !== null, "the content reverted to the construction-time node");
+    ok(a.style.width === "64px", `width did not follow size: ${a.style.width}`);
+    ok(getComputedStyle(a).padding === "8px", "the factory lost its own key");
+    ok(a.style.borderRadius === "0px", `radius did not follow shape: ${a.style.borderRadius}`);
+  });
+
+  await t("Tooltip: tooltipDelay is the old name of delay, and delay wins", async () => {
+    // `tooltipDelay` was a `special` entry no widget read: passing it changed
+    // nothing, and the default 300 ms stayed in force.
+    const base = document.body.children.length;
+    const slow = mount(W.Tooltip({ text: "slow", child: W.Text({ text: "a" }), tooltipDelay: 40 }));
+    slow.showTooltip();
+    ok(document.body.children.length === base, "the bubble appeared before the alias delay elapsed");
+    await wait(140);
+    ok(document.body.children.length === base + 1, "tooltipDelay was ignored and the bubble never came");
+    document.body.lastElementChild.remove();
+    slow.hideTooltip();
+
+    const fast = mount(W.Tooltip({ text: "fast", child: W.Text({ text: "b" }), delay: 0, tooltipDelay: 5000 }));
+    fast.showTooltip();
+    await wait(60);
+    ok(document.body.children.length === base + 1, `delay lost to its own alias (${document.body.children.length - base} portals)`);
+    document.body.lastElementChild.remove();
+    fast.hideTooltip();
+  });
+
+  await t("Image: downloadable saves, and never steals onPress", async () => {
+    // Neither `downloadable` nor `downloadFileName` was read by the widget, so a
+    // "downloadable" image only ever pressed.
+    const saved = [];
+    const realClick = HTMLAnchorElement.prototype.click;
+    HTMLAnchorElement.prototype.click = function () { saved.push(this.download); };
+    let pressed = 0;
+    try {
+      mount(W.Image({ src: "/files/quote.png", downloadable: true, onPress: () => pressed++ })).click();
+    } finally {
+      HTMLAnchorElement.prototype.click = realClick;
+    }
+    ok(saved.length === 1, `the click saved nothing: ${JSON.stringify(saved)}`);
+    ok(saved[0] === "quote.png", `saved under the wrong name: ${saved[0]}`);
+    ok(pressed === 1, `onPress fired ${pressed} times`);
+  });
+
+  await t("Image: the download props survive update() and a state key", async () => {
+    // `downloadable`/`downloadFileName` were read once, at construction, and the
+    // factory never saw them (`special`): an update or a store change could
+    // neither offer a save nor rename the file it offered.
+    const saved = [];
+    const realClick = HTMLAnchorElement.prototype.click;
+    HTMLAnchorElement.prototype.click = function () { saved.push(this.download); };
+    const { useState } = await import("../src/tools/useState.js");
+    try {
+      const stillPlain = mount(W.Image({ src: "/files/quote.png" }));
+      stillPlain.update({ downloadable: true, downloadFileName: "promoted.png" });
+      stillPlain.click();
+      ok(saved.join() === "promoted.png", `update() did not make it downloadable: ${JSON.stringify(saved)}`);
+
+      saved.length = 0;
+      stillPlain.update({ downloadFileName: "renamed.png" });
+      stillPlain.click();
+      ok(saved.join() === "renamed.png", `the old name kept being offered: ${JSON.stringify(saved)}`);
+
+      saved.length = 0;
+      stillPlain.update({ downloadable: false });
+      stillPlain.click();
+      ok(saved.length === 0, `a saved offer stayed after downloadable went false: ${JSON.stringify(saved)}`);
+
+      const [allow, setAllow] = useState("imageDownloadAllowed", false);
+      const bound = mount(W.Image({ src: "/files/report.pdf", downloadable: allow }));
+      bound.click();
+      ok(saved.length === 0, "the bound store said false and the image downloaded anyway");
+      setAllow(true);
+      await wait(60);
+      bound.click();
+      ok(saved.join() === "report.pdf", `the bound store never reached the image: ${JSON.stringify(saved)}`);
+    } finally {
+      HTMLAnchorElement.prototype.click = realClick;
+    }
+  });
+
   // ------------------------------------------------------------------ report
   window.__REGRESSION = { pass, fail, total: pass + fail, results };
 

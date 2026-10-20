@@ -60,6 +60,35 @@ t("Icon: size -> px font", () => { const e = mount(W.Icon({ name: "star", size: 
 // ---------------- Image ----------------
 t("Image: IMG tag with src/alt", () => { const e = W.Image({ src: "/a.png", alt: "A" }); eq(e.tagName, "IMG"); eq(e.getAttribute("src"), "/a.png"); eq(e.getAttribute("alt"), "A"); });
 t("Image: objectFit via style fallback", () => { const e = mount(W.Image({ src: "/a.png", objectFit: "cover" })); eq(cs(e).objectFit, "cover"); });
+// `downloadable` saves through an <a download>; the harness captures the anchor
+// instead of letting the browser fetch and store a file.
+const saveOnce = (props) => {
+  const saved = [];
+  const realClick = HTMLAnchorElement.prototype.click;
+  HTMLAnchorElement.prototype.click = function () { saved.push(this.download); };
+  try { mount(W.Image(props)).click(); } finally { HTMLAnchorElement.prototype.click = realClick; }
+  return saved;
+};
+t("Image: without downloadable a click saves nothing", () => {
+  const e = mount(W.Image({ src: "/a.png" }));
+  const before = saveOnce({ src: "/a.png" });
+  eq(before.length, 0);
+  if (cs(e).cursor === "pointer") throw new Error("an ordinary image invites a click");
+});
+t("Image: downloadable click saves under the name in the URL", () => {
+  const saved = saveOnce({ src: "/files/report.pdf?v=2", downloadable: true });
+  eq(saved.length, 1);
+  eq(saved[0], "report.pdf");
+});
+t("Image: downloadable invites the click with a pointer cursor", () => {
+  const e = mount(W.Image({ src: "/a.png", downloadable: true }));
+  eq(cs(e).cursor, "pointer");
+});
+t("Image: downloadFileName names the saved file", () => {
+  const saved = saveOnce({ src: "/files/report.pdf", downloadable: true, downloadFileName: "march-invoice.pdf" });
+  eq(saved.length, 1);
+  eq(saved[0], "march-invoice.pdf");
+});
 
 // ---------------- Button ----------------
 t("Button: BUTTON tag + label text", () => { const e = mount(W.Button({ text: "Click me" })); eq(e.tagName, "BUTTON"); if (!e.textContent.includes("Click me")) throw new Error("label missing"); });
