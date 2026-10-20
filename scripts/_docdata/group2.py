@@ -1,19 +1,25 @@
 WIDGET_DOCS = {
     "Image": {
         "summary": "Renders an image element from a URL or path. Supports fixed sizing, "
-                   "object-fit modes, and a circular crop for avatars.",
+                   "object-fit modes, a circular crop for avatars, and saving on click.",
         "when": "Use it whenever you need to show a photo, banner, thumbnail, or icon asset.",
         "related": ["Avatar", "Card", "Icon"],
         "tips": [
             "Set both width and height with fit: \"cover\" to avoid stretched or squashed art.",
             "Use circular: true instead of a full borderRadius when you want a perfect avatar crop.",
+            "downloadable only saves the file when the image is same-origin or CORS-served; "
+            "anything else opens in a new tab instead of replacing your app.",
         ],
         "accessibility": [
             "Always pass alt so screen readers can describe the image; alt: \"\" marks it decorative.",
         ],
         "behavior": [
             "onLoad fires once the image decodes; onError fires when the src fails to load.",
-            "onPress is attached to the wrapper, so the image behaves like a tappable tile.",
+            "onPress is attached to the image itself, so the image behaves like a tappable tile.",
+            "With downloadable: true a click saves the image under downloadFileName, or under the "
+            "file name in the URL when that prop is absent.",
+            "Both download props stay live: update() can turn the offer on or off and rename it, "
+            "and a downloadable bound to a useState key follows the store.",
         ],
         "basic": '''const photo = Image({
   src: "/photo.jpg",
@@ -28,12 +34,14 @@ WIDGET_DOCS = {
   borderRadius: 12,
 });''',
         "full": '''const teamPhoto = Image({
-  src: "/team/anna.jpg",
+  src: "/team/anna.jpg?v=3",
   alt: "Anna at the keynote",
   width: 96,
   height: 96,
   fit: "cover",
   circular: true,
+  downloadable: true,
+  downloadFileName: "anna-keynote.jpg",
   onLoad: () => console.log("loaded"),
   onError: () => console.error("failed"),
   onPress: () => console.log("open profile"),
@@ -41,19 +49,27 @@ WIDGET_DOCS = {
     },
     "Avatar": {
         "summary": "A compact identity chip that shows a profile image, the person's initials, "
-                   "or a fallback icon. It falls back gracefully when no image is available.",
+                   "or a fallback icon. It falls back gracefully when no image is available and "
+                   "can carry a presence dot.",
         "when": "Reach for it in headers, comments, list rows, and any place a user needs a face.",
         "related": ["Image", "ListTile", "Card"],
         "tips": [
-            "Provide both src and name so initials render if the image fails.",
+            "Provide both src and name so the initials are ready if you swap the image out.",
             "Use shape: \"circle\" for people and shape: \"rounded\" for organizations or bots.",
+            "Leave badgeColor at its default for an available dot; pass another color to signal "
+            "away or busy.",
         ],
         "accessibility": [
             "The name prop is announced as the label, so always give a meaningful name.",
         ],
         "behavior": [
-            "When src is missing or errors, the widget automatically shows initials from name.",
+            "Content is picked once, in order: src, then icon, then initials from name, then a "
+            "generic person icon. A failing src does not swap the image for initials by itself.",
             "onPress makes the whole avatar interactive, which is useful for opening profiles.",
+            "online draws a dot in the bottom-right corner. It sits inside the edge and is sized "
+            "from the avatar, so a circular avatar clips it no more than a square one.",
+            "Every own prop applies again through update() or updateContent(), so an avatar bound "
+            "to a state key changes without rebuilding the element.",
         ],
         "basic": '''const user = Avatar({
   name: "Ada Lovelace",
@@ -63,6 +79,7 @@ WIDGET_DOCS = {
   name: "Ada Lovelace",
   size: 48,
   shape: "circle",
+  online: true,
 });''',
         "full": '''const user = Avatar({
   src: "/avatars/ada.png",
@@ -71,6 +88,8 @@ WIDGET_DOCS = {
   shape: "rounded",
   bgColor: "#2563eb",
   textColor: "#ffffff",
+  online: true,
+  badgeColor: "#f59e0b",
   onPress: () => console.log("open profile"),
 });''',
     },

@@ -151,6 +151,8 @@ DESC = {
     "alt": "Alternative text for an image, for accessibility.",
     "fit": "How the image fits its box (CSS `object-fit`).",
     "circular": "Clips the image into a circle.",
+    "downloadable": "Makes a click on the image save it.",
+    "downloadFileName": "File name suggested when saving; defaults to the name in the URL.",
     "onLoad": "Fired when the media finishes loading.",
     "onError": "Fired when the media fails to load.",
     "controls": "Shows the native media playback controls.",
@@ -164,6 +166,9 @@ DESC = {
     "onEnd": "Fired when playback reaches the end.",
     "onTimeUpdate": "Fired repeatedly as the playback position changes.",
     "onProgress": "Fired as the media buffers.",
+    # Avatar
+    "online": "Shows a presence dot in the corner of the avatar.",
+    "badgeColor": "Color of the presence dot.",
     # Forms / inputs
     "placeholder": "Hint text shown when the field is empty.",
     "error": "Error flag or message shown under the field.",
@@ -376,5 +381,11 @@ DESCRIPTION_FALLBACKS = []
 WIDGET_DESC = {
     "Maps": {
         "markers": "Pins to draw: bare positions or `{position, label, color, id, rotation, clickable, data}` records.",
+    },
+    # `delay` in DESC is written for animations; on a tooltip it is the wait
+    # before the bubble appears, and `tooltipDelay` is its old name.
+    "Tooltip": {
+        "delay": "Milliseconds the pointer has to stay on the widget before the tooltip appears.",
+        "tooltipDelay": "Deprecated alias of `delay`.",
     },
 }

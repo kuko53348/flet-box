@@ -1,6 +1,6 @@
 # Avatar
 
-A compact identity chip that shows a profile image, the person's initials, or a fallback icon. It falls back gracefully when no image is available.
+A compact identity chip that shows a profile image, the person's initials, or a fallback icon. It falls back gracefully when no image is available and can carry a presence dot.
 
 ## When to use it
 
@@ -29,6 +29,8 @@ const user = Avatar({
 | `bgColor` | `Color` | Background color. Alias: `backgroundColor`. |
 | `textColor` | `Color` | Color of the button label. |
 | `shape` | `'circle' \| 'rounded' \| 'square'` | The `shape` value for the widget. |
+| `online` | `boolean` | Shows a presence dot in the corner of the avatar. |
+| `badgeColor` | `Color` | Color of the presence dot. |
 | `onPress` | `(widget: Widget) => void` | Callback fired when the widget is pressed. Alias: `onClick`. |
 
 ### Common props
@@ -70,6 +72,7 @@ const user = Avatar({
   name: "Ada Lovelace",
   size: 48,
   shape: "circle",
+  online: true,
 });
 ```
 
@@ -85,14 +88,17 @@ const user = Avatar({
   shape: "rounded",
   bgColor: "#2563eb",
   textColor: "#ffffff",
+  online: true,
+  badgeColor: "#f59e0b",
   onPress: () => console.log("open profile"),
 });
 ```
 
 ## Tips
 
-- Provide both src and name so initials render if the image fails.
+- Provide both src and name so the initials are ready if you swap the image out.
 - Use shape: "circle" for people and shape: "rounded" for organizations or bots.
+- Leave badgeColor at its default for an available dot; pass another color to signal away or busy.
 
 ## Accessibility
 
@@ -100,8 +106,10 @@ const user = Avatar({
 
 ## Behavior
 
-- When src is missing or errors, the widget automatically shows initials from name.
+- Content is picked once, in order: src, then icon, then initials from name, then a generic person icon. A failing src does not swap the image for initials by itself.
 - onPress makes the whole avatar interactive, which is useful for opening profiles.
+- online draws a dot in the bottom-right corner. It sits inside the edge and is sized from the avatar, so a circular avatar clips it no more than a square one.
+- Every own prop applies again through update() or updateContent(), so an avatar bound to a state key changes without rebuilding the element.
 
 ## Related widgets
 
