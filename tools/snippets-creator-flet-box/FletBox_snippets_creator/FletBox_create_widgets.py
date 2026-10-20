@@ -190,6 +190,13 @@ Column({
     onPress: () => openGallery(),
     id: "hero-image"
 })''',
+'Image.download': '''Image({
+    src: "invoice.png",
+    alt: "March invoice",
+    width: 240,
+    downloadable: true,
+    downloadFileName: "invoice-march.png"
+})''',
 
 'Avatar.basic': 'Avatar({ name: "User" })',
 'Avatar.normal': 'Avatar({ src: "profile.jpg", size: 48, shape: "circle" })',
