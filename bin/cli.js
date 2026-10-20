@@ -15,6 +15,7 @@ import path from "path";
 import { createProject } from "./commands/create.js";
 import { checkApi } from "./commands/checkApi.js";
 import { auditFix } from "./commands/auditFix.js";
+import { toPng } from "./commands/toPng.js";
 import { unpack } from "./commands/unpack.js";
 import { packageManager } from "./commands/package.js";
 import { createBundle } from "./commands/createBundle.js";
@@ -86,6 +87,10 @@ ${cmd("   └─ unpack --all", "every widget; --json / --md write .fletbox/api/
 ${cmd("audit-fix", "Rewrite broken imports, missing imports and misspelled props")}
 ${cmd("   └─ --only imports|props", "run one repair instead of both")}
 ${cmd("   └─ alias", "fix-imports | fix-path-imports | auditFix")}
+${cmd("to-png [dir]", "Convert JPEG/BMP/GIF images to PNG, no dependencies")}
+${cmd("   └─ --replace", "remove each source after its PNG was written and read back")}
+${cmd("   └─ --out <dir> | --force | --flat | --dry-run", "where to write, and what to touch")}
+${cmd("   └─ alias", "topng | convert-images")}
 ${cmd("build android", "Build Android debug APK")}
 ${cmd("build android --release", "Build unsigned release APK/AAB to sign yourself")}
 ${cmd("build ios", "Build iOS Simulator app (macOS + Xcode)")}
@@ -307,6 +312,14 @@ async function main() {
       case "fix-imports":
       case "fix-path-imports": {
         const { exitCode } = await auditFix(args.slice(1));
+        if (exitCode) process.exit(exitCode);
+        break;
+      }
+
+      case "to-png":
+      case "topng":
+      case "convert-images": {
+        const { exitCode } = await toPng(args.slice(1));
         if (exitCode) process.exit(exitCode);
         break;
       }
