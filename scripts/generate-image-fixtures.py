@@ -430,6 +430,10 @@ for y in range(SIZE):
 add("png-rgb", save(flat, "PNG"), rgba_of(flat))
 add("png-grey", save(grey, "PNG"), rgba_of(grey))
 add("png-rgba", save(alpha, "PNG"), rgba_of(alpha))
+# A gradient instead of more tiles: it holds over a thousand distinct colours, so
+# it is the fixture that reaches the "too many colours for a palette" branch. With
+# only tiles here, a writer that quantised anything it could would pass unnoticed.
+add("png-gradient", save(gradient(), "PNG"), rgba_of(gradient()))
 for filter_type in range(5):
     add(f"png-filter-{filter_type}", save(alpha, "PNG", filter_type=filter_type), rgba_of(alpha))
 

@@ -22,6 +22,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import zlib from "node:zlib";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
@@ -67,6 +68,73 @@ const diff = (a, b) => {
   // `a.length` is the number of channel values, since every pixel has four.
   return { mean: sum / a.length, max, badAlpha };
 };
+
+/**
+ * @param {Buffer} buf
+ * @returns {number} Unsigned CRC-32, computed here so this file stays a reader
+ *   of the library rather than a copy of it.
+ */
+const crc32 = (() => {
+  const table = new Int32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    table[n] = c;
+  }
+  return (buf) => {
+    let c = -1;
+    for (const byte of buf) c = table[(c ^ byte) & 0xff] ^ (c >>> 8);
+    return (c ^ -1) >>> 0;
+  };
+})();
+
+/**
+ * The writer this command shipped with: colour type 6, filter "None", level 9.
+ *
+ * Kept here rather than in the library because the point of the assertions below
+ * is to measure the new output against the old one, and a guard that asks the
+ * thing under test what it used to do measures nothing.
+ *
+ * @param {{ width: number, height: number, rgba: Buffer }} image
+ * @returns {Buffer}
+ */
+const naivePng = ({ width, height, rgba }) => {
+  const stride = width * 4;
+  const raw = Buffer.alloc((stride + 1) * height);
+  for (let y = 0; y < height; y++) rgba.copy(raw, y * (stride + 1) + 1, y * stride, y * stride + stride);
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(width, 0);
+  ihdr.writeUInt32BE(height, 4);
+  ihdr[8] = 8;
+  ihdr[9] = 6;
+  const chunk = (type, data) => {
+    const head = Buffer.alloc(8);
+    head.writeUInt32BE(data.length, 0);
+    head.write(type, 4, "ascii");
+    const body = Buffer.concat([head, data]);
+    const crc = Buffer.alloc(4);
+    crc.writeUInt32BE(crc32(body.subarray(4)));
+    return Buffer.concat([body, crc]);
+  };
+  return Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    chunk("IHDR", ihdr),
+    chunk("IDAT", zlib.deflateSync(raw, { level: 9 })),
+    chunk("IEND", Buffer.alloc(0)),
+  ]);
+};
+
+/** @param {Buffer} png @returns {number} The colour type of its IHDR. */
+const colourTypeOf = (png) => png.readUInt8(25);
+
+/** @param {Buffer} rgba @returns {boolean} Whether every pixel is opaque. */
+const isOpaque = (rgba) => {
+  for (let i = 3; i < rgba.length; i += 4) if (rgba[i] !== 255) return false;
+  return true;
+};
+
+/** Colour types the writer is allowed to answer with, for the coverage count. */
+const layoutsSeen = new Set();
 
 for (const fixture of fixtures) {
   const source = Buffer.from(fixture.source, "base64");
@@ -129,7 +197,30 @@ for (const fixture of fixtures) {
   const png = encodePng({ width: image.width, height: image.height, rgba: image.rgba });
   const again = decodeImage(png);
   check(`${fixture.name} re-encodes`, again.rgba.equals(image.rgba), "the PNG written from these pixels differs");
+
+  // Optimization is only an improvement if it is also lossless, and only honest
+  // if it never ends up bigger than the plain layout it replaced.
+  const naive = naivePng(image);
+  check(`${fixture.name} is no bigger than the plain writer`, png.length <= naive.length,
+    `${png.length} bytes against ${naive.length} for colour type 6, filter None`);
+  const type = colourTypeOf(png);
+  layoutsSeen.add(type);
+  check(`${fixture.name} does not pay for alpha it never uses`, !(isOpaque(image.rgba) && type === 6),
+    "an opaque frame came out as colour type 6");
+  if (type === 3) {
+    const distinct = new Set();
+    for (let i = 0; i < image.rgba.length; i += 4) {
+      distinct.add(((image.rgba[i] << 24) | (image.rgba[i + 1] << 16) | (image.rgba[i + 2] << 8) | image.rgba[i + 3]) >>> 0);
+    }
+    check(`${fixture.name} only palettes colours that fit`, distinct.size <= 256,
+      `${distinct.size} distinct colours written as a palette`);
+  }
 }
+
+// Each layout the writer may answer with has to be reached by at least one
+// fixture, or the branch it lives in is code nobody has ever run.
+check("every layout is reached", [0, 2, 3, 6].every((type) => layoutsSeen.has(type)),
+  `colour types seen across the fixtures: ${[...layoutsSeen].sort().join(", ")}`);
 
 // ---------------------------------------------------------------- sniffing
 const cases = [
@@ -221,6 +312,49 @@ check("--replace removed the jpg", !fs.existsSync(path.join(assets, "logo.jpg"))
 check("--replace says so", replaced.includes("source removed"), replaced);
 check("--replace kept the png", fs.existsSync(path.join(assets, "logo.png")));
 check("--replace never deletes a png's own bytes", fs.existsSync(path.join(assets, "keep.png")), replaced);
+
+// ---------------------------------------------------------------- the optimizer
+const optDir = path.join(work, "optimize");
+fs.mkdirSync(optDir, { recursive: true });
+const paletteImage = decodeImage(Buffer.from(fixtures.find((f) => f.name === "png-palette").source, "base64"));
+const naiveFile = path.join(optDir, "naive.png");
+fs.writeFileSync(naiveFile, naivePng(paletteImage));
+const naiveSize = fs.statSync(naiveFile).size;
+// A PNG this writer produced is, by construction, the smallest it can make for
+// those pixels, so the second pass has to say so instead of rewriting it.
+const doneFile = path.join(optDir, "done.png");
+fs.writeFileSync(doneFile, encodePng(paletteImage));
+const doneBytes = fs.readFileSync(doneFile);
+fs.writeFileSync(path.join(optDir, "deep.png"), Buffer.from(fixtures.find((f) => f.name === "png-16bit").source, "base64"));
+
+const rehearsal = run([optDir, "--optimize", "--dry-run"]);
+check("--optimize rehearses without writing",
+  fs.statSync(naiveFile).size === naiveSize && rehearsal.includes("[dry run]"), rehearsal);
+
+const firstPass = result([optDir, "--optimize"]);
+check("--optimize shrinks a naive PNG",
+  firstPass.out.includes("1 optimized") && fs.statSync(naiveFile).size < naiveSize, firstPass.out);
+check("--optimize keeps every pixel",
+  decodeImage(fs.readFileSync(naiveFile)).rgba.equals(paletteImage.rgba), "the rewrite changed the picture");
+check("--optimize exits 0", firstPass.status === 0, firstPass.out);
+check("a 16-bit PNG is left at 16 bits",
+  firstPass.out.includes("16-bit PNG, left as it is"), firstPass.out);
+check("a PNG that is already the smallest is not rewritten",
+  firstPass.out.includes("already the smallest") && fs.readFileSync(doneFile).equals(doneBytes), firstPass.out);
+
+const shrunk = fs.statSync(naiveFile).size;
+const secondPass = result([optDir, "--optimize"]);
+check("the next pass has nothing to do", secondPass.out.includes("2 already optimal"), secondPass.out);
+check("and it changes no file", fs.statSync(naiveFile).size === shrunk && fs.readFileSync(doneFile).equals(doneBytes), secondPass.out);
+
+// A photograph written as PNG is bigger than the file it came from, which is the
+// format speaking, and the command has to say it rather than look like a bug.
+const photoDir = path.join(work, "photo");
+fs.mkdirSync(photoDir);
+fs.writeFileSync(path.join(photoDir, "shot.jpg"), Buffer.from(fixtures.find((f) => f.name === "jpeg-photo").source, "base64"));
+const photoRun = run([photoDir]);
+check("a PNG that outgrew its JPEG says so",
+  photoRun.includes("bigger than the file it came from"), photoRun);
 
 // A folder with nothing convertible is a success, not an error.
 const empty = path.join(work, "empty");
