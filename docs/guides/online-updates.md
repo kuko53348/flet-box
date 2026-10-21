@@ -15,7 +15,8 @@ you edit source code
         v
 git tag v1.0.1 pushed to GitHub
         |
-        | GitHub Actions (on: tags v*)
+        | GitHub Actions — the web job deploys www/ on every push,
+        | but only a v* tag publishes www/config.json with it
         v
 www/ deployed to GitHub Pages      <- the ONLY place an update is published
         |
@@ -33,7 +34,7 @@ loader.js fetches <update.url>/config.json
 
 Three invariants make this safe:
 
-1. **Updates are published only by release tags.** Ordinary `git push` runs CI (so breakage is caught) but never publishes, so a half-finished test build can never reach your users.
+1. **Only a release tag can be offered as an update.** The web workflow publishes your site on every push, so the preview is never stale — but it deletes `www/config.json` from any build that is not a `v*` tag. With no manifest to read, an installed app logs `no remote config (offline or not deployed yet)` and keeps running the release it already has. So the site is live for reading while the update feed stays on tags, and a half-finished test build can never reach your users.
 2. **The app verifies integrity.** A downloaded bundle is executed only if its sha256 matches the hash in `config.json`.
 3. **The app always launches.** Offline, a wrong URL, a hash mismatch, or a declined dialog all fall back to the bundle already on the device. OTA can never brick the app.
 
@@ -174,12 +175,12 @@ Downloaded OTA bundles live in a **separate** cache (`fletbox-ota`) owned by the
 
 ## Requirements and troubleshooting
 
-Requirements: a **public** GitHub repository, GitHub Pages enabled (Settings → Pages → Source = "GitHub Actions"), and the workflow from `flet-box create` (it already deploys `www/` on `v*` tags). GitHub Pages and Actions are free for public repos.
+Requirements: a **public** GitHub repository, GitHub Pages enabled (Settings → Pages → Source = "GitHub Actions"), and the workflow from `flet-box create` (`.github/workflows/build.yml` publishes `www/` on every push, and publishes the OTA manifest only for a `v*` tag; Android and iOS live in `build-native.yml`, which starts by hand). GitHub Pages and Actions are free for public repos.
 
 | Symptom | Likely cause |
 | --- | --- |
 | Build prints "THIS APP DOES NOT SUPPORT OTA UPDATES" | No public GitHub repo is reachable from the project (no `origin` remote, a non-GitHub remote, or nothing configured). The app still works — it runs the bundle it shipped with. Create the repo, push it, and rebuild. |
-| No dialog, app runs old code | `update.url` missing/incorrect, or the tag was never pushed (CI never published). |
+| No dialog, app runs old code | `update.url` missing/incorrect, or no `v*` tag was published — a normal push updates the site but deliberately leaves the manifest out, so there is nothing to compare against. |
 | `hash mismatch` in console | The published `config.json` and bundle are from different builds. Re-run `flet-box release` so both are published together. |
 | Dialog appears but download fails | The Pages site is not reachable/CORS-blocked from the app origin. Pages serves with permissive headers; check you are not behind a proxy that strips them. |
 | Update applies but reverts on next launch | Cache Storage unavailable (private browsing). The bundle runs once but cannot persist. |
