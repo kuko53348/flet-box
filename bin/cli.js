@@ -16,6 +16,8 @@ import { createProject } from "./commands/create.js";
 import { checkApi } from "./commands/checkApi.js";
 import { auditFix } from "./commands/auditFix.js";
 import { toPng } from "./commands/toPng.js";
+import { images } from "./commands/images.js";
+import { pruneAssets } from "./commands/pruneAssets.js";
 import { unpack } from "./commands/unpack.js";
 import { packageManager } from "./commands/package.js";
 import { createBundle } from "./commands/createBundle.js";
@@ -91,6 +93,12 @@ ${cmd("to-png [dir]", "Convert JPEG/BMP/GIF images to PNG, no dependencies")}
 ${cmd("   └─ --replace", "remove each source after its PNG was written and read back")}
 ${cmd("   └─ --out <dir> | --force | --flat | --dry-run", "where to write, and what to touch")}
 ${cmd("   └─ alias", "topng | convert-images")}
+${cmd("images [dir]", "Shrink JPG/PNG photos to a byte budget with the platform WebP encoder")}
+${cmd("   └─ --budget <KB> | --width <px>", "what 'small enough' means (default 40KB)")}
+${cmd("   └─ --install", "install the encoder this machine is missing")}
+${cmd("   └─ alias", "optimize-images | imgs")}
+${cmd("prune-assets [dir]", "Delete images the app never references (dry run unless --apply)")}
+${cmd("   └─ alias", "prune")}
 ${cmd("build android", "Build Android debug APK")}
 ${cmd("build android --release", "Build unsigned release APK/AAB to sign yourself")}
 ${cmd("build ios", "Build iOS Simulator app (macOS + Xcode)")}
@@ -320,6 +328,21 @@ async function main() {
       case "topng":
       case "convert-images": {
         const { exitCode } = await toPng(args.slice(1));
+        if (exitCode) process.exit(exitCode);
+        break;
+      }
+
+      case "images":
+      case "optimize-images":
+      case "imgs": {
+        const { exitCode } = await images(args.slice(1));
+        if (exitCode) process.exit(exitCode);
+        break;
+      }
+
+      case "prune-assets":
+      case "prune": {
+        const { exitCode } = await pruneAssets(args.slice(1));
         if (exitCode) process.exit(exitCode);
         break;
       }

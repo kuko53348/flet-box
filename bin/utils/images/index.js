@@ -47,6 +47,83 @@ export const sniffFormat = (buf) => {
 };
 
 /**
+ * Reads the size and the transparency of a PNG or JPEG from its header, without
+ * decoding a single pixel.
+ *
+ * This exists for the commands that only need to *know* a picture: a budget
+ * search wants the frame width to resize from and whether an alpha plane has to
+ * survive, and both are in the first bytes. It also covers the files the full
+ * decoder declines by rule — a progressive JPEG is a browser-standard export from
+ * Photoshop or macOS, and `decodeJpeg` stops at multi-scan coding because that is
+ * the honest thing to do in a lossless converter.
+ *
+ * @param {Buffer} buf - File bytes.
+ * @returns {{format: string, width: number, height: number, hasAlpha: boolean|null, note?: string}}
+ * @throws {UnsupportedImage} When the format has no readable header here.
+ */
+export const readImageHeader = (buf) => {
+  const format = sniffFormat(buf);
+
+  if (format === "png") {
+    if (buf.length < 26) throw new UnsupportedImage("PNG", "the header is truncated");
+    const width = buf.readUInt32BE(16);
+    const height = buf.readUInt32BE(20);
+    const colorType = buf[25];
+    // Chunks run to the end of the file; only `tRNS` matters, and a palette or a
+    // grey/RGB file with one is as transparent as colour type 6.
+    let tRNS = false;
+    let at = 8;
+    while (at + 8 <= buf.length) {
+      const fourcc = buf.toString("ascii", at, at + 4);
+      const size = buf.readUInt32LE(at + 4);
+      if (fourcc === "tRNS") tRNS = true;
+      if (fourcc === "IHDR" && buf[at + 8 + 1] !== 0) {
+        throw new UnsupportedImage("PNG", "Adam7 interlacing is not implemented");
+      }
+      if (fourcc === "IDAT") break;
+      at += 8 + size + 12;
+    }
+    return {
+      format,
+      width,
+      height,
+      hasAlpha: colorType === 4 || colorType === 6 || tRNS,
+      note: tRNS && colorType !== 4 && colorType !== 6 ? "tRNS" : undefined,
+    };
+  }
+
+  if (format === "jpeg") {
+    let at = 2;
+    while (at + 9 < buf.length) {
+      if (buf[at] !== 0xff) {
+        at++;
+        continue;
+      }
+      const marker = buf[at + 1];
+      if (marker === 0x00 || marker === 0x01 || (marker >= 0xd0 && marker <= 0xd9)) {
+        at += 2;
+        continue;
+      }
+      // Start-of-frame markers carry the dimensions at the same offsets whether
+      // the scan is baseline (0xC0), progressive (0xC2) or lossless (0xC3).
+      if (marker >= 0xc0 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xc8) {
+        return {
+          format,
+          height: buf.readUInt16BE(at + 5),
+          width: buf.readUInt16BE(at + 7),
+          hasAlpha: false, // JPEG has no alpha channel in any of its codings
+          note: marker === 0xc2 ? "progressive" : marker === 0xc3 ? "lossless" : undefined,
+        };
+      }
+      at += 2 + buf.readUInt16BE(at + 2);
+    }
+    throw new UnsupportedImage("JPEG", "no start-of-frame marker was found");
+  }
+
+  throw new UnsupportedImage(format.toUpperCase(), "this tool reads no header for that format");
+};
+
+/**
  * Decodes an image of any supported format into RGBA.
  *
  * @param {Buffer} buf - File bytes.
@@ -68,7 +145,7 @@ export const decodeImage = (buf) => {
     case "webp":
       throw new UnsupportedImage(
         "WebP",
-        "lossy VP8 needs a video codec; re-export as PNG or JPEG",
+        "lossy VP8 needs a video codec; shrink it with `flet-box images` instead",
       );
     case "avif":
       throw new UnsupportedImage("AVIF/HEIF", "these are video containers, not still images");
