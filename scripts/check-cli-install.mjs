@@ -63,6 +63,59 @@ try {
   const docs = path.join(pkg, "docs", "widget");
   if (!fs.existsSync(docs)) fail("the tarball has no docs/widget/");
   else if (fs.readdirSync(docs).length < 40) fail(`docs/widget has only ${fs.readdirSync(docs).length} pages`);
+
+  // The CI files a consumer gets are built here, not in the repo — this repo's
+  // own `.github/` is a different thing. Read the templates out of the tarball
+  // (importing them also proves they need nothing but Node) and hold the
+  // contract that `flet-box create` promises: the site publishes on a push,
+  // the OTA manifest publishes only on a tag, and the address is in the log.
+  const templates = await import(
+    path.join(pkg, "bin", "utils", "templates.js")
+  );
+  const web = templates.githubWorkflow("Check App", "com.check.app");
+  const native = templates.nativeWorkflow("Check App");
+  if (typeof web !== "string" || typeof native !== "string") {
+    fail("create has no workflow templates to write");
+  } else {
+    const deployLines = web
+      .split("\n")
+      .filter((l) => /Upload Pages artifact|Deploy to GitHub Pages/.test(l))
+      .length;
+    if (deployLines !== 2) fail(`the web workflow lost a Pages step (${deployLines}/2)`);
+    // Neither Pages step may be gated on a tag again: that is the bug the user
+    // reports as "the Actions ran green and no website was created".
+    if (/if: startsWith\(github.ref, 'refs\/tags\/v'\)/.test(web)) {
+      fail("the web workflow gates Pages on a release tag, so a push publishes nothing");
+    }
+    if (!/if: \$\{\{ !startsWith\(github.ref, 'refs\/tags\/v'\) \}\}\s*\n\s*run: rm -f www\/config\.json/.test(web)) {
+      fail("the web workflow no longer strips www/config.json from a non-release build");
+    }
+    if (!/pages: write/.test(web) || !/id-token: write/.test(web)) {
+      fail("the web workflow lost the Pages permissions the deploy step needs");
+    }
+    // `environment.url` also mentions page_url, so match the log lines: the
+    // user asked to be able to read the address from the run output. Two
+    // different moments matter — the address before the deploy runs (so a green
+    // run with no site is explainable) and the annotation after it.
+    if (!/site: [^\n]*github\.io/.test(web)) {
+      fail("the web workflow never prints the site address before deploying");
+    }
+    if (!/::notice [^\n]*steps\.deployment\.outputs\.page_url/.test(web)) {
+      fail("the web workflow publishes no run annotation with the address");
+    }
+    if (!/Settings -> Pages/.test(web)) {
+      fail("the web workflow no longer says which setting makes the deploy land");
+    }
+    if (!/^on:\s*\n\s*workflow_dispatch:/m.test(native) || /on:\s*\n\s*push:/m.test(native)) {
+      fail("the native workflow runs on a push again (a macOS runner is not free)");
+    }
+    if (/deploy-pages|upload-pages-artifact/.test(native)) {
+      fail("the native workflow publishes the site, which build.yml already does");
+    }
+    if (!/inputs\.platform == 'android'/.test(native) || !/inputs\.platform == 'ios'/.test(native)) {
+      fail("the native workflow lost the platform choice");
+    }
+  }
 } finally {
   fs.rmSync(tmp, { recursive: true, force: true });
 }

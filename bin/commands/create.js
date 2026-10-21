@@ -231,6 +231,10 @@ export const createProject = async (projectName, rawArgs = []) => {
     templates.githubWorkflow(finalName, appId),
   );
   createFile(
+    path.join(projectPath, ".github/workflows/build-native.yml"),
+    templates.nativeWorkflow(finalName),
+  );
+  createFile(
     path.join(projectPath, "README.md"),
     templates.readme(finalName, template, appId),
   );
@@ -489,8 +493,9 @@ export const createProject = async (projectName, rawArgs = []) => {
   console.log(
     c(
       "gray",
-      "CI:      .github/workflows/build.yml builds web + Android + iOS on every push.\n" +
-        "         Enable GitHub Pages (Settings → Pages → Source: GitHub Actions) for the web preview.\n",
+      "CI:      .github/workflows/build.yml publishes the web to GitHub Pages on every push.\n" +
+      "         Enable it once: Settings → Pages → Source: GitHub Actions. The job prints the URL.\n" +
+      "         Android and iOS are manual: .github/workflows/build-native.yml, Run workflow.\n",
     ),
   );
   console.log(

@@ -1123,8 +1123,9 @@ export const manifest = (appName = "FletBox App") => `{
 }
 `;
 
-// GitHub Actions workflow that builds web + Android + iOS in ONE run.
-// Placed at .github/workflows/ (the only location GitHub reads), NOT inside www/.
+// GitHub Actions workflow that builds and publishes the WEB. It runs on every
+// push, so the site is live without asking. The native builds are a second file
+// (build-native.yml) that only runs when started by hand.
 // NOTE: every GitHub `${{ }}` expression is escaped as `\${{ }}` because this is
 // a JS template literal — an unescaped `${` would be parsed as interpolation.
 export const githubWorkflow = (appName = "FletBox App", appId = "com.fletbox.app") => {
@@ -1133,14 +1134,20 @@ export const githubWorkflow = (appName = "FletBox App", appId = "com.fletbox.app
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 40) || "fletbox-app";
-  return `name: Build ${appName}
+  return `name: Build ${appName} — web
 
-# One push (or manual trigger) fans out into three parallel jobs:
-#   web     -> bundles the PWA; publishes to GitHub Pages ONLY on release
-#              tags (v*), which is what triggers OTA self-updates
-#   android -> compiles a debug APK and uploads it as an artifact
-#   ios     -> compiles a simulator .app and uploads it as an artifact
-# All three run at the same time on separate runners.
+# Publishes the PWA to GitHub Pages on every push to main, on a release tag, and
+# on a manual run. A pull request only builds, so a branch cannot take the site
+# down. Android and iOS are NOT here: they live in build-native.yml and run only
+# when you start them, because a macOS runner is not free.
+#
+# One consequence to know about: this Pages site is also what an installed app
+# polls for an OTA update (www/config.json), and the app compares the bundle
+# hash, not the version. So the manifest is left out of every deploy that is not
+# a release tag (see "Keep the OTA feed on releases only" below): the site is
+# live on every push, while installed apps keep running the last \`flet-box
+# release\`. That is what the tag gate used to achieve by not deploying at all.
+
 on:
   push:
     branches: [ main ]
@@ -1149,7 +1156,13 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
-# Cancel superseded runs on the same branch to save Actions minutes.
+# The web job needs Pages write access; it is declared once, for the whole file.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Cancel superseded runs on the same ref to save Actions minutes.
 concurrency:
   group: \${{ github.workflow }}-\${{ github.ref }}
   cancel-in-progress: true
@@ -1159,14 +1172,10 @@ concurrency:
 # can \`npm install\` it. package-lock.json is gitignored, so we use npm install.
 
 jobs:
-  # ---------- WEB: bundle + GitHub Pages preview ----------
+  # ---------- WEB: bundle + GitHub Pages ----------
   web:
     name: Web (Pages)
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
     environment:
       name: github-pages
       url: \${{ steps.deployment.outputs.page_url }}
@@ -1188,25 +1197,90 @@ jobs:
       - name: Bundle web app (flet-box createBundle www)
         run: npm run build
 
-      # Pages is the OTA update source (www/config.json), so it is published
-      # ONLY for release tags (v*) created by \`flet-box release\`. Ordinary
-      # pushes still build (to catch breakage in CI) but never publish an
-      # update, so test builds cannot reach installed apps.
+      # Printed before the deploy, because this is the address the whole job is
+      # about, and because a missing Pages setting otherwise shows up as a green
+      # run with no site: Pages lower-cases the owner, hence the tr.
+      - name: Where this lives
+        run: |
+          owner=$(printf '%s' "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')
+          repo=\${GITHUB_REPOSITORY#*/}
+          echo "  site:    https://$owner.github.io/$repo/"
+          echo "  version: $(node -p "require('./package.json').version")"
+          case "$GITHUB_REF" in
+            refs/tags/v*) echo "  ota:     this is a release: config.json ships, installed apps may update" ;;
+            *)            echo "  ota:     web-only: config.json left out, installed apps stay on the release" ;;
+          esac
+          echo "  If a green run leaves that 404, the source is wrong:"
+          echo "  Settings -> Pages -> Build and deployment -> Source: GitHub Actions"
+
+      # A pull request gets the build, never the deploy: only one site exists.
+      #
+      # www/config.json is the OTA manifest: an installed app fetches it and
+      # compares its \`hash\` with the bundle it is running, so publishing it from
+      # an ordinary push would offer that unfinished build to every device that
+      # checks for updates. Dropping the file makes the poll fail as "not
+      # deployed yet" (see bin/ota/loader.js), which is the behaviour wanted:
+      # the site is live for reading, the release feed stays on tagged builds.
+      - name: Keep the OTA feed on releases only
+        if: \${{ !startsWith(github.ref, 'refs/tags/v') }}
+        run: rm -f www/config.json
+
       - name: Upload Pages artifact
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v5
         with:
           path: www
 
-      # Enable Pages first: Settings -> Pages -> Source = "GitHub Actions".
       - name: Deploy to GitHub Pages
+        if: github.event_name != 'pull_request'
         id: deployment
-        if: startsWith(github.ref, 'refs/tags/v')
         uses: actions/deploy-pages@v5
 
+      # The link in the log as well as in the "github-pages" box under the job,
+      # and as a run annotation so it is readable from the workflow list.
+      - name: Published
+        if: steps.deployment.outcome == 'success'
+        run: |
+          echo "  live at: \${{ steps.deployment.outputs.page_url }}"
+          echo "::notice title=Site published to GitHub Pages::\${{ steps.deployment.outputs.page_url }}"
+`;
+};
+
+// Native builds: the same two jobs, but they run ONLY when started by hand from
+// Actions -> Run workflow, with a choice of platform. A push never pays for a
+// macOS runner, and `flet-box build android|ios` already covers a local build.
+export const nativeWorkflow = (appName = "FletBox App") => {
+  const slug = appName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40) || "fletbox-app";
+  return `name: Build ${appName} — native (manual)
+
+# Nothing in here runs on a push. Start it by hand: Actions -> "${appName} —
+# native (manual)" -> Run workflow, then pick the platform. Each job bundles the
+# web first, because that bundle is what Capacitor copies into the app.
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: "What to build"
+        type: choice
+        options:
+          - android
+          - ios
+          - both
+        default: android
+
+permissions:
+  contents: read
+
+jobs:
   # ---------- ANDROID: debug APK ----------
   android:
     name: Android (APK)
+    if: inputs.platform == 'android' || inputs.platform == 'both'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -1248,9 +1322,19 @@ jobs:
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
 
+      # An artifact has no public URL: it is on the run page, and this prints
+      # which run. The debug APK installs as it is; a release one would have to be
+      # signed with your own keystore first.
+      - name: Where the APK is
+        run: |
+          echo "  artifact: ${slug}-android-debug"
+          echo "  download: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          echo "::notice title=APK ready::${slug}-android-debug, on this run page"
+
   # ---------- iOS: simulator build ----------
   ios:
     name: iOS (simulator)
+    if: inputs.platform == 'ios' || inputs.platform == 'both'
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v5
@@ -1297,6 +1381,12 @@ jobs:
           name: ${slug}-ios-simulator
           path: ios/App/build/Build/Products/Debug-iphonesimulator/App.app
           if-no-files-found: error
+
+      - name: Where the build is
+        run: |
+          echo "  artifact: ${slug}-ios-simulator"
+          echo "  download: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          echo "::notice title=Simulator build ready::${slug}-ios-simulator, on this run page"
 `;
 };
 
@@ -1424,29 +1514,43 @@ CORS configuration and use HTTPS for the remote service.
 
 ## Continuous Integration (GitHub Actions)
 
-Every project ships with \`.github/workflows/build.yml\`. Once the repo is on
-GitHub, each push to \`main\` (or a manual **Run workflow**) fans out into three
-parallel jobs:
+Two workflow files ship with the project, and they answer to different triggers:
 
-- **web** — bundles the app into \`www/\` and deploys it to **GitHub Pages** so you
-  can view it in a browser.
-- **android** — compiles a debug **APK** and uploads it as a run artifact.
-- **ios** — compiles an unsigned **simulator .app** and uploads it as an artifact.
+- \`.github/workflows/build.yml\` — **the web, automatic**. Every push to \`main\`
+  (and every \`v*\` tag, and a manual run) bundles \`www/\` and publishes it to
+  **GitHub Pages**. A pull request builds but never deploys: there is one site.
+- \`.github/workflows/build-native.yml\` — **Android and iOS, manual only**. Nothing
+  runs on a push. Open **Actions → "… — native (manual)" → Run workflow** and pick
+  \`android\`, \`ios\` or \`both\`. Each job uploads its build as a run artifact and
+  prints the artifact name and the run URL in its own log.
 
-### Run it on the web (one-time setup)
+### Publish the web (one-time setup)
 
 1. Push this project to a GitHub repository.
 2. Open **Settings → Pages** in that repo.
-3. Set **Source** to **GitHub Actions** (not "Deploy from a branch").
-4. Push to \`main\`, or open the **Actions** tab and click **Run workflow**.
+3. Set **Source** to **GitHub Actions** (not "Deploy from a branch"). Skip this
+   and the deploy step fails on every push.
+4. Push. The **Where this lives** step prints the address before the deploy runs,
+   and the **Published** step prints it again as a run annotation, so you do not
+   have to hunt for the environment box under the job.
 
 The site goes live at \`https://<your-user>.github.io/<repo-name>/\`. That is a
 sub-path, so \`index.html\` uses relative asset paths and works without changes.
 
+**Why a push does not update anyone's app:** this same address is the OTA feed
+installed apps poll, and the update check compares bundle **hashes**, not version
+numbers. So the workflow leaves \`www/config.json\` out of every artifact that is
+not a \`v*\` tag: the site is live for reading, while a device keeps running the
+last \`flet-box release\` until a tag publishes a manifest. The **Where this
+lives** step prints which of the two a given run was. Cut a release with
+\`flet-box release --patch --push\` when the app is worth updating.
+
 ### Download the mobile artifacts
 
-Open the workflow run in the **Actions** tab; the Android APK and the iOS
-\`.app\` are listed under **Artifacts** at the bottom of the run summary.
+Start it by hand — **Actions → "… — native (manual)" → Run workflow**, pick a
+platform — and open that run: the Android APK and the iOS \`.app\` are listed
+under **Artifacts** at the bottom of the run summary, and the job's own log prints
+the artifact name plus the URL of the run it belongs to.
 
 > The workflow installs dependencies with \`npm install\`, which resolves the
 > \`flet-box\` package from npm. If you develop against a local copy of the
@@ -1524,10 +1628,19 @@ updates:
 - Replace \`TU-USUARIO\` with your GitHub username and \`TU-REPO\` with the
   repository name, or set \`update.url\` to any HTTPS host that serves your
   \`config.json\` + bundle.
-- Enable GitHub Pages: **Settings → Pages → Source: GitHub Actions**.
+- Enable GitHub Pages: **Settings → Pages → Source: GitHub Actions**. Without
+  that the deploy step is green and no site exists.
 - Cut a release with \`flet-box release --push\` (bumps the version, rebuilds
   \`www/\`, commits and tags \`vX.Y.Z\`). CI then deploys \`www/\` and installed
   apps self-update the next time they open.
+- A plain \`git push\` also deploys \`www/\` — that is the preview, and the job
+  prints the address. It never publishes \`www/config.json\`, because that file
+  is the update feed and the app compares bundle **hashes**: without it an
+  installed app finds no manifest and stays on the last release. Do not "fix"
+  that gate; the release tag is the only thing that should reach users.
+- Android and iOS are not built on a push. Start
+  \`.github/workflows/build-native.yml\` from **Actions → Run workflow** and pick
+  \`android\`, \`ios\` or \`both\`.
 - The update URL is also reflected in \`www/config.json\` after \`flet-box
   createBundle www\`; it is baked into Android/iOS builds at \`cap sync\` time.
 - Only web files are updated OTA. Native changes (plugins, permissions,
