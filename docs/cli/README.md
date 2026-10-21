@@ -442,7 +442,7 @@ It recognises a file by its leading bytes, never by its extension, so a
 | Format | Notes |
 | --- | --- |
 | JPEG | Baseline and extended sequential, greyscale or colour, any sampling factor (4:4:4, 4:2:2, 4:2:0, 4:1:1), restart intervals. Progressive, arithmetic-coded, lossless, 12-bit and CMYK files are refused with the reason. |
-| PNG | Colour types grey/RGB/palette/grey+alpha/RGBA at 1–16 bits, all five row filters, `tRNS` transparency. Already a PNG, so it is left alone unless you ask with `--force`. Interlaced (Adam7) files are refused. |
+| PNG | Colour types grey/RGB/palette/grey+alpha/RGBA at 1–16 bits, all five row filters, `tRNS` transparency. Already a PNG, so it is left alone unless you ask with `--optimize` or `--force`. Interlaced (Adam7) files are refused. |
 | GIF | First frame, with or without interlacing and transparency. An animated file converts with a note saying how many frames were dropped. |
 | BMP | Uncompressed 1/4/8/24/32-bit, top-down or bottom-up. Run-length (RLE) files are refused. |
 
@@ -460,12 +460,45 @@ read back and checked:
 flet-box to-png assets --out build/img   # write the PNGs somewhere else
 flet-box to-png assets --force           # replace an existing logo.png
 flet-box to-png assets --replace         # delete the source once its PNG is verified
+flet-box to-png assets --optimize        # re-pack the PNGs already in the folder
 flet-box to-png assets --flat            # top level only, no sub-folders
 ```
 
-The summary separates the four outcomes — converted, declined, already a PNG, and
-name clashes — and only a file whose bytes could not be decoded counts as a
-failure, which is the one case that exits non-zero.
+The summary counts the outcomes apart — converted, declined, already a PNG, name
+clashes, and with `--optimize` also optimized, already optimal and the bytes saved
+— and only a file whose bytes could not be decoded counts as a failure, which is
+the one case that exits non-zero.
+
+### The PNG it writes is the smallest one that holds the picture
+
+A converted file is not written in one fixed layout. The writer looks at the
+pixels first and keeps whichever arrangement is smallest: a palette when the
+frame really does hold 256 colours or fewer (an exact address per pixel, not a
+quantisation), greyscale when every channel already agrees, three bytes per pixel
+when no pixel uses alpha. It then deflates the five row filters and keeps the
+shortest result. Nothing is approximated, so the file reads back as the same
+picture — and the command checks that before it calls the conversion a success.
+
+`--optimize` asks the same question about files that already are PNG, which is
+how a hand-made asset gets its turn:
+
+```bash
+flet-box to-png assets --optimize
+```
+
+It replaces a PNG only when the new bytes are smaller *and* every pixel matches,
+so running it twice is free: the second pass reports each file as already optimal
+and touches nothing. The repo's own icons lose 13 KB on the 1024 maskable and 3 KB
+on the logo, and the other four come back as already optimal. A 16-bit PNG is left
+alone either way — rewriting it would trade someone else's bit depth for a smaller
+file, and "smaller without losing quality" does not cover that.
+
+What this cannot do is make a photograph small. PNG stores every pixel, and a
+camera JPEG has already thrown most of them away, so the PNG of a photo comes out
+three to four times the file it came from (a 3.5 MB picture writes as 12 MB). The
+command converts it anyway and says so in the report: keep the JPEG — or a WebP
+from a tool that carries a codec — for that picture, and let `to-png` do the flat
+art, the logos and the icons.
 
 ## Command reference
 
@@ -495,6 +528,7 @@ failure, which is the one case that exits non-zero.
 | `flet-box to-png [dir]` | Converts JPEG, GIF, BMP and non-PNG-precision images in a folder to PNG. |
 | `flet-box to-png --dry-run` | Reports what would happen, writes nothing. |
 | `flet-box to-png --replace` | Deletes each source after its PNG was written and read back. |
+| `flet-box to-png --optimize` | Re-packs the PNGs already in the folder, and only when that makes them smaller. |
 | `flet-box pkg` | Opens the package manager. |
 | `flet-box --version` | Shows the CLI version. |
 | `flet-box --help` | Shows the command list. |
