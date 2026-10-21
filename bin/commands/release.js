@@ -27,6 +27,7 @@ import fs from "fs";
 import path from "path";
 import { c, banner, gradient } from "../utils/colors.js";
 import { createBundle } from "./createBundle.js";
+import { resolveUpdateUrl } from "../utils/bundleConfig.js";
 import { INITIAL_VERSION, incrementVersion, isValidVersion } from "../utils/version.js";
 
 /**
@@ -183,7 +184,39 @@ export const release = async (argv = []) => {
       c("gray", `      ⬆️  Publish it: ${gradient(`git push && git push origin ${tag}`, "#22d3ee", "#38bdf8")}`),
     );
   }
+
+  // The live URL is the first thing people look for after a release, and the
+  // Actions run page hides it (it appears under the environment chip, never in
+  // the log) — so print the exact address this bundle was built for, plus the
+  // two steps that decide whether it is serving yet.
+  const siteUrl = resolveUpdateUrl(projectRoot);
   console.log(
-    c("dim", "      ℹ️  CI deploys www/ to GitHub Pages on the tag; open apps self-update from config.json."),
+    c("gray", "      🌐 Web:    ") +
+      (siteUrl
+        ? gradient(siteUrl, "#22d3ee", "#38bdf8")
+        : c("yellow", "unknown — no origin remote set yet")),
   );
+  console.log(
+    c(
+      "dim",
+        `      Deploys: every push to main publishes www/ to GitHub Pages, so the\n` +
+        `               site is already live. Only the OTA feed is gated: the build\n` +
+        `               keeps www/config.json when its commit carries a v* tag, and\n` +
+        `               drops it otherwise, so an ordinary push never offers itself\n` +
+        `               to installed apps.\n` +
+        `      Release: a tag push cannot deploy — the github-pages environment\n` +
+        `               refuses runs that do not start from the default branch. So\n` +
+        `               after ${tag} exists, run the workflow once more by hand\n` +
+        `               (Actions → Deploy → Run workflow) to publish the feed.\n` +
+        `      Where:   Actions → the run → Deploy to Pages → the link under the\n` +
+        `               "github-pages" environment box. Not in the log.\n` +
+        `      Setup:   Settings → Pages → Source = "GitHub Actions", or even a\n` +
+        `               green build leaves the old site standing.`,
+    ),
+  );
+  if (push) {
+    console.log(
+      c("gray", `      ⏳ CI is publishing ${tag} now — open the run to follow it.`),
+    );
+  }
 };

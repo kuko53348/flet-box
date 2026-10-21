@@ -103,8 +103,15 @@ try {
         fail("the web workflow lost the github-pages environment on the deploy job");
       }
     }
-    if (!/if: \$\{\{ !startsWith\(github.ref, 'refs\/tags\/v'\) \}\}\s*\n\s*run: rm -f www\/config\.json/.test(web)) {
+    // The release gate has to survive as a *decision*, not as a ref test: a run
+    // that starts from a tag cannot deploy at all (the github-pages environment
+    // only accepts the default branch), so the workflow reads the tags pointing
+    // at the commit it built instead of github.ref.
+    if (!/git tag --points-at HEAD/.test(web) || !/rm -f www\/config\.json/.test(web)) {
       fail("the web workflow no longer strips www/config.json from a non-release build");
+    }
+    if (/startsWith\(github\.ref, 'refs\/tags\/v'\)/.test(web)) {
+      fail("the web workflow gates the OTA feed on github.ref again — a tag run cannot deploy, so that branch is dead code");
     }
     if (!/pages: write/.test(web) || !/id-token: write/.test(web)) {
       fail("the web workflow lost the Pages permissions the deploy step needs");

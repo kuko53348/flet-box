@@ -55,7 +55,7 @@ export const indexHtml = (appName = "FletBox App") => `<!DOCTYPE html>
     <div id="root"></div>
     <script>
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/service-worker.js')
+            navigator.serviceWorker.register('./service-worker.js')
                 .then(reg => console.log('Service Worker registered', reg))
                 .catch(err => console.log('Service Worker registration error', err));
         }
@@ -1140,15 +1140,25 @@ export const githubWorkflow = (appName = "FletBox App") => `name: Deploy ${appNa
 #
 # One consequence to know about: this Pages site is also what an installed app
 # polls for an OTA update (www/config.json), and the app compares the bundle
-# hash, not the version. So the manifest is left out of every build that is not
-# a release tag (see "Keep the OTA feed on releases only" below): the site is
-# live on every push, while installed apps keep running the last \`flet-box
-# release\`. That is what the tag gate used to achieve by not deploying at all.
+# hash, not the version. So the manifest is left out of every build whose commit
+# carries no \`v*\` tag (see "Ship the update feed only when this commit is a
+# release" below): the site is live on every push, while installed apps keep
+# running the last \`flet-box release\`.
+#
+# Publishing a release: push main, then \`git tag -a v1.2.3 && git push origin
+# v1.2.3\`, then Actions -> this workflow -> Run workflow. The manual run deploys
+# the tagged commit, and it is the run that puts config.json on the site. The tag
+# itself cannot deploy: GitHub refuses Pages deployments that start from a tag.
 
 on:
   push:
     branches: [ main ]
-    tags: [ 'v*' ]
+    # Deliberately NO tags: trigger. The github-pages environment only accepts
+    # deployments from the default branch, so a run that starts from a tag fails
+    # at the deploy job with "Tag v1.0.0 is not allowed to deploy to github-pages
+    # due to environment protection rules". A release is therefore made by
+    # pushing main and then running this workflow again, by hand, once the tag
+    # exists: that run is on main, and it sees the tag on HEAD.
   workflow_dispatch:
 
 # The deploy job needs Pages write access; it is declared once, for the file.
@@ -1157,10 +1167,14 @@ permissions:
   pages: write
   id-token: write
 
-# One deployment at a time; a newer push cancels the in-flight one.
+# Allow only one concurrent deployment, skipping runs queued between the run
+# in-progress and the latest queued. Do NOT cancel in-progress: a production
+# deployment is allowed to finish, because the site that is live while it runs is
+# the previous one, and a cancelled deploy leaves Pages holding a half-written
+# artifact.
 concurrency:
-  group: pages-\${{ github.ref }}
-  cancel-in-progress: true
+  group: pages
+  cancel-in-progress: false
 
 # The generated app depends on the public \`flet-box\` npm package. If you
 # develop against a local copy, publish it (or vendor it) before these jobs can
@@ -1173,6 +1187,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          # The release decision below reads the tags pointing at this commit, and
+          # a shallow checkout of one commit does not fetch them by itself.
+          fetch-tags: true
+
+      # Registers the Pages integration for this run and reports the site's base
+      # path, which is /<repo>/ for a project site and empty on a custom domain.
+      # It belongs in the build job, before the artifact is uploaded.
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
 
       - uses: actions/setup-node@v5
         with:
@@ -1198,10 +1222,6 @@ jobs:
           repo=\${GITHUB_REPOSITORY#*/}
           echo "  site:    https://$owner.github.io/$repo/"
           echo "  version: $(node -p "require('./package.json').version")"
-          case "$GITHUB_REF" in
-            refs/tags/v*) echo "  ota:     this is a release: config.json ships, installed apps may update" ;;
-            *)            echo "  ota:     web-only: config.json left out, installed apps stay on the release" ;;
-          esac
           echo "  If a green run leaves that 404, the source is wrong:"
           echo "  Settings -> Pages -> Build and deployment -> Source: GitHub Actions"
 
@@ -1211,9 +1231,20 @@ jobs:
       # checks for updates. Dropping the file makes the poll fail as "not
       # deployed yet" (see bin/ota/loader.js), which is the behaviour wanted:
       # the site is live for reading, the release feed stays on tagged builds.
-      - name: Keep the OTA feed on releases only
-        if: \${{ !startsWith(github.ref, 'refs/tags/v') }}
-        run: rm -f www/config.json
+      #
+      # The decision reads the commit, not the ref: a tag push cannot deploy (the
+      # environment refuses it), so \`github.ref\` is always a branch here. To
+      # publish a release, push main, tag that commit, then run this workflow by
+      # hand from Actions - the manual run is on main and sees the tag.
+      - name: Ship the update feed only when this commit is a release
+        run: |
+          tag=$(git tag --points-at HEAD --list 'v*' | sort -V | tail -1)
+          if [ -n "$tag" ]; then
+            echo "  ota:     $tag is on this commit: config.json ships, installed apps may update"
+          else
+            rm -f www/config.json
+            echo "  ota:     web-only: no v* tag on $(git rev-parse --short HEAD), manifest left out"
+          fi
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5

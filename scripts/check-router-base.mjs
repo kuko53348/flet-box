@@ -68,8 +68,59 @@ for (const [url, base, wantBase, wantPath] of cases) {
 
 clearRouter();
 
+// ---------------------------------------------------------------------------
+// The same prefix rule applied to what `flet-box create` writes out. A project
+// site is served under /<repo>/, so any root-absolute URL in the generated
+// shell escapes the app; and the generated workflow is the other half of the
+// deploy, so its shape is asserted here too, because a file GitHub cannot parse
+// fails with no job and no step to read.
+// ---------------------------------------------------------------------------
+const templates = await import("../bin/utils/templates.js");
+const generated = {
+  "index.html": templates.indexHtml("Guard Test"),
+  "service-worker.js": templates.serviceWorkerJs(),
+  "build.yml": templates.githubWorkflow("Guard Test"),
+};
+
+const checks = [
+  // Root-absolute URLs, allowed only where the file is deliberately at the
+  // origin root (none today).
+  ["index.html: no root-absolute src/href", !/(?:src|href)="\//.test(generated["index.html"])],
+  ["index.html: registers the worker app-relative", generated["index.html"].includes("register('./service-worker.js')")],
+  ["index.html: no absolute fetch('/…')", !generated["index.html"].includes("fetch('/")],
+  ["service-worker.js: derives its own base", generated["service-worker.js"].includes("new URL('./', self.location)")],
+  ["service-worker.js: precache is prefixed", !/PRECACHE = \[\s*['"]\//.test(generated["service-worker.js"])],
+  // A workflow that publishes a source tree instead of the bundle, and one whose
+  // release gate depends on a ref that can never deploy, are both refused here.
+  ["build.yml: triggers on main only", /^  push:\n    branches: \[ main \]$/m.test(generated["build.yml"]) && !/^ *tags:/m.test(generated["build.yml"])],
+  ["build.yml: checkout can see the tags", generated["build.yml"].includes("fetch-tags: true")],
+  // A run that starts from a tag cannot deploy: github-pages refuses it. So the
+  // release decision must read the commit, never github.ref.
+  ["build.yml: release reads the commit, not the ref", generated["build.yml"].includes("git tag --points-at HEAD")],
+  ["build.yml: no github.ref tag gate", !generated["build.yml"].includes("startsWith(github.ref, 'refs/tags/v')")],
+  ["build.yml: sets up Pages", generated["build.yml"].includes("actions/configure-pages@v5")],
+  ["build.yml: uploads only www", /upload-pages-artifact@v?\d+[\s\S]{0,40}?path: www/.test(generated["build.yml"])],
+  ["build.yml: deploy needs build", /^\s+needs: build$/m.test(generated["build.yml"])],
+  ["build.yml: never cancels a live deploy", generated["build.yml"].includes("cancel-in-progress: false")],
+];
+
+let templateFailures = 0;
+for (const [name, ok] of checks) {
+  if (ok) {
+    console.log(`✅ ${name}`);
+    continue;
+  }
+  templateFailures++;
+  console.error(`❌ ${name}`);
+}
+
+if (templateFailures) {
+  console.error(`\nGenerated shell/workflow: ${templateFailures} of ${checks.length} guards failed.`);
+  process.exit(1);
+}
+
 if (failures) {
   console.error(`\nRouter base path: ${failures} of ${cases.length} cases failed.`);
   process.exit(1);
 }
-console.log(`\nRouter base path: ${cases.length} cases OK.`);
+console.log(`\nRouter base path: ${cases.length} cases OK, ${checks.length} generated-file guards OK.`);
