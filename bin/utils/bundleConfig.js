@@ -108,6 +108,40 @@ export const resolveUpdateUrl = (projectRoot) => {
 };
 
 /**
+ * The `<meta>` tags a social scraper resolves against its own machine.
+ *
+ * Facebook, WhatsApp and X do not run the page and do not resolve `./assets/…`
+ * the way a browser does, so a relative `og:image` produces a share card with no
+ * picture — the silent kind of breakage, because the site itself looks perfect
+ * when somebody opens it.
+ */
+export const SHARE_TAGS = ["og:image", "og:url", "twitter:image", "twitter:url"];
+
+/**
+ * Rewrite the share-card tags in a built `index.html` to absolute URLs.
+ *
+ * Only the bundle copy is touched: the project's own `index.html` stays
+ * host-agnostic, which is what lets one folder run on `:8000`, through a tunnel
+ * and on Pages. Values that already carry a scheme are left alone, so building
+ * twice over the same output cannot produce `https://…/https://…`.
+ *
+ * @param {string} html - The built index.html.
+ * @param {string|null} base - Site origin ending in "/", or null to leave as is.
+ * @returns {string}
+ */
+export const absoluteShareTags = (html, base) => {
+  if (!base || !base.endsWith("/")) return html;
+  return html.replace(/<meta\b[^>]*>/gi, (tag) => {
+    const key = tag.match(/\b(?:property|name)\s*=\s*(["'])([^"']+)\1/i)?.[2];
+    if (!key || !SHARE_TAGS.includes(key)) return tag;
+    const found = tag.match(/\bcontent\s*=\s*(["'])([^"']*)\1/i);
+    if (!found || !found[2] || /^(https?:)?\/\//i.test(found[2])) return tag;
+    const absolute = base + found[2].replace(/^\.?\//, "");
+    return tag.slice(0, found.index) + `content="${absolute}"` + tag.slice(found.index + found[0].length);
+  });
+};
+
+/**
  * Returns the `origin` remote URL of the git repo at `projectRoot`, or null.
  *
  * @param {string} projectRoot - Absolute path to the project root.
@@ -128,6 +162,126 @@ export const getGitRemoteUrl = (projectRoot) => {
 };
 
 /**
+ * Directories never worth walking when resolving release assets: they are either
+ * tooling output or would turn a small build into a filesystem scan.
+ */
+const PRUNED_DIRS = new Set(["node_modules", "dist", "www", "build", "coverage"]);
+
+/**
+ * Translates an asset glob into a regular expression over bundle-relative paths
+ * that always use forward slashes. Supports `**` (any depth, and zero dirs when
+ * written as `a/** /b`), `*` (one segment) and `?`.
+ *
+ * @param {string} pattern
+ * @returns {RegExp}
+ */
+const globToRegExp = (pattern) => {
+  let source = "";
+  for (let i = 0; i < pattern.length; i += 1) {
+    const char = pattern[i];
+    if (char === "*") {
+      if (pattern[i + 1] === "*") {
+        i += 1;
+        const trailingSlash = pattern[i + 1] === "/";
+        if (trailingSlash) i += 1;
+        source += trailingSlash ? "(?:.*/)?" : ".*";
+      } else {
+        source += "[^/]*";
+      }
+    } else if (char === "?") {
+      source += "[^/]";
+    } else {
+      source += char.replace(/[.+^${}()|[\]\\]/g, "\\$&");
+    }
+  }
+  return new RegExp(`^${source}$`);
+};
+
+/**
+ * Lists every file under `dir` (relative to `projectRoot`) as a forward-slash
+ * path, skipping tooling folders and dot-directories.
+ *
+ * @param {string} projectRoot
+ * @param {string} dir - "" for the project root itself.
+ * @param {string[]} found - Accumulator, mutated.
+ * @returns {string[]}
+ */
+const listFiles = (projectRoot, dir, found) => {
+  let entries;
+  try {
+    entries = fs.readdirSync(path.join(projectRoot, dir), { withFileTypes: true });
+  } catch {
+    return found;
+  }
+  for (const entry of entries) {
+    const rel = dir ? `${dir}/${entry.name}` : entry.name;
+    if (entry.isDirectory()) {
+      if (PRUNED_DIRS.has(entry.name) || entry.name.startsWith(".")) continue;
+      listFiles(projectRoot, rel, found);
+    } else if (entry.isFile()) {
+      found.push(rel);
+    }
+  }
+  return found;
+};
+
+/**
+ * Reads the asset globs a project declares for its OTA releases
+ * (`update.assets` in `fletbox.config.json`).
+ *
+ * @param {string} projectRoot - Absolute path to the project root.
+ * @returns {string[]} Absolute-free glob list, empty when none is configured.
+ */
+export const resolveAssetPatterns = (projectRoot) => {
+  const fletboxConfig = readJsonSafe(
+    path.join(projectRoot, "fletbox.config.json"),
+    {},
+  );
+  const patterns = fletboxConfig?.update?.assets;
+  if (!Array.isArray(patterns)) return [];
+  return patterns
+    .filter((p) => typeof p === "string" && p.trim())
+    .map((p) => p.trim().replace(/^\.\//, "").replace(/^\/+/, ""));
+};
+
+/**
+ * Resolves asset globs into the manifest entries a release ships next to the
+ * bundle. Each file is hashed so a running app can verify what it downloads.
+ *
+ * @param {string} projectRoot - Absolute path to the project root.
+ * @param {string[]} patterns - Globs relative to the project root.
+ * @returns {Array<{path: string, hash: string, size: number}>} Sorted by path.
+ */
+export const collectAssets = (projectRoot, patterns = []) => {
+  const globs = patterns.map((p) => globToRegExp(p));
+  if (!globs.length) return [];
+
+  // Start the walk at each pattern's literal first segment when there is one,
+  // so `docs/**` never reads the rest of the project.
+  const starts = new Set(
+    patterns.map((pattern) => {
+      const first = pattern.split("/")[0];
+      if (/[*?]/.test(first)) return "";
+      const absolute = path.join(projectRoot, first);
+      return fs.existsSync(absolute) && fs.statSync(absolute).isDirectory()
+        ? first
+        : "";
+    }),
+  );
+
+  const files = [];
+  for (const start of starts) listFiles(projectRoot, start, files);
+
+  return [...new Set(files)]
+    .filter((file) => globs.some((re) => re.test(file)))
+    .sort()
+    .map((file) => {
+      const content = fs.readFileSync(path.join(projectRoot, file));
+      return { path: file, hash: sha256(content), size: content.length };
+    });
+};
+
+/**
  * Builds the OTA config manifest object for a freshly written bundle.
  *
  * @param {object} opts
@@ -136,12 +290,16 @@ export const getGitRemoteUrl = (projectRoot) => {
  *   `app.js` (after the version header is stamped), used for the hash + size.
  * @param {string} [opts.bundlePath="src/app.js"] - Bundle path, relative to
  *   the bundle root, as the loader should request it.
+ * @param {Array<{path: string, hash: string, size: number}>} [opts.assets=[]]
+ *   Extra files the release serves at `update.url`, as returned by
+ *   {@link collectAssets}. `hash` still describes only the bundle.
  * @returns {object} The config.json manifest.
  */
 export const buildBundleConfig = ({
   projectRoot,
   bundleContent,
   bundlePath = "src/app.js",
+  assets = [],
 }) => {
   const pkg = readJsonSafe(path.join(projectRoot, "package.json"), {});
   const fletboxConfig = readJsonSafe(
@@ -159,6 +317,14 @@ export const buildBundleConfig = ({
     builtAt: new Date().toISOString(),
     bundle: bundlePath,
     size: content.length,
+    // Files the release serves beside the bundle (markdown, JSON, images). An
+    // installed app reads them through the loader's asset helper; without this
+    // list they are frozen at whatever version the APK/IPA was built with.
+    assets: Array.isArray(assets)
+      ? assets
+          .filter((a) => a && typeof a.path === "string" && typeof a.hash === "string")
+          .map((a) => ({ path: a.path, hash: a.hash, size: Number(a.size) || 0 }))
+      : [],
     // Minimum native (APK/IPA) version this bundle is compatible with. When the
     // installed native shell is older, the loader must fall back to a store
     // update instead of applying the OTA. Defaults to "0.0.0" (always compatible).

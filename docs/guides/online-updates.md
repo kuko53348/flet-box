@@ -15,8 +15,11 @@ you edit source code
         v
 git tag v1.0.1 pushed to GitHub
         |
-        | GitHub Actions — the web job deploys www/ on every push,
-        | but only a v* tag publishes www/config.json with it
+        | GitHub Actions — the web job deploys www/ on every push to main,
+        | and keeps www/config.json only when that commit carries a v* tag.
+        | A run started BY THE TAG cannot deploy (the github-pages environment
+        | accepts the default branch only), so publish the feed with one
+        | manual run on main: Actions → Deploy → Run workflow.
         v
 www/ deployed to GitHub Pages      <- the ONLY place an update is published
         |
@@ -34,7 +37,7 @@ loader.js fetches <update.url>/config.json
 
 Three invariants make this safe:
 
-1. **Only a release tag can be offered as an update.** The web workflow publishes your site on every push, so the preview is never stale — but it deletes `www/config.json` from any build that is not a `v*` tag. With no manifest to read, an installed app logs `no remote config (offline or not deployed yet)` and keeps running the release it already has. So the site is live for reading while the update feed stays on tags, and a half-finished test build can never reach your users.
+1. **Only a release tag can be offered as an update.** The web workflow publishes your site on every push to main, so the preview is never stale — but it deletes `www/config.json` from any build whose commit carries no `v*` tag. With no manifest to read, an installed app logs `no remote config (offline or not deployed yet)` and keeps running the release it already has. So the site is live for reading while the update feed stays on tags, and a half-finished test build can never reach your users.
 2. **The app verifies integrity.** A downloaded bundle is executed only if its sha256 matches the hash in `config.json`.
 3. **The app always launches.** Offline, a wrong URL, a hash mismatch, or a declined dialog all fall back to the bundle already on the device. OTA can never brick the app.
 
@@ -55,7 +58,7 @@ flet-box release --push     # also push the commit and the tag to origin
 2. Bumps the version in `package.json` using the odometer scheme below.
 3. Rebuilds the production bundle (`www/`), which regenerates `www/config.json` with the new version and the sha256 of the new bundle.
 4. Commits the version bump and creates the annotated tag `vX.Y.Z`.
-5. Optionally pushes (`--push`), which triggers the CI deploy.
+5. Optionally pushes (`--push`), which deploys the site. The tag is what turns the update feed on, and a tag run cannot deploy by itself — after pushing, start the workflow once more from Actions (Run workflow, on main) and that build keeps `www/config.json`.
 
 If the build fails, the version bump is rolled back so a failed release leaves no trace.
 
@@ -80,6 +83,10 @@ Every bundle ships a small manifest at `www/config.json`. This is what a running
   "builtAt": "2026-10-11T19:53:24.524Z",
   "bundle": "src/app.js",
   "size": 36132,
+  "assets": [
+    { "path": "docs/widget/Maps.md", "hash": "b0f2…", "size": 4213 },
+    { "path": "data/catalog.json", "hash": "7ac9…", "size": 980 }
+  ],
   "minNativeVersion": "0.0.0",
   "update": {
     "url": "https://kuko53348.github.io/my-app/",
@@ -97,6 +104,7 @@ Every bundle ships a small manifest at `www/config.json`. This is what a running
 | `hash` | sha256 of the bundle. **This is what drives the update decision**, not the version. |
 | `bundle` | Path of the bundle relative to the update URL. |
 | `size` | Bundle size in bytes (shown in the dialog as KB). |
+| `assets` | Extra files this release publishes (see [Shipping extra files](#shipping-extra-files-release-assets)). Each entry is verified by its own `hash`; the bundle `hash` never covers them. |
 | `minNativeVersion` | Oldest native shell this bundle supports. Older shells are told to update from the store instead. |
 | `update.url` | Where `config.json` and the bundle are published (your GitHub Pages site). |
 | `update.mode` | `prompt` (ask the user, default) or `auto` (download silently). |
@@ -128,6 +136,44 @@ To configure it by hand, create `fletbox.config.json`:
 }
 ```
 
+## Shipping extra files (release assets)
+
+OTA swaps **one file**: `src/app.js`. Anything your app reads from disk at runtime — markdown pages, JSON data, per-tenant config — keeps the copy baked into the build the device installed. So an app installed three releases ago can run a bundle that was updated over the air and still be missing files the current catalog refers to. The symptom is not a crash, it is a "this page does not exist" for content that clearly exists online.
+
+Declare those files in `fletbox.config.json` and they become part of every release:
+
+```json
+{
+  "update": {
+    "assets": ["docs/**/*.md", "data/catalog.json"]
+  }
+}
+```
+
+Globs are relative to the project root and support `**`, `*` and `?`. At build time `flet-box createBundle` copies each match into `www/` at the same path, hashes it, and lists it in the manifest's `assets` array — which is also what your CI publishes to GitHub Pages.
+
+The app then reads them through the loader instead of `fetch`:
+
+```js
+const asset = await globalThis.__FLETBOX_OTA_ASSET__?.("docs/widget/Maps.md");
+const markdown = asset && asset.ok ? await asset.text() : await (await fetch("./docs/widget/Maps.md")).text();
+```
+
+It returns a `Response`, or `null` when the file exists in neither place. For each path it tries, in order:
+
+1. **The OTA cache** — the published copy already downloaded on a previous launch, so repeat reads and offline reads are free.
+2. **The published release** at `update.url`. The bytes are verified against the manifest hash; a mismatch is logged and ignored rather than trusted.
+3. **The copy inside this build**, exactly as `fetch` would return it.
+
+Because step 3 is always available, the helper can never leave you with less than you had before: an unpublished file, an offline device, or a tampered download all serve the shipped copy.
+
+Two rules keep this honest:
+
+- **A file only updates OTA if it is listed.** An empty or missing `assets` list means the manifest publishes nothing but the bundle.
+- **Bundle and assets are verified separately.** `hash` is the bundle; each asset entry carries its own hash, so one corrupted file cannot serve unverified content — and a bad asset never blocks a good bundle update.
+
+**Old shells have no helper.** `loader.js` is baked into the native build and OTA replaces the bundle, never the loader — so a store build made before this feature cannot fetch published assets, however many updates it accepts. That is what the `fetch` fallback in the snippet is for, and it closes only when you ship a new store build.
+
 ## What the app does on launch
 
 `www/loader.js` (wired in automatically as the module entry of every production bundle) runs **before** your app:
@@ -142,17 +188,17 @@ The dialog is plain HTML/CSS rendered by the loader itself, so it appears before
 
 ## What OTA can and cannot change
 
-OTA replaces the **web layer only** — the files inside `www/`.
+OTA replaces the **web layer only**: the `src/app.js` bundle plus whatever you list in `update.assets`. Everything else on the device is what the store build shipped.
 
 | Updates over the air | Needs a new store submission |
 | --- | --- |
 | UI, screens, widgets, styles | New native plugins / Capacitor version |
 | App logic and routing | New Android/iOS permissions |
-| Text, images, fonts, assets in `www/` | Changes to `AndroidManifest.xml` / `Info.plist` |
+| Release assets declared in `update.assets` (markdown, JSON, images) | Changes to `AndroidManifest.xml` / `Info.plist` |
 | Bug fixes and new JS features | Native code or signing changes |
 | Anything inside the bundle | Anything that changes the app's identity or purpose |
 
-Rule of thumb: if the change lives in `src/` (your FletBox code) it ships OTA; if it lives in the native shell it goes through the store. The `minNativeVersion` field exists for the boundary case where a new web bundle needs a newer shell: older shells skip the OTA and you direct users to the store update.
+Rule of thumb: if the change lives in `src/` (your FletBox code) it ships OTA; if it lives in the native shell it goes through the store. A data or content file ships OTA only when it is listed in `update.assets` — otherwise the device keeps the copy its store build baked in. The `minNativeVersion` field exists for the boundary case where a new web bundle needs a newer shell: older shells skip the OTA and you direct users to the store update.
 
 ## Store policy (read this before relying on OTA)
 
@@ -171,7 +217,7 @@ The generated service worker uses a hybrid strategy so OTA and offline coexist:
 - **Static assets** (fonts, icons, images, css): cache-first, since they are immutable per release.
 - **Cross-origin requests** (your remote `config.json` and bundle) are left to the network and are never cached by the worker.
 
-Downloaded OTA bundles live in a **separate** cache (`fletbox-ota`) owned by the loader, so a service-worker update never wipes an installed OTA bundle.
+Downloaded OTA bundles **and** release assets live in a **separate** cache (`fletbox-ota`) owned by the loader, so a service-worker update never wipes an installed OTA bundle. The loader fetches published assets with `cache: no-store`, so a stale service-worker copy of a file in `www/` cannot shadow the published one.
 
 ## Requirements and troubleshooting
 
@@ -184,6 +230,7 @@ Requirements: a **public** GitHub repository, GitHub Pages enabled (Settings →
 | `hash mismatch` in console | The published `config.json` and bundle are from different builds. Re-run `flet-box release` so both are published together. |
 | Dialog appears but download fails | The Pages site is not reachable/CORS-blocked from the app origin. Pages serves with permissive headers; check you are not behind a proxy that strips them. |
 | Update applies but reverts on next launch | Cache Storage unavailable (private browsing). The bundle runs once but cannot persist. |
+| A data/content file is missing on the device but published online | It is not listed in `update.assets`, so OTA only ever replaced the bundle — or the installed shell predates release assets, in which case the app must fall back to its own copy. |
 | Want to force a clean state | Clear site data for the app origin (this removes the OTA cache and localStorage entry). |
 
 Because the decision is hash-based, two builds of identical source produce the same hash and no spurious update is offered; only a real content change triggers the dialog.

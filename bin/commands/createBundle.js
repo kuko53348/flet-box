@@ -17,7 +17,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { c, banner, gradient, section } from "../utils/colors.js";
-import { buildBundleConfig, getGitRemoteUrl } from "../utils/bundleConfig.js";
+import { buildBundleConfig, collectAssets, getGitRemoteUrl, resolveAssetPatterns, absoluteShareTags } from "../utils/bundleConfig.js";
 import { INITIAL_VERSION, incrementVersion, isValidVersion } from "../utils/version.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -278,10 +278,31 @@ export const createBundle = async (targetArg) => {
   const stampedCode = header + bundledCode;
   fs.writeFileSync(outAppJs, stampedCode);
 
+  // ---- Release assets -----------------------------------------------------
+  // `update.assets` in fletbox.config.json lists files the app serves that are
+  // not part of the JS bundle (markdown docs, JSON data, images). They are copied
+  // into the bundle AND named in config.json with a hash, so an app that updated
+  // its bundle by OTA can still fetch the current copy of a file that its
+  // packaged build predates.
+  const assets = collectAssets(projectRoot, resolveAssetPatterns(projectRoot));
+  for (const asset of assets) {
+    const from = path.join(projectRoot, asset.path);
+    const to = path.join(targetDir, asset.path);
+    fs.mkdirSync(path.dirname(to), { recursive: true });
+    fs.copyFileSync(from, to);
+  }
+  if (assets.length) {
+    const kb = (assets.reduce((sum, a) => sum + a.size, 0) / 1024).toFixed(0);
+    console.log(
+      c("green", `✅ Copied: ${assets.length} OTA asset file(s) (${kb} KB)`),
+    );
+  }
+
   const bundleConfig = buildBundleConfig({
     projectRoot,
     bundleContent: stampedCode,
     bundlePath: "src/app.js",
+    assets,
   });
   fs.writeFileSync(
     path.join(targetDir, "config.json"),
@@ -366,6 +387,24 @@ export const createBundle = async (targetArg) => {
           ),
         );
       }
+    }
+  }
+
+  // ---- Social preview card --------------------------------------------------
+  // A scraper fetches the HTML and resolves the tags itself; it does not run the
+  // app and does not treat `./assets/hero.jpg` as the page origin does. Left
+  // relative, every share of the site posts a headline with no picture — and the
+  // site looks perfect to anyone who opens it, so nobody notices. The base is the
+  // URL OTA already derived, so the card points where the bundle is actually
+  // reachable, and only the built copy changes: `index.html` in the project stays
+  // host-agnostic so the same folder still runs on :8000 and through a tunnel.
+  const shareIndex = path.join(targetDir, "index.html");
+  if (fs.existsSync(shareIndex) && bundleConfig.update?.url) {
+    const html = fs.readFileSync(shareIndex, "utf8");
+    const stamped = absoluteShareTags(html, bundleConfig.update.url);
+    if (stamped !== html) {
+      fs.writeFileSync(shareIndex, stamped);
+      console.log(c("green", `✅ share card → absolute images at ${bundleConfig.update.url}`));
     }
   }
 

@@ -24,6 +24,10 @@
  * SECURITY: the downloaded bundle is only run if its sha256 matches the hash in
  * the remote config.json. If Web Crypto is unavailable (non-secure context) OTA
  * is skipped rather than running unverified code.
+ *
+ * Extra release files (`config.json` → `assets`) are served to the app through
+ * `globalThis.__FLETBOX_OTA_ASSET__(path)`: cached copy, then the published one
+ * (verified against its manifest hash), then the copy baked into this build.
  */
 
 const SHIPPED_BUNDLE = "./src/app.js";
@@ -235,6 +239,9 @@ async function checkAndUpdate(shippedConfig, activeHash) {
     return false;
   }
   if (!remote || typeof remote.hash !== "string") return false;
+  // Even when this release turns out to be the one already running, its asset
+  // list is the newest truth about where the app's files live.
+  rememberAssets(remote, update.url);
   if (remote.hash === activeHash) {
     log("up to date (" + (remote.version || activeHash.slice(0, 8)) + ")");
     return false;
@@ -328,6 +335,88 @@ async function checkAndUpdate(shippedConfig, activeHash) {
   return true;
 }
 
+// ---- Release assets -----------------------------------------------------
+// config.json may name files a release serves beside the bundle (markdown docs,
+// JSON data, images). OTA replaces the bundle and nothing else, so an app
+// packaged two builds ago still has the old copy of those files on disk — the
+// symptom is an updated catalog pointing at pages the device does not have.
+// The app calls globalThis.__FLETBOX_OTA_ASSET__(path) and gets a Response, or
+// null when the file exists in neither place.
+const SHIPPED_BASE = new URL("./", import.meta.url).href;
+
+let assetSource = null; // base URL of the newest release the loader has seen
+let assetHashes = null; // Map "<path>" -> expected sha256
+
+const rememberAssets = (config, base) => {
+  if (!config || !Array.isArray(config.assets) || !config.assets.length) return;
+  assetSource = base;
+  assetHashes = new Map(
+    config.assets
+      .filter((a) => a && typeof a.path === "string" && typeof a.hash === "string")
+      .map((a) => [a.path, a.hash]),
+  );
+};
+
+const openAssetCache = async () =>
+  "caches" in globalThis ? await caches.open(OTA_CACHE) : null;
+
+globalThis.__FLETBOX_OTA_ASSET__ = async (relPath) => {
+  const clean = String(relPath || "").replace(/^\.?\//, "");
+  if (!clean) return null;
+  const shippedUrl = new URL(clean, SHIPPED_BASE).href;
+  const url = assetSource ? new URL(clean, assetSource).href : shippedUrl;
+
+  try {
+    const cache = await openAssetCache();
+    const hit = cache && (await cache.match(url));
+    if (hit) return hit;
+  } catch (e) {
+    log("asset cache unreadable:", e.message);
+  }
+
+  if (url !== shippedUrl) {
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
+      const res = await fetch(url, { cache: "no-store", signal: ctrl.signal });
+      clearTimeout(timer);
+      if (res.ok) {
+        const text = await res.text();
+        const type = res.headers.get("Content-Type") || "application/octet-stream";
+        const expected = assetHashes && assetHashes.get(clean);
+        const digest = expected ? await sha256(text) : null;
+        if (digest && digest !== expected) {
+          warn("asset hash mismatch for " + clean + " — using this build's copy");
+        } else {
+          try {
+            const cache = await openAssetCache();
+            if (cache) {
+              await cache.put(
+                url,
+                new Response(text, { headers: { "Content-Type": type } }),
+              );
+            }
+          } catch (e) {
+            log("asset not cached:", e.message);
+          }
+          return new Response(text, { headers: { "Content-Type": type } });
+        }
+      }
+    } catch (e) {
+      log("asset fetch failed for " + clean + ":", e.message);
+    }
+  }
+
+  // Offline, unpublished, or it failed verification: ship what this build holds.
+  try {
+    const res = await fetch(shippedUrl);
+    return res.ok ? res : null;
+  } catch (e) {
+    log("asset missing from this build (" + clean + "):", e.message);
+    return null;
+  }
+};
+
 (async function main() {
   let shippedConfig = null;
   try {
@@ -340,6 +429,7 @@ async function checkAndUpdate(shippedConfig, activeHash) {
   } catch (e) {
     warn("no shipped config.json:", e.message);
   }
+  rememberAssets(shippedConfig, SHIPPED_BASE);
 
   const installed = readInstalled();
   const activeHash = installed
