@@ -2079,6 +2079,77 @@ async function run() {
     }
   });
 
+  // ---------------------------------------------------------------- layout
+  // Container paints `overflow: auto` by default. A flex item whose overflow is
+  // not `visible` has an automatic minimum size of zero, so inside a column that
+  // overflows, every Container became shrinkable to nothing: a 440px photo band
+  // rendered 0px and a 49px chip ribbon rendered 24px (padding only).
+  await t("Container: an explicit height survives a shrinking column", () => {
+    const band = W.Container({
+      width: "100%",
+      height: 440,
+      bgColor: "transparent",
+      child: W.Text({ text: "the view comes with the meal" }),
+    });
+    const ribbon = W.Container({
+      width: "100%",
+      height: 48,
+      bgColor: "transparent",
+      child: W.Text({ text: "lechón asado" }),
+    });
+    mount(
+      W.Container({
+        width: "100%",
+        height: 200,
+        overflowY: "auto",
+        children: [
+          W.Container({ width: "100%", height: 900, bgColor: "transparent", child: W.Text({ text: "tall" }) }),
+          band,
+          ribbon,
+        ],
+      }),
+    );
+    ok(band.offsetHeight === 440, `440px band shrank to ${band.offsetHeight}px`);
+    ok(ribbon.offsetHeight === 48, `48px ribbon shrank to ${ribbon.offsetHeight}px`);
+  });
+
+  await t("Container: content height survives a shrinking column", () => {
+    const chips = W.Container({
+      width: "100%",
+      paddingTop: 12,
+      paddingBottom: 12,
+      bgColor: "transparent",
+      child: W.Container({ width: "100%", height: 25, bgColor: "transparent", child: W.Text({ text: "chips" }) }),
+    });
+    mount(
+      W.Container({
+        width: "100%",
+        height: 200,
+        overflowY: "auto",
+        children: [
+          W.Container({ width: "100%", height: 900, bgColor: "transparent", child: W.Text({ text: "tall" }) }),
+          chips,
+        ],
+      }),
+    );
+    ok(chips.offsetHeight >= 49, `collapsed to ${chips.offsetHeight}px, content is ${chips.scrollHeight}px`);
+  });
+
+  // The guard on the fix: opting into flex must still win over the default.
+  await t("Container: flex:1 still stretches in a column", () => {
+    const page = mount(
+      W.Container({
+        width: "100%",
+        height: 400,
+        children: [
+          W.Container({ width: "100%", height: 100, bgColor: "transparent", child: W.Text({ text: "a" }) }),
+          W.Container({ flex: 1, bgColor: "transparent", child: W.Text({ text: "b" }) }),
+        ],
+      }),
+    );
+    ok(page.children[1].offsetHeight >= 280, `flex:1 stretched to ${page.children[1].offsetHeight}px`);
+  });
+
   // ------------------------------------------------------------------ report
   window.__REGRESSION = { pass, fail, total: pass + fail, results };
 
