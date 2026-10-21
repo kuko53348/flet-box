@@ -71,17 +71,26 @@ const diff = (a, b) => {
 for (const fixture of fixtures) {
   const source = Buffer.from(fixture.source, "base64");
 
-  if (fixture.kind === "decline") {
+  if (fixture.kind === "decline" || fixture.kind === "refuse") {
     let message = "";
+    let unsupported = false;
     try {
       decodeImage(source);
     } catch (error) {
       message = error.message;
+      unsupported = error instanceof UnsupportedImage;
     }
+    // The class is the contract, not the wording: the command counts an
+    // UnsupportedImage as a declined asset and anything else as a failed file, so a
+    // refusal that degrades into a plain Error turns a folder of WhatsApp photos
+    // into a build that exits 1.
+    const wantDecline = fixture.kind === "decline";
     check(
-      `${fixture.name} is refused`,
-      message.includes(fixture.reason),
-      message ? `said "${message}"` : "decoded it without complaining",
+      `${fixture.name} is ${wantDecline ? "declined" : "a hard failure"}`,
+      message.includes(fixture.reason) && unsupported === wantDecline,
+      message
+        ? `said "${message}" as ${unsupported ? "UnsupportedImage" : "a plain Error"}`
+        : "decoded it without complaining",
     );
     continue;
   }
@@ -152,8 +161,27 @@ write("keep.png", "png-rgba");
 write("sprite.webp", "webp");
 
 const cli = path.join(root, "bin", "cli.js");
-const run = (args) =>
-  execFileSync(process.execPath, [cli, "to-png", ...args], { encoding: "utf8", cwd: work });
+
+/**
+ * Runs the command and keeps its report whatever the exit status.
+ *
+ * `execFileSync` throws on a non-zero exit, and a non-zero exit is exactly what
+ * a broken file is supposed to produce — so the throw has to hand back the
+ * output, or the checker dies on a stack trace instead of printing which
+ * assertion the command missed.
+ *
+ * @param {string[]} args
+ * @returns {{ out: string, status: number }}
+ */
+const result = (args) => {
+  try {
+    return { out: execFileSync(process.execPath, [cli, "to-png", ...args], { encoding: "utf8", cwd: work }), status: 0 };
+  } catch (error) {
+    return { out: `${error.stdout ?? ""}${error.stderr ?? ""}`, status: error.status ?? -1 };
+  }
+};
+
+const run = (args) => result(args).out;
 
 const dry = run([assets, "--dry-run", "--quiet"]);
 check("dry run writes nothing", !fs.existsSync(path.join(assets, "logo.png")), dry);
@@ -197,15 +225,32 @@ check("--replace never deletes a png's own bytes", fs.existsSync(path.join(asset
 // A folder with nothing convertible is a success, not an error.
 const empty = path.join(work, "empty");
 fs.mkdirSync(empty);
-check("an empty folder exits 0", run([empty, "--quiet"]).includes("0 converted"));
+const emptyRun = result([empty, "--quiet"]);
+check("an empty folder exits 0", emptyRun.status === 0 && emptyRun.out.includes("0 converted"), emptyRun.out);
 
-let missingFailed = false;
-try {
-  execFileSync(process.execPath, [cli, "to-png", path.join(work, "nowhere")], { encoding: "utf8", cwd: work, stdio: "pipe" });
-} catch (error) {
-  missingFailed = error.status === 1;
-}
-check("a missing folder exits 1", missingFailed);
+// The two non-zero statuses the command must tell apart. A folder of WebP from a
+// design hand-off is fine — the files simply are not convertible — while one
+// truncated JPEG is a broken asset in a build, and both used to be reported to
+// the developer as the same red "failed" line with exit 1.
+const only = (dir, name, fixtureName) => {
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, name), Buffer.from(fixtures.find((f) => f.name === fixtureName).source, "base64"));
+};
+
+const unsupportedDir = path.join(work, "unsupported");
+only(unsupportedDir, "banner.webp", "webp");
+const unsupportedRun = result([unsupportedDir, "--quiet"]);
+check("a folder of declined assets exits 0", unsupportedRun.status === 0, `${unsupportedRun.out}(status ${unsupportedRun.status})`);
+check("a declined asset is counted as declined", unsupportedRun.out.includes("1 declined"), unsupportedRun.out);
+
+const brokenDir = path.join(work, "broken");
+only(brokenDir, "truncated.jpg", "corrupt-jpeg");
+const brokenRun = result([brokenDir, "--quiet"]);
+check("an undecodable file exits 1", brokenRun.status === 1, `${brokenRun.out}(status ${brokenRun.status})`);
+check("an undecodable file is counted as failed", brokenRun.out.includes("1 failed"), brokenRun.out);
+
+const missingRun = result([path.join(work, "nowhere")]);
+check("a missing folder exits 1", missingRun.status === 1, missingRun.out);
 
 fs.rmSync(work, { recursive: true, force: true });
 

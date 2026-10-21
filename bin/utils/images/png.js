@@ -15,6 +15,7 @@
  */
 
 import zlib from "node:zlib";
+import UnsupportedImage from "./unsupported.js";
 
 const SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
@@ -140,8 +141,8 @@ export const decodePng = (buf) => {
   }
 
   if (!width || !height) throw new Error("PNG has no IHDR");
-  if (interlace !== 0) throw new Error("interlaced (Adam7) PNG is not supported");
-  if (![1, 2, 4, 8, 16].includes(bitDepth)) throw new Error(`unsupported PNG bit depth ${bitDepth}`);
+  if (interlace !== 0) throw new UnsupportedImage("PNG", "Adam7 interlacing is not implemented");
+  if (![1, 2, 4, 8, 16].includes(bitDepth)) throw new UnsupportedImage("PNG", `${bitDepth}-bit samples are not implemented`);
 
   const channels = { 0: 1, 2: 3, 3: 1, 4: 2, 6: 4 }[colorType];
   if (!channels) throw new Error(`unknown PNG colour type ${colorType}`);

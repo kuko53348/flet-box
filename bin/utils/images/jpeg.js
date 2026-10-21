@@ -4,13 +4,16 @@
  *
  * Covers what a camera or an export tool writes for a normal `.jpg`: 8-bit DCT
  * with Huffman coding, one or three components, any sampling factor (4:4:4,
- * 4:2:2, 4:2:0, 4:4:0 and the odd 4:1:1), and restart intervals.
+ * 4:2:2, 4:2:0, 4:4:0 and the odd 4:1:1), restart intervals, and the non-interleaved
+ * form where each component gets its own scan.
  *
  * What it refuses — naming the feature it found — is progressive JPEG,
  * arithmetic coding, lossless JPEG, 12-bit precision and CMYK. Those are
  * different entropy coders and colour spaces, not edge cases of this one, and a
  * converter that quietly produced a plausible-but-wrong picture would be worse
- * than one that declines.
+ * than one that declines. Refusals are `UnsupportedImage`, so the caller reports
+ * them as declined assets rather than broken files: a folder of WhatsApp photos
+ * is not a failing build.
  *
  * The IDCT is the textbook separable float transform rather than an AAN-style
  * fast one: it is a few lines, obviously correct, and asset-sized images are not
@@ -18,6 +21,8 @@
  * nearest-picked, which is the difference between agreeing with a viewer to
  * within 2 units and standing eight times further off on a hard colour edge.
  */
+
+import UnsupportedImage from "./unsupported.js";
 
 /** Coefficient k of the scan order, expressed as its position in the block. */
 const ZIGZAG = [
@@ -42,17 +47,23 @@ const COS = (() => {
 })();
 
 /**
- * @param {Buffer} data - DHT payload: 16 count bytes, then the symbol values.
- * @returns {Map<string, number>} Codes keyed as `"length:code"`.
+ * Builds a Huffman table from its code counts and symbol values.
+ *
+ * Keys pack the code length into the high bits so the bit reader can look a code
+ * up without building a string per bit — on a 6 MB scan that difference is the
+ * whole decode time.
+ *
+ * @param {Buffer} counts - 16 bytes: how many codes of each length, 1 through 16.
+ * @param {Buffer} values - The symbol values, in code order.
+ * @returns {Map<number, number>}
  */
-const buildHuffman = (data) => {
-  const counts = data.subarray(0, 16);
+const buildHuffman = (counts, values) => {
   const map = new Map();
   let code = 0;
-  let index = 16;
+  let index = 0;
   for (let length = 1; length <= 16; length++) {
     for (let n = 0; n < counts[length - 1]; n++) {
-      map.set(`${length}:${code}`, data[index]);
+      map.set((length << 16) | code, values[index]);
       code++;
       index++;
     }
@@ -91,7 +102,7 @@ class BitStream {
   /**
    * Walks the Huffman tree bit by bit.
    *
-   * @param {Map<string, number>} table
+   * @param {Map<number, number>} table
    * @returns {number} Symbol; for AC tables this packs the zero-run in the high
    *   nibble and the magnitude size in the low one.
    */
@@ -99,7 +110,7 @@ class BitStream {
     let code = 0;
     for (let length = 1; length <= 16; length++) {
       code = (code << 1) | this.readBit();
-      const symbol = table.get(`${length}:${code}`);
+      const symbol = table.get((length << 16) | code);
       if (symbol !== undefined) return symbol;
     }
     throw new Error("JPEG Huffman code is not canonical");
@@ -109,7 +120,7 @@ class BitStream {
 /**
  * Reads the amplitude that follows a size symbol.
  *
- * JPEG writes these as offset binary: size 3 covers -7..-1 and 4..7, so a value
+ * JPEG writes these as offset binary: size 3 covers -7..-4 and 4..7, so a value
  * below the halfway point has had its leading bit cleared, not its sign set.
  *
  * @param {BitStream} stream
@@ -173,6 +184,13 @@ const splitScan = (buf) => {
       i += 2;
       continue;
     }
+    if (next === 0xff) {
+      // Fill byte: the encoder may pad before any marker, and `0xFFFF…` is how
+      // some tools stretch a segment boundary. Dropping one byte keeps the pair
+      // readable on the next pass instead of ending the scan early.
+      i++;
+      continue;
+    }
     if (next >= 0xd0 && next <= 0xd7) {
       segments.push(Buffer.from(current));
       current = [];
@@ -190,7 +208,8 @@ const splitScan = (buf) => {
  *
  * @param {Buffer} buf - File bytes.
  * @returns {{ width: number, height: number, rgba: Buffer }}
- * @throws {Error} Naming the unsupported feature, or the corruption found.
+ * @throws {UnsupportedImage} For a JPEG mode this decoder will never read.
+ * @throws {Error} For a file whose bytes do not add up.
  */
 export const decodeJpeg = (buf) => {
   if (buf.length < 4 || buf[0] !== 0xff || buf[1] !== 0xd8) {
@@ -202,7 +221,7 @@ export const decodeJpeg = (buf) => {
   const ac = [];
   let frame = null;
   let restartInterval = 0;
-  let scanStart = -1;
+  const scans = [];
 
   let offset = 2;
   while (offset + 1 < buf.length) {
@@ -217,54 +236,42 @@ export const decodeJpeg = (buf) => {
     }
     offset += 2;
 
-    // Standalone markers carry no length: fill bytes, TEM, and RSTn.
-    if (marker === 0x01 || marker === 0xd8 || (marker >= 0xd0 && marker <= 0xd7)) continue;
+    // Standalone markers carry no length: stuffed bytes, fill, TEM, and RSTn.
+    if (marker === 0x00 || marker === 0x01 || marker === 0xd8 || (marker >= 0xd0 && marker <= 0xd7)) continue;
     if (marker === 0xd9) break;
 
     const length = buf.readUInt16BE(offset);
     const payload = buf.subarray(offset + 2, offset + 2 + length - 2);
     offset += length;
 
-    if (marker === 0xdb) {
-      let p = 0;
-      while (p + 64 <= payload.length) {
-        const precision = payload[p] >> 4;
-        const id = payload[p] & 15;
-        p++;
-        if (precision !== 0) throw new Error("16-bit quantisation tables are not supported");
-        // The table arrives in scan order; coefficients are stored in block
-        // order, so it is de-zigzagged once here rather than per block.
-        const table = new Float64Array(64);
-        for (let k = 0; k < 64; k++) table[ZIGZAG[k]] = payload[p + k];
-        p += 64;
-        quant[id] = table;
-      }
-    } else if (marker === 0xc4) {
-      const classId = payload[0];
-      const table = buildHuffman(payload.subarray(1));
-      if (classId >> 4 === 0) dc[classId & 15] = table;
-      else ac[classId & 15] = table;
-    } else if (marker === 0xdd) {
-      restartInterval = payload.readUInt16BE(0);
-    } else if (marker >= 0xc0 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xc8) {
+    if (marker === 0xdb) readDqt(payload, quant);
+    else if (marker === 0xc4) readDht(payload, dc, ac);
+    else if (marker === 0xdd) restartInterval = payload.readUInt16BE(0);
+    else if (marker >= 0xc0 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xc8) {
       frame = readFrame(marker, payload);
     } else if (marker === 0xda) {
-      scanStart = offset;
-      applyScanHeader(payload, () => frame, dc, ac);
-      break;
+      // Jump the entropy data: a multi-scan file continues here, and reading
+      // forward through stuffed bytes as if they were markers is how a second
+      // scan starts decoding the first one's leftovers.
+      const start = offset;
+      const end = findScanEnd(buf, start);
+      // Snapshot what is in force at this SOS. A later marker may redefine the
+      // same table or interval slot, and if the scans are decoded once the whole
+      // header has been walked, that later definition silently rewrites the
+      // earlier scan's pixels.
+      scans.push({ payload, start, end, restartInterval, tables: { quant: quant.slice(), dc: dc.slice(), ac: ac.slice() } });
+      offset = end;
     }
   }
 
   if (!frame) throw new Error("JPEG has no start-of-frame marker");
-  if (scanStart < 0) throw new Error("JPEG has no scan");
-  if (frame.components.length === 4) throw new Error("CMYK JPEG is not supported");
+  if (!scans.length) throw new Error("JPEG has no scan");
 
   const { width, height, components } = frame;
   const maxH = Math.max(...components.map((c) => c.h));
   const maxV = Math.max(...components.map((c) => c.v));
   const mcusPerRow = Math.ceil(width / (8 * maxH));
   const mcusPerColumn = Math.ceil(height / (8 * maxV));
-  const totalMcus = mcusPerRow * mcusPerColumn;
 
   for (const component of components) {
     component.planeWidth = mcusPerRow * component.h * 8;
@@ -272,81 +279,19 @@ export const decodeJpeg = (buf) => {
     component.plane = new Float64Array(component.planeWidth * component.planeHeight);
   }
 
-  const scanEnd = findScanEnd(buf, scanStart);
-  const segments = splitScan(buf.subarray(scanStart, scanEnd));
-  const intervals = restartInterval > 0 ? Math.ceil(totalMcus / restartInterval) : 1;
-  if (segments.length < intervals) {
-    throw new Error("JPEG scan data ended before the frame was complete");
-  }
-
   const block = new Float64Array(64);
   const scratch = new Float64Array(64);
-  let stream = new BitStream(segments[0]);
-  let segment = 0;
-  let mcusLeft = restartInterval > 0 ? Math.min(restartInterval, totalMcus) : totalMcus;
-  const predictors = new Int32Array(components.length);
-
-  for (let mcu = 0; mcu < totalMcus; mcu++) {
-    if (mcusLeft === 0) {
-      segment++;
-      stream = new BitStream(segments[segment]);
-      mcusLeft = Math.min(restartInterval, totalMcus - mcu);
-      predictors.fill(0);
-    }
-    mcusLeft--;
-
-    const mcuX = mcu % mcusPerRow;
-    const mcuY = Math.floor(mcu / mcusPerRow);
-
-    for (let ci = 0; ci < components.length; ci++) {
-      const component = components[ci];
-      const table = quant[component.quantId];
-      if (!table) throw new Error(`JPEG names quantisation table ${component.quantId}, which was never defined`);
-
-      for (let by = 0; by < component.v; by++) {
-        for (let bx = 0; bx < component.h; bx++) {
-          decodeBlock(component, ci);
-          for (let k = 0; k < 64; k++) block[k] *= table[k];
-          inverseDct(block, scratch);
-          // The plane is its own block grid of component.h × component.v blocks
-          // per MCU — the max factors only decide how its samples map back onto
-          // luma pixels, in `sample()`.
-          const originX = (mcuX * component.h + bx) * 8;
-          const originY = (mcuY * component.v + by) * 8;
-          for (let y = 0; y < 8; y++) {
-            const rowStart = (originY + y) * component.planeWidth + originX;
-            for (let x = 0; x < 8; x++) component.plane[rowStart + x] = block[y * 8 + x];
-          }
-        }
-      }
-    }
-  }
-
-  function decodeBlock(component, ci) {
-    block.fill(0);
-    const dcSymbol = stream.decode(component.dcTable);
-    predictors[ci] += extend(stream, dcSymbol);
-    block[0] = predictors[ci];
-
-    let k = 1;
-    while (k < 64) {
-      const rs = stream.decode(component.acTable);
-      const run = rs >> 4;
-      const size = rs & 15;
-      if (size === 0) {
-        if (run === 0) break; // EOB — the rest of the block is zero
-        k += run; // ZRL — sixteen zeros, then the next coefficient
-        continue;
-      }
-      k += run;
-      if (k >= 64) throw new Error("JPEG AC coefficient ran past the block");
-      block[ZIGZAG[k]] = extend(stream, size);
-      k++;
-    }
+  for (const scan of scans) {
+    decodeScan(scan, { buf, components, width, height, maxH, maxV, block, scratch });
   }
 
   const rgba = Buffer.alloc(width * height * 4);
-  const [luma, chromaB, chromaR] = components;
+  // The frame declares components in its own order; the identifiers say which is
+  // which, and a file whose list is Y-Cr-Cb would otherwise come out inverted.
+  const byId = (id) => components.find((c) => c.id === id);
+  const luma = components.length === 1 ? components[0] : byId(1) ?? components[0];
+  const chromaB = byId(2) ?? components[1];
+  const chromaR = byId(3) ?? components[2];
 
   if (components.length === 1) {
     for (let y = 0; y < height; y++) {
@@ -378,12 +323,147 @@ export const decodeJpeg = (buf) => {
 };
 
 /**
+ * Decodes every MCU of one scan into its components' planes.
+ *
+ * Blocks are read in *scan* order, which is the order of the SOS component
+ * specifiers — not the order the frame listed them in. They are usually the same
+ * list, and when they are not, reading them by frame order hands each block the
+ * wrong Huffman tables and the rest of the scan decodes as noise.
+ *
+ * @param {{ payload: Buffer, start: number, end: number, restartInterval: number,
+ *   tables: { quant: Object[], dc: Map[], ac: Map[] } }} scan
+ * @param {Object} ctx - Frame geometry, tables and reusable buffers.
+ * @returns {void}
+ */
+const decodeScan = (scan, ctx) => {
+  const { buf, components, width, height, maxH, maxV, block, scratch } = ctx;
+  const { restartInterval, tables: { quant, dc, ac } } = scan;
+  const specs = readScanHeader(scan.payload, components.length);
+  if (specs.length !== components.length && specs.length !== 1) {
+    throw new Error(`JPEG scan covers ${specs.length} of ${components.length} components, which is neither interleaved nor single-component`);
+  }
+  const interleaved = specs.length === components.length;
+
+  const list = specs.map((spec) => {
+    const component = components.find((c) => c.id === spec.id);
+    if (!component) throw new Error(`JPEG scan names component ${spec.id}, which the frame never declared`);
+    component.dcTable = dc[spec.tables >> 4];
+    component.acTable = ac[spec.tables & 15];
+    if (!component.dcTable || !component.acTable) {
+      throw new Error("JPEG scan names a Huffman table that was never defined");
+    }
+    return component;
+  });
+
+  // In a single-component scan the MCU is one block and the scan walks that
+  // component's own block grid in raster order; the h×v block group only exists
+  // in the interleaved form. Reading a non-interleaved luma scan as 2×2 groups
+  // instead keeps the right number of blocks and still puts half of each MCU row
+  // one block-row early, which scrambles the picture without tripping any check.
+  const rowMcus = interleaved
+    ? Math.ceil(width / (8 * maxH))
+    : Math.ceil(Math.ceil((width * list[0].h) / maxH) / 8);
+  const colMcus = interleaved
+    ? Math.ceil(height / (8 * maxV))
+    : Math.ceil(Math.ceil((height * list[0].v) / maxV) / 8);
+  const totalMcus = rowMcus * colMcus;
+
+  const segments = splitScan(buf.subarray(scan.start, scan.end));
+  const intervals = restartInterval > 0 ? Math.ceil(totalMcus / restartInterval) : 1;
+  if (segments.length < intervals) {
+    throw new Error("JPEG scan data ended before the frame was complete");
+  }
+
+  const predictors = new Int32Array(list.length);
+  let stream = new BitStream(segments[0]);
+  let segment = 0;
+  let mcusLeft = restartInterval > 0 ? Math.min(restartInterval, totalMcus) : totalMcus;
+
+  for (let mcu = 0; mcu < totalMcus; mcu++) {
+    if (mcusLeft === 0) {
+      segment++;
+      stream = new BitStream(segments[segment]);
+      mcusLeft = Math.min(restartInterval, totalMcus - mcu);
+      predictors.fill(0);
+    }
+    mcusLeft--;
+
+    const mcuX = mcu % rowMcus;
+    const mcuY = Math.floor(mcu / rowMcus);
+
+    for (let ci = 0; ci < list.length; ci++) {
+      const component = list[ci];
+      const table = quant[component.quantId];
+      if (!table) throw new Error(`JPEG names quantisation table ${component.quantId}, which was never defined`);
+
+      // Interleaved: this MCU carries the component's whole h×v block group.
+      // Non-interleaved: one block, and the max factors only decide how the
+      // plane maps back onto luma pixels, in `sample()`.
+      const wide = interleaved ? component.h : 1;
+      const tall = interleaved ? component.v : 1;
+      for (let by = 0; by < tall; by++) {
+        for (let bx = 0; bx < wide; bx++) {
+          decodeBlock(component, ci, stream, predictors, block);
+          for (let k = 0; k < 64; k++) block[k] *= table[k];
+          inverseDct(block, scratch);
+          const originX = (mcuX * wide + bx) * 8;
+          const originY = (mcuY * tall + by) * 8;
+          for (let y = 0; y < 8; y++) {
+            const rowStart = (originY + y) * component.planeWidth + originX;
+            for (let x = 0; x < 8; x++) component.plane[rowStart + x] = block[y * 8 + x];
+          }
+        }
+      }
+    }
+  }
+};
+
+/**
+ * One MCU block: DC prediction then the AC run-length symbols.
+ *
+ * @param {Object} component - Supplies this scan's Huffman tables.
+ * @param {number} ci - Slot in the scan's predictor array.
+ * @param {BitStream} stream
+ * @param {Int32Array} predictors
+ * @param {Float64Array} block - Cleared, then filled with dequant-ready coefficients.
+ * @returns {void}
+ */
+const decodeBlock = (component, ci, stream, predictors, block) => {
+  block.fill(0);
+  predictors[ci] += extend(stream, stream.decode(component.dcTable));
+  block[0] = predictors[ci];
+
+  let k = 1;
+  while (k < 64) {
+    const rs = stream.decode(component.acTable);
+    const run = rs >> 4;
+    const size = rs & 15;
+    if (size === 0) {
+      if (run === 0) break; // EOB — the rest of the block is zero
+      // 0xF0 is ZRL: sixteen zeros, so the next coefficient is sixteen along.
+      // Advancing by the run nibble alone (fifteen) leaves every following block
+      // one symbol short, and a block coded to its last coefficient then reads
+      // its neighbour's first symbol — which desynchronises the whole rest of
+      // the scan. That is how an ordinary photo turned into "AC coefficient ran
+      // past the block" while small test images decoded fine.
+      if (run !== 15) throw new Error(`JPEG AC symbol 0x${rs.toString(16)} is reserved`);
+      k += 16;
+      continue;
+    }
+    k += run;
+    if (k >= 64) throw new Error("JPEG AC coefficient ran past the block");
+    block[ZIGZAG[k]] = extend(stream, size);
+    k++;
+  }
+};
+
+/**
  * Reads an SOFn header.
  *
  * @param {number} marker - The SOF marker byte.
  * @param {Buffer} payload
  * @returns {{ width: number, height: number, components: Object[] }}
- * @throws {Error} For the frame modes this decoder does not implement.
+ * @throws {UnsupportedImage} For the frame modes this decoder does not implement.
  */
 const readFrame = (marker, payload) => {
   const kind = {
@@ -392,18 +472,18 @@ const readFrame = (marker, payload) => {
     0xc2: "progressive",
     0xc3: "lossless",
   }[marker];
-  if (marker === 0xc2) throw new Error("progressive JPEG is not supported");
-  if (marker === 0xc3) throw new Error("lossless JPEG is not supported");
-  if (marker >= 0xc6 && marker <= 0xc9) throw new Error("arithmetic-coded JPEG is not supported");
-  if (marker >= 0xca && marker <= 0xcf) throw new Error("arithmetic-coded JPEG is not supported");
-  if (!kind) throw new Error(`JPEG frame marker 0x${marker.toString(16)} is not supported`);
-  if (payload[0] !== 8) throw new Error(`JPEG precision ${payload[0]} is not supported (only 8-bit)`);
+  if (marker === 0xc2) throw new UnsupportedImage("JPEG", "progressive (multi-scan) entropy coding is not implemented");
+  if (marker === 0xc3) throw new UnsupportedImage("JPEG", "lossless (predictive) JPEG is not implemented");
+  if (marker >= 0xc6 && marker <= 0xcf) throw new UnsupportedImage("JPEG", "arithmetic coding is not implemented");
+  if (!kind) throw new UnsupportedImage("JPEG", `frame marker 0x${marker.toString(16)} is not implemented`);
+  if (payload[0] !== 8) throw new UnsupportedImage("JPEG", `${payload[0]}-bit samples are not implemented (only 8-bit)`);
 
   const height = payload.readUInt16BE(1);
   const width = payload.readUInt16BE(3);
   const count = payload[5];
+  if (count === 4) throw new UnsupportedImage("JPEG", "CMYK (four components) is not implemented");
   if (count !== 1 && count !== 3) {
-    throw new Error(`JPEG with ${count} components is not supported (only greyscale and YCbCr)`);
+    throw new UnsupportedImage("JPEG", `${count} components is not implemented (only greyscale and YCbCr)`);
   }
 
   const components = [];
@@ -422,40 +502,80 @@ const readFrame = (marker, payload) => {
 };
 
 /**
- * Binds the SOS component specifiers to the frame's components.
- *
- * The spec lists components by *identifier*, in scan order, which is not always
- * the order the frame declared them.
+ * Reads a DQT segment, which may hold several tables.
  *
  * @param {Buffer} payload
- * @param {function(): Object|null} getFrame
- * @param {Map[]} dc
- * @param {Map[]} ac
+ * @param {Float64Array[]} quant - Filled by table id.
  * @returns {void}
- * @throws {Error} When the scan names tables or components the frame never had.
  */
-const applyScanHeader = (payload, getFrame, dc, ac) => {
-  const frame = getFrame();
-  if (!frame) throw new Error("JPEG scan appears before its frame header");
+const readDqt = (payload, quant) => {
+  let p = 0;
+  while (p + 65 <= payload.length) {
+    const precision = payload[p] >> 4;
+    const id = payload[p] & 15;
+    p++;
+    if (precision !== 0) throw new UnsupportedImage("JPEG", "16-bit quantisation tables belong to 12-bit JPEG, which is not implemented");
+    // The table arrives in scan order; coefficients are stored in block
+    // order, so it is de-zigzagged once here rather than per block.
+    const table = new Float64Array(64);
+    for (let k = 0; k < 64; k++) table[ZIGZAG[k]] = payload[p + k];
+    p += 64;
+    quant[id] = table;
+  }
+};
+
+/**
+ * Reads a DHT segment.
+ *
+ * The spec puts one table per marker, but plenty of camera software writes all
+ * four in a single segment, and libjpeg walks the payload rather than trusting
+ * that. Reading only the first table leaves a scan pointing at Huffman tables
+ * that were never defined — for a file that opens fine in every viewer.
+ *
+ * @param {Buffer} payload
+ * @param {Map<number, number>[]} dc
+ * @param {Map<number, number>[]} ac
+ * @returns {void}
+ */
+const readDht = (payload, dc, ac) => {
+  let p = 0;
+  while (p + 17 <= payload.length) {
+    const classId = payload[p];
+    const counts = payload.subarray(p + 1, p + 17);
+    const total = counts.reduce((a, b) => a + b, 0);
+    if (p + 17 + total > payload.length) {
+      throw new Error("JPEG Huffman table claims more codes than its segment holds");
+    }
+    const table = buildHuffman(counts, payload.subarray(p + 17, p + 17 + total));
+    if (classId >> 4 === 0) dc[classId & 15] = table;
+    else ac[classId & 15] = table;
+    p += 17 + total;
+  }
+};
+
+/**
+ * Reads an SOS header and rejects anything that is not a full-band, first-pass
+ * scan.
+ *
+ * @param {Buffer} payload
+ * @param {number} componentCount
+ * @returns {{ id: number, tables: number }[]} Component specifiers, in scan order.
+ * @throws {UnsupportedImage} For a progressive or refined scan.
+ */
+const readScanHeader = (payload, componentCount) => {
   const count = payload[0];
+  if (payload.length < 4 + count * 2) throw new Error("JPEG scan header is truncated");
+  const specs = [];
   for (let i = 0; i < count; i++) {
-    const id = payload[1 + i * 2];
-    const tables = payload[2 + i * 2];
-    const component = frame.components.find((c) => c.id === id);
-    if (!component) throw new Error(`JPEG scan names component ${id}, which the frame never declared`);
-    component.dcTable = dc[tables >> 4];
-    component.acTable = ac[tables & 15];
+    specs.push({ id: payload[1 + i * 2], tables: payload[2 + i * 2] });
   }
   const spectralStart = payload[1 + count * 2];
-  const successive = payload[3 + count * 2];
-  if (spectralStart !== 0 || payload[2 + count * 2] !== 63 || successive !== 0) {
-    throw new Error("progressive JPEG is not supported");
+  const spectralEnd = payload[2 + count * 2];
+  const approximation = payload[3 + count * 2];
+  if (spectralStart !== 0 || spectralEnd !== 63 || approximation !== 0) {
+    throw new UnsupportedImage("JPEG", "progressive (multi-scan) entropy coding is not implemented");
   }
-  for (const component of frame.components) {
-    if (!component.dcTable || !component.acTable) {
-      throw new Error("JPEG scan names a Huffman table that was never defined");
-    }
-  }
+  return specs;
 };
 
 /**
@@ -497,7 +617,7 @@ const clamp255 = (value) => {
 /**
  * @param {Buffer} buf
  * @param {number} start - First entropy byte of the scan.
- * @returns {number} Offset of the first non-restart marker after the scan.
+ * @returns {number} Offset of the first marker that ends the scan.
  */
 const findScanEnd = (buf, start) => {
   let i = start;
@@ -509,6 +629,10 @@ const findScanEnd = (buf, start) => {
     const marker = buf[i + 1];
     if (marker === 0x00 || (marker >= 0xd0 && marker <= 0xd7)) {
       i += 2;
+      continue;
+    }
+    if (marker === 0xff) {
+      i++;
       continue;
     }
     return i;

@@ -9,6 +9,8 @@
  * garbage that still looks like a picture.
  */
 
+import UnsupportedImage from "./unsupported.js";
+
 /**
  * Decodes a BMP into RGBA.
  *
@@ -23,7 +25,7 @@ export const decodeBmp = (buf) => {
 
   const dataOffset = buf.readUInt32LE(10);
   const headerSize = buf.readUInt32LE(14);
-  if (headerSize < 40) throw new Error("OS/2 BITMAPCOREHEADER is not supported");
+  if (headerSize < 40) throw new UnsupportedImage("BMP", "OS/2 BITMAPCOREHEADER is not implemented");
 
   const width = buf.readInt32LE(18);
   const rawHeight = buf.readInt32LE(22);
@@ -31,10 +33,10 @@ export const decodeBmp = (buf) => {
   const compression = buf.readUInt32LE(30);
 
   if (compression !== 0) {
-    throw new Error(`BMP compression ${compression} is not supported (only uncompressed)`);
+    throw new UnsupportedImage("BMP", `compression mode ${compression} (only uncompressed BI_RGB is implemented)`);
   }
   if (![1, 4, 8, 24, 32].includes(bitCount)) {
-    throw new Error(`BMP depth ${bitCount} bits is not supported`);
+    throw new UnsupportedImage("BMP", `${bitCount}-bit depth is not implemented (1, 4, 8, 24 and 32 are)`);
   }
 
   const topDown = rawHeight < 0;

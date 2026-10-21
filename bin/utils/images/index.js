@@ -17,26 +17,9 @@ import { decodePng, encodePng } from "./png.js";
 import { decodeJpeg } from "./jpeg.js";
 import { decodeBmp } from "./bmp.js";
 import { decodeGif } from "./gif.js";
+import UnsupportedImage from "./unsupported.js";
 
-/**
- * Thrown when a file is a format this tool will never read.
- *
- * It is a distinct class so the command can print a declined asset differently
- * from one whose bytes are corrupt: the first is information, the second is a
- * failure.
- */
-export class UnsupportedImage extends Error {
-  /**
-   * @param {string} format - Human-readable format name.
-   * @param {string} reason - Why it cannot be converted.
-   */
-  constructor(format, reason) {
-    super(`${format}: ${reason}`);
-    this.name = "UnsupportedImage";
-    this.format = format;
-    this.reason = reason;
-  }
-}
+export { UnsupportedImage };
 
 /**
  * Names the format behind a file's first bytes.
