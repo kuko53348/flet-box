@@ -228,7 +228,7 @@ export const createProject = async (projectName, rawArgs = []) => {
   createFile(path.join(projectPath, ".gitignore"), templates.gitignore());
   createFile(
     path.join(projectPath, ".github/workflows/build.yml"),
-    templates.githubWorkflow(finalName, appId),
+    templates.githubWorkflow(finalName),
   );
   createFile(
     path.join(projectPath, ".github/workflows/build-native.yml"),

@@ -1123,27 +1123,24 @@ export const manifest = (appName = "FletBox App") => `{
 }
 `;
 
-// GitHub Actions workflow that builds and publishes the WEB. It runs on every
-// push, so the site is live without asking. The native builds are a second file
-// (build-native.yml) that only runs when started by hand.
+// GitHub Actions workflow that builds and publishes the WEB. Two jobs, the way
+// the docs site does it: `build` checks and bundles `www/` and only *uploads* it,
+// `deploy` is the sole job that can touch Pages — so a build that fails leaves
+// the live site alone. The native builds are a second file (build-native.yml)
+// that only runs when started by hand.
 // NOTE: every GitHub `${{ }}` expression is escaped as `\${{ }}` because this is
 // a JS template literal — an unescaped `${` would be parsed as interpolation.
-export const githubWorkflow = (appName = "FletBox App", appId = "com.fletbox.app") => {
-  const slug = appName
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 40) || "fletbox-app";
-  return `name: Build ${appName} — web
+export const githubWorkflow = (appName = "FletBox App") => `name: Deploy ${appName}
 
-# Publishes the PWA to GitHub Pages on every push to main, on a release tag, and
-# on a manual run. A pull request only builds, so a branch cannot take the site
-# down. Android and iOS are NOT here: they live in build-native.yml and run only
-# when you start them, because a macOS runner is not free.
+# Publishes the PWA to GitHub Pages. Every push to main (and every manual run)
+# builds a fresh site, and only the deploy job can touch Pages, so a broken
+# bundle never replaces the live one. Android and iOS are NOT here: they live in
+# build-native.yml and run only when you start them, because a macOS runner is
+# not free.
 #
 # One consequence to know about: this Pages site is also what an installed app
 # polls for an OTA update (www/config.json), and the app compares the bundle
-# hash, not the version. So the manifest is left out of every deploy that is not
+# hash, not the version. So the manifest is left out of every build that is not
 # a release tag (see "Keep the OTA feed on releases only" below): the site is
 # live on every push, while installed apps keep running the last \`flet-box
 # release\`. That is what the tag gate used to achieve by not deploying at all.
@@ -1152,39 +1149,34 @@ on:
   push:
     branches: [ main ]
     tags: [ 'v*' ]
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:
 
-# The web job needs Pages write access; it is declared once, for the whole file.
+# The deploy job needs Pages write access; it is declared once, for the file.
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Cancel superseded runs on the same ref to save Actions minutes.
+# One deployment at a time; a newer push cancels the in-flight one.
 concurrency:
-  group: \${{ github.workflow }}-\${{ github.ref }}
+  group: pages-\${{ github.ref }}
   cancel-in-progress: true
 
-# The generated app depends on the public \`flet-box\` npm package. If you are
-# developing against a local copy, publish it (or vendor it) before these jobs
-# can \`npm install\` it. package-lock.json is gitignored, so we use npm install.
+# The generated app depends on the public \`flet-box\` npm package. If you
+# develop against a local copy, publish it (or vendor it) before these jobs can
+# \`npm install\` it. package-lock.json is gitignored, so we use npm install.
 
 jobs:
-  # ---------- WEB: bundle + GitHub Pages ----------
-  web:
-    name: Web (Pages)
+  # ---------- BUILD: check, bundle, upload. Nothing here reaches Pages. ----------
+  build:
+    name: Build site
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: \${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v5
 
       - uses: actions/setup-node@v5
         with:
-          node-version: 22
+          node-version: 20
 
       - name: Install dependencies
         run: npm install
@@ -1194,12 +1186,12 @@ jobs:
       - name: Check app API usage (npm run check)
         run: npm run check
 
-      - name: Bundle web app (flet-box createBundle www)
+      - name: Build site (flet-box createBundle www)
         run: npm run build
 
-      # Printed before the deploy, because this is the address the whole job is
-      # about, and because a missing Pages setting otherwise shows up as a green
-      # run with no site: Pages lower-cases the owner, hence the tr.
+      # Printed before the deploy, because this is the address the whole workflow
+      # is about, and because a missing Pages setting otherwise shows up as a
+      # green run with no site: Pages lower-cases the owner, hence the tr.
       - name: Where this lives
         run: |
           owner=$(printf '%s' "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')
@@ -1213,8 +1205,6 @@ jobs:
           echo "  If a green run leaves that 404, the source is wrong:"
           echo "  Settings -> Pages -> Build and deployment -> Source: GitHub Actions"
 
-      # A pull request gets the build, never the deploy: only one site exists.
-      #
       # www/config.json is the OTA manifest: an installed app fetches it and
       # compares its \`hash\` with the bundle it is running, so publishing it from
       # an ordinary push would offer that unfinished build to every device that
@@ -1226,25 +1216,30 @@ jobs:
         run: rm -f www/config.json
 
       - name: Upload Pages artifact
-        if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v5
         with:
           path: www
 
+  # ---------- DEPLOY: the only job with a path to Pages ----------
+  deploy:
+    name: Deploy to Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: \${{ steps.deployment.outputs.page_url }}
+    steps:
       - name: Deploy to GitHub Pages
-        if: github.event_name != 'pull_request'
         id: deployment
         uses: actions/deploy-pages@v5
 
-      # The link in the log as well as in the "github-pages" box under the job,
-      # and as a run annotation so it is readable from the workflow list.
+      # The address in the job log and as a run annotation, so it is readable
+      # from the workflow list without opening anything.
       - name: Published
-        if: steps.deployment.outcome == 'success'
         run: |
           echo "  live at: \${{ steps.deployment.outputs.page_url }}"
           echo "::notice title=Site published to GitHub Pages::\${{ steps.deployment.outputs.page_url }}"
 `;
-};
 
 // Native builds: the same two jobs, but they run ONLY when started by hand from
 // Actions -> Run workflow, with a choice of platform. A push never pays for a
@@ -1517,8 +1512,10 @@ CORS configuration and use HTTPS for the remote service.
 Two workflow files ship with the project, and they answer to different triggers:
 
 - \`.github/workflows/build.yml\` — **the web, automatic**. Every push to \`main\`
-  (and every \`v*\` tag, and a manual run) bundles \`www/\` and publishes it to
-  **GitHub Pages**. A pull request builds but never deploys: there is one site.
+  (and every \`v*\` tag, and a manual run) builds \`www/\` and publishes it to
+  **GitHub Pages**, in two jobs: **Build site** checks the app, bundles it and
+  uploads the result; **Deploy to Pages** is the only job that can replace the
+  live site, so a bundle that fails to build leaves the current one running.
 - \`.github/workflows/build-native.yml\` — **Android and iOS, manual only**. Nothing
   runs on a push. Open **Actions → "… — native (manual)" → Run workflow** and pick
   \`android\`, \`ios\` or \`both\`. Each job uploads its build as a run artifact and

@@ -87,6 +87,22 @@ try {
     if (/if: startsWith\(github.ref, 'refs\/tags\/v'\)/.test(web)) {
       fail("the web workflow gates Pages on a release tag, so a push publishes nothing");
     }
+    // Two jobs, like the docs site: only the deploy job can reach Pages, so a
+    // bundle that fails to build cannot replace the live site.
+    const deployJob = web.split("\n  deploy:")[1];
+    if (!deployJob || !/needs: build/.test(deployJob)) {
+      fail("the web workflow has no deploy job that waits for the build");
+    } else {
+      if (!/actions\/deploy-pages@v5/.test(deployJob)) {
+        fail("the web workflow's deploy job does not deploy");
+      }
+      if (/actions\/deploy-pages@v5/.test(web.split("\n  deploy:")[0])) {
+        fail("the web workflow deploys from the build job, so a failed build can still replace the site");
+      }
+      if (!/name: github-pages/.test(deployJob)) {
+        fail("the web workflow lost the github-pages environment on the deploy job");
+      }
+    }
     if (!/if: \$\{\{ !startsWith\(github.ref, 'refs\/tags\/v'\) \}\}\s*\n\s*run: rm -f www\/config\.json/.test(web)) {
       fail("the web workflow no longer strips www/config.json from a non-release build");
     }
