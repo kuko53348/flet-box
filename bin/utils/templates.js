@@ -1200,7 +1200,9 @@ jobs:
 
       - uses: actions/setup-node@v5
         with:
-          node-version: 20
+          # 22 is the current LTS. 20 is EOL, and the runner says so on every
+          # build of a generated app.
+          node-version: 22
 
       - name: Install dependencies
         run: npm install

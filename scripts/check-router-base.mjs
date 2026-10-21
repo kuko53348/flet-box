@@ -102,6 +102,8 @@ const checks = [
   ["build.yml: uploads only www", /upload-pages-artifact@v?\d+[\s\S]{0,40}?path: www/.test(generated["build.yml"])],
   ["build.yml: deploy needs build", /^\s+needs: build$/m.test(generated["build.yml"])],
   ["build.yml: never cancels a live deploy", generated["build.yml"].includes("cancel-in-progress: false")],
+  // Node 20 is EOL; a generated app must not announce it on every build.
+  ["build.yml: builds on a live Node LTS", /node-version: (22|24)\b/.test(generated["build.yml"])],
 ];
 
 let templateFailures = 0;
