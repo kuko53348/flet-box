@@ -72,7 +72,7 @@ try {
   const templates = await import(
     path.join(pkg, "bin", "utils", "templates.js")
   );
-  const web = templates.githubWorkflow("Check App", "com.check.app");
+  const web = templates.githubWorkflow("Check App", "https://octocat.check-app/");
   const native = templates.nativeWorkflow("Check App");
   if (typeof web !== "string" || typeof native !== "string") {
     fail("create has no workflow templates to write");
@@ -128,6 +128,16 @@ try {
     }
     if (!/Settings -> Pages/.test(web)) {
       fail("the web workflow no longer says which setting makes the deploy land");
+    }
+    // The address is in the file text, not only in the log: `create --repo`
+    // writes the Pages URL the repo implies into the header, so build.yml
+    // explains itself to anyone who opens it on GitHub before reading a step.
+    if (!/^# This app goes live at:\n#   https:\/\/octocat\.check-app\/$/m.test(web)) {
+      fail("the web workflow does not name the Pages address its repo implies");
+    }
+    // The split the user asked for: web on every push, natives only by hand.
+    if (!/Web: AUTOMATIC/.test(web) || !/build-native\.yml/.test(web)) {
+      fail("the web workflow no longer says the web is automatic and Android/iOS are manual");
     }
     if (!/^on:\s*\n\s*workflow_dispatch:/m.test(native) || /on:\s*\n\s*push:/m.test(native)) {
       fail("the native workflow runs on a push again (a macOS runner is not free)");

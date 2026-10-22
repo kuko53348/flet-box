@@ -79,7 +79,10 @@ const templates = await import("../bin/utils/templates.js");
 const generated = {
   "index.html": templates.indexHtml("Guard Test"),
   "service-worker.js": templates.serviceWorkerJs(),
+  // Two shapes: no repo given (the placeholder is what the developer edits) and
+  // a repo given (the address is written as text, like the docs repo does).
   "build.yml": templates.githubWorkflow("Guard Test"),
+  "build.yml (repo)": templates.githubWorkflow("Guard Test", "https://octocat.guard-test/"),
 };
 
 const checks = [
@@ -104,6 +107,18 @@ const checks = [
   ["build.yml: never cancels a live deploy", generated["build.yml"].includes("cancel-in-progress: false")],
   // Node 20 is EOL; a generated app must not announce it on every build.
   ["build.yml: builds on a live Node LTS", /node-version: (22|24)\b/.test(generated["build.yml"])],
+  // The address lives in the file, not only in the log: opening build.yml on
+  // GitHub has to say where this app goes. With no repo at scaffold time the
+  // owner stays the placeholder the developer must edit.
+  ["build.yml: names a site address in the header", /^# This app goes live at:\n#   https:\/\/\S+\/$/m.test(generated["build.yml"])],
+  ["build.yml: no repo keeps TU-USUARIO visible", generated["build.yml"].includes("https://TU-USUARIO.github.io/guard-test/")],
+  ["build.yml: a repo writes its real Pages URL", generated["build.yml (repo)"].includes("https://octocat.guard-test/")],
+  // The placeholder also names the second file that holds the same address, so
+  // the OTA URL and the deploy target cannot drift apart; a real repo drops it.
+  ["build.yml: a placeholder points at fletbox.config.json too", generated["build.yml"].includes("fletbox.config.json (update.url)")],
+  ["build.yml: a known repo says nothing about placeholders", !generated["build.yml (repo)"].includes("placeholder")],
+  ["build.yml: a value that is not a URL is refused", templates.githubWorkflow("Guard Test", "com.check.app").includes("TU-USUARIO")],
+  ["build.yml: web deploys on push, natives are not here", generated["build.yml"].includes("Web: AUTOMATIC") && !/deploy-pages/.test(generated["build.yml"].split("\n  deploy:")[0])],
 ];
 
 let templateFailures = 0;

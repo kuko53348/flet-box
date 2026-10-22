@@ -1063,13 +1063,45 @@ export const manifest = (appName = "FletBox App") => `{
 // that only runs when started by hand.
 // NOTE: every GitHub `${{ }}` expression is escaped as `\${{ }}` because this is
 // a JS template literal — an unescaped `${` would be parsed as interpolation.
-export const githubWorkflow = (appName = "FletBox App") => `name: Deploy ${appName}
+//
+// `siteUrl` is the Pages address `flet-box create` derived from `--repo`. It is
+// written into the file as text, at the top, the way the docs repo states its
+// own: whoever opens build.yml on GitHub reads where this app lives before
+// reading a single step. Anything that is not an http(s) URL is refused, so a
+// caller that passes the wrong thing gets the placeholder rather than a lie —
+// and the placeholder keeps `TU-USUARIO` visible, because that is the one string
+// the developer must edit.
+export const githubWorkflow = (appName = "FletBox App", siteUrl = null) => {
+  const slug = String(appName)
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "fletbox-app";
+  const site = /^https?:\/\//i.test(String(siteUrl || ""))
+    ? String(siteUrl).replace(/\/?$/, "/")
+    : `https://TU-USUARIO.github.io/${slug}/`;
+  // Only when the owner is still a guess: the address lives in two files, and a
+  // developer who edits one and not the other ships an app that polls a site
+  // that is not where the bundle is.
+  const todo = site.includes("TU-USUARIO")
+    ? `# The owner above is a placeholder: this project was created without \`--repo\`,
+# so the folder name is only a guess at the repo name. Write the real address in
+# both files that state it — this header, and fletbox.config.json (update.url),
+# which is the URL an installed app polls for an update.
+`
+    : "";
+  return `name: Deploy ${appName}
 
-# Publishes the PWA to GitHub Pages. Every push to main (and every manual run)
-# builds a fresh site, and only the deploy job can touch Pages, so a broken
-# bundle never replaces the live one. Android and iOS are NOT here: they live in
-# build-native.yml and run only when you start them, because a macOS runner is
-# not free.
+# This app goes live at:
+#   ${site}
+${todo}#
+# Web: AUTOMATIC. Every push to main (and every manual run) builds a fresh site;
+# only the deploy job can touch Pages, so a broken bundle never replaces the
+# live one. Enable the destination once: Settings -> Pages -> Build and
+# deployment -> Source: GitHub Actions. Until you do, runs are green and no site
+# exists — the "Where this lives" step below says so in the log.
+#
+# Android and iOS are NOT here: they live in build-native.yml and run only when
+# you start them, because a macOS runner is not free.
 #
 # One consequence to know about: this Pages site is also what an installed app
 # polls for an OTA update (www/config.json), and the app compares the bundle
@@ -1151,11 +1183,15 @@ jobs:
       # Printed before the deploy, because this is the address the whole workflow
       # is about, and because a missing Pages setting otherwise shows up as a
       # green run with no site: Pages lower-cases the owner, hence the tr.
+      # The file header names one address too; this is the authority, because it
+      # reads the repo the run actually belongs to — they disagree when the repo
+      # was created with a different name than the folder, or never pushed.
       - name: Where this lives
         run: |
           owner=$(printf '%s' "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')
           repo=\${GITHUB_REPOSITORY#*/}
           echo "  site:    https://$owner.github.io/$repo/"
+          echo "  header:  ${site}"
           echo "  version: $(node -p "require('./package.json').version")"
           echo "  If a green run leaves that 404, the source is wrong:"
           echo "  Settings -> Pages -> Build and deployment -> Source: GitHub Actions"
@@ -1206,6 +1242,7 @@ jobs:
           echo "  live at: \${{ steps.deployment.outputs.page_url }}"
           echo "::notice title=Site published to GitHub Pages::\${{ steps.deployment.outputs.page_url }}"
 `;
+};
 
 // Native builds: the same two jobs, but they run ONLY when started by hand from
 // Actions -> Run workflow, with a choice of platform. A push never pays for a
@@ -1487,10 +1524,12 @@ CORS configuration and use HTTPS for the remote service.
 Two workflow files ship with the project, and they answer to different triggers:
 
 - \`.github/workflows/build.yml\` — **the web, automatic**. Every push to \`main\`
-  (and every \`v*\` tag, and a manual run) builds \`www/\` and publishes it to
-  **GitHub Pages**, in two jobs: **Build site** checks the app, bundles it and
-  uploads the result; **Deploy to Pages** is the only job that can replace the
-  live site, so a bundle that fails to build leaves the current one running.
+  (and a manual run) builds \`www/\` and publishes it to **GitHub Pages**, in two
+  jobs: **Build site** checks the app, bundles it and uploads the result; **Deploy
+  to Pages** is the only job that can replace the live site, so a bundle that
+  fails to build leaves the current one running. A \`v*\` tag is deliberately not
+  a trigger: the Pages environment refuses a run that starts from a tag, so the
+  release is deployed by running this workflow again after tagging.
 - \`.github/workflows/build-native.yml\` — **Android and iOS, manual only**. Nothing
   runs on a push. Open **Actions → "… — native (manual)" → Run workflow** and pick
   \`android\`, \`ios\` or \`both\`. Each job uploads its build as a run artifact and
@@ -1506,8 +1545,12 @@ Two workflow files ship with the project, and they answer to different triggers:
    and the **Published** step prints it again as a run annotation, so you do not
    have to hunt for the environment box under the job.
 
-The site goes live at \`https://<your-user>.github.io/<repo-name>/\`. That is a
-sub-path, so \`index.html\` uses relative asset paths and works without changes.
+The address this project publishes to is written at the top of
+\`.github/workflows/build.yml\`. \`flet-box create <name> --repo <user>/<repo>\`
+fills it in from the repo; without \`--repo\` it stays
+\`https://TU-USUARIO.github.io/<name>/\`, and the header says which two files to
+edit. That is a sub-path, so \`index.html\` uses relative asset paths and works
+without changes.
 
 **Why a push does not update anyone's app:** this same address is the OTA feed
 installed apps poll, and the update check compares bundle **hashes**, not version

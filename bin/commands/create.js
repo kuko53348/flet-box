@@ -109,6 +109,21 @@ const askRepo = () =>
   });
 
 /**
+ * The GitHub Pages address a repo value implies, or null when the value is not
+ * a GitHub repo. Kept apart from `resolveOtaUrl` because the workflow header
+ * names the *Pages* site: a custom-domain OTA URL is not an address this file
+ * can publish to, so it must not be printed as one.
+ *
+ * @param {string|null} input - "user/repo" or a github.com URL.
+ * @returns {string|null} Base URL ending in "/", or null.
+ */
+const pagesSiteUrl = (input) => {
+  if (!input) return null;
+  const gh = parseGithubRepo(input.trim());
+  return gh ? `https://${gh.user}.github.io/${gh.repo}/` : null;
+};
+
+/**
  * Normalizes the user's OTA target into a base URL ending in "/".
  * - "user/repo" (or any GitHub URL shape) → GitHub Pages URL.
  * - A full http(s) URL is used as-is.
@@ -123,8 +138,7 @@ const resolveOtaUrl = (input) => {
   if (/^https?:\/\//i.test(value)) {
     return value.endsWith("/") ? value : `${value}/`;
   }
-  const gh = parseGithubRepo(value);
-  return gh ? `https://${gh.user}.github.io/${gh.repo}/` : null;
+  return pagesSiteUrl(value);
 };
 
 /**
@@ -167,6 +181,10 @@ export const createProject = async (projectName, rawArgs = []) => {
     repoInput = await askRepo();
   }
   const otaUrl = resolveOtaUrl(repoInput);
+  // The Pages address the workflow file prints as its own header. Derived from
+  // the repo alone: `flet-box create myapp --repo me/my-website` says so in
+  // build.yml, and a missing or unparsable repo leaves the placeholder to edit.
+  const siteUrl = pagesSiteUrl(repoInput);
   if (repoInput && !otaUrl) {
     console.warn(
       c(
@@ -230,7 +248,7 @@ export const createProject = async (projectName, rawArgs = []) => {
   createFile(path.join(projectPath, ".gitignore"), templates.gitignore());
   createFile(
     path.join(projectPath, ".github/workflows/build.yml"),
-    templates.githubWorkflow(finalName),
+    templates.githubWorkflow(finalName, siteUrl),
   );
   createFile(
     path.join(projectPath, ".github/workflows/build-native.yml"),
@@ -519,8 +537,9 @@ export const createProject = async (projectName, rawArgs = []) => {
     c(
       "gray",
       "CI:      .github/workflows/build.yml publishes the web to GitHub Pages on every push.\n" +
-      "         Enable it once: Settings → Pages → Source: GitHub Actions. The job prints the URL.\n" +
-      "         Android and iOS are manual: .github/workflows/build-native.yml, Run workflow.\n",
+        `         It goes live at: ${siteUrl || `https://TU-USUARIO.github.io/${finalName}/`}\n` +
+        "         Enable it once: Settings → Pages → Source: GitHub Actions. The job prints the URL.\n" +
+        "         Android and iOS are manual: .github/workflows/build-native.yml, Run workflow.\n",
     ),
   );
   console.log(
