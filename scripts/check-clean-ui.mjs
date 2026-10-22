@@ -203,7 +203,7 @@ await bites("an image that says nothing", "IMAGE_NO_ALT", [
   ['Image({ src: "/assets/cover.webp", alt: "" })', 'Image({ src: "/assets/cover.webp" })'],
 ]);
 await bites("a number that paints no shadow", "DEAD_ELEVATION", [
-  ['shadow: "0 2px 8px rgba(0, 0, 0, 0.12)"', "elevation: 3"],
+  ["ListView({ children: rows })", "ListView({ children: rows, elevation: 3 })"],
 ]);
 await bites("a paragraph set centred", "CENTERED_BODY_TEXT", [
   ['align: "left"', 'align: "center"'],
@@ -256,16 +256,21 @@ await bites("a small preset used as a target", "SMALL_PRESET", [
   ],
 ]);
 
-// 3 — the depth list is read off the package, not invented here: the advice names
-// a widget that really turns the number into a shadow, and never `Card`, whose
-// own default is the bug this tier exists to show.
+// 3 — the depth list is read off the package, not invented here. It must name the
+// widgets that really turn a number into a shadow — Card is one of them since it
+// started reading the shared scale — and never a widget with no scale at all.
 await check("the depth advice comes from the installed package", async () => {
-  const findings = await scan(mutate("DEAD_ELEVATION", [['shadow: "0 2px 8px rgba(0, 0, 0, 0.12)"', "elevation: 3"]]));
+  const findings = await scan(
+    mutate("DEAD_ELEVATION", [
+      ["ListView({ children: rows })", "ListView({ children: rows, elevation: 3 })"],
+    ]),
+  );
   const dead = findings.find((item) => item.code === "DEAD_ELEVATION");
   assert.ok(dead, "no DEAD_ELEVATION finding to read");
   const names = dead.detail.slice(0, dead.detail.indexOf("turn a number"));
   assert.match(names, /\bButton\b/, "the list names no widget that really reads elevation");
-  assert.ok(!/\bCard\b/.test(names), "Card is listed as a widget with depth, and it has none");
+  assert.match(names, /\bCard\b/, "Card reads the depth scale and the advice hides it");
+  assert.ok(!/\bListView\b/.test(names), "a widget with no depth is listed as if it had one");
 });
 
 console.log(

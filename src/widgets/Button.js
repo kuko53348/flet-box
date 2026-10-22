@@ -3,6 +3,7 @@
  * @description Button with size presets, variants, icons and gradient support.
  */
 import { WidgetFactory } from "../widget-factory/index.js";import { colors } from "../utils/themes.js";
+import { SHADOW_LEVELS } from "../tools/index.js";
 import { Text } from "./Text.js";
 import { Icon } from "./Icon.js";
 
@@ -14,15 +15,6 @@ const SIZE_PRESETS = {
   small: { padding: [6, 12], fontSize: 12, gap: 6, iconSize: 16 },
   medium: { padding: [10, 20], fontSize: 14, gap: 8, iconSize: 20 },
   large: { padding: [14, 28], fontSize: 16, gap: 10, iconSize: 24 },
-};
-
-const SHADOW_LEVELS = {
-  0: "none",
-  1: "0 1px 3px rgba(0,0,0,0.12)",
-  2: "0 3px 6px rgba(0,0,0,0.16)",
-  3: "0 6px 12px rgba(0,0,0,0.2)",
-  4: "0 10px 20px rgba(0,0,0,0.25)",
-  5: "0 15px 30px rgba(0,0,0,0.3)",
 };
 
 // ============================================================

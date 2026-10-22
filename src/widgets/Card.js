@@ -4,7 +4,7 @@
  */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
-import { border } from "../tools/index.js";
+import { border, SHADOW_LEVELS } from "../tools/index.js";
 
 export const Card = (props = {}) => {
   const {
@@ -24,7 +24,11 @@ export const Card = (props = {}) => {
     backgroundColor: bgColor,
     borderRadius: borderRadius,
     padding: padding,
-    elevation: elevation,
+    // The engine routes `elevation` straight into `style.boxShadow`, and CSS drops
+    // a bare number: forwarding it left every card flat, whatever depth was asked
+    // for. Depth is a scale, so the level is read here into a real shadow — and an
+    // explicit `shadow`/`boxShadow` in `rest` still wins over the scale.
+    boxShadow: SHADOW_LEVELS[elevation] ?? SHADOW_LEVELS[2],
     border: showBorder ? border(borderWidth, borderStyle, borderColor) : "none",
     ...rest,
   });

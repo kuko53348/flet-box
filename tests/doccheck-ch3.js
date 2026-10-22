@@ -7,9 +7,11 @@
 // - Theme tokens (src/utils/themes.js): surface #f8fafc = rgb(248,250,252);
 //   border #e2e8f0 = rgb(226,232,240); primary #6366f1 = rgb(99,102,241);
 //   secondary #8b5cf6; danger #ef4444.
-// - Card forwards raw `elevation` to the factory (elevation -> boxShadow, unit "none"),
-//   which yields an invalid "Npx" box-shadow that the browser drops -> computed "none".
-//   ListTile and Chip build their own real box-shadow strings from `elevation`.
+// - Card reads `elevation` from the shared depth scale (src/tools/shadow.js SHADOW_LEVELS)
+//   and passes the resulting box-shadow string to the factory, so a level paints a real
+//   shadow; 0 is `none`, an off-scale level falls back to the documented default 2, and an
+//   explicit `shadow`/`boxShadow` wins over the scale.
+// - ListTile and Chip build their own real box-shadow strings from `elevation`.
 export default function run(ctx) {
   const { t, eq, cs, mount, W } = ctx;
 
@@ -35,9 +37,19 @@ export default function run(ctx) {
     const off = mount(W.Card({ showBorder: false }));
     eq(cs(off).borderTopStyle, "none");
   });
-  t("Card: elevation is forwarded raw and renders no box-shadow (documented caveat)", () => {
-    const e = mount(W.Card({ elevation: 4 }));
-    eq(cs(e).boxShadow, "none");
+  t("Card: elevation paints a real shadow from the depth scale", () => {
+    eq(cs(mount(W.Card({ elevation: 4 }))).boxShadow, "rgba(0, 0, 0, 0.25) 0px 10px 20px 0px");
+    eq(cs(mount(W.Card({ elevation: 1 }))).boxShadow, "rgba(0, 0, 0, 0.12) 0px 1px 3px 0px");
+  });
+  t("Card: elevation 0 is flush, an off-scale level keeps the default depth", () => {
+    eq(cs(mount(W.Card({ elevation: 0 }))).boxShadow, "none");
+    eq(cs(mount(W.Card({ elevation: 7 }))).boxShadow, "rgba(0, 0, 0, 0.16) 0px 3px 6px 0px");
+  });
+  t("Card: an explicit shadow wins over the elevation scale", () => {
+    eq(
+      cs(mount(W.Card({ elevation: 5, shadow: "0 0 0 2px #f00" }))).boxShadow,
+      "rgb(255, 0, 0) 0px 0px 0px 2px",
+    );
   });
   t("Card: bgColor overrides the surface default", () => {
     const e = mount(W.Card({ bgColor: "#ff0000" }));
