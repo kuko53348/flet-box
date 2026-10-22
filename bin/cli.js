@@ -14,6 +14,7 @@ import fs from "fs";
 import path from "path";
 import { createProject } from "./commands/create.js";
 import { checkApi } from "./commands/checkApi.js";
+import { checkUi } from "./commands/checkUi.js";
 import { auditFix } from "./commands/auditFix.js";
 import { toPng } from "./commands/toPng.js";
 import { images } from "./commands/images.js";
@@ -86,6 +87,10 @@ ${cmd("unpack <Widget>", "Everything one widget really accepts, and what works")
 ${cmd("   └─ --example", "paste-ready call using only verified props")}
 ${cmd("   └─ --diff", "what the docs or types claim that the code ignores")}
 ${cmd("   └─ unpack --all", "every widget; --json / --md write .fletbox/api/")}
+${cmd("check-ui", "Clean-UI gate: tokens, 8-based scale, tap targets, WCAG contrast")}
+${cmd("   └─ --tokens", "print the measured contrast of every color token")}
+${cmd("   └─ --strict", "fail on contrast warnings too")}
+${cmd("   └─ alias", "ui | checkUi")}
 ${cmd("audit-fix", "Rewrite broken imports, missing imports and misspelled props")}
 ${cmd("   └─ --only imports|props", "run one repair instead of both")}
 ${cmd("   └─ alias", "fix-imports | fix-path-imports | auditFix")}
@@ -311,6 +316,14 @@ async function main() {
 
       case "unpack": {
         const { exitCode } = await unpack(args.slice(1));
+        if (exitCode) process.exit(exitCode);
+        break;
+      }
+
+      case "check-ui":
+      case "checkUi":
+      case "ui": {
+        const { exitCode } = await checkUi(args.slice(1));
         if (exitCode) process.exit(exitCode);
         break;
       }

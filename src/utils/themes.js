@@ -2,11 +2,23 @@
 
 // ========== DEFAULT COLORS (static, safe) ==========
 const DEFAULT_COLORS = {
-  primary: "#6366f1",
+  // #6366f1 put white on 4.47:1 — a hair under AA for a button label. Two units
+  // darker measures 4.55:1, the same indigo, and every brand button passes.
+  primary: "#6165ef",
   secondary: "#8b5cf6",
   success: "#10b981",
   warning: "#f59e0b",
+  // The readable greens and ambers, same rule as the red below: #10b981 and
+  // #f59e0b carry white at 2.54:1 and 2.15:1, so they are dots and borders. These
+  // are the ones a person can read or press — 5.48:1 and 5.02:1, both directions.
+  successStrong: "#047857",
+  warningStrong: "#b45309",
+  // #ef4444 is the error *signal*: a badge, an icon, a border. As words on a
+  // white page it measures 3.76:1, which is not AA, and white on it is 3.76 too.
   danger: "#ef4444",
+  // The red a person can read and press: 6.47:1 against white in both directions,
+  // so it is legal as the label of a delete and as the plate under white words.
+  dangerStrong: "#b91c1c",
   info: "#3b82f6",
   background: "#ffffff",
   surface: "#f8fafc",
@@ -14,6 +26,10 @@ const DEFAULT_COLORS = {
   text: "#0f172a",
   textSecondary: "#64748b",
   textDisabled: "#94a3b8",
+  // What to write on a `primary` fill. White measures 4.55:1 on #6165ef.
+  onPrimary: "#ffffff",
+  // The soft brand tint a card or icon chip uses instead of `primary + '15'`.
+  primaryBg: "#eef2ff",
   border: "#e2e8f0",
   gray50: "#f8fafc",
   gray100: "#f1f5f9",
@@ -46,11 +62,18 @@ export const palettes = {
     success: "#10b981",
     warning: "#f59e0b",
     danger: "#ef4444",
+    dangerStrong: "#b91c1c",
+    successStrong: "#047857",
+    warningStrong: "#b45309",
     info: "#3b82f6",
     background: "#ffffff",
     surface: "#f8fafc",
     card: "#ffffff",
     text: "#0f172a",
+    // #00A5FF is a light fill: white on it measures 2.68:1 and fails even the
+    // large-text line, so text on this brand color is the dark ink (6.65:1).
+    onPrimary: "#0f172a",
+    primaryBg: "#e6f9ff",
     textSecondary: "#64748b",
     textDisabled: "#94a3b8",
     border: "#e2e8f0",
@@ -73,11 +96,22 @@ export const palettes = {
     success: "#10b981",
     warning: "#fbbf24",
     danger: "#f87171",
+    // On this page a light red is the readable one (6.45:1 as words); the plate a
+    // person presses goes the other way, dark enough for the page's own ink:
+    // #f1f5f9 on #7f1d1d measures 9.15:1.
+    dangerStrong: "#7f1d1d",
+    // Same convention in the dark theme: the light tone is the readable word, the
+    // deep one is the plate the page's own ink sits on (8.32:1 and 8.28:1).
+    successStrong: "#14532d",
+    warningStrong: "#78350f",
     info: "#60a5fa",
     background: "#0f172a",
     surface: "#1e293b",
     card: "#1e293b",
     text: "#f1f5f9",
+    // #00AFBC is a light fill too: white on it is 2.67:1. Dark ink reads 6.68:1.
+    onPrimary: "#0f172a",
+    primaryBg: "#0b3b41",
     textSecondary: "#94a3b8",
     textDisabled: "#64748b",
     border: "#334155",
@@ -134,13 +168,14 @@ const notifyThemeChange = () => {
 
 // ========== THEME FUNCTIONS ==========
 /**
- * Applies a named theme palette to the global `colors` object, updates all
- * CSS custom properties on `:root`, persists the choice to `localStorage`,
- * and notifies all subscribers.
- * @param {string} themeName - Name of the palette to apply (e.g. `"light"` or `"dark"`).
- * @returns {Object} The updated `colors` object after the theme is applied.
+ * Copies a registered palette onto the live `colors` object and refreshes the
+ * CSS custom properties. Shared by `setTheme` and `registerPalette`; it does not
+ * persist anything, because "this is the palette now" and "the user picked this
+ * theme" are two different sentences.
+ * @param {string} themeName
+ * @returns {Object} the updated `colors` object
  */
-export const setTheme = (themeName) => {
+const applyPalette = (themeName) => {
   const palette = palettes[themeName];
   if (palette) {
     Object.keys(palette).forEach((key) => {
@@ -160,6 +195,20 @@ export const setTheme = (themeName) => {
     // Silently fail in non-browser environments
   }
 
+  notifyThemeChange();
+  return colors;
+};
+
+/**
+ * Applies a named theme palette to the global `colors` object, updates all
+ * CSS custom properties on `:root`, persists the choice to `localStorage`,
+ * and notifies all subscribers.
+ * @param {string} themeName - Name of the palette to apply (e.g. `"light"` or `"dark"`).
+ * @returns {Object} The updated `colors` object after the theme is applied.
+ */
+export const setTheme = (themeName) => {
+  applyPalette(themeName);
+
   // Save preference
   try {
     localStorage.setItem("fletbox-theme", themeName);
@@ -167,8 +216,33 @@ export const setTheme = (themeName) => {
     // Silently fail
   }
 
-  notifyThemeChange();
   return colors;
+};
+
+/**
+ * Merges an app's own tokens into a named palette and, when that palette is the
+ * one currently on screen, repaints with it. An app that only declares a
+ * `colors` object changes nothing: every widget reads the framework's live
+ * `colors`, so the tokens have to be registered to reach the page.
+ *
+ * Unlike `setTheme` this never writes the theme preference — an app supplying
+ * its brand colors is not the user choosing light or dark.
+ *
+ * @param {string} themeName - Palette to extend, usually `"light"` or `"dark"`.
+ * @param {Object} palette - Token names to override; unknown keys are ignored.
+ * @returns {Object} The registered palette.
+ */
+export const registerPalette = (themeName, palette) => {
+  if (!themeName || !palette || typeof palette !== "object") return palettes;
+  // A token the framework never heard of is seeded onto `colors` first:
+  // applyPalette only copies keys that already exist — that filter is what stops
+  // a palette which leaves one out (both built-ins do) from blanking it.
+  Object.keys(palette).forEach((key) => {
+    if (!colors.hasOwnProperty(key)) colors[key] = palette[key];
+  });
+  palettes[themeName] = { ...(palettes[themeName] || {}), ...palette };
+  if (getTheme() === themeName) applyPalette(themeName);
+  return palettes[themeName];
 };
 
 /**

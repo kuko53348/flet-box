@@ -198,6 +198,8 @@ export const createProject = async (projectName, rawArgs = []) => {
     ".fletbox/api",
     ".fletbox/memory/notes",
     ".claude",
+    ".claude/skills/fletbox-clean-ui",
+    ".qoder/skills/fletbox-clean-ui",
     ".cursor/rules",
   ];
   const extraDirs =
@@ -416,6 +418,29 @@ export const createProject = async (projectName, rawArgs = []) => {
     path.join(projectPath, ".cursor/rules/fletbox.mdc"),
     templates.cursorRules(),
   );
+
+  // The clean-UI skill. Claude Code loads `.claude/skills/<name>/SKILL.md` by
+  // description, so the agent picks it up whenever it touches a screen without
+  // being told. `.qoder/skills/` holds a byte-identical copy because Qoder reads
+  // the same shape from a different root — one text, two loaders, never two edits.
+  const cleanUiSkill = templates.cleanUiSkill();
+  createFile(
+    path.join(projectPath, ".claude/skills/fletbox-clean-ui/SKILL.md"),
+    cleanUiSkill,
+  );
+  createFile(
+    path.join(projectPath, ".qoder/skills/fletbox-clean-ui/SKILL.md"),
+    cleanUiSkill,
+  );
+  createFile(
+    path.join(projectPath, ".cursor/rules/fletbox-clean-ui.mdc"),
+    templates.cleanUiCursorRule(),
+  );
+  createFile(
+    path.join(projectPath, "scripts/check-ui.mjs"),
+    templates.checkUiScript(finalName),
+  );
+
   createFile(
     path.join(projectPath, ".fletbox/memory/MEMORY.md"),
     templates.memoryIndexMd(finalName),

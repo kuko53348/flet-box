@@ -292,6 +292,60 @@ class Color {
   }
 
   /**
+   * Relative luminance of the color, as WCAG 2.1 defines it.
+   *
+   * Each channel is sRGB-decoded (the linear branch below 0.04045 is the one
+   * that matters for dark colors, where `isDark()`'s BT.601 luma is a poor
+   * proxy) and weighted 0.2126 / 0.7152 / 0.0722. Alpha is ignored: this is the
+   * luminance of the color itself, so a translucent color must be composited
+   * over its background before being measured.
+   *
+   * @returns {number} 0 for black, 1 for white
+   */
+  luminance() {
+    const channel = (value) => {
+      const c = value / 255;
+      return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    };
+    return (
+      0.2126 * channel(this.r) + 0.7152 * channel(this.g) + 0.0722 * channel(this.b)
+    );
+  }
+
+  /**
+   * Contrast ratio between this color and another, in WCAG terms.
+   *
+   * Returns the ratio of the lighter luminance to the darker one, from 1
+   * (identical) to 21 (black on white). This is what the readability thresholds
+   * are written against: 4.5 for body text, 3 for large text (>= 24px, or 19px
+   * bold) and for a control's own outline against the surface it sits on.
+   *
+   * @param {string|Color} other - The second color (any form `color()` parses).
+   * @returns {number} Contrast ratio, >= 1
+   * @example
+   * color('#64748b').contrastRatio('#ffffff'); // 4.76 — the textSecondary token, passes
+   * color('#94a3b8').contrastRatio('#ffffff'); // 2.56 — the textDisabled token, fails
+   */
+  contrastRatio(other) {
+    const a = this.luminance();
+    const b = other instanceof Color ? other.luminance() : color(other).luminance();
+    const light = Math.max(a, b);
+    const dark = Math.min(a, b);
+    return (light + 0.05) / (dark + 0.05);
+  }
+
+  /**
+   * Whether this color and another clear a WCAG contrast threshold.
+   *
+   * @param {string|Color} other - The color it is read against.
+   * @param {number} [minimum=4.5] - The ratio required: 4.5 body text, 3 large text.
+   * @returns {boolean} `true` when the pair is at or above `minimum`
+   */
+  meetsContrast(other, minimum = 4.5) {
+    return this.contrastRatio(other) >= minimum;
+  }
+
+  /**
    * Invert the color by complementing each RGB channel.
    *
    * Each channel is replaced with `255 - channel`. The alpha value is unchanged.

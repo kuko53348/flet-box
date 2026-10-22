@@ -302,7 +302,7 @@ export const usage = () => ({
     ram: RamStore.getRamItemCount()
 });''',
 
-    'createModule.theme': '''import { ThemeProvider, useTheme, setTheme, getTheme, toggleTheme, subscribeTheme, applySystemTheme, watchSystemTheme, palettes, colors, Container, Text } from 'flet-box';
+    'createModule.theme': '''import { ThemeProvider, useTheme, setTheme, registerPalette, getTheme, toggleTheme, subscribeTheme, applySystemTheme, watchSystemTheme, palettes, colors, Container, Text } from 'flet-box';
 
 export const ThemedApp = () => ThemeProvider({
     theme: 'dark',
@@ -310,6 +310,11 @@ export const ThemedApp = () => ThemeProvider({
 });
 
 const { colors: liveColors, getColor } = useTheme();
+
+// registerPalette() puts an app's own tokens into a named palette and repaints
+// only when that palette is already on screen. It never picks the theme.
+registerPalette('light', { primary: '#6165ef', onPrimary: '#ffffff' });
+registerPalette('dark', { primary: '#818cf8', onPrimary: '#0f172a' });
 
 subscribeTheme((name) => console.log('theme is now', name));
 setTheme(getTheme() === 'light' ? 'dark' : 'light');

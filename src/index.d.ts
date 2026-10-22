@@ -1884,6 +1884,10 @@ declare module 'flet-box' {
   export const colors: Record<string, string>;
   export const palettes: Record<string, Record<string, string>>;
   export function setTheme(themeName: 'light' | 'dark'): Record<string, string>;
+  export function registerPalette(
+    themeName: string,
+    palette: Record<string, string>
+  ): Record<string, string>;
   export function getTheme(): string;
   export function toggleTheme(): string;
   export function getColor(colorName: string, opacity?: number): string;
@@ -2084,9 +2088,12 @@ declare module 'flet-box' {
     isDark(): boolean;
     isLight(): boolean;
     contrast(): string;
+    luminance(): number;
+    contrastRatio(other: string | ColorInstance): number;
+    meetsContrast(other: string | ColorInstance, minimum?: number): boolean;
   }
 
-  export const color: (value: string) => ColorInstance;
+  export const color: (value: string | ColorInstance) => ColorInstance;
   export function rgba(r: number, g: number, b: number, a?: number): string;
   export function stackPosition(widget: Widget, props: { top?: any; right?: any; bottom?: any; left?: any }): Widget;
   export function flex(grow: number | { grow?: number; shrink?: number; basis?: string }, shrink?: number, basis?: string): string;

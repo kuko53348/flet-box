@@ -87,6 +87,7 @@ export {
 export {
   colors,
   setTheme,
+  registerPalette,
   getTheme,
   toggleTheme,
   subscribeTheme,

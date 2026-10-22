@@ -64,110 +64,6 @@ export const indexHtml = (appName = "FletBox App") => `<!DOCTYPE html>
 </body>
 </html>`;
 
-export const appJs = () => `// app.js
-import { runApp, Scaffold, AppBar, BottomNavigation, colors, Icon, goTo, openDrawer } from 'flet-box';
-import { RootScreen } from './screens/RootScreen.js';
-import { HomeScreen } from './screens/HomeScreen.js';
-import { AboutScreen } from './screens/AboutScreen.js';
-import { DrawerMenu } from './components/layouts/DrawerMenu.js';
-
-// ========== CUSTOM APPBAR (commented out) ==========
-/*
-const CustomAppBar = () => {
-    return AppBar({
-        title: 'My App',
-        backgroundColor: colors.primary,
-        titleColor: '#ffffff',
-        centerTitle: true,
-        showBackButton: false,
-        leading: Icon({ 
-            name: 'menu', 
-            size: 24, 
-            color: '#ffffff',
-            onclick: () => openDrawer()
-        }),
-        actions: [
-            Icon({ name: 'search', size: 22, color: '#ffffff', onclick: () => console.log('Search') }),
-            Icon({ name: 'notifications', size: 22, color: '#ffffff', onclick: () => console.log('Notifications') })
-        ]
-    });
-};
-*/
-
-// ========== BOTTOM NAVIGATION (commented out) ==========
-/*
-const BottomNav = () => {
-    return BottomNavigation({
-        items: [
-            { icon: 'home', label: 'Home', route: '/home' },
-            { icon: 'favorite', label: 'Favorites', route: '/favorites' },
-            { icon: 'person', label: 'Profile', route: '/profile' }
-        ],
-        backgroundColor: colors.surface,
-        selectedColor: colors.primary
-    });
-};
-*/
-
-// ========== APPBAR PER ROUTE ==========
-const HomeAppBar = () => {
-    return AppBar({
-        title: 'Dashboard',
-        backgroundColor: colors.primary,
-        titleColor: '#ffffff',
-        centerTitle: true,
-        showBackButton: false,
-        leading: Icon({ 
-            name: 'menu', 
-            size: 24, 
-            color: '#ffffff',
-            onclick: () => openDrawer()
-        })
-    });
-};
-
-const AboutAppBar = () => {
-    return AppBar({
-        title: 'About',
-        backgroundColor: colors.primary,
-        titleColor: '#ffffff',
-        centerTitle: true,
-        showBackButton: true,
-        leading: Icon({ 
-            name: 'arrow_back', 
-            size: 24, 
-            color: '#ffffff',
-            onclick: () => goTo('/home')
-        })
-    });
-};
-
-// ========== ROUTES ==========
-const routes = {
-    '/': { body: RootScreen, appBar: false },
-    '/home': { body: HomeScreen, appBar: HomeAppBar() },
-    '/about': { body: AboutScreen, appBar: AboutAppBar() }
-    // Example with BottomNavigation (uncomment)
-    // '/favorites': { body: HomeScreen, appBar: HomeAppBar() },
-    // '/profile': { body: AboutScreen, appBar: AboutAppBar() }
-};
-
-const MyApp = () => {
-    return Scaffold({
-        routes: routes,
-        drawer: DrawerMenu(),
-        // bottomBar: BottomNav(),  // ← Uncomment to enable BottomNavigation
-        routerMode: 'hash',
-        backgroundColor: colors.background
-    });
-};
-
-runApp(MyApp, 'root');
-`;
-
-// The rest of the templates (rootScreenJs, homeScreenJs, aboutScreenJs, drawerMenuJs, themesJs, etc.)
-// remain the same as in your original file (they are already in English).
-// For brevity, I include them below as you already have them, but ensure no Spanish comments.
 
 export const rootScreenJs = () => `// screens/RootScreen.js
 import { Container, Column, Text, Button, Icon, colors, goTo } from 'flet-box';
@@ -177,24 +73,24 @@ export const RootScreen = () => {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 20,
+        padding: 24,
         backgroundColor: colors.background,
         child: Column({
-            gap: 28,
+            gap: 24,
             alignItems: 'center',
             children: [
                 Container({
                     width: 80,
                     height: 80,
-                    borderRadius: 20,
-                    backgroundColor: colors.primary + '15',
+                    borderRadius: 16,
+                    backgroundColor: colors.primaryBg,
                     justifyContent: 'center',
                     alignItems: 'center',
                     child: Icon({ name: 'rocket_launch', size: 48, color: colors.primary })
                 }),
                 Text({ 
                     text: 'FletBox', 
-                    size: 36, 
+                    size: 40, 
                     weight: 'bold', 
                     color: colors.primary, 
                     align: 'center' 
@@ -205,12 +101,13 @@ export const RootScreen = () => {
                     color: colors.textSecondary, 
                     align: 'center' 
                 }),
+                // A filled Button defaults to colors.surface, not to the brand:
+                // the primary action has to name the fill it wants.
                 Button({ 
-                    text: 'Get Started →', 
+                    text: 'Get Started', 
                     iconRight: 'arrow_forward',
                     bgColor: colors.primary, 
-                    color: '#ffffff', 
-                    padding: '10px 28px',
+                    color: colors.onPrimary,
                     onPress: () => goTo('/home') 
                 })
             ]
@@ -252,8 +149,8 @@ export const HomeScreen = () => {
                 Container({
                     width: 96,
                     height: 96,
-                    borderRadius: 24,
-                    backgroundColor: colors.primary + '15',
+                    borderRadius: 16,
+                    backgroundColor: colors.primaryBg,
                     justifyContent: 'center',
                     alignItems: 'center',
                     child: Icon({ name: 'rocket_launch', size: 56, color: colors.primary })
@@ -277,29 +174,28 @@ export const HomeScreen = () => {
                     style: { width: '100%', maxWidth: 280 },
                     children: [
                         Button({ 
-                            text: '🏠 Home', 
+                            text: 'Home', 
+                            iconLeft: 'dashboard',
                             iconRight: 'arrow_forward',
                             bgColor: colors.primary, 
-                            color: '#ffffff',
-                            padding: '12px 20px',
+                            color: colors.onPrimary,
                             fullWidth: true,
                             onPress: () => goTo('/home') 
                         }),
                         Button({ 
-                            text: 'ℹ️ About', 
+                            text: 'About', 
+                            iconLeft: 'info',
                             iconRight: 'arrow_forward',
                             variant: 'outlined',
-                            color: colors.info,
-                            padding: '12px 20px',
+                            color: colors.primary,
                             fullWidth: true,
                             onPress: () => goTo('/about') 
                         }),
                         Button({ 
-                            text: '← Back to Root', 
+                            text: 'Back to Root', 
                             iconLeft: 'arrow_back',
                             variant: 'text',
-                            color: colors.textSecondary,
-                            padding: '12px 20px',
+                            color: colors.text,
                             fullWidth: true,
                             onPress: () => goTo('/') 
                         })
@@ -339,8 +235,8 @@ export const AboutScreen = () => {
                 Container({
                     width: 96,
                     height: 96,
-                    borderRadius: 24,
-                    backgroundColor: colors.primary + '15',
+                    borderRadius: 16,
+                    backgroundColor: colors.primaryBg,
                     justifyContent: 'center',
                     alignItems: 'center',
                     child: Icon({ name: 'rocket_launch', size: 56, color: colors.primary })
@@ -356,39 +252,39 @@ export const AboutScreen = () => {
                     text: 'A simple and fast UI framework for building web apps with pure JavaScript.', 
                     size: 16, 
                     color: colors.textSecondary, 
-                    align: 'center',
+                    align: 'left',
                     style: { maxWidth: 400 }
                 }),
                 Container({
                     marginTop: 16,
-                    padding: 20,
+                    padding: 24,
                     borderRadius: 16,
                     backgroundColor: colors.surface,
                     style: { width: '100%', maxWidth: 400 },
                     child: Column({
                         gap: 12,
                         children: [
-                            Text({ text: '✨ What is FletBox?', size: 18, weight: 'bold', color: colors.primary }),
+                            Text({ text: 'What is FletBox?', size: 18, weight: 'bold', color: colors.text }),
                             Text({ text: 'FletBox helps you create web apps easily. No complex tools. Just write JavaScript.', size: 14, color: colors.textSecondary }),
                             Container({ height: 1, backgroundColor: colors.border, marginVertical: 8 }),
                             Row({ gap: 12, alignItems: 'center', children: [
-                                Icon({ name: 'check_circle', size: 20, color: colors.success }),
+                                Icon({ name: 'check_circle', size: 20, color: colors.successStrong }),
                                 Text({ text: 'Zero dependencies - lightweight', size: 14, color: colors.text })
                             ] }),
                             Row({ gap: 12, alignItems: 'center', children: [
-                                Icon({ name: 'check_circle', size: 20, color: colors.success }),
+                                Icon({ name: 'check_circle', size: 20, color: colors.successStrong }),
                                 Text({ text: '40+ ready-to-use widgets', size: 14, color: colors.text })
                             ] }),
                             Row({ gap: 12, alignItems: 'center', children: [
-                                Icon({ name: 'check_circle', size: 20, color: colors.success }),
+                                Icon({ name: 'check_circle', size: 20, color: colors.successStrong }),
                                 Text({ text: 'Built-in navigation (router)', size: 14, color: colors.text })
                             ] }),
                             Row({ gap: 12, alignItems: 'center', children: [
-                                Icon({ name: 'check_circle', size: 20, color: colors.success }),
+                                Icon({ name: 'check_circle', size: 20, color: colors.successStrong }),
                                 Text({ text: 'Dark / Light theme', size: 14, color: colors.text })
                             ] }),
                             Row({ gap: 12, alignItems: 'center', children: [
-                                Icon({ name: 'check_circle', size: 20, color: colors.success }),
+                                Icon({ name: 'check_circle', size: 20, color: colors.successStrong }),
                                 Text({ text: 'Hot reload for fast development', size: 14, color: colors.text })
                             ] })
                         ]
@@ -397,9 +293,8 @@ export const AboutScreen = () => {
                 Button({ 
                     text: 'Back to Root', 
                     iconLeft: 'arrow_back',
-                    variant: 'outlined',
-                    bgColor: colors.info, 
-                    color: colors.info, 
+                    bgColor: colors.primary, 
+                    color: colors.onPrimary,
                     onPress: () => goTo('/') 
                 })
             ]
@@ -416,7 +311,7 @@ import { Drawer, DrawerItem, Container, Column, Text, Icon, colors, closeDrawer 
 export const DrawerMenu = () => {
     return Drawer({
         header: Container({
-            padding: 28,
+            padding: 24,
             backgroundColor: colors.primary,
             child: Column({
                 gap: 12,
@@ -425,14 +320,14 @@ export const DrawerMenu = () => {
                     Container({
                         width: 60,
                         height: 60,
-                        borderRadius: 30,
-                        backgroundColor: '#ffffff',
+                        borderRadius: 999,
+                        backgroundColor: colors.onPrimary,
                         justifyContent: 'center',
                         alignItems: 'center',
                         child: Icon({ name: 'rocket_launch', size: 32, color: colors.primary })
                     }),
-                    Text({ text: 'FletBox', size: 18, weight: 'bold', color: '#ffffff' }),
-                    Text({ text: 'UI Framework', size: 12, color: 'rgba(255,255,255,0.8)' })
+                    Text({ text: 'FletBox', size: 18, weight: 'bold', color: colors.onPrimary }),
+                    Text({ text: 'UI Framework', size: 12, color: colors.onPrimary })
                 ]
             })
         }),
@@ -457,7 +352,7 @@ export const DrawerMenu = () => {
             })
         ],
         footer: Container({
-            padding: 20,
+            padding: 16,
             borderTop: \`1px solid \${colors.border}\`,
             child: Text({ 
                 text: 'Version 1.0.0', 
@@ -473,12 +368,29 @@ export default DrawerMenu;
 `;
 
 export const themesJs = () => `// database/themes.js
-export let colors = {
-    primary: '#6366f1',
+// The app's whole design system lives here. Every value is measured with the
+// framework's own \`color().contrastRatio()\` against the surface it is written on:
+// the number sits next to the pair that needs it, because a token that cannot
+// carry AA text is decoration, not a color.
+import { registerPalette } from 'flet-box';
+
+export const lightColors = {
+    // #6366f1 put white on 4.47:1 — a hair under AA. Two units darker measures
+    // 4.55:1, the same indigo, and every brand button passes.
+    primary: '#6165ef',
     secondary: '#8b5cf6',
     success: '#10b981',
     warning: '#f59e0b',
+    // The error signal: a badge, a border, an icon. 3.76:1 as words on this page,
+    // so it is never the label of a button.
     danger: '#ef4444',
+    // The readable red, both ways: 6.47:1 as words on white, 6.47:1 with white
+    // written on it, 5.42:1 inside \`errorBg\`. Use it for the words and the plate.
+    dangerStrong: '#b91c1c',
+    // The readable green and amber: 5.48:1 and 5.02:1, in both directions, so
+    // they may be a label, an icon that carries meaning, or a plate.
+    successStrong: '#047857',
+    warningStrong: '#b45309',
     info: '#3b82f6',
     background: '#ffffff',
     surface: '#f8fafc',
@@ -486,10 +398,19 @@ export let colors = {
     textSecondary: '#64748b',
     textDisabled: '#94a3b8',
     border: '#e2e8f0',
-    white: '#ffffff',
-    black: '#000000',
     overlay: 'rgba(0, 0, 0, 0.5)',
-    shadow: 'rgba(0, 0, 0, 0.1)'
+    shadow: 'rgba(0, 0, 0, 0.1)',
+    // What to write on a brand fill, and the soft tints that replace
+    // \`colors.primary + '15'\`.
+    onPrimary: '#ffffff',
+    primaryBg: '#eef2ff',
+    error: '#ff3b30',
+    errorBg: '#ffe5e5',
+    successBg: '#e5f5e5',
+    warningBg: '#fff5e5',
+    infoBg: '#e5f5ff',
+    divider: '#eeeeee',
+    card: '#ffffff'
 };
 
 export const darkColors = {
@@ -497,7 +418,15 @@ export const darkColors = {
     secondary: '#a78bfa',
     success: '#34d399',
     warning: '#fbbf24',
+    // On a dark page the light red is the readable one: 6.45:1 against the
+    // background. The plate a person presses goes the other way.
     danger: '#f87171',
+    // #f1f5f9 on this measures 9.15:1 — the destructive button in the dark theme.
+    dangerStrong: '#7f1d1d',
+    // The same convention: in the dark theme the light tone is the readable word
+    // (9.29:1, 10.69:1) and these deep ones are the plates under the page ink.
+    successStrong: '#14532d',
+    warningStrong: '#78350f',
     info: '#60a5fa',
     background: '#0f172a',
     surface: '#1e293b',
@@ -505,46 +434,26 @@ export const darkColors = {
     textSecondary: '#94a3b8',
     textDisabled: '#64748b',
     border: '#334155',
-    white: '#ffffff',
-    black: '#000000',
     overlay: 'rgba(0, 0, 0, 0.6)',
-    shadow: 'rgba(0, 0, 0, 0.3)'
+    shadow: 'rgba(0, 0, 0, 0.3)',
+    // #818cf8 is a light fill: white on it is 2.98:1, the page's own ink is 5.98:1.
+    onPrimary: '#0f172a',
+    primaryBg: '#1e1b4b',
+    error: '#f87171',
+    errorBg: '#3b1113',
+    successBg: '#0c2f22',
+    warningBg: '#33230a',
+    infoBg: '#12263c',
+    divider: '#1e293b',
+    card: '#1e293b'
 };
 
-let currentTheme = 'light';
-const listeners = [];
-
-export const setTheme = (themeName) => {
-    const theme = themeName === 'dark' ? darkColors : colors;
-    currentTheme = themeName;
-    Object.keys(theme).forEach(key => { 
-        if (colors.hasOwnProperty(key)) {
-            colors[key] = theme[key];
-        }
-    });
-    const root = document.documentElement;
-    Object.keys(colors).forEach(key => {
-        root.style.setProperty(\`--color-\${key}\`, colors[key]);
-    });
-    listeners.forEach(cb => cb(colors, themeName));
-};
-
-export const getTheme = () => currentTheme;
-export const toggleTheme = () => {
-    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
-    return newTheme;
-};
-export const subscribeTheme = (callback) => {
-    listeners.push(callback);
-    return () => { const i = listeners.indexOf(callback); if(i > -1) listeners.splice(i, 1); };
-};
-
-const initTheme = () => {
-    const root = document.documentElement;
-    Object.keys(colors).forEach(key => root.style.setProperty(\`--color-\${key}\`, colors[key]));
-};
-initTheme();
+// Declaring a palette paints nothing by itself: every widget reads the
+// framework's live \`colors\`, so the tokens have to be registered into it.
+// Registration deliberately does not pick a theme — whether the app is dark is
+// the reader's answer (\`setTheme\`, \`toggleTheme\`), not the designer's.
+registerPalette('light', lightColors);
+registerPalette('dark', darkColors);
 `;
 
 export const runSh = () => `#!/bin/bash
@@ -686,17 +595,40 @@ self.addEventListener('fetch', event => {
         const hit = await cache.match(req);
         if (hit) return hit;
       }
+
+      // A page load that neither the host nor the cache can answer must still
+      // boot the app: the router takes the URL from there. Asset requests keep
+      // their own failure, because replacing a missing image with a document is
+      // how a broken site becomes an undebuggable one.
+      const shell = async () => {
+        if (req.mode !== 'navigate') return null;
+        const cached = await cache.match(BASE + 'index.html');
+        if (cached) return cached;
+        try {
+          const fresh = await fetch(BASE + 'index.html', { cache: 'no-store' });
+          return fresh.ok ? fresh : null;
+        } catch (err) {
+          return null;
+        }
+      };
+
       try {
         const fresh = await fetch(req, { cache: 'no-store' });
-        if (fresh.ok) cache.put(req, fresh.clone());
-        return fresh;
+        if (fresh.ok) {
+          cache.put(req, fresh.clone());
+          return fresh;
+        }
+        // A host without SPA rewrites (GitHub Pages, a plain bucket) answers an
+        // unknown path with its own 404 page. That is a response, not an error,
+        // so a fallback living in the catch below never runs and every reload of
+        // a deep link shows "Page not found" while the app is perfectly healthy.
+        const fallback = await shell();
+        return fallback || fresh;
       } catch (err) {
         const cached = await cache.match(req);
         if (cached) return cached;
-        if (req.mode === 'navigate') {
-          const shell = await cache.match(BASE + 'index.html');
-          if (shell) return shell;
-        }
+        const fallback = await shell();
+        if (fallback) return fallback;
         return Response.error();
       }
     })()
@@ -711,6 +643,7 @@ export const packageJson = (name) => `{
   "scripts": {
     "dev": "bash run.sh",
     "check": "node scripts/check-app.mjs",
+    "ui": "node scripts/check-ui.mjs",
     "fix": "flet-box audit-fix",
     "api": "flet-box unpack --all --md",
     "build": "flet-box createBundle www",
@@ -1083,8 +1016,8 @@ export const manifest = (appName = "FletBox App") => `{
   "name": ${JSON.stringify(appName)},
   "short_name": ${JSON.stringify(appName.slice(0, 12))},
   "description": ${JSON.stringify(`${appName} built with Flet-Box`)},
-  "start_url": "/",
-  "scope": "/",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "display_override": ["window-controls-overlay"],
   "theme_color": "#1a1a2e",
@@ -1456,6 +1389,10 @@ framework from scratch:
 
 - \`AGENTS.md\` — the rules: FletBox syntax only, real widgets and props only, and the
   verification loop it must run after every edit.
+- \`.claude/skills/fletbox-clean-ui/SKILL.md\` — the design rules themselves, numbered
+  00 to 20 and measured: which token, which step of the scale, which contrast. The
+  same text is at \`.qoder/skills/fletbox-clean-ui/SKILL.md\` and as a Cursor rule in
+  \`.cursor/rules/fletbox-clean-ui.mdc\`.
 - \`.claude/CLAUDE.md\`, \`.cursor/rules/fletbox.mdc\` — short pointers to \`AGENTS.md\` for
   Claude Code and Cursor.
 - \`.fletbox/api/cheatsheet.md\` — every widget and its real props, generated from the
@@ -1465,11 +1402,16 @@ framework from scratch:
 - \`.fletbox/memory/\` — notes the agent keeps between sessions, so it does not
   rediscover the same thing twice.
 - \`scripts/check-app.mjs\` — the gate that catches hallucinated APIs.
+- \`scripts/check-ui.mjs\` — the gate that catches an unclean screen.
 
 \`\`\`bash
 npm run check                      # scan src/ for invented widgets, props, imports
 npm run check -- --props Button    # print the real props of one widget
 npm run check -- --list            # print every public export
+npm run ui                         # clean-UI gate: tokens, scale, tap targets, labels,
+                                   # contrast — each finding cites the rule it broke
+npm run ui -- --tokens             # measured contrast of every token, on both surfaces
+npm run ui -- --strict             # warnings (a one-off tint, an image with no alt) fail too
 npm run fix                        # rewrite typos it can prove (imports, prop keys)
 npm run api                        # regenerate .fletbox/api/api.json and api.md
 flet-box unpack Button             # each prop, where it really goes, and what is dead
@@ -1477,9 +1419,9 @@ flet-box unpack Button --example   # a paste-ready call using only verified prop
 flet-box unpack Modal --diff       # where types, engine, docs and code disagree
 \`\`\`
 
-\`npm run check\` exits non-zero on a real error and also runs in CI. If you upgrade
-\`flet-box\`, regenerate the cheatsheet with \`flet-box check-api --emit-api\` and the
-machine-readable surface with \`npm run api\`.
+\`npm run check\` and \`npm run ui\` exit non-zero on a real error and also run in CI. If
+you upgrade \`flet-box\`, regenerate the cheatsheet with \`flet-box check-api --emit-api\`
+and the machine-readable surface with \`npm run api\`.
 
 ## Android
 
@@ -1725,11 +1667,11 @@ export const ProfileScreen = () => {
         padding: 24,
         backgroundColor: colors.background,
         child: Column({
-            gap: 20,
+            gap: 24,
             alignItems: 'center',
             children: [
                 Icon({ name: 'person', size: 80, color: colors.primary }),
-                Text({ text: 'User Profile', size: 28, weight: 'bold', color: colors.text }),
+                Text({ text: 'User Profile', size: 24, weight: 'bold', color: colors.text }),
                 Text({ text: 'This is your profile page.', size: 16, color: colors.textSecondary })
             ]
         })
@@ -1751,20 +1693,25 @@ export { AboutScreen } from './AboutScreen.js';${
 
 // Layout components
 export const appBarComponentJs = () => `// components/layouts/AppBarComponent.js
-import { AppBar, Icon, colors, openDrawer } from 'flet-box';
+import { AppBar, Icon, Tooltip, colors, openDrawer } from 'flet-box';
 
 export const AppBarComponent = ({ title, isMobile = false, showBack = false, onBack }) => {
     return AppBar({
         title: title,
         backgroundColor: colors.primary,
-        titleColor: '#ffffff',
+        titleColor: colors.onPrimary,
         centerTitle: true,
         showBackButton: showBack,
-        leading: isMobile ? Icon({
-            name: 'menu',
-            size: 24,
-            color: '#ffffff',
-            onclick: () => openDrawer()
+        leading: isMobile ? Tooltip({
+            text: 'Open the menu',
+            position: 'bottom',
+            child: Icon({
+                name: 'menu',
+                size: 24,
+                height: 40,
+                color: colors.onPrimary,
+                onclick: () => openDrawer()
+            })
         }) : null,
         onBackPress: onBack,
         elevation: 2
@@ -1819,22 +1766,22 @@ export const Sidebar = ({ items = [], currentRoute } = {}) => {
                     child: Column({
                         alignItems: 'center',
                         children: [
-                            Icon({ name: 'rocket_launch', size: 40, color: '#ffffff' }),
-                            Text({ text: 'FletBox', size: 20, weight: 'bold', color: '#ffffff', marginTop: 12 })
+                            Icon({ name: 'rocket_launch', size: 40, color: colors.onPrimary }),
+                            Text({ text: 'FletBox', size: 18, weight: 'bold', color: colors.onPrimary, marginTop: 12 })
                         ]
                     })
                 }),
                 ...menuItems.map(item => Container({
-                    padding: '12px 20px',
+                    padding: '12px 16px',
                     cursor: 'pointer',
-                    backgroundColor: currentRoute === item.route ? \`\${colors.primary}15\` : 'transparent',
+                    backgroundColor: currentRoute === item.route ? colors.primaryBg : 'transparent',
                     borderLeft: currentRoute === item.route ? \`3px solid \${colors.primary}\` : 'none',
                     child: Row({
                         gap: 12,
                         alignItems: 'center',
                         children: [
                             Icon({ name: item.icon, size: 20, color: currentRoute === item.route ? colors.primary : colors.textSecondary }),
-                            Text({ text: item.label, size: 14, color: currentRoute === item.route ? colors.primary : colors.text })
+                            Text({ text: item.label, size: 14, weight: currentRoute === item.route ? 'bold' : 'normal', color: colors.text })
                         ]
                     }),
                     onclick: () => goTo(item.route)
@@ -1858,14 +1805,14 @@ export const DrawerMenu = ({ items = [] } = {}) => {
     const menuItems = items.length ? items : defaultItems;
     return Drawer({
         header: Container({
-            padding: 28,
+            padding: 24,
             backgroundColor: colors.primary,
             child: Column({
                 alignItems: 'center',
                 children: [
-                    Icon({ name: 'rocket_launch', size: 48, color: '#ffffff' }),
-                    Text({ text: 'FletBox', size: 18, weight: 'bold', color: '#ffffff', marginTop: 12 }),
-                    Text({ text: 'UI Framework', size: 12, color: 'rgba(255,255,255,0.8)' })
+                    Icon({ name: 'rocket_launch', size: 48, color: colors.onPrimary }),
+                    Text({ text: 'FletBox', size: 18, weight: 'bold', color: colors.onPrimary, marginTop: 12 }),
+                    Text({ text: 'UI Framework', size: 12, color: colors.onPrimary })
                 ]
             })
         }),
@@ -1876,7 +1823,7 @@ export const DrawerMenu = ({ items = [] } = {}) => {
             onPress: () => closeDrawer()
         })),
         footer: Container({
-            padding: 20,
+            padding: 16,
             borderTop: \`1px solid \${colors.border}\`,
             child: Text({ text: 'Version 1.0.0', size: 12, color: colors.textSecondary, align: 'center' })
         })
@@ -1887,6 +1834,10 @@ export const DrawerMenu = ({ items = [] } = {}) => {
 // App templates (blank, basic, full, sidebar, adaptive)
 export const blankAppJs = () => `// app.js - Blank template
 import { runApp, Container, Text, colors } from 'flet-box';
+// Registers this app's design tokens. Without it every screen paints
+// with the framework's own palette, and the file that looks like the design
+// system is decoration.
+import './database/themes.js';
 
 const App = () => Container({
     flex: 1,
@@ -1900,7 +1851,11 @@ runApp(App, 'root');
 `;
 
 export const basicAppJs = () => `// app.js - Basic template (AppBar + Drawer)
-import { runApp, Scaffold, colors } from 'flet-box';
+import { runApp, Scaffold, colors, useState, dimensions } from 'flet-box';
+// Registers this app's design tokens. Without it every screen paints
+// with the framework's own palette, and the file that looks like the design
+// system is decoration.
+import './database/themes.js';
 import { AppBarComponent } from './components/layouts/AppBarComponent.js';
 import { DrawerMenu } from './components/layouts/DrawerMenu.js';
 
@@ -1915,12 +1870,21 @@ const routes = {
     '/about': AboutScreen
 };
 
-const MyApp = () => Scaffold({
-    routes,
-    appBar: AppBarComponent({ title: 'FletBox', isMobile: false }),
-    drawer: DrawerMenu(),
-    backgroundColor: colors.background
-});
+// The drawer is only reachable through the AppBar's menu button, so the shell has
+// to know whether it is on a phone. Key-based state keeps the width across
+// re-renders; the resize listener is registered once, at module scope.
+const [viewportWidth, setViewportWidth] = useState('viewportWidth', dimensions.getWidth());
+dimensions.addListener(({ width }) => setViewportWidth(width));
+
+const MyApp = () => {
+    const isMobile = viewportWidth.valueOf() < 768;
+    return Scaffold({
+        routes,
+        appBar: AppBarComponent({ title: 'FletBox', isMobile }),
+        drawer: DrawerMenu(),
+        backgroundColor: colors.background
+    });
+};
 
 runApp(MyApp, 'root');
 `;
@@ -1928,6 +1892,10 @@ runApp(MyApp, 'root');
 export const fullAppJs =
   () => `// app.js - Full template (AppBar + Drawer + BottomNav)
 import { runApp, Scaffold, colors, useState, dimensions } from 'flet-box';
+// Registers this app's design tokens. Without it every screen paints
+// with the framework's own palette, and the file that looks like the design
+// system is decoration.
+import './database/themes.js';
 import { AppBarComponent } from './components/layouts/AppBarComponent.js';
 import { DrawerMenu } from './components/layouts/DrawerMenu.js';
 import { BottomNav } from './components/layouts/BottomNav.js';
@@ -1966,6 +1934,10 @@ runApp(MyApp, 'root');
 
 export const sidebarAppJs = () => `// app.js - Sidebar template (desktop only)
 import { runApp, Scaffold, colors } from 'flet-box';
+// Registers this app's design tokens. Without it every screen paints
+// with the framework's own palette, and the file that looks like the design
+// system is decoration.
+import './database/themes.js';
 import { AppBarComponent } from './components/layouts/AppBarComponent.js';
 import { Sidebar } from './components/layouts/Sidebar.js';
 import { RootScreen, HomeScreen, AboutScreen } from './screens/index.js';
@@ -1989,6 +1961,10 @@ runApp(MyApp, 'root');
 export const adaptiveAppJs =
   () => `// app.js - Adaptive template (mobile + desktop)
 import { runApp, Scaffold, colors, useState, dimensions } from 'flet-box';
+// Registers this app's design tokens. Without it every screen paints
+// with the framework's own palette, and the file that looks like the design
+// system is decoration.
+import './database/themes.js';
 import { AppBarComponent } from './components/layouts/AppBarComponent.js';
 import { DrawerMenu } from './components/layouts/DrawerMenu.js';
 import { BottomNav } from './components/layouts/BottomNav.js';
@@ -2180,7 +2156,7 @@ export const agentsMd = (appName, template, version) =>
     '| --- | --- | --- |',
     '| Brand | `colors.primary` | the one action the screen asks for: primary button, active tab, focus ring, links |',
     '| Emphasis | `colors.secondary` | a deliberate second voice: gradients, badges, a highlighted stat |',
-    '| Feedback | `colors.success` / `colors.warning` / `colors.danger` | status only — never as decoration |',
+    '| Feedback | `colors.success` / `colors.warning` / `colors.danger` / `colors.dangerStrong` | status only — never as decoration; the last one is the red you may write words in |',
     '',
     'Everything else is neutral: `colors.background`, `colors.surface`,',
     '`colors.card`, `colors.text`, `colors.textSecondary`, `colors.textDisabled`,',
@@ -2190,10 +2166,15 @@ export const agentsMd = (appName, template, version) =>
     '  means one of them is wrong.',
     '- Never type a hex or `rgb()` literal. If a token is missing, add it to a',
     '  `theme.js` in this app that re-exports `colors` — do not scatter the value.',
-    '- Text on a dark fill is white; hierarchy comes from opacity',
-    '  (`rgba(255,255,255,.72)`), not from a second color.',
-    '- `error` ≡ `danger` and `*Bg` variants exist for alert fills; use the pair',
-    '  (`colors.danger` + `colors.errorBg`), not a hand-mixed tint.',
+    '- Text on a dark or brand fill is white, and it stays white: hierarchy comes',
+    '  from size and weight, not from fading the ink to `rgba(255,255,255,.72)` —',
+    '  faded white on `colors.primary` measures 3.16:1 and stops being body text.',
+    '- `error` ≡ `danger`, and `*Bg` variants exist for alert fills. As **words**,',
+    '  `colors.danger` is 3.76:1 on white and fails AA: write `colors.dangerStrong`',
+    '  for the label of a delete or an inline error (6.47:1 on white, 5.42:1 inside',
+    '  `colors.errorBg`), and keep `colors.danger` for the dot, the border, the icon.',
+    '  Same reason `colors.warning` and `colors.success` are plates, never sentences.',
+    '  Measure any pair before arguing about it: `npm run ui -- --tokens`.',
     '',
     '**Space and type: an 8-based scale.** Use these numbers and nothing between',
     'them. They are plain props (`padding`, `gap`, `margin`, `width`, `height`,',
@@ -2205,11 +2186,14 @@ export const agentsMd = (appName, template, version) =>
     '         12  ·  control padding (input/button height − text)',
     '         16  ·  default card padding, section gap, screen gutter',
     '         18  ·  card-to-card rhythm on a dense grid',
-    '         24  ·  between sections',
+    '         24  ·  between sections, page gutter',
     '         32  ·  between page blocks',
+    '         40  ·  the smallest tap target, a roomy control',
     '         48  ·  hero spacing',
+    '         64 / 96  ·  a full-bleed section, a landing hero',
     'radius     4 / 8 / 12 / 16 / 999 (pill)',
-    'type      12 caption · 14 body-small · 16 body · 18 subtitle · 24 title · 32 headline',
+    'type      12 caption · 14 body-small · 16 body · 18 subtitle · 24 title',
+    '          32 headline · 40 / 48 display (a hero, a big number)',
     'weight    400 body · 500 label · 600 title · 700 headline',
     'line-height  1.5 body · 1.2 heading',
     '```',
@@ -2230,12 +2214,20 @@ export const agentsMd = (appName, template, version) =>
     'npm run check          # static gate: invented widgets/props, positional args,',
     '                       # foreign imports, and broken imports between your own',
     '                       # modules (a name a file never exports)',
+    'npm run ui             # clean-UI gate: the tokens and the scale above, 40px',
+    '                       # targets, labels, contrast — every finding cites the',
+    '                       # rule number it broke',
     'npm run dev            # serve on :8000 — check the UI actually renders',
     '```',
     '',
-    '`npm run check` exits non-zero on a real error. Fix the code, not the checker.',
-    'It reads the installed package, so it is always in sync with what runs. A',
+    'Both gates read the installed package, so they are always in sync with what',
+    'runs. They exit non-zero on a real error: fix the code, not the checker. A',
     'warning is allowed to stay only when you can justify it in one sentence.',
+    '',
+    '`npm run ui` proves what is *written*; the rules it cites are the numbered ones',
+    'in [.claude/skills/fletbox-clean-ui/SKILL.md](.claude/skills/fletbox-clean-ui/SKILL.md),',
+    'and that file is the part a checker cannot do — hierarchy, copy, whether the',
+    'screen solves the problem. Read it before writing a screen, not after.',
     '',
     'When the error is a mistyped name, `npm run fix` rewrites it for you — a',
     'relative path that does not resolve, a name the target module never exports,',
@@ -2285,8 +2277,7 @@ export const claudeMd = () =>
     '# CLAUDE.md',
     '',
     'The rules for this project live in [AGENTS.md](./AGENTS.md). Read it first and',
-    'follow it exactly — FletBox syntax only, real props only, `npm run check` after',
-    'every edit.',
+    'follow it exactly — FletBox syntax only, real props only.',
     '',
     'Two shortcuts replace guessing:',
     '',
@@ -2294,9 +2285,16 @@ export const claudeMd = () =>
     '  its type, default and engine target. `--example` gives a call you can paste,',
     '  `--diff` lists the props that are documented but dead or used but undeclared.',
     '  `.fletbox/api/api.json` is the same surface for all widgets, as data.',
-    '- Design is fixed, not improvised: one brand color per screen from the `colors`',
-    '  tokens (never a hex literal), and sizes only from the 8-based scale —',
-    '  4 · 8 · 12 · 16 · 18 · 24 · 32 · 48. AGENTS.md §4 has the full table.',
+    '- Design is not improvised. The rules are a file: read',
+    '  [skills/fletbox-clean-ui/SKILL.md](skills/fletbox-clean-ui/SKILL.md) before',
+    '  writing a screen. `npm run ui` proves the part a checker can prove (tokens,',
+    '  the scale, 40px targets, labels, contrast) and cites the rule number it',
+    '  broke; AGENTS.md §4 has the tables. Scale: 4 · 8 · 12 · 16 · 18 · 24 · 32 ·',
+    '  40 · 48 · 64 · 96 spacing, radii 4/8/12/16/999, type 12 · 14 · 16 · 18 · 24',
+    '  · 32 · 40 · 48.',
+    '',
+    'After every edit: `npm run check` (does it exist), `npm run ui` (is it clean),',
+    'then look at the screen — the checker has no eyes.',
     '',
     'Memory: read `.fletbox/memory/MEMORY.md` before working, and write new entries',
     'there when you learn something the next session should not rediscover.',
@@ -2320,11 +2318,15 @@ export const cursorRules = () =>
     '  `.fletbox/api/cheatsheet.md`, look it up: `flet-box unpack <Widget>` (or',
     '  `npm run check -- --props <Widget>`). If it is not listed, it does not exist —',
     '  do not invent it. `unpack --example` prints a call that is safe to paste.',
-    '- Design rules: one brand color per screen, taken from the `colors` tokens —',
-    '  never a hex literal. Sizes come from the 8-based scale only:',
-    '  4 · 8 · 12 · 16 · 18 · 24 · 32 · 48 spacing, radii 4/8/12/16/999, type',
-    '  12/14/16/18/24/32. See AGENTS.md §4.',
-    '- Run `npm run check` after every change and fix what it reports.',
+    '- Design rules: read [fletbox-clean-ui.mdc](./fletbox-clean-ui.mdc) in this',
+    '  folder — the numbered clean-UI rules the agent is expected to follow. One',
+    '  brand color per screen, taken from the `colors` tokens — never a hex literal.',
+    '  Sizes come from the scale only: 4 · 8 · 12 · 16 · 18 · 24 · 32 · 40 · 48 · 64',
+    '  · 96 spacing, radii 4/8/12/16/999, type 12 · 14 · 16 · 18 · 24 · 32 · 40 · 48.',
+    '  See AGENTS.md §4.',
+    '- Run `npm run check` after every change (does this API exist) and `npm run ui`',
+    '  (is this screen clean: tokens, scale, 40px targets, labels, contrast). Fix',
+    '  what they report; a warning stays only with a one-sentence reason.',
     '- Check `.fletbox/memory/MEMORY.md` at session start; record new non-obvious',
     '  findings there instead of re-deriving them.',
     '',
@@ -2405,6 +2407,547 @@ export const checkAppScript = (appName) =>
     "const { checkApi } = await import(pathToFileURL(checker).href);",
     '',
     "const { exitCode } = await checkApi(process.argv.slice(2));",
+    'process.exit(exitCode);',
+    '',
+  ].join('\n');
+
+// ---------------------------------------------------------------------------
+// Clean-UI skill
+// ---------------------------------------------------------------------------
+// The design-system contract, merged from two sources and then measured against
+// this framework: Angelene Wallis, "No bullshit guide to UX" (2022), and "The UI/
+// UX Playbook" (uxpeak, 144 pages). Every number is either one the books state or
+// one read off the installed palette; every prop named here exists in the API the
+// app is generated with. The rules are numbered so `flet-box check-ui` can cite
+// them, and so the agent can quote one back when it breaks one on purpose.
+//
+// Two halves, always kept in agreement: what the checker proves statically, and
+// what only a person can see. The skill names both so the agent never claims the
+// checker covers more than it does.
+export const cleanUiSkill = () =>
+  [
+    "---",
+    "name: fletbox-clean-ui",
+    "description: Design-system contract for a FletBox app - tokens only, one scale, three-tier hierarchy, a state for every interaction, measured contrast, destructive actions designed last. Use when creating, editing or reviewing any screen, form, list, dialog or action control.",
+    "---",
+    "",
+    "# Clean UI — the system rules",
+    "",
+    "You are not decorating screens. You are extending a system that every later",
+    "screen will copy. A decision that cannot be restated as a rule is a defect, not",
+    "a style.",
+    "",
+    "When two goals conflict, take them in this order:",
+    "",
+    "1 Consistency · 2 Clarity · 3 Accessibility · 4 Usability · 5 Scalability",
+    "· 6 Maintainability · 7 Conversion",
+    "",
+    "Never optimize for aesthetics alone. Beauty is what is left when the system is",
+    "correct; it is an outcome, never a target you can hit directly.",
+    "",
+    "## 00 The two gates",
+    "",
+    "```bash",
+    "npm run check      # the API is real: widgets, props, imports",
+    "npm run ui         # the screen follows these rules (codes map to rule numbers)",
+    "npm run ui -- --tokens   # measured contrast of every token, on both surfaces",
+    "npm run dev        # then look at it: the checker has no eyes",
+    "```",
+    "",
+    "A finding you keep needs one sentence of justification, in the commit or in",
+    "`.fletbox/memory/`. If that sentence is \"the design wants it\", the design is",
+    "what needs writing down, because the next screen will copy it.",
+    "",
+    "Sources, cited as `NBG p.N` (No bullshit guide to UX) and `Playbook p.N`",
+    "(The UI/UX Playbook; the PDF page — the printed folio is one lower). Every",
+    "number below is either stated by one of them or measured on this palette.",
+    "Every prop in every call below exists in `.fletbox/api/api.json`.",
+    "",
+    "## 01 System before component",
+    "",
+    "Define the token, then the component, then the screen. In that order, always.",
+    "Components are outputs; the system is the source of truth.",
+    "",
+    "- A screen that needs a value the system does not have adds a token to",
+    "  `src/database/themes.js`. It does not write the value inline.",
+    "- A component that needs a special exception: challenge the exception first, and",
+    "  if it survives, change its siblings too. Two components solving one problem",
+    "  differently get unified, not documented.",
+    "- If you cannot say which rule a decision follows, do not make it.",
+    "",
+    "## 02 Consistency is sacred",
+    "",
+    "No arbitrary differences. If a person learns one pattern here, they must not",
+    "relearn it anywhere else (Playbook p.038).",
+    "",
+    "- One button scheme for the whole app: the primary is `variant: \"filled\"`, the",
+    "  secondary `variant: \"outlined\"`, the tertiary `variant: \"text\"`. Never a",
+    "  per-card button color chosen to match the picture — people then wonder whether",
+    "  each button does something different (p.040-041).",
+    "  A filled `Button` defaults to `bgColor: colors.surface` with `colors.text` on",
+    "  it, so the primary action must name the brand pair: `bgColor: colors.primary`",
+    "  and `color: colors.onPrimary`. An outlined one must name its border (`color:`),",
+    "  or it inherits the surface it sits on and disappears.",
+    "- One radius language per screen. A rounded picture next to a square button reads",
+    "  as two products (p.039).",
+    "- One icon family, one weight, one size per screen. The one allowed mix is state:",
+    "  a selected tab filled, unselected tabs outlined (p.045-046).",
+    "- Cards in the same row share a height. When the copy is uncontrollable, fix the",
+    "  height and bottom-align the action; the empty space goes in the middle",
+    "  (p.043-044).",
+    "- Same purpose, same shape: identical inputs get the same `height`,",
+    "  `borderRadius`, states and validation behavior (rule 13).",
+    "- Images inside a repeated card sit in the same slot, same size, same crop",
+    "  (`fit`, `shape`), whatever the picture is (p.042).",
+    "",
+    "## 03 Design tokens only",
+    "",
+    "No arbitrary values, no hex, no `px` strings. Every value comes from the scale.",
+    "",
+    "```",
+    "space    4 · 8 · 12 · 16 · 18 · 24 · 32 · 40 · 48 · 64 · 96",
+    "radius   4 · 8 · 12 · 16 · 999 (pill)",
+    "type     12 caption · 14 body-small · 16 body · 18 subtitle · 24 title",
+    "         32 headline · 40 display-sm · 48 display",
+    "weight   400 body · 500 label · 600 title · 700 headline",
+    "line     1.5-1.6 body · 1.2-1.3 heading",
+    "depth    elevation 0 · 1 · 2 · 3 · 4 · 5",
+    "```",
+    "",
+    "- The base unit is 4 and everything is a multiple of it (Playbook p.028). A value",
+    "  like 13, 19, 21 or 31 is not a design decision, it is drift.",
+    "- Never type a hex or `rgb()` outside `src/database/themes.js`",
+    "  (`RAW_COLOR`). If a token is missing, add it there.",
+    "- Never build a color by appending alpha to a token — `colors.primary + \"15\"` is",
+    "  a one-off shade the rest of the app cannot reuse (`HAND_MIXED_COLOR`). The",
+    "  tints exist: `colors.primaryBg`, `colors.errorBg`, `colors.successBg`,",
+    "  `colors.warningBg`, `colors.infoBg`.",
+    "- Text on a brand fill is `colors.onPrimary`, never a literal white.",
+    "- Tap targets are at least 40 on a side (`SMALL_TAP_TARGET`). Reach it with",
+    "  `height`, not with padding. The books argue this qualitatively (Fitts, p.099);",
+    "  40 is the floor this system enforces and 44 is what a phone primary action",
+    "  gets.",
+    "- `size: \"small\"` on a `Button` is for dense secondary actions, never for the one",
+    "  thing a phone screen asks for.",
+    "",
+    "## 04 Hierarchy must be obvious in three seconds",
+    "",
+    "A person must answer three questions without reading: what is this, what",
+    "matters, what happens next. There are exactly four levers — size, color, weight,",
+    "position (Playbook p.007). If everything is emphasized, nothing is.",
+    "",
+    "- One primary action per screen. One secondary. Everything else is tertiary.",
+    "  Never two filled buttons on one view (`MULTIPLE_PRIMARY_ACTIONS`).",
+    "- Actions rank by emphasis, information ranks by size: the secondary button keeps",
+    "  the same `height` as the primary and loses color (p.008); the data gets the",
+    "  size ladder (p.088). That is how p.008 and p.088 stop contradicting each other.",
+    "- In a stat card the value is the largest and darkest text and the label is",
+    "  smaller and muted. Never the inverse (p.010).",
+    "- Darkness means importance: heading darker than body, body muted. Never let a",
+    "  thumbnail outsize the price (p.009, p.011).",
+    "- Never render a detail panel as uniform label:value rows — it has no hierarchy",
+    "  and cannot be scanned. Promote the one value that matters, demote the rest,",
+    "  add an icon per row (p.012).",
+    "- Before building, list the elements and rank them by user importance; then map",
+    "  size, color, weight and position onto that ranking (p.010).",
+    "",
+    "## 05 One purpose per screen",
+    "",
+    "Write the sentence first: \"this screen lets <who> do <what>\". If it needs an",
+    "\"and\", split the screen (NBG pp.40-43).",
+    "",
+    "- Conflicting goals reduce usability. A task screen carries nothing that does not",
+    "  serve the task: no promo panel, no second call to action (Playbook p.127).",
+    "- Decorative imagery next to a form is allowed only when it is action-free — no",
+    "  text overlay, no button — and it still has to be about this product, not merely",
+    "  pretty (p.128).",
+    "- Navigation exposes what the job needs and nothing else. Every extra link is a",
+    "  decision taken before the user made theirs.",
+    "",
+    "## 06 Reduce cognitive load",
+    "",
+    "People recognize; they must never memorize, guess or interpret.",
+    "",
+    "- Chunk to about four items per group and cap a visible group at 7; past that,",
+    "  truncate and expose one action — \"Show all 21 amenities\" (Playbook p.101).",
+    "  The 7±2 figure is a myth in its loosest form; plan on four and the group still",
+    "  holds when someone adds a fifth.",
+    "- Recognition over recall: common icons, common words, state visible on screen",
+    "  rather than in memory (p.104). \"Continue watching\" beats \"remember where you",
+    "  stopped\".",
+    "- Do not hide choices behind a control that must be opened to be seen: variants",
+    "  as swatches, quantity as a stepper, not a nested menu (p.107-108).",
+    "- Never oversimplify into vagueness either: a switch with an icon and no words is",
+    "  not clean, it is unreadable (p.014).",
+    "- If no user has shown they need a feature, remove it rather than park it behind",
+    "  a toggle (NBG p.136).",
+    "",
+    "## 07 Spacing communicates the relationship",
+    "",
+    "Whitespace is functional, not decorative. Related things sit closer than",
+    "unrelated things, and that difference is the whole message (Playbook p.013, p.029).",
+    "",
+    "- Field pattern: label to its own input `12`, that field to the next label `32`.",
+    "  Equal spacing at both levels makes label ownership ambiguous (p.013).",
+    "- Card padding is `16`; the rhythm between cards is `16` or `24`; sections",
+    "  separate at `24` or `32`; page blocks at `48`. Never mix two rhythms in one list.",
+    "- Start a layout with more room than you think you need and tighten it; clutter",
+    "  is easier to see than cramp is to undo (p.025-027).",
+    "- Do not stretch a form or a checkout to the viewport. 1440 is a canvas size, not",
+    "  a target; give the card the width it needs and let the margin carry the rest",
+    "  (p.129-130). `Container({ maxWidth: 480 })` around a form, `fullWidth: true`",
+    "  only on the button inside it.",
+    "- Layout is `useState` bindings, `flex`, `gap` and `wrap`. An absolute offset is",
+    "  for overlays, and then through `stackPosition`, not raw coordinates.",
+    "",
+    "## 08 Typography is structure",
+    "",
+    "- Body is `size: 16` (Playbook p.090). Nothing that must be read goes below 12;",
+    "  the book contradicts itself between 12 (p.090) and 10 (p.096) — 12 is the floor",
+    "  here.",
+    "- Heading: bigger, heavier, darker, tighter. Body: smaller, regular, muted,",
+    "  looser. Never the same weight for both, never extra-light for body (p.084-087).",
+    "- Line-height: 1.5-1.6 on body, 1.2-1.3 on headings; a 32px heading sits at about",
+    "  1.25 (p.091-092). A heading never gets more air than a paragraph.",
+    "- Measure: 45-75 characters per line on desktop, 30-40 on mobile. A paragraph",
+    "  that runs the full width is unreadable at 1440 (p.076-078).",
+    "- One typeface; two at the absolute maximum, and then headings against body",
+    "  (p.075-076). Declare it once in the theme, never per `Text`.",
+    "- `align: \"left\"` for every run of text and every list. `right` for numbers and",
+    "  prices, so magnitudes compare. `center` only for a short title or a lone CTA,",
+    "  never for a paragraph (p.018, p.094).",
+    "- Long copy becomes scannable copy: a short lead, a heading, then one item per",
+    "  feature with an icon, a bold name and two lines of body; four or more items go",
+    "  in a two-column grid (p.123-125).",
+    "",
+    "## 09 Color carries meaning",
+    "",
+    "- One brand color per screen, and it is the color of the one action the screen",
+    "  asks for. A second accent on the same view means one of them is wrong.",
+    "- Reserve the brand for things you can click. Headers, labels and icons stay",
+    "  neutral — brand color on a decorative surface teaches people that color means",
+    "  nothing (Playbook p.066-067).",
+    "- Backgrounds are neutral (`colors.background`, `colors.surface`, `colors.card`);",
+    "  color belongs in the action, not the wall (p.067-068). A dark theme is equally",
+    "  valid; offer both, because dark mode is expected, not a bonus (p.070).",
+    "- Feedback colors are fixed and never redefined: `colors.success`,",
+    "  `colors.warning`, `colors.danger`, `colors.info`. Red is error, green is",
+    "  success, amber is warning; never pink for success, never green for delete.",
+    "- The signal red and the readable red are different tokens. `colors.danger`",
+    "  (#ef4444) is for a badge, a border, an icon: as words on a white page it",
+    "  measures 3.76:1 and that is not AA. `colors.dangerStrong` (#b91c1c) is the red",
+    "  you may read and press — 6.47:1 as words on white, 6.47:1 with white written on",
+    "  it, 5.42:1 inside `colors.errorBg`. Same for the others: `colors.warning`",
+    "  (2.15:1 with white on it) and `colors.success` (2.54:1) are plates and dots,",
+    "  never a sentence — `colors.warningStrong` (5.02:1) and `colors.successStrong`",
+    "  (5.48:1) are the readable ones, in either direction. Measure any pair you are",
+    "  about to ship: `npm run ui -- --tokens`.",
+    "- Never carry meaning in color alone — a color-blind person and a phone in",
+    "  sunlight both lose it. Pair the color with an icon and a word (p.070): a status",
+    "  chip is `Badge` plus text, a field error is `error` plus `showValidationMessage`.",
+    "- Hierarchy inside a fill comes from opacity, not from a second hue.",
+    "",
+    "## 10 Depth is a scale",
+    "",
+    "- `elevation: 0-5` is the shadow system, and only these widgets read it:",
+    "  `Button`, `Modal`, `Chip`, `ListTile`, `Accordion`, `SnackBar`,",
+    "  `FloatingActionButton`, `AppBar`, `Drawer`, `BottomNavigation`. Everywhere",
+    "  else — `Card` and `Container` included — the number reaches `style.boxShadow`",
+    "  as a bare number, CSS drops it, and the box stays flat without saying so:",
+    "  pass a `shadow: \"0 12px 32px rgba(15,23,42,0.12)\"` string instead",
+    "  (`DEAD_ELEVATION`).",
+    "- Anything that floats gets depth: a dropdown, a menu, a modal, a card on a map.",
+    "  A shadowless layer merges with the page and the user cannot tell what is on top",
+    "  (p.050-051).",
+    "- Soft, not harsh: depth comes from a wide blur at low opacity, and the shadow",
+    "  is tinted toward the background hue, never pure grey or black (p.052-054).",
+    "- Do not put a white card on a white page — the interface goes flat. Page",
+    "  `colors.background`, card `colors.card` (p.056-057).",
+    "- Borders are thin and rare. Separation comes from space and surface, not from a",
+    "  rule under every row; a bordered list of everything reads as busy and dated",
+    "  (p.059-061).",
+    "- Glass and blur are a brand decision, and they never survive a light background:",
+    "  text on frosted glass over white loses the contrast war (p.063-065).",
+    "",
+    "## 11 Accessibility is a floor, not a feature",
+    "",
+    "When accessibility and aesthetics conflict, accessibility wins. Every time.",
+    "",
+    "- Text needs 4.5:1 against what it sits on; large text (24px, or 18px bold) and",
+    "  meaningful graphics need 3:1. Disabled text is exempt. The book agrees: its",
+    "  passing examples measure 4.8-6.54:1 and its failures 1.81-2.84:1 (p.021), and",
+    "  #626262 is the lightest grey that survives on white (p.086).",
+    "- Measure instead of arguing: `npm run ui -- --tokens`. On this palette `text` is",
+    "  17.85:1, `textSecondary` 4.76:1, `textDisabled` 2.56:1 (decoration only), and",
+    "  the brand pair `onPrimary` on `primary` is 4.55:1 — which is why `primary` may",
+    "  carry a button label and not a paragraph. By hand:",
+    "  `color(\"#0f172a\").contrastRatio(\"#ffffff\")` answers 17.85.",
+    "- Text over a photograph needs a scrim: a dark overlay or a blurred plate under",
+    "  the words. Light text over one dark photo proves nothing about the next photo",
+    "  (p.022).",
+    "- Every field has a visible `label`; a placeholder is a format hint, never a",
+    "  substitute (p.115). Every switch and checkbox has one too (`UNLABELED_TOGGLE`).",
+    "- Every control that is only an icon gets a name: wrap it in",
+    "  `Tooltip({ text, child })` or give it a visible label (`ICON_ONLY_CONTROL`).",
+    "- Every `Image` that carries information has `alt`; `alt: \"\"` is the correct",
+    "  answer for a decoration (`IMAGE_NO_ALT`).",
+    "- Focus must be visible, keyboard must reach everything, and `Esc` must close",
+    "  whatever opened (`Modal({ closeOnEsc: true, showCloseButton: true })`).",
+    "- Motion is optional content: respect a reduced-motion preference; never",
+    "  auto-play a carousel or a banner.",
+    "",
+    "## 12 Every interaction has four states",
+    "",
+    "A control that handles only the happy path is unfinished (NBG pp.94-97). Write",
+    "all four, in the same component, before the screen counts as done.",
+    "",
+    "```js",
+    "Column({ gap: 16, children: [",
+    "  loading ? Skeleton({ width: \"100%\", height: 48, count: 3 }) : null,",
+    "  !loading && rows.length === 0",
+    "    ? EmptyState()                       // headline + illustration + tip + CTA",
+    "    : null,",
+    "  failed",
+    "    ? SnackBar({ message: \"Could not load the list.\", action: \"Retry\", onAction: retry })",
+    "    : null,",
+    "  !loading && rows.length > 0 ? ListView({ children: rows }) : null,",
+    "]})",
+    "```",
+    "",
+    "- Empty has four parts: a solution-oriented headline, an illustration, two",
+    "  concrete tips, one primary action. \"You have no projects\" is a dead end, not a",
+    "  state (Playbook p.135-136).",
+    "- Loading appears before the wait, not after it: a `Skeleton` at once beats a",
+    "  spinner two seconds later (NBG p.134, Doherty).",
+    "- Error does exactly three things: says what went wrong in the user's words,",
+    "  gives the way back, keeps the visual style of the app. Show the code, keep the",
+    "  navigation, offer links (p.137-138). Never an error code alone, never a shrug.",
+    "- Success confirms in place — a `SnackBar`, not a new screen — and offers the",
+    "  next step while it is there.",
+    "- Progress is honest. Show real progress or show a `Skeleton`; a bar that lies",
+    "  buys one visit and costs the next one (NBG defends inflating them; do not).",
+    "",
+    "## 13 Forms: prevent the error, do not report it",
+    "",
+    "- Ask for 3 to 7 things at once. More than that is more than one step, and a step",
+    "  the user can see: `Stepper({ steps, activeStep, onFinish })` (NBG pp.40-43).",
+    "- Width fits the data: CVC is 3 or 4 characters, so the field is short; card",
+    "  number and name run full width; pair Expiry with CVC on one row (p.115-116).",
+    "- A column of three or more fields lives inside a cap — `Container({ maxWidth:",
+    "  480 })`. A field as wide as the window answers \"type anything\" and the eye",
+    "  loses the next line (`UNCONSTRAINED_FORM_WIDTH`).",
+    "- A fixed-length code gets one box per character in enlarged type, not one long",
+    "  field (p.114).",
+    "- `Input({ label, placeholder, required, maxLength, validation, type })`:",
+    "  placeholder carries the format (\"MM/YY\", \"12345\"), `maxLength` and `type`",
+    "  constrain the input, and validation runs inline as they type, not on submit",
+    "  (p.119).",
+    "- No \"Confirm password\" field. It adds cost, repeats the same typo twice, and",
+    "  buys a false sense of safety. One field, `passwordToggle: true`, and a strength",
+    "  line under it (p.117-119).",
+    "- Good defaults and autofill remove keystrokes: prefill the country, the saved",
+    "  address, the last card (p.105).",
+    "- Required fields are marked, and the label of the submit button names the",
+    "  outcome — \"Pay $65\", not \"Submit\" (p.115).",
+    "- Never clear a form because one field failed. Keep what they typed.",
+    "",
+    "## 14 Destructive actions are designed last, and carefully",
+    "",
+    "- The button carries the verb: \"Delete 3 files\", never \"OK\" or \"Yes\"",
+    "  (`GENERIC_ACTION_LABEL`) (Playbook p.121).",
+    "- Destructive is red — `colors.dangerStrong` for the words, `colors.danger` for",
+    "  the dot beside them — because green reads safe and a person presses it twice",
+    "  (`DESTRUCTIVE_COLOR`) (p.120). `colors.danger` alone is 3.76:1 as a label.",
+    "- Order in a two-button row: Cancel on the left, destructive on the right. Left",
+    "  is what a reading eye hits first (`CONFIRM_ORDER`) (p.121-122).",
+    "- The dialog states reversibility: \"This action cannot be undone.\" Say it even",
+    "  when it can, and then offer the way back.",
+    "- `AlertDialog({ title, message, confirmText, cancelText, showCancel, onCancel, onConfirm, onClose })`",
+    "  always leaves an escape: a Cancel, and an X on any layer that can be opened.",
+    "- Undo is cheaper than a warning. If the action is reversible, let people undo it",
+    "  instead of interrupting them to confirm it (NBG pp.116-118).",
+    "- On a phone, a destructive action is not in the thumb zone; the thing you do",
+    "  often is (p.133-135).",
+    "",
+    "## 15 Reduce interaction cost",
+    "",
+    "Interaction cost is cognitive effort + physical effort + time (Playbook p.098).",
+    "Count it, then cut it: reading, scrolling, searching, deciding, clicking, typing,",
+    "waiting, remembering (p.099).",
+    "",
+    "- Count the steps in the main flow and delete every one that does not change the",
+    "  outcome (p.105). Three is a target; one is better.",
+    "- Put the action next to the thing it acts on: the CTA beside the quantity",
+    "  stepper, the row action inside the row (p.108, Fitts).",
+    "- Keep the control that runs all the time in a fixed, reachable place — a player",
+    "  bar at the bottom, a primary tab at the thumb (p.100, p.133-135).",
+    "- Show the content instead of a door to the content: three real cards beat a",
+    "  banner that says \"Explore now\" (p.111-113).",
+    "- One click where a confirmation is not needed. Two where it is.",
+    "",
+    "## 16 Respect the platform",
+    "",
+    "- Use the words, icons and gestures people already brought with them (NBG p.131,",
+    "  Jakob's law). An invented gesture is a bug report waiting to be written.",
+    "- iOS, Android and web each have conventions; meet them instead of overriding",
+    "  them with a custom pattern. A back that lands where the user expects, a sheet",
+    "  that dismisses down, a form that advances on Enter.",
+    "- Break a convention only when the measurement says the convention is wrong here,",
+    "  and write that measurement down.",
+    "",
+    "## 17 The review",
+    "",
+    "When asked to review a screen, answer in this order, and say why every time:",
+    "",
+    "1 Goal — what the screen is for, and whether it is one goal.",
+    "2 UX problems — cost, states, recall, flow.",
+    "3 UI problems — hierarchy, spacing, type, color, depth.",
+    "4 System violations — the values that are not tokens, the component that is an",
+    "  exception.",
+    "5 Accessibility violations — measured ratios, targets, labels, focus.",
+    "6 Consistency violations — what this screen does differently for no reason.",
+    "7 Scalability risk — what breaks when this screen has eleven siblings.",
+    "8 Fix — the call, not the mood. Then the rule it establishes.",
+    "9 Score — see below.",
+    "",
+    "Score the seven axes 0-100, but only against evidence, never against taste:",
+    "an axis starts at 100 and loses 10 for every open finding of its own codes, so",
+    "the number is a count and not an opinion. Below 85 on any axis means the fix is",
+    "a rule change, not a pixel move. An axis with no findings and no evidence is",
+    "unmeasured, not perfect — say so.",
+    "",
+    "| Axis | Its codes (from `npm run ui`) |",
+    "| --- | --- |",
+    "| Consistency | OFF_SCALE_SPACING · OFF_SCALE_RADIUS · OFF_SCALE_TYPE · RAW_COLOR · HAND_MIXED_COLOR · DEAD_ELEVATION |",
+    "| Accessibility | LOW_CONTRAST · LOW_CONTRAST_UI · SMALL_TAP_TARGET · UNLABELED_FIELD · UNLABELED_TOGGLE · ICON_ONLY_CONTROL · IMAGE_NO_ALT |",
+    "| Usability | CROWDED_FORM · LIST_WITHOUT_STATE · UNCONSTRAINED_FORM_WIDTH |",
+    "| Hierarchy | MULTIPLE_PRIMARY_ACTIONS · CENTERED_BODY_TEXT · GENERIC_ACTION_LABEL · DESTRUCTIVE_COLOR · CONFIRM_ORDER |",
+    "| Scalability | every token that had to be added to make the screen pass |",
+    "| Conversion | the label of the primary action, counted in words and in steps |",
+    "| Visual quality | measured only by the axes above; state what you looked at |",
+    "",
+    "## 18 Where these books are wrong",
+    "",
+    "Both are worth more read than copied. The parts that do not survive measurement:",
+    "",
+    "- The Playbook bans pure black on white and pure white on dark (p.083). This",
+    "  system puts white text on deep brand fills, and the ratio is what decides —",
+    "  4.55:1 there, not the rule of thumb.",
+    "- p.008 says a secondary button keeps the primary's size; p.088 says size is",
+    "  the hierarchy lever. Both are right about different things: emphasis ranks",
+    "  actions, size ranks information.",
+    "- p.079 marks center-aligned body as good; p.094 says center is for titles only.",
+    "  The later rule is the readable one.",
+    "- p.103 bans pop-ups as distractions; p.120 requires one to confirm a deletion.",
+    "  Reconciled: never unsolicited, always on destructive.",
+    "- p.019 (gutter 70, margin 79, overlay 17%) and p.052-054 (Y:12, blur:48,",
+    "  #E9E9E9) are one designer's Figma fields in a screenshot, not a scale.",
+    "  Do not harvest them as thresholds.",
+    "- The Playbook's own sign-up example (p.127) is white on a pale blue fill that",
+    "  fails its own contrast chapter. Copy the rule, never the screenshot.",
+    "- \"7 ± 2\" (p.101) is Miller's number quoted loosely; chunk size is a design",
+    "  choice, and four is the one that survives a fifth item.",
+    "- NBG defends inflating progress bars (its \"little lie\"). Do not.",
+    "- Neither book states a tap-target size in px. Fitts gives the direction; 40 is",
+    "  this system's floor, and the number to defend if someone asks.",
+    "",
+    "## 19 What no checker can see",
+    "",
+    "`npm run ui` cannot tell you whether the screen is understood. For that:",
+    "",
+    "- Ask one person to do one task and stay quiet while they do it. Their first three",
+    "  sentences are the specification.",
+    "- Watch where the pointer hesitates and where it misclicks: that is where the",
+    "  layout is lying about what is tappable.",
+    "- Five people find most of what is broken. Two rounds of five beat one round of",
+    "  ten.",
+    "- Write what you saw into `.fletbox/memory/`, or the next session designs this",
+    "  screen again from taste.",
+    "",
+    "## 20 The loop",
+    "",
+    "```bash",
+    "npm run check",
+    "npm run ui",
+    "npm run dev        # look at the screen, at 375px and at 1440px",
+    "```",
+    "",
+    "Fix the code, not the checker. Then make the rule reusable: if the fix was right",
+    "for this screen, it is a rule for every screen, and it belongs in this file.",
+    "",
+  ].join('\n');
+
+// Cursor has no skills folder, so the same rules ship as one always-apply rule
+// that loads the skill file instead of duplicating it.
+export const cleanUiCursorRule = () =>
+  [
+    '---',
+    'description: Clean-UI rules for every screen - tokens, the 8-based scale, tap targets, states',
+    'globs: "src/**/*.js"',
+    'alwaysApply: true',
+    '---',
+    '',
+    'Design a screen, do not decorate one. The full rules are in',
+    '[.claude/skills/fletbox-clean-ui/SKILL.md](../../.claude/skills/fletbox-clean-ui/SKILL.md)',
+    '- read it before writing a screen, form, list or dialog.',
+    '',
+    '- One screen, one job, one primary action; secondaries are `Button({ variant: "text" })`.',
+    '- Colors come from `colors.*` only. Never a hex literal outside `src/database/themes.js`.',
+    '  `colors.onPrimary` writes on a brand fill; `colors.primaryBg` is the brand tint.',
+    '- Sizes come from the scale: 4 - 8 - 12 - 16 - 18 - 24 - 32 - 48 space, 4 / 8 / 12 / 16 /',
+    '  999 radius, 12 / 14 / 16 / 18 / 24 / 32 type.',
+    '- Anything pressable is at least 40px on a side, and 44 is the number to aim at.',
+    '- Every interaction shows loading, done, failed and empty; errors say the problem and',
+    '  the way out in the user\'s own words.',
+    '- Verify with `npm run check` then `npm run ui` (add `-- --tokens` to read the measured',
+    '  contrast table), and then look at the screen - the checker has no eyes.',
+    '',
+  ].join('\n');
+
+/**
+ * The app-side twin of scripts/check-app.mjs for the clean-UI gate. Same
+ * resolution dance, because the package exports map only publishes "." and
+ * "./package.json".
+ *
+ * @param {string} appName
+ * @returns {string}
+ */
+export const checkUiScript = (appName) =>
+  [
+    '// scripts/check-ui.mjs',
+    `// Clean-UI gate for ${appName}: tokens, the 8-based scale, tap targets, field`,
+    '// labels and measured WCAG contrast, checked by the installed flet-box.',
+    '//',
+    '//   npm run ui              scan src/ and fail on a real finding',
+    '//   npm run ui -- --tokens  print the measured contrast of every token',
+    '//   npm run ui -- --strict  contrast warnings fail the run too',
+    '//   npm run ui -- --json    machine-readable findings',
+    '',
+    "import path from 'node:path';",
+    "import { createRequire } from 'node:module';",
+    "import { pathToFileURL } from 'node:url';",
+    '',
+    "const require = createRequire(import.meta.url);",
+    '',
+    'function resolvePackage() {',
+    "  const candidates = [path.resolve(process.cwd(), 'node_modules/flet-box')];",
+    '  try {',
+    "    candidates.push(path.dirname(require.resolve('flet-box/package.json')));",
+    '  } catch {',
+    '    /* not installed yet */',
+    '  }',
+    "  const fs = require('fs');",
+    '  for (const dir of candidates) {',
+    "    if (fs.existsSync(path.join(dir, 'bin/commands/checkUi.js'))) return dir;",
+    '  }',
+    "  console.error('flet-box package not found. Run: npm install');",
+    '  process.exit(1);',
+    '}',
+    '',
+    "const checker = path.join(resolvePackage(), 'bin', 'commands', 'checkUi.js');",
+    "const { checkUi } = await import(pathToFileURL(checker).href);",
+    '',
+    "const { exitCode } = await checkUi(process.argv.slice(2));",
     'process.exit(exitCode);',
     '',
   ].join('\n');
