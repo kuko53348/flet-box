@@ -48,7 +48,9 @@ export const Slider = (props) => {
     showMarks = false,
     marks = [], // ← implemented
     // Visual effects
-    striped = true,
+    // Off by default: diagonal stripes turn a value control into a progress bar
+    // that is saying something, and a text-size slider is not saying anything.
+    striped = false,
     animatedStripes = false,
     stripeColor = "rgba(255,255,255,0.25)",
     glow = false,

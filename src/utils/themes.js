@@ -289,7 +289,10 @@ export const applySystemTheme = () => {
         .matches
         ? "dark"
         : "light";
-      setTheme(systemTheme);
+      // applyPalette, not setTheme: painting what the OS asked for is not the
+      // reader choosing a theme. Persisting here would pin the first answer and
+      // make watchSystemTheme's own savedTheme check bail forever.
+      applyPalette(systemTheme);
       return systemTheme;
     }
     return savedTheme;
@@ -310,8 +313,9 @@ export const watchSystemTheme = () => {
     const handler = (e) => {
       const savedTheme = localStorage.getItem("fletbox-theme");
       if (!savedTheme) {
-        const theme = e.matches ? "dark" : "light";
-        setTheme(theme);
+        // Same rule as applySystemTheme: the OS changing its mind is not the
+        // reader choosing a theme, so it must not be written down as one.
+        applyPalette(e.matches ? "dark" : "light");
       }
     };
     mediaQuery.addEventListener("change", handler);
@@ -386,13 +390,16 @@ const initTheme = () => {
   try {
     const savedTheme = localStorage.getItem("fletbox-theme");
     if (savedTheme && (savedTheme === "light" || savedTheme === "dark")) {
-      setTheme(savedTheme);
+      applyPalette(savedTheme);
     } else {
       const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
         .matches
         ? "dark"
         : "light";
-      setTheme(systemTheme);
+      // applyPalette, not setTheme: this runs the first time the module is
+      // imported, so persisting here wrote the OS answer down as a reader
+      // choice — and every later watcher then refused to follow the OS.
+      applyPalette(systemTheme);
     }
     watchSystemTheme();
   } catch (e) {

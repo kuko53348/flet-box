@@ -50,14 +50,20 @@ function computeTextColor(variant, disabled, color, bgColor) {
   return color || bgColor || colors.primary;
 }
 
-function computeBorder(variant, disabled, color, bgColor) {
+function computeBorder(variant, disabled, color, bgColor, borderColor, namesItsOwnFill) {
   if (disabled) return `1px solid ${colors.gray300}`;
   if (variant === "outlined") {
-    const borderColor = color || bgColor || colors.primary;
-    return `2px solid ${borderColor}`;
+    const tint = color || bgColor || colors.primary;
+    return `2px solid ${tint}`;
   }
   if (variant === "text") return "none";
-  return `1px solid ${colors.border}`;
+  // A filled button whose caller named the fill is a colour decision; a neutral
+  // grey ring around it is an edge that belongs to no token and reads as a
+  // rendering bug on the deep variants. A button that names no fill lands on
+  // `colors.surface`, and there the hairline is what keeps the control findable
+  // on a card of the same colour. An explicit `borderColor` always wins.
+  if (borderColor) return `1px solid ${borderColor}`;
+  return namesItsOwnFill ? "none" : `1px solid ${colors.border}`;
 }
 
 function createIcon(name, size, color) {
@@ -165,7 +171,7 @@ export const Button = (props) => {
     variant = "filled",
     size = "medium",
     borderRadius = 16,
-    elevation = 2,
+    elevation = null,
     disabled = false,
     fullWidth = false,
     bgColor = colors.surface,
@@ -174,11 +180,28 @@ export const Button = (props) => {
   } = props;
 
   const sizePreset = SIZE_PRESETS[size] || SIZE_PRESETS.medium;
-  const shadow = SHADOW_LEVELS[elevation] || SHADOW_LEVELS[0];
+  // Depth follows the variant: a text or outlined button is not a surface lifted
+  // off the page, and a shadow drawn around a transparent box paints a grey blob
+  // where the label should sit alone. An explicit `elevation` still wins.
+  const lifted = elevation === null ? (variant === "filled" ? 2 : 0) : elevation;
+  const shadow = SHADOW_LEVELS[lifted] || SHADOW_LEVELS[0];
 
   const background = computeBackground(variant, disabled, bgColor, gradient);
   const textColor = computeTextColor(variant, disabled, color, bgColor);
-  const border = computeBorder(variant, disabled, color, bgColor);
+  // `bgColor` above always has a value (the default is the surface), so whether
+  // the caller chose the fill has to be read off the props, not the local.
+  const namesItsOwnFill =
+    props.bgColor !== undefined ||
+    props.backgroundColor !== undefined ||
+    !!gradient;
+  const border = computeBorder(
+    variant,
+    disabled,
+    color,
+    bgColor,
+    rest.borderColor,
+    namesItsOwnFill,
+  );
 
   const iconNames = resolveIconNames({
     icon,

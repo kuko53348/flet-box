@@ -20,6 +20,7 @@ import { MatrixRain } from "../src/animations/MatrixRain.js";
 import { animate, pulse, stopAnimation } from "../src/animations/animate.js";
 import { runApp } from "../src/core/runApp.js";
 import { useState, saveState, getState } from "../src/tools/useState.js";
+import { colors, palettes, setTheme, applySystemTheme } from "../src/utils/themes.js";
 
 const results = [];
 let pass = 0;
@@ -1136,6 +1137,40 @@ async function run() {
       step24 > step16 * 1.4,
       `rows stayed ${step24}px apart at the 24px base — the slot is frozen in pixels while every row's own box scales with rem, so tall items overlap`,
     );
+  });
+
+  // ------------------- The OS answer is painted, never written down as a choice
+  await t("applySystemTheme follows the OS without pinning the preference", async () => {
+    const savedPref = localStorage.getItem("fletbox-theme");
+    const realMatchMedia = window.matchMedia;
+    localStorage.removeItem("fletbox-theme");
+    window.matchMedia = (query) => ({
+      matches: /dark/.test(query),
+      addEventListener() {},
+      removeEventListener() {},
+    });
+    try {
+      const applied = applySystemTheme();
+      ok(applied === "dark", `applySystemTheme returned "${applied}" while the OS asked for dark`);
+      ok(
+        colors.background === palettes.dark.background,
+        `the dark palette never reached colors (background is ${colors.background})`,
+      );
+      ok(
+        localStorage.getItem("fletbox-theme") === null,
+        "booting wrote the OS answer as the reader's preference, so watchSystemTheme can never follow the OS again",
+      );
+      setTheme("light");
+      ok(
+        localStorage.getItem("fletbox-theme") === "light",
+        "an explicit setTheme stopped persisting — the reader's own choice would be lost on reload",
+      );
+    } finally {
+      window.matchMedia = realMatchMedia;
+      if (savedPref) localStorage.setItem("fletbox-theme", savedPref);
+      else localStorage.removeItem("fletbox-theme");
+      applySystemTheme();
+    }
   });
 
   // ------------------------------------------- Slider: thumb retry loop

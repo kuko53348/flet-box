@@ -3,9 +3,10 @@
  * @description iOS-style toggle switch with controlled/uncontrolled state.
  */
 import { WidgetFactory } from "../widget-factory/index.js";
+import { Text } from "./Text.js";
 import { colors } from "../utils/themes.js";
 import { toREM } from "../utils/units.js";
-import { PILL, TAP_MINIMUM } from "../tools/index.js";
+import { PILL, TAP_MINIMUM, LABEL_TEXT } from "../tools/index.js";
 
 export const Switch = (props) => {
   const {
@@ -15,6 +16,7 @@ export const Switch = (props) => {
     disabled = false,
     size = "medium",
     activeColor = colors.success,
+    label = null,
     ...rest
   } = props;
 
@@ -79,15 +81,34 @@ export const Switch = (props) => {
   // The pressable box is the track's parent, not the track: a 32-unit pill is not
   // a Fitts target, and stretching the pill to 40 would make it look like a
   // button. The hit area grows, the switch does not.
+  //
+  // With a `label` the box grows further into the whole row, because a reader
+  // aiming at the words must still land on the toggle: the label is part of the
+  // control, not a caption beside it.
+  const isLabelled = label !== null && label !== undefined && label !== "";
+
   const switchContainer = WidgetFactory({
     widgetName: "Switch",
-    display: "inline-flex",
+    display: "flex",
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: isLabelled ? "space-between" : "center",
+    gap: 12,
+    width: isLabelled ? "100%" : undefined,
     minHeight: TAP_MINIMUM,
     cursor: disabled ? "not-allowed" : "pointer",
     opacity: disabled ? 0.5 : 1,
-    child: track,
+    child: isLabelled
+      ? [
+          Text({
+            text: label,
+            size: LABEL_TEXT,
+            fontWeight: 500,
+            color: disabled ? colors.textDisabled : colors.text,
+          }),
+          track,
+        ]
+      : track,
     ...rest,
   });
 
