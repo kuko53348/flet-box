@@ -40,6 +40,8 @@ import { initRouter, getCurrentRoute, subscribe } from "./Router.js";
  *   - `updateLeftNavBar(cfg)` / `updateRightNavBar(cfg)` — replace sidebar content.
  *   - `setLeftNavBarWidth(w)` / `setRightNavBarWidth(w)` — resize a sidebar at runtime.
  */
+import { toREM } from "../utils/units.js";
+
 export const Scaffold = (props) => {
   const {
     appBar: originalAppBar,
@@ -283,7 +285,7 @@ export const Scaffold = (props) => {
     if (widget) {
       leftNavBarContainer.appendChild(widget);
       if (mainContentContainer)
-        mainContentContainer.style.width = `calc(100% - ${leftNavBarWidth}px)`;
+        mainContentContainer.style.width = `calc(100% - ${toREM(leftNavBarWidth)})`;
     }
   };
 
@@ -389,7 +391,7 @@ export const Scaffold = (props) => {
 
     if (finalLeftNavBar) {
       leftNavBarContainer = document.createElement("div");
-      leftNavBarContainer.style.width = `${leftNavBarWidth}px`;
+      leftNavBarContainer.style.width = toREM(leftNavBarWidth);
       leftNavBarContainer.style.flexShrink = "0";
       leftNavBarContainer.style.overflow = "auto";
       leftNavBarContainer.style.height = "100%";
@@ -409,7 +411,7 @@ export const Scaffold = (props) => {
 
     if (finalRightNavBar) {
       rightNavBarContainer = document.createElement("div");
-      rightNavBarContainer.style.width = `${rightNavBarWidth}px`;
+      rightNavBarContainer.style.width = toREM(rightNavBarWidth);
       rightNavBarContainer.style.flexShrink = "0";
       rightNavBarContainer.style.overflow = "auto";
       rightNavBarContainer.style.height = "100%";
@@ -425,8 +427,8 @@ export const Scaffold = (props) => {
     // FAB slot — absolutely positioned so it floats above content.
     fabContainer = document.createElement("div");
     fabContainer.style.position = "absolute";
-    fabContainer.style.bottom = "16px";
-    fabContainer.style.right = "16px";
+    fabContainer.style.bottom = toREM(16);
+    fabContainer.style.right = toREM(16);
     fabContainer.style.zIndex = "10";
     container.appendChild(fabContainer);
 
@@ -528,7 +530,7 @@ export const Scaffold = (props) => {
    */
   container.setLeftNavBarWidth = (w) => {
     if (leftNavBarContainer)
-      leftNavBarContainer.style.width = typeof w === "number" ? `${w}px` : w;
+      leftNavBarContainer.style.width = toREM(w);
   };
 
   /**
@@ -538,7 +540,7 @@ export const Scaffold = (props) => {
    */
   container.setRightNavBarWidth = (w) => {
     if (rightNavBarContainer)
-      rightNavBarContainer.style.width = typeof w === "number" ? `${w}px` : w;
+      rightNavBarContainer.style.width = toREM(w);
   };
 
   return container;

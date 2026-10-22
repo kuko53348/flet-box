@@ -8,6 +8,7 @@ import { Button } from "./Button.js";
 import { Text } from "./Text.js";
 import { Icon } from "./Icon.js";
 import { colors } from "../utils/themes.js";
+import { toREM } from "../utils/units.js";
 
 export const Pagination = (props) => {
   const {
@@ -64,10 +65,10 @@ export const Pagination = (props) => {
   const sz = sizes[size] || sizes.medium;
 
   const buttonBase = {
-    minWidth: `${sz.buttonSize}px`,
-    height: `${sz.buttonSize}px`,
+    minWidth: toREM(sz.buttonSize),
+    height: toREM(sz.buttonSize),
     padding: "0",
-    fontSize: `${sz.fontSize}px`,
+    fontSize: toREM(sz.fontSize),
   };
 
   const createPageButton = (page, isActive = false) => {

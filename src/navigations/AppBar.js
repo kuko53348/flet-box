@@ -59,6 +59,9 @@ import { goBack, goTo } from "./Router.js";
  *   - `setBackgroundColor(color: string)` — swap the background color or gradient.
  *   - `show()` / `hide()` — toggle bar visibility.
  */
+import { toREM } from "../utils/units.js";
+import { SHADOW_LEVELS } from "../tools/shadow.js";
+
 export const AppBar = (props) => {
   const {
     title,
@@ -119,18 +122,10 @@ export const AppBar = (props) => {
   const finalPaddingRight = paddingRight || padding;
 
   const finalBorderRadius =
-    typeof borderRadius === "number" ? `${borderRadius}px` : borderRadius;
+    toREM(borderRadius);
 
-  // Material Design elevation → box-shadow lookup table.
-  const shadows = {
-    0: "none",
-    1: "0 1px 3px rgba(0,0,0,0.12)",
-    2: "0 3px 6px rgba(0,0,0,0.16)",
-    3: "0 6px 12px rgba(0,0,0,0.2)",
-    4: "0 10px 20px rgba(0,0,0,0.25)",
-    5: "0 15px 30px rgba(0,0,0,0.3)",
-  };
-  const boxShadow = shadow === true ? shadows[elevation] : shadow || "none";
+  // The framework's depth scale, not a local copy of it (src/tools/shadow.js).
+  const boxShadow = shadow === true ? SHADOW_LEVELS[elevation] : shadow || "none";
 
   // ========== LEADING SECTION ==========
   // Auto-create a back button if requested and no custom leading was supplied.
@@ -173,7 +168,7 @@ export const AppBar = (props) => {
     marginBottom: finalMarginBottom,
     marginLeft: finalMarginLeft,
     marginRight: finalMarginRight,
-    paddingTop: `calc(${finalPaddingTop}px + env(safe-area-inset-top, 0px))`,
+    paddingTop: `calc(${toREM(finalPaddingTop)} + env(safe-area-inset-top, 0px))`,
     paddingBottom: finalPaddingBottom,
     paddingLeft: finalPaddingLeft,
     paddingRight: finalPaddingRight,

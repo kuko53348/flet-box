@@ -5,6 +5,7 @@ import { Container } from "../widgets/Container.js";
 import { Row } from "../widgets/Row.js";
 import { Text } from "../widgets/Text.js";
 import { Icon } from "../widgets/Icon.js";
+import { toREM } from "../utils/units.js";
 
 /**
  * @typedef {Object} TabDefinition
@@ -263,7 +264,7 @@ export const Tabs = (props) => {
 
   const contentContainer = Container({
     display: "flex",
-    padding: `${sz.cp}px 0`,
+    padding: `${toREM(sz.cp)} 0`,
     width: "100%",
     overflow: "auto",
   });

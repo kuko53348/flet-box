@@ -7,6 +7,8 @@ import { Row } from "./Row.js";
 import { Text } from "./Text.js";
 import { Icon } from "./Icon.js";
 import { colors } from "../utils/themes.js";
+import { toREM } from "../utils/units.js";
+import { SHADOW_LEVELS, PILL } from "../tools/index.js";
 
 export const FloatingActionButton = (props) => {
   const {
@@ -15,8 +17,10 @@ export const FloatingActionButton = (props) => {
     onPress,
     backgroundColor = colors.primary,
     foregroundColor = "#ffffff",
-    elevation = 6,
-    borderRadius = 48,
+    // Depth is the 0-5 scale, like every other widget; 6 was a number the scale
+    // does not have, which only worked because this widget built its own string.
+    elevation = 4,
+    borderRadius = PILL,
     padding = 12,
     mini = false,
     extended = false,
@@ -24,7 +28,9 @@ export const FloatingActionButton = (props) => {
     ...rest
   } = props;
 
-  const size = mini ? 40 : 56;
+  // 48 and 40 are both scale steps, and both clear the Fitts floor: the mini FAB
+  // sits exactly on it, which is as small as a floating target may get.
+  const size = mini ? 40 : 48;
   const iconSize = mini ? 20 : 24;
 
   const children = [
@@ -58,14 +64,14 @@ export const FloatingActionButton = (props) => {
     gap: 8,
     width: extended ? "auto" : size,
     height: size,
-    borderRadius: extended ? "24px" : "50%",
+    borderRadius: extended ? borderRadius : "50%",
     backgroundColor: backgroundColor,
     color: foregroundColor,
     cursor: disabled ? "not-allowed" : "pointer",
     opacity: disabled ? 0.6 : 1,
-    boxShadow: `0 ${elevation / 2}px ${elevation}px rgba(0,0,0,0.3)`,
+    boxShadow: SHADOW_LEVELS[elevation] ?? SHADOW_LEVELS[4],
     transition: "all 0.2s ease",
-    padding: extended ? "0 20px" : 0,
+    padding: extended ? `0 ${toREM(16)}` : 0,
     child: extended
       ? Row({ alignItems: "center", gap: 8, children })
       : children[0],

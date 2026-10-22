@@ -11,6 +11,8 @@ import { Icon } from "./Icon.js";
 import { Button } from "./Button.js";
 import { colors } from "../utils/themes.js";
 
+import { toREM } from "../utils/units.js";
+
 export const Stepper = (props) => {
   const {
     steps = [],
@@ -32,7 +34,7 @@ export const Stepper = (props) => {
     borderColor = colors.border,
     borderWidth = 1,
     shadow,
-    padding = 20,
+    padding = 24,
     margin = 0,
     width = "100%",
     ...rest
@@ -215,12 +217,12 @@ export const Stepper = (props) => {
 
   // Build style for main container using WidgetFactory
   let style = {
-    width: typeof width === "number" ? `${width}px` : width,
+    width: toREM(width),
     backgroundColor: bgColor,
     borderRadius:
-      typeof borderRadius === "number" ? `${borderRadius}px` : borderRadius,
-    padding: typeof padding === "number" ? `${padding}px` : padding,
-    margin: typeof margin === "number" ? `${margin}px` : margin,
+      toREM(borderRadius),
+    padding: toREM(padding),
+    margin: toREM(margin),
     display: "flex",
     flexDirection: "column",
     gap: "24px",

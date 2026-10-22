@@ -31,7 +31,9 @@ export default function run(ctx) {
     a.open();
     eq(a.modal.isOpen, true);
     eq(overlay.style.visibility, "visible");
-    eq(overlay.firstElementChild.style.width, "320px"); // documented dialog width
+    // Measured from the rendered box: the panel width is framework units, emitted
+    // as rem, and 320 is the documented dialog width at the default base font.
+    eq(cs(overlay.firstElementChild).width, "320px");
     a.close();
     eq(a.modal.isOpen, false);
     a.modal.destroy();
@@ -81,7 +83,7 @@ export default function run(ctx) {
     eq(m.isOpen, true);
     eq(overlay.style.visibility, "visible");
     eq(overlay.style.opacity, "1");
-    eq(overlay.firstElementChild.style.width, "480px");
+    eq(cs(overlay.firstElementChild).width, "480px");
     m.close();
     eq(m.isOpen, false);
     eq(overlay.style.opacity, "0");
@@ -141,7 +143,7 @@ export default function run(ctx) {
     eq(el.parentNode, document.body);
     eq(cs(el).position, "fixed");
     eq(cs(el).zIndex, "10000");
-    eq(el.style.bottom, "16px"); // position 'bottom' + margin 16
+    eq(cs(el).bottom, "16px"); // position 'bottom' + margin 16
     if (!el.textContent.includes("Saved")) throw new Error("message missing");
     sb.close();
   });
@@ -154,7 +156,7 @@ export default function run(ctx) {
   });
   t("SnackBar: position 'top' anchors the bar to the top edge", () => {
     const sb = W.SnackBar({ message: "Hi", position: "top" });
-    eq(sb.getElement().style.top, "16px");
+    eq(cs(sb.getElement()).top, "16px");
     sb.close();
   });
   t("SnackBar: dismissible without action renders the close (x) button", () => {
@@ -205,8 +207,9 @@ export default function run(ctx) {
     eq(cs(e).flexDirection, "row");
     const track = e.firstElementChild;
     const fill = track.firstElementChild;
-    eq(track.style.height, "8px");
-    eq(track.style.borderRadius, "4px"); // height / 2
+    // Rendered box, not the inline string: the bar is framework units (rem).
+    eq(cs(track).height, "8px");
+    eq(cs(track).borderRadius, "4px"); // height / 2
     eq(cs(track).backgroundColor, rgbOf(colors.border)); // colors.border
     eq(cs(fill).backgroundColor, rgbOf(colors.primary));
   });
@@ -244,7 +247,9 @@ export default function run(ctx) {
     const e = mount(W.CircularBar({ value: 40, size: 120, animate: false }));
     eq(e.tagName, "DIV");
     eq(e.style.display, "inline-block");
-    eq(e.style.width, "120px");
+    // The factory routes width through rem, so read the rendered box, not the
+    // inline string ("7.5rem" at a 16px base, "11.25rem" at 24).
+    eq(cs(e).width, "120px");
     const canvas = e.querySelector("canvas");
     if (!canvas) throw new Error("no canvas");
     eq(canvas.tagName, "CANVAS");
@@ -281,9 +286,11 @@ export default function run(ctx) {
     eq(cs(e).gap, "8px");
     eq(e.children.length, 1);
     const block = e.firstElementChild;
+    // The inline string here: a computed width is always resolved to px, so "100%"
+    // is only visible on the style itself.
     eq(block.style.width, "100%");
-    eq(block.style.height, "16px");
-    eq(block.style.borderRadius, "4px");
+    eq(cs(block).height, "16px");
+    eq(cs(block).borderRadius, "4px");
     eq(cs(block).backgroundColor, rgbOf(colors.gray200)); // colors.gray200
   });
   t("Skeleton: default pulse animation + injected keyframes", () => {
@@ -299,29 +306,35 @@ export default function run(ctx) {
     const wave = mount(W.Skeleton({ animation: "wave" }));
     if (!wave.firstElementChild.style.backgroundImage.includes("linear-gradient")) throw new Error("no wave gradient");
   });
-  t("Skeleton: avatar variant is 40x40 and round; button variant is 120x36 r24", () => {
+  t("Skeleton: avatar variant is 40x40 and round; button variant matches the Button preset", () => {
     const av = mount(W.Skeleton({ variant: "avatar" })).firstElementChild;
-    eq(av.style.width, "40px");
-    eq(av.style.height, "40px");
-    eq(av.style.borderRadius, "50%");
+    eq(cs(av).width, "40px");
+    eq(cs(av).height, "40px");
+    eq(cs(av).borderRadius, "50%");
+    // The button placeholder is the Button preset's own box: 40 tall (the tap
+    // floor) with the preset's 16-unit corner, so nothing jumps when the real
+    // control replaces it.
     const btn = mount(W.Skeleton({ variant: "button" })).firstElementChild;
-    eq(btn.style.width, "120px");
-    eq(btn.style.height, "36px");
-    eq(btn.style.borderRadius, "24px");
+    eq(cs(btn).width, "120px");
+    eq(cs(btn).height, "40px");
+    eq(cs(btn).borderRadius, "16px");
   });
 
   // ---------------- FloatingActionButton ----------------
-  t("FloatingActionButton: 56px round DIV with a Material Icon (default 'add')", () => {
+  t("FloatingActionButton: 48px round DIV with a Material Icon (default 'add')", () => {
     const e = mount(W.FloatingActionButton({ onPress: () => {} }));
     eq(e.tagName, "DIV");
-    eq(cs(e).width, "56px");
-    eq(cs(e).height, "56px");
+    // 48 is a step of the spacing scale and clears the 40-unit tap floor; the old
+    // 56 was neither.
+    eq(cs(e).width, "48px");
+    eq(cs(e).height, "48px");
     eq(e.style.borderRadius, "50%");
     const icon = e.querySelector(".material-icons");
     if (!icon) throw new Error("no icon");
     eq(icon.textContent.trim(), "add");
     eq(cs(icon).fontSize, "24px");
-    if (!cs(e).boxShadow.includes("3px 6px")) throw new Error("elevation 6 shadow missing");
+    // Depth comes from the shared scale (SHADOW_LEVELS), level 4 by default.
+    if (!cs(e).boxShadow.includes("10px 20px")) throw new Error("elevation 4 shadow missing");
   });
   t("FloatingActionButton: onPress fires on click", () => {
     let n = 0;
@@ -329,7 +342,7 @@ export default function run(ctx) {
     e.click();
     eq(n, 1);
   });
-  t("FloatingActionButton: mini is 40px with a 20px icon", () => {
+  t("FloatingActionButton: mini is 40px — the tap floor — with a 20px icon", () => {
     const e = mount(W.FloatingActionButton({ mini: true }));
     eq(cs(e).width, "40px");
     eq(cs(e).height, "40px");
@@ -339,7 +352,8 @@ export default function run(ctx) {
     const e = mount(W.FloatingActionButton({ extended: true, label: "Create" }));
     if (!e.textContent.includes("Create")) throw new Error("label missing");
     eq(e.style.width, "auto");
-    eq(e.style.borderRadius, "24px");
+    // A stadium, not a hand-picked 24: the same PILL the Switch and Chip use.
+    eq(cs(e).borderTopLeftRadius, "999px");
   });
   t("FloatingActionButton: disabled dims and ignores onPress", () => {
     let n = 0;

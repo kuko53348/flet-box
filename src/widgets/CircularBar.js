@@ -85,13 +85,13 @@ export const CircularBar = (props) => {
 
   const updateCanvasSize = () => {
     if (!canvas) return;
-    let width;
-    if (isFixedSize) width = fixedSize;
-    else {
-      const rect = container.getBoundingClientRect();
-      width = rect.width;
-      if (width <= 0) width = 200;
-    }
+    // The box is routed through rem, so a fixed `size: 120` paints 180px wide
+    // when the reader's base font is 24. The drawing buffer has to follow that
+    // rendered box, not the number the developer wrote, or the ring grows and
+    // turns soft. The number is only the fallback for a node with no layout yet.
+    const measured = container.getBoundingClientRect().width;
+    const width =
+      measured > 0 ? measured : isFixedSize ? fixedSize : 200;
     canvas.width = width;
     canvas.height = width;
     currentWidth = width;

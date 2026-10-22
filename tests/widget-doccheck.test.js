@@ -123,7 +123,7 @@ t("Radio: select() does not deselect siblings", () => {
 // ---------------- Switch ----------------
 t("Switch: default off + toggle on click", () => { let v = null; const e = mount(W.Switch({ onToggle: (x) => v = x })); eq(e.getValue(), false); e.click(); eq(v, true); eq(e.getValue(), true); });
 t("Switch: updateValue", () => { const e = W.Switch({}); e.updateValue(false); eq(e.getValue(), false); });
-t("Switch: size large -> 60px", () => { const e = mount(W.Switch({ size: "large" })); eq(cs(e).width, "60px"); });
+t("Switch: size large -> 64px track inside a 40px hit box", () => { const e = mount(W.Switch({ size: "large" })); eq(cs(e.firstElementChild).width, "64px"); eq(cs(e).minHeight, "40px"); });
 
 // ---------------- Slider ----------------
 t("Slider: clamps value to max", () => { const e = W.Slider({ value: 150, max: 100 }); eq(e.getValue(), 100); });

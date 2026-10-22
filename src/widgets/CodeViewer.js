@@ -7,6 +7,8 @@ import { colors } from "../utils/themes.js";
 import { composeUpdate } from "../utils/composeUpdate.js";
 import { generateHighlightedHtml } from "../utils/syntaxHighlight.js";
 
+import { toREM } from "../utils/units.js";
+
 export const CodeViewer = (props) => {
   const {
 code = "",
@@ -44,7 +46,7 @@ code = "",
         for (let i = 0; i < lines.length; i++) {
           const numberDiv = WidgetFactory({
             tag: "div",
-            padding: `0 ${padding / 2}px 0 ${padding}px`,
+            padding: `0 ${toREM(padding / 2)} 0 ${toREM(padding)}`,
             whiteSpace: "pre",
             textContent: String(startingLineNumber + i),
           });
@@ -94,7 +96,7 @@ code = "",
       tag: "div",
       padding: "8px 12px",
       backgroundColor: colors.primary,
-      borderRadius: `${borderRadius}px ${borderRadius}px 0 0`,
+      borderRadius: `${toREM(borderRadius)} ${toREM(borderRadius)} 0 0`,
       color: "#fff",
       fontSize: "14px",
       fontWeight: "bold",
@@ -110,10 +112,10 @@ code = "",
     tag: "div",
     backgroundColor,
     borderRadius: currentTitle
-      ? `0 0 ${borderRadius}px ${borderRadius}px`
-      : `${borderRadius}px`,
+      ? `0 0 ${toREM(borderRadius)} ${toREM(borderRadius)}`
+      : toREM(borderRadius),
     overflow: "auto",
-    maxHeight: typeof maxHeight === "number" ? `${maxHeight}px` : maxHeight,
+    maxHeight: toREM(maxHeight),
     overflowX: "auto",
     overflowY: "auto",
   });
@@ -132,22 +134,22 @@ code = "",
       tag: "div",
       backgroundColor,
       borderRight: `1px solid ${colors.border}`,
-      padding: `${padding}px 0`,
+      padding: `${toREM(padding)} 0`,
       fontFamily: "monospace",
-      fontSize: typeof fontSize === "number" ? `${fontSize}px` : fontSize,
+      fontSize: toREM(fontSize),
       lineHeight: "1.5",
       textAlign: "right",
       color: lineNumberColor,
       userSelect: "none",
-      width: `${lineNumberWidth}px`,
+      width: toREM(lineNumberWidth),
       flexShrink: 0,
     });
 
     codeColRef = WidgetFactory({
       tag: "div",
-      padding: `${padding}px`,
+      padding: toREM(padding),
       fontFamily: "monospace",
-      fontSize: typeof fontSize === "number" ? `${fontSize}px` : fontSize,
+      fontSize: toREM(fontSize),
       lineHeight: "1.5",
       whiteSpace: "pre",
       flex: 1,
@@ -170,9 +172,9 @@ code = "",
   } else {
     codeWrapperRef = WidgetFactory({
       tag: "div",
-      padding: typeof padding === "number" ? `${padding}px` : padding,
+      padding: toREM(padding),
       fontFamily: "monospace",
-      fontSize: typeof fontSize === "number" ? `${fontSize}px` : fontSize,
+      fontSize: toREM(fontSize),
       whiteSpace: "pre",
       lineHeight: "1.5",
     });
@@ -189,7 +191,7 @@ code = "",
     for (let i = 0; i < lines.length; i++) {
       const numberDiv = WidgetFactory({
         tag: "div",
-        padding: `0 ${padding / 2}px 0 ${padding}px`,
+        padding: `0 ${toREM(padding / 2)} 0 ${toREM(padding)}`,
         whiteSpace: "pre",
         textContent: String(startingLineNumber + i),
       });

@@ -5,6 +5,8 @@
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 
+import { toREM } from "../utils/units.js";
+
 export const CircularChart = (props) => {
   let {
     data = [],
@@ -117,10 +119,15 @@ export const CircularChart = (props) => {
   const updateCanvasSize = () => {
     if (!canvas) return;
     if (isFixedSize) {
-      canvas.width = canvasWidth;
-      canvas.height = canvasHeight;
-      currentWidth = canvasWidth;
-      currentHeight = canvasHeight;
+      // The box is routed through rem, so `size: 160` is 240px wide for a reader
+      // on a 24px base font. The buffer has to follow the rendered box or the
+      // chart grows and turns soft; the numbers are the fallback for a node
+      // that has no layout yet.
+      const { width, height } = container.getBoundingClientRect();
+      canvas.width = width > 0 ? width : canvasWidth;
+      canvas.height = height > 0 ? height : canvasHeight;
+      currentWidth = canvas.width;
+      currentHeight = canvas.height;
     } else {
       const rect = container.getBoundingClientRect();
       let w = rect.width;
@@ -463,7 +470,7 @@ export const CircularChart = (props) => {
       position: "relative",
       overflow: "hidden",
       borderRadius:
-        typeof borderRadius === "number" ? `${borderRadius}px` : borderRadius,
+        toREM(borderRadius),
       border:
         borderWidth > 0 && borderColor
           ? `${borderWidth}px solid ${borderColor}`

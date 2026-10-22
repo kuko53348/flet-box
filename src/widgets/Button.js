@@ -3,7 +3,7 @@
  * @description Button with size presets, variants, icons and gradient support.
  */
 import { WidgetFactory } from "../widget-factory/index.js";import { colors } from "../utils/themes.js";
-import { SHADOW_LEVELS } from "../tools/index.js";
+import { SHADOW_LEVELS, TAP_MINIMUM } from "../tools/index.js";
 import { Text } from "./Text.js";
 import { Icon } from "./Icon.js";
 
@@ -11,10 +11,20 @@ import { Icon } from "./Icon.js";
 // CONFIGURATION
 // ============================================================
 
+/**
+ * Every number here is a framework unit — the factory converts lengths to `rem`,
+ * so the whole preset grows with the reader's font size instead of freezing at
+ * the pixel it was written in.
+ *
+ * `minHeight` is the Fitts floor: a pressable box the finger can hit, set on the
+ * box rather than reached through padding, so `small` stays a small *looking*
+ * control that is still a real target. `medium` and `large` land on 40 and 48;
+ * `small` is 32 and is a desktop-density escape hatch, not a touch target.
+ */
 const SIZE_PRESETS = {
-  small: { padding: [6, 12], fontSize: 12, gap: 6, iconSize: 16 },
-  medium: { padding: [10, 20], fontSize: 14, gap: 8, iconSize: 20 },
-  large: { padding: [14, 28], fontSize: 16, gap: 10, iconSize: 24 },
+  small: { padding: [4, 12], fontSize: 12, gap: 4, iconSize: 16, minHeight: 32 },
+  medium: { padding: [8, 16], fontSize: 14, gap: 8, iconSize: 20, minHeight: TAP_MINIMUM },
+  large: { padding: [12, 24], fontSize: 16, gap: 12, iconSize: 24, minHeight: 48 },
 };
 
 // ============================================================
@@ -112,11 +122,8 @@ function buildButtonChildren(text, textColor, fontSize, gap, iconElements) {
   return children;
 }
 
-function applySpacingToProps(buttonProps, padding, margin) {
-  const normalizedPadding = normalizeSpacing(
-    padding,
-    SIZE_PRESETS.medium.padding,
-  );
+function applySpacingToProps(buttonProps, padding, margin, fallbackPadding) {
+  const normalizedPadding = normalizeSpacing(padding, fallbackPadding);
   const normalizedMargin = normalizeSpacing(margin, undefined);
 
   if (Array.isArray(normalizedPadding)) {
@@ -157,7 +164,7 @@ export const Button = (props) => {
     iconPosition = "left",
     variant = "filled",
     size = "medium",
-    borderRadius = 24,
+    borderRadius = 16,
     elevation = 2,
     disabled = false,
     fullWidth = false,
@@ -208,6 +215,7 @@ export const Button = (props) => {
     justifyContent: "center",
     gap: sizePreset.gap,
     borderRadius,
+    minHeight: sizePreset.minHeight,
     width: fullWidth ? "100%" : "auto",
     backgroundColor: background,
     border,
@@ -223,7 +231,7 @@ export const Button = (props) => {
     ...rest,
   };
 
-  applySpacingToProps(buttonProps, padding, margin);
+  applySpacingToProps(buttonProps, padding, margin, sizePreset.padding);
 
   if (gradient) {
     buttonProps.background = gradient;

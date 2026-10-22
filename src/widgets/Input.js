@@ -4,6 +4,8 @@
  */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
+import { toREM } from "../utils/units.js";
+import { TAP_MINIMUM } from "../tools/index.js";
 import { Icon } from "./Icon.js";
 import { TextInputValidator } from "../utils/TextInputValidator.js";
 import { composeUpdate } from "../utils/composeUpdate.js";
@@ -76,7 +78,7 @@ export const Input = (props) => {
     size = "medium",
     variant = "outlined",
     fullWidth = false,
-    borderRadius = 24,
+    borderRadius = 16,
 
     iconLeft,
     iconRight,
@@ -131,11 +133,17 @@ export const Input = (props) => {
   const isFocused = () => document.activeElement === inputElement;
 
   // ========== SIZES ==========
-  // Maps the `size` prop to concrete CSS values so the rest of the code stays size-agnostic.
+  /**
+   * Framework units, not CSS strings: this widget builds a real `<input>` and
+   * writes `style.*` by hand, so every length here goes through `toREM` at the
+   * point of use. Written as `"10px 14px"` the field froze at 16px base and the
+   * reader who raises their font got small text inside a control that should have
+   * grown with it. `minHeight` is the Fitts floor — a text field is a target.
+   */
   const sizes = {
-    small: { padding: "6px 12px", fontSize: "12px", iconSize: 16 },
-    medium: { padding: "10px 14px", fontSize: "14px", iconSize: 20 },
-    large: { padding: "14px 18px", fontSize: "16px", iconSize: 24 },
+    small: { padding: [4, 12], fontSize: 12, iconSize: 16, minHeight: 32 },
+    medium: { padding: [8, 12], fontSize: 14, iconSize: 20, minHeight: TAP_MINIMUM },
+    large: { padding: [12, 16], fontSize: 16, iconSize: 24, minHeight: 48 },
   };
   const sz = sizes[size] || sizes.medium;
 
@@ -350,7 +358,7 @@ export const Input = (props) => {
       fontSize: 12,
       fontWeight: 500,
       color: error ? colors.danger : colors.textSecondary,
-      marginBottom: 2,
+      marginBottom: 4,
       cursor: "text",
     });
     // Clicking the label focuses the native input — mirrors native <label for> behavior
@@ -387,8 +395,7 @@ export const Input = (props) => {
 
   if (variant === "filled") {
     wrapperStyles.backgroundColor = colors.gray100;
-    wrapperStyles.borderRadius =
-      typeof borderRadius === "number" ? `${borderRadius}px` : borderRadius;
+    wrapperStyles.borderRadius = toREM(borderRadius);
     wrapperStyles.border = "none";
   } else if (variant === "underlined") {
     wrapperStyles.backgroundColor = "transparent";
@@ -397,8 +404,7 @@ export const Input = (props) => {
   } else {
     // Default: outlined
     wrapperStyles.backgroundColor = "transparent";
-    wrapperStyles.borderRadius =
-      typeof borderRadius === "number" ? `${borderRadius}px` : borderRadius;
+    wrapperStyles.borderRadius = toREM(borderRadius);
     wrapperStyles.border = `1px solid ${error ? colors.danger : colors.border}`;
   }
 
@@ -414,7 +420,7 @@ export const Input = (props) => {
       name: iconLeft,
       size: iconSize || sz.iconSize,
       color: iconColor,
-      marginLeft: "12px",
+      marginLeft: 12,
       flexShrink: 0,
       pointerEvents: "auto",
     });
@@ -436,8 +442,9 @@ export const Input = (props) => {
   inputElement.value = currentValue;
 
   inputElement.style.flex = "1";
-  inputElement.style.padding = sz.padding;
-  inputElement.style.fontSize = sz.fontSize;
+  inputElement.style.padding = `${toREM(sz.padding[0])} ${toREM(sz.padding[1])}`;
+  inputElement.style.fontSize = toREM(sz.fontSize);
+  inputElement.style.minHeight = toREM(sz.minHeight);
   inputElement.style.border = "none";
   inputElement.style.outline = "none";
   inputElement.style.backgroundColor = "transparent";
@@ -505,15 +512,15 @@ export const Input = (props) => {
     btn.type = "button";
     btn.textContent = glyph;
     btn.setAttribute("aria-label", label);
-    btn.style.width = "28px";
-    btn.style.height = "28px";
+    btn.style.width = toREM(32);
+    btn.style.height = toREM(32);
     btn.style.flexShrink = "0";
-    btn.style.marginRight = "6px";
+    btn.style.marginRight = toREM(4);
     btn.style.padding = "0";
     btn.style.border = "none";
     btn.style.background = "transparent";
     btn.style.color = colors.textSecondary;
-    btn.style.fontSize = "15px";
+    btn.style.fontSize = toREM(16);
     btn.style.lineHeight = "1";
     btn.style.cursor = disabled ? "not-allowed" : "pointer";
     btn.style.display = "flex";
@@ -564,12 +571,12 @@ export const Input = (props) => {
   if (showValidationIcon && validation !== "none") {
     validationIcon = document.createElement("span");
     validationIcon.textContent = "";
-    validationIcon.style.width = "24px";
-    validationIcon.style.fontSize = "16px";
+    validationIcon.style.width = toREM(24);
+    validationIcon.style.fontSize = toREM(16);
     validationIcon.style.display = "none";
     validationIcon.style.alignItems = "center";
     validationIcon.style.justifyContent = "center";
-    validationIcon.style.marginRight = "8px";
+    validationIcon.style.marginRight = toREM(8);
     validationIcon.style.flexShrink = "0";
     inputWrapper.appendChild(validationIcon);
   }
@@ -580,7 +587,7 @@ export const Input = (props) => {
       name: iconRight,
       size: iconSize || sz.iconSize,
       color: iconColor,
-      marginRight: "12px",
+      marginRight: 12,
       flexShrink: 0,
       pointerEvents: "auto",
     });
@@ -593,9 +600,9 @@ export const Input = (props) => {
   // --- Error message element rendered below the input ---
   errorMessageElement = document.createElement("span");
   errorMessageElement.textContent = "";
-  errorMessageElement.style.fontSize = "11px";
+  errorMessageElement.style.fontSize = toREM(12);
   errorMessageElement.style.color = colors.danger;
-  errorMessageElement.style.marginTop = "2px";
+  errorMessageElement.style.marginTop = toREM(4);
   errorMessageElement.style.display = "none";
   container.appendChild(errorMessageElement);
 

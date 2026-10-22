@@ -6,6 +6,8 @@ import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 import { injectKeyframes } from "../utils/styleInjector.js";
 
+import { toREM } from "../utils/units.js";
+
 export const Skeleton = (props) => {
   const {
     variant = "text", // 'text', 'circular', 'avatar', 'image', 'card', 'listTile', 'button'
@@ -43,8 +45,12 @@ export const Skeleton = (props) => {
         return { width: "100%", height: 120, borderRadius: 12 };
       case "listTile":
         return { width: "100%", height: 56, borderRadius: 8 };
+      // The shape a button actually has: 40 units tall (the Fitts floor the Button
+      // preset uses) with the Button's own 16-unit corner, not an invented 36x24
+      // pill — a skeleton that does not match the control it replaces reads as a
+      // layout shift when the real one loads.
       case "button":
-        return { width: 120, height: 36, borderRadius: 24 };
+        return { width: 120, height: 40, borderRadius: 16 };
       default:
         return { width: "100%", height: 20, borderRadius: 4 };
     }
@@ -79,14 +85,11 @@ export const Skeleton = (props) => {
     if (variant === "button") {
       return WidgetFactory({
         tag: "div",
-        width: typeof finalWidth === "number" ? `${finalWidth}px` : finalWidth,
+        width: toREM(finalWidth),
         height:
-          typeof finalHeight === "number" ? `${finalHeight}px` : finalHeight,
+          toREM(finalHeight),
         backgroundColor: bgColor,
-        borderRadius:
-          typeof finalBorderRadius === "number"
-            ? `${finalBorderRadius}px`
-            : finalBorderRadius,
+        borderRadius: toREM(finalBorderRadius),
         ...getAnimationStyle(),
       });
     }
@@ -97,14 +100,14 @@ export const Skeleton = (props) => {
         tag: "div",
         display: "flex",
         alignItems: "center",
-        gap: "12px",
+        gap: 12,
         width: "100%",
       });
 
       const avatar = WidgetFactory({
         tag: "div",
-        width: "40px",
-        height: "40px",
+        width: 40,
+        height: 40,
         backgroundColor: bgColor,
         borderRadius: "50%",
         flexShrink: 0,
@@ -117,24 +120,24 @@ export const Skeleton = (props) => {
         flex: 1,
         display: "flex",
         flexDirection: "column",
-        gap: "8px",
+        gap: 8,
       });
 
       const line1 = WidgetFactory({
         tag: "div",
         width: "80%",
-        height: "14px",
+        height: 14,
         backgroundColor: bgColor,
-        borderRadius: "4px",
+        borderRadius: 4,
         ...getAnimationStyle(),
       });
 
       const line2 = WidgetFactory({
         tag: "div",
         width: "60%",
-        height: "12px",
+        height: 12,
         backgroundColor: bgColor,
-        borderRadius: "4px",
+        borderRadius: 4,
         ...getAnimationStyle(),
       });
 
@@ -151,16 +154,16 @@ export const Skeleton = (props) => {
         tag: "div",
         display: "flex",
         flexDirection: "column",
-        gap: "12px",
+        gap: 12,
         width: "100%",
       });
 
       const imageArea = WidgetFactory({
         tag: "div",
         width: "100%",
-        height: "120px",
+        height: 120,
         backgroundColor: bgColor,
-        borderRadius: "8px",
+        borderRadius: 8,
         ...getAnimationStyle(),
       });
       container.appendChild(imageArea);
@@ -169,25 +172,25 @@ export const Skeleton = (props) => {
         tag: "div",
         display: "flex",
         flexDirection: "column",
-        gap: "8px",
-        padding: "0 8px",
+        gap: 8,
+        paddingHorizontal: 8,
       });
 
       const line1 = WidgetFactory({
         tag: "div",
         width: "90%",
-        height: "16px",
+        height: 16,
         backgroundColor: bgColor,
-        borderRadius: "4px",
+        borderRadius: 4,
         ...getAnimationStyle(),
       });
 
       const line2 = WidgetFactory({
         tag: "div",
         width: "70%",
-        height: "12px",
+        height: 12,
         backgroundColor: bgColor,
-        borderRadius: "4px",
+        borderRadius: 4,
         ...getAnimationStyle(),
       });
 
@@ -201,14 +204,11 @@ export const Skeleton = (props) => {
     // Simple variants (text, circular, avatar, image)
     return WidgetFactory({
       tag: "div",
-      width: typeof finalWidth === "number" ? `${finalWidth}px` : finalWidth,
+      width: toREM(finalWidth),
       height:
-        typeof finalHeight === "number" ? `${finalHeight}px` : finalHeight,
+        toREM(finalHeight),
       backgroundColor: bgColor,
-      borderRadius:
-        typeof finalBorderRadius === "number"
-          ? `${finalBorderRadius}px`
-          : finalBorderRadius,
+      borderRadius: toREM(finalBorderRadius),
       ...getAnimationStyle(),
     });
   };
@@ -219,7 +219,7 @@ export const Skeleton = (props) => {
     widgetName: "Skeleton",
     display: "flex",
     flexDirection: "column",
-    gap: typeof gap === "number" ? `${gap}px` : gap,
+    gap: toREM(gap),
     width: "100%",
   });
 

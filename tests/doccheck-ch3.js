@@ -207,9 +207,11 @@ export default function run(ctx) {
   });
   t("Avatar: shape controls border-radius (circle/rounded/square)", () => {
     eq(W.Avatar({ shape: "circle" }).style.borderRadius, "50%");
-    eq(W.Avatar({ shape: "rounded", size: 40 }).style.borderRadius, "8px");
+    // The rounded corner is 20% of the avatar, in framework units (rem), so the
+    // measured box is what the reader sees: 8px at the default base font.
+    eq(cs(mount(W.Avatar({ shape: "rounded", size: 40 }))).borderRadius, "8px");
     // Zero serializes with units in Chromium: setting borderRadius "0" reads back "0px".
-    eq(W.Avatar({ shape: "square" }).style.borderRadius, "0px");
+    eq(cs(mount(W.Avatar({ shape: "square" }))).borderRadius, "0px");
   });
   t("Avatar: size sets width/height in px", () => {
     const e = mount(W.Avatar({ size: 64 }));
@@ -237,10 +239,12 @@ export default function run(ctx) {
   t("Avatar: online draws a dot inset from the edge and sized from the avatar", () => {
     const e = mount(W.Avatar({ name: "Ada Lovelace", size: 40, online: true }));
     const dot = e.lastElementChild;
-    eq(dot.style.width, "12px");
-    eq(dot.style.height, "12px");
-    eq(dot.style.right, "5px");
-    eq(dot.style.bottom, "5px");
+    // Measured from the rendered box: the dot's size is framework units, emitted
+    // as rem, and 40 · 0.3 computes to 12px at the default base font.
+    eq(cs(dot).width, "12px");
+    eq(cs(dot).height, "12px");
+    eq(cs(dot).right, "5px");
+    eq(cs(dot).bottom, "5px");
     eq(cs(dot).display, "block");
   });
   t("Avatar: without online there is no dot to show", () => {
@@ -264,11 +268,13 @@ export default function run(ctx) {
     // The content used to revert to the construction-time node on any update.
     eq(e.querySelector("img") !== null, true);
     eq(cs(e).backgroundColor, "rgb(0, 255, 0)");
-    eq(e.style.width, "64px");
-    eq(e.style.height, "64px");
+    eq(cs(e).width, "64px");
+    eq(cs(e).height, "64px");
     // 64 · 0.3 = 19px dot, 64 · 0.12 = 8px inset — inside the clipped circle.
-    eq(e.lastElementChild.style.width, "19px");
-    eq(e.lastElementChild.style.right, "8px");
+    // Measured from the rendered box, not the inline string: a framework number
+    // is emitted as `rem`, and both describe the same pixel.
+    eq(cs(e.lastElementChild).width, "19px");
+    eq(cs(e.lastElementChild).right, "8px");
     eq(cs(e.lastElementChild).backgroundColor, "rgb(255, 0, 0)");
   });
   t("Avatar: dropping src falls back to initials, then to the icon", () => {
@@ -314,10 +320,10 @@ export default function run(ctx) {
   });
 
   // ---------------- Chip ----------------
-  t("Chip: renders an inline-block DIV carrying the label", () => {
+  t("Chip: renders an inline-flex DIV carrying the label", () => {
     const e = W.Chip({ label: "Tag" });
     eq(e.tagName, "DIV");
-    eq(e.style.display, "inline-block");
+    eq(e.style.display, "inline-flex");
     eq(e.textContent.includes("Tag"), true);
   });
   t("Chip: onPress makes it clickable with a pointer cursor", () => {

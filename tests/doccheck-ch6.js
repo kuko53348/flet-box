@@ -123,7 +123,8 @@ export default function run(ctx) {
 
   t("Chart: defaults are height 400px, width 100%, borderRadius 8px", () => {
     const e = mount(W.Chart({ type: "bar", data: [4, 5, 6] }));
-    eq(e.style.height, "400px");
+    // Rendered box: the container is framework units, emitted as rem.
+    eq(cs(e).height, "400px");
     eq(e.style.width, "100%");
     eq(cs(e).borderRadius, "8px");
     eq(cs(e).overflow, "hidden");
@@ -133,8 +134,8 @@ export default function run(ctx) {
     const e = mount(
       W.Chart({ type: "area", data: [1, 2, 3], height: 220, width: 480, borderRadius: 0 }),
     );
-    eq(e.style.height, "220px");
-    eq(e.style.width, "480px");
+    eq(cs(e).height, "220px");
+    eq(cs(e).width, "480px");
     eq(cs(e).borderRadius, "0px");
   });
 
@@ -168,8 +169,8 @@ export default function run(ctx) {
   t("CircularChart: size fixes the box and the canvas backing store", () => {
     const e = mount(W.CircularChart({ data: [{ value: 60 }, { value: 40 }], size: 160, animate: false }));
     eq(e.style.display, "inline-block");
-    eq(e.style.width, "160px");
-    eq(e.style.height, "160px");
+    eq(cs(e).width, "160px");
+    eq(cs(e).height, "160px");
     eq(e.querySelector("canvas").width, 160);
   });
 
@@ -182,7 +183,7 @@ export default function run(ctx) {
 
   t("CircularChart: semiCircle halves the canvas on that axis", () => {
     const e = mount(W.CircularChart({ data: [{ value: 1 }], size: 200, semiCircle: "bottom", animate: false }));
-    eq(e.style.height, "100px");
+    eq(cs(e).height, "100px");
     eq(e.querySelector("canvas").height, 100);
     eq(e.querySelector("canvas").width, 200);
   });

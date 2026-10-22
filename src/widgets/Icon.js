@@ -5,6 +5,8 @@
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 
+import { toREM } from "../utils/units.js";
+
 export const Icon = (props) => {
   const {
     icon,
@@ -20,7 +22,7 @@ export const Icon = (props) => {
     widgetName: "Icon",
     className: "material-icons",
     text: iconName, // ✅ CHANGED: text instead of textContent
-    fontSize: typeof size === "number" ? `${size}px` : size,
+    fontSize: toREM(size),
     color: color,
     display: "inline-flex",
     alignItems: "center",

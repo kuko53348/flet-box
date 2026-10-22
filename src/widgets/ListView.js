@@ -4,6 +4,7 @@
  */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { injectKeyframes } from "../utils/styleInjector.js";
+import { toREM, getBaseFontSize } from "../utils/units.js";
 
 /**
  * @typedef {Object} ListViewProps
@@ -11,8 +12,8 @@ import { injectKeyframes } from "../utils/styleInjector.js";
  * @property {Function} renderItem - Called with `(item, index)` and must return an `HTMLElement`.
  * @property {number|string} [height=400] - Height of the scroll container. Overridden when `expand` is true.
  * @property {number|string} [width="100%"] - Width of the widget.
- * @property {number} [itemSize=60] - Fixed height of each row in pixels (required for virtualization math).
- * @property {number} [gap=0] - Vertical gap between rows in pixels.
+ * @property {number} [itemSize=60] - Fixed height of each row in framework units, i.e. it grows with the base font (required for virtualization math).
+ * @property {number} [gap=0] - Vertical gap between rows in framework units.
  * @property {number} [bufferSize=5] - Number of extra rows to render above and below the visible viewport.
  *   Larger values reduce the chance of blank flashes during fast scrolling at the cost of more DOM nodes.
  * @property {boolean} [showsScrollIndicator=true] - Whether to show the native scrollbar.
@@ -140,6 +141,23 @@ export const ListView = (props) => {
 
   // ---- Helper functions ----
 
+  /**
+   * Rendered pixels per framework unit, read from the live root font size.
+   *
+   * `itemSize` and `gap` are framework units, so the row they reserve grows with
+   * the reader's font like every other box. The virtualisation math compares
+   * against `scrollTop` and `clientHeight`, which are always CSS pixels, so the
+   * two spaces have to be joined here: a 60-unit row is 90px of scroll space for
+   * a reader on a 24px base, and rows written straight from the unit overlap.
+   */
+  const unitPx = () => {
+    if (typeof document === "undefined") return 1;
+    const root = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    return root > 0 ? root / getBaseFontSize() : 1;
+  };
+  const slotHeight = () => (itemSize + gap) * unitPx();
+  const gapHeight = () => gap * unitPx();
+
   /** @returns {number} Total number of rows (accounting for grid columns). */
   const getTotalRows = () => Math.ceil(_data.length / cols);
 
@@ -159,7 +177,7 @@ export const ListView = (props) => {
    */
   const getItemTop = (index) => {
     const row = Math.floor(index / cols);
-    return row * (itemSize + gap);
+    return row * slotHeight();
   };
 
   /**
@@ -171,7 +189,7 @@ export const ListView = (props) => {
   const getTotalHeight = () => {
     const rows = getTotalRows();
     if (rows === 0) return 0;
-    return Math.max(0, rows * (itemSize + gap) - gap);
+    return Math.max(0, rows * slotHeight() - gapHeight());
   };
 
   /** Applies the correct logical height to the inner container. */
@@ -190,7 +208,7 @@ export const ListView = (props) => {
     if (!scrollContainer) return;
 
     const viewportH = scrollContainer.clientHeight;
-    const itemTotalH = itemSize + gap;
+    const itemTotalH = slotHeight();
     // Convert the scroll position into ITEM space: rows start below the header, so
     // the first rows are still on screen while `scrollTop` is inside the header.
     const itemsTop = Math.max(0, scrollContainer.scrollTop - getHeaderHeight());
@@ -228,7 +246,7 @@ export const ListView = (props) => {
           console.error("Error in renderItem:", err);
           itemEl = document.createElement("div");
           itemEl.textContent = "Error";
-          itemEl.style.padding = "8px";
+          itemEl.style.padding = toREM(8);
         }
       }
       if (!itemEl) continue;
@@ -240,12 +258,12 @@ export const ListView = (props) => {
         const col = i % cols;
         wrapper.style.left = `${(col / cols) * 100}%`;
         wrapper.style.width = `${100 / cols}%`;
-        wrapper.style.padding = `0 ${gap / 2}px`;
+        wrapper.style.padding = `0 ${toREM(gap / 2)}`;
         wrapper.style.boxSizing = "border-box";
       } else {
         wrapper.style.left = "0";
         wrapper.style.right = "0";
-        wrapper.style.padding = `0 ${gap}px`;
+        wrapper.style.padding = `0 ${toREM(gap)}`;
       }
       wrapper.appendChild(itemEl);
       fragment.appendChild(wrapper);
@@ -367,8 +385,8 @@ export const ListView = (props) => {
     refreshIndicator.style.transition = "height 0.2s";
 
     const spinner = document.createElement("div");
-    spinner.style.width = "24px";
-    spinner.style.height = "24px";
+    spinner.style.width = toREM(24);
+    spinner.style.height = toREM(24);
     spinner.style.border = "2px solid #e0e0e0";
     spinner.style.borderTop = "2px solid #007aff";
     spinner.style.borderRadius = "50%";
@@ -401,7 +419,7 @@ export const ListView = (props) => {
         if (h >= 60) {
           // Threshold met — trigger the refresh
           _refreshing = true;
-          refreshIndicator.style.height = "60px";
+          refreshIndicator.style.height = toREM(60);
           onRefresh(() => {
             _refreshing = false;
             refreshIndicator.style.height = "0";
@@ -498,7 +516,7 @@ export const ListView = (props) => {
     set: (val) => {
       _refreshing = val;
       if (refreshIndicator)
-        refreshIndicator.style.height = _refreshing ? "60px" : "0";
+        refreshIndicator.style.height = _refreshing ? toREM(60) : "0";
     },
     enumerable: true,
   });

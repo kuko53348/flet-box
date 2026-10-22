@@ -7,6 +7,7 @@ import { Row } from "./Row.js";
 import { Text } from "./Text.js";
 import { Icon } from "./Icon.js";
 import { colors, subscribeTheme } from "../utils/themes.js";
+import { TAP_MINIMUM } from "../tools/index.js";
 
 export const Rating = (props) => {
   const {
@@ -21,7 +22,7 @@ export const Rating = (props) => {
     iconActive = "star",
     iconInactive = "star_border",
     iconHalf = "star_half",
-    gap = 2,
+    gap = 4,
     allowHalf = false,
     showValue = false,
     valueColor = colors.textSecondary,
@@ -108,10 +109,17 @@ export const Rating = (props) => {
     });
     const wrapper = WidgetFactory({
       display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
       cursor: readOnly ? "default" : "pointer",
       transition: "transform 0.1s ease",
       child: icon,
-      padding: "4px", // larger touch area
+      // A star is picked with a thumb, so the cell — not the glyph — is the
+      // target: 20 units of star inside a 40-unit box. A read-only rating shows a
+      // score instead of a control, so it keeps its compact 4-unit gutter.
+      ...(readOnly
+        ? { padding: 4 }
+        : { minWidth: TAP_MINIMUM, minHeight: TAP_MINIMUM }),
     });
 
     starIcons.push(icon);

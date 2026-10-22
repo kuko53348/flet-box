@@ -1092,6 +1092,52 @@ async function run() {
     list.remove();
   });
 
+  // --------------------------- ListView: the row slot is a framework unit, not a pixel
+  await t("ListView: the virtual row slot grows with the base font", async () => {
+    const root = document.documentElement;
+    const previous = root.style.fontSize;
+    const build = () => {
+      const list = W.ListView({
+        data: Array.from({ length: 60 }, (_, i) => i),
+        itemSize: 60,
+        gap: 8,
+        height: 200,
+        expand: false,
+        renderItem: (i) => W.Text({ text: `row ${i}` }),
+      });
+      host.appendChild(list);
+      return list;
+    };
+    const firstTwoTops = async (list) => {
+      await wait(120);
+      const rows = Array.from(list.querySelectorAll("div"))
+        .filter((n) => n.style.position === "absolute" && n.firstChild)
+        .map((n) => parseFloat(n.style.top))
+        .sort((a, b) => a - b);
+      ok(rows.length > 1, "the list rendered no positioned rows");
+      return Math.round(rows[1] - rows[0]);
+    };
+
+    root.style.fontSize = "16px";
+    const small = build();
+    const step16 = await firstTwoTops(small);
+    small.remove();
+
+    root.style.fontSize = "24px";
+    const big = build();
+    const step24 = await firstTwoTops(big);
+    big.remove();
+
+    if (previous === undefined) root.style.removeProperty("font-size");
+    else root.style.fontSize = previous;
+
+    ok(step16 === 68, `a 60+8 slot measured ${step16}px at the 16px base`);
+    ok(
+      step24 > step16 * 1.4,
+      `rows stayed ${step24}px apart at the 24px base — the slot is frozen in pixels while every row's own box scales with rem, so tall items overlap`,
+    );
+  });
+
   // ------------------------------------------- Slider: thumb retry loop
   await t("Slider: the thumb retry loop stops when the widget unmounts", async () => {
     const origRaf = window.requestAnimationFrame;
@@ -1333,23 +1379,29 @@ async function run() {
   await t("Checkbox/Radio/Switch: activeColor paints the active state", async () => {
     // The three controls hardcoded the theme color when active, so the documented
     // `activeColor` prop changed nothing.
+    // The fill is on the painted element, not on the widget: each control is now a
+    // 40-unit hit box wrapping a smaller visual, so stretching the colour to the
+    // root would make the control itself the size of the target.
+    // The inline value, not the computed one: the track cross-fades over 200 ms,
+    // so getComputedStyle still reports the colour it is leaving for a moment.
+    const paint = (el) => el.firstElementChild.style.backgroundColor;
     const box = mount(W.Checkbox({ checked: true, activeColor: "rgb(37, 99, 235)" }));
-    ok(box.style.backgroundColor === "rgb(37, 99, 235)", `Checkbox bg=${box.style.backgroundColor}`);
+    ok(paint(box) === "rgb(37, 99, 235)", `Checkbox bg=${paint(box)}`);
     const untoggled = mount(W.Checkbox({ activeColor: "rgb(37, 99, 235)" }));
     untoggled.setChecked(true);
-    ok(untoggled.style.backgroundColor === "rgb(37, 99, 235)", `after setChecked: ${untoggled.style.backgroundColor}`);
+    ok(paint(untoggled) === "rgb(37, 99, 235)", `after setChecked: ${paint(untoggled)}`);
 
     const radio = mount(W.Radio({ activeColor: "rgb(22, 163, 74)" }));
     radio.select();
-    ok(radio.style.backgroundColor === "rgb(22, 163, 74)", `Radio after select(): ${radio.style.backgroundColor}`);
+    ok(paint(radio) === "rgb(22, 163, 74)", `Radio after select(): ${paint(radio)}`);
 
     const sw = mount(W.Switch({ value: true, activeColor: "rgb(124, 58, 237)" }));
-    ok(sw.style.backgroundColor === "rgb(124, 58, 237)", `Switch bg=${sw.style.backgroundColor}`);
+    ok(paint(sw) === "rgb(124, 58, 237)", `Switch bg=${paint(sw)}`);
     sw.updateValue(false);
-    ok(sw.style.backgroundColor !== "rgb(124, 58, 237)", "the off state kept the active color");
+    ok(paint(sw) !== "rgb(124, 58, 237)", "the off state kept the active color");
 
     const themed = mount(W.Checkbox({ checked: true }));
-    ok(themed.style.backgroundColor !== "", "the default theme color disappeared");
+    ok(paint(themed) !== "rgba(0, 0, 0, 0)", "the default theme color disappeared");
   });
 
   await t("Stack: alignment anchors children at the documented nine points", async () => {
@@ -2000,9 +2052,10 @@ async function run() {
     const a = mount(W.Avatar({ src: "/a.png", name: "Ada Lovelace", size: 40 }));
     a.update({ size: 64, shape: "square", padding: 8 });
     ok(a.querySelector("img") !== null, "the content reverted to the construction-time node");
-    ok(a.style.width === "64px", `width did not follow size: ${a.style.width}`);
+    // Geometry is framework units (rem), so the assertion reads the rendered box.
+    ok(getComputedStyle(a).width === "64px", `width did not follow size: ${a.style.width}`);
     ok(getComputedStyle(a).padding === "8px", "the factory lost its own key");
-    ok(a.style.borderRadius === "0px", `radius did not follow shape: ${a.style.borderRadius}`);
+    ok(getComputedStyle(a).borderRadius === "0px", `radius did not follow shape: ${a.style.borderRadius}`);
   });
 
   await t("Tooltip: tooltipDelay is the old name of delay, and delay wins", async () => {

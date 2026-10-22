@@ -4,6 +4,7 @@
  */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
+import { TAP_MINIMUM } from "../tools/index.js";
 
 export const Radio = (props) => {
   const {
@@ -37,17 +38,16 @@ export const Radio = (props) => {
 
   // Createste dot
   const dot = WidgetFactory({
-    width: size / 2,
-    height: size / 2,
+    width: Math.max(8, Math.round(size * 0.4)),
+    height: Math.max(8, Math.round(size * 0.4)),
     backgroundColor: "#fff",
     borderRadius: "50%",
     display: internalSelected ? "block" : "none",
   });
   dotRef = dot;
 
-  // Createste main radio container
-  const radio = WidgetFactory({
-    widgetName: "Radio",
+  // The visual circle: a 2-unit ring and the fill, nothing else.
+  const circle = WidgetFactory({
     width: size,
     height: size,
     border: `2px solid ${disabled ? colors.border : internalSelected ? activeColor : colors.border}`,
@@ -57,12 +57,27 @@ export const Radio = (props) => {
     alignItems: "center",
     justifyContent: "center",
     transition: "all 0.2s ease",
+    boxSizing: "border-box",
+    child: dot,
+  });
+  radioRef = circle;
+
+  // Createste main radio container — the finger's box, larger than the ring it
+  // centres, because radios are chosen with a thumb and a 20-unit circle is not
+  // something a thumb hits reliably.
+  const radio = WidgetFactory({
+    widgetName: "Radio",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: TAP_MINIMUM,
+    minHeight: TAP_MINIMUM,
+    flexShrink: 0,
     cursor: disabled ? "not-allowed" : "pointer",
     opacity: disabled ? 0.5 : 1,
-    child: dot,
+    child: circle,
     ...rest,
   });
-  radioRef = radio;
 
   // Handle click
   if (!disabled) {
@@ -92,16 +107,16 @@ export const Radio = (props) => {
     // direct assignment died on the first `update()` or reactive setter.
     radio.update({ onPress: handleClick });
 
-    // Hover effect
+    // Hover effect — on the drawn ring, not the hit box around it.
     radio.addEventListener("mouseenter", () => {
       if (!disabled && !internalSelected) {
-        radio.style.backgroundColor = `color-mix(in srgb, ${activeColor} 12%, transparent)`;
+        circle.style.backgroundColor = `color-mix(in srgb, ${activeColor} 12%, transparent)`;
       }
     });
 
     radio.addEventListener("mouseleave", () => {
       if (!disabled && !internalSelected) {
-        radio.style.backgroundColor = "transparent";
+        circle.style.backgroundColor = "transparent";
       }
     });
   }

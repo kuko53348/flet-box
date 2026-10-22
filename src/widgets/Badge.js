@@ -13,6 +13,7 @@ import { WidgetFactory } from "../widget-factory/index.js";
 import { Stack } from "./Stack.js";
 import { Text } from "./Text.js";
 import { colors, subscribeTheme } from "../utils/themes.js";
+import { toREM } from "../utils/units.js";
 
 /**
  * Creates a Badge widget that overlays a small count or status indicator on
@@ -113,7 +114,7 @@ export const Badge = (props) => {
     minWidth: size,
     height: size,
     // Extra horizontal padding for two-digit numbers so they don't clip
-    padding: size > 20 ? `0 ${size / 3}px` : 0,
+    padding: size > 20 ? `0 ${toREM(size / 3)}` : 0,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",

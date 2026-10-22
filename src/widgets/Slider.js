@@ -12,6 +12,9 @@ import { injectKeyframes } from "../utils/styleInjector.js";
  * Props owned by the Slider's closure state. Routed to the widget's `update`
  * and never to the factory's (see `composeUpdate`).
  */
+import { toREM } from "../utils/units.js";
+import { TAP_MINIMUM } from "../tools/index.js";
+
 const SLIDER_PROP_KEYS = [
   "value", "min", "max", "step", "disabled",
   "width", "height", "thumbSize",
@@ -32,7 +35,7 @@ export const Slider = (props) => {
     // Appearance
     width = "100%",
     height = 4,
-    thumbSize = 20,
+    thumbSize = 24,
     color = colors.primary,
     trackColor = colors.border,
     thumbColor = "#fff",
@@ -72,10 +75,10 @@ export const Slider = (props) => {
   let displayPercent = inverted ? 1 - rawPercent : rawPercent;
 
   let isHorizontal = orientation === "horizontal";
-  let trackSizePx = isHorizontal ? height : width;
-  let trackLengthPx =
-    typeof trackSizePx === "number" ? `${trackSizePx}px` : trackSizePx;
-  let thumbSizeNum = typeof thumbSize === "number" ? thumbSize : 20;
+  let trackSize = isHorizontal ? height : width;
+  let trackLength =
+    toREM(trackSize);
+  let thumbSizeNum = typeof thumbSize === "number" ? thumbSize : 24;
 
   // Positioning retries while the track still measures 0 (hidden parent, not laid
   // out yet). Both handles are tracked so unmounting can stop them: an untracked
@@ -109,11 +112,11 @@ export const Slider = (props) => {
     valueDisplay = WidgetFactory({
       tag: "div",
       textContent: `${valuePrefix}${currentValue}${valueSuffix}`,
-      fontSize: "14px",
+      fontSize: 14,
       color: colors.textSecondary,
       textAlign: "center",
-      marginBottom: isHorizontal ? "4px" : "0",
-      marginRight: !isHorizontal ? "4px" : "0",
+      marginBottom: isHorizontal ? 4 : 0,
+      marginRight: !isHorizontal ? 4 : 0,
     });
     container.appendChild(valueDisplay);
   }
@@ -125,12 +128,15 @@ export const Slider = (props) => {
     ...(isHorizontal
       ? {
           width: "100%",
-          height: trackLengthPx,
+          height: trackLength,
+          // The rail is 4 units of paint; the surface a thumb can grab is 40.
+          minHeight: TAP_MINIMUM,
           display: "flex",
           alignItems: "center",
         }
       : {
           height: "100%", // for vertical, the wrapper takes the full height
+          minWidth: TAP_MINIMUM,
           display: "flex",
           justifyContent: "center",
         }),
@@ -144,14 +150,14 @@ export const Slider = (props) => {
     ...(isHorizontal
       ? {
           width: "100%",
-          height: trackLengthPx,
+          height: trackLength,
         }
       : {
-          width: trackLengthPx,
+          width: trackLength,
           height: "100%",
         }),
     backgroundColor: trackColor,
-    borderRadius: trackLengthPx,
+    borderRadius: trackLength,
     cursor: disabled ? "not-allowed" : "pointer",
   });
   wrapper.appendChild(track);
@@ -161,7 +167,7 @@ export const Slider = (props) => {
     tag: "div",
     position: "absolute",
     backgroundColor: color,
-    borderRadius: trackLengthPx,
+    borderRadius: trackLength,
     transition: disabled ? "none" : "width 0.1s ease, height 0.1s ease",
     ...(isHorizontal
       ? {
@@ -191,8 +197,8 @@ export const Slider = (props) => {
   const thumb = WidgetFactory({
     tag: "div",
     position: "absolute",
-    width: `${thumbSizeNum}px`,
-    height: `${thumbSizeNum}px`,
+    width: toREM(thumbSizeNum),
+    height: toREM(thumbSizeNum),
     backgroundColor: thumbColor,
     borderRadius: "50%",
     boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
@@ -350,12 +356,15 @@ export const Slider = (props) => {
     }
     if (isHorizontal) {
       const left = displayPercent * trackRect.width;
-      thumb.style.left = `${left - thumbSizeNum / 2}px`;
+      // The half-thumb comes from the rendered box, not from `thumbSize`: that
+      // number is a framework unit and the handle is `rem`, so at a raised font
+      // size the handle is wider than the arithmetic says and sits off-centre.
+      thumb.style.left = `${left - thumb.offsetWidth / 2}px`;
       thumb.style.top = "50%";
       thumb.style.transform = "translateY(-50%)";
     } else {
       const bottom = displayPercent * trackRect.height;
-      thumb.style.bottom = `${bottom - thumbSizeNum / 2}px`;
+      thumb.style.bottom = `${bottom - thumb.offsetHeight / 2}px`;
       thumb.style.left = "50%";
       thumb.style.transform = "translateX(-50%)";
     }

@@ -20,6 +20,14 @@ export { default as padding } from "./padding.js";
 export { print } from "./print.js";
 export { random } from "./random.js";
 export { default as rgba } from "./rgba.js";
+export {
+  SPACING_SCALE,
+  RADIUS_SCALE,
+  TYPE_SCALE,
+  TAP_MINIMUM,
+  PILL,
+  LABEL_TEXT,
+} from "./scale.js";
 export { default as shadow, SHADOW_LEVELS } from "./shadow.js";
 export {
   capitalize,

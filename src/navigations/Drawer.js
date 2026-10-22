@@ -58,6 +58,8 @@ let drawerInstance = null;
  * @param {DrawerProps} [props={}]
  * @returns {DrawerInstance}
  */
+import { toREM } from "../utils/units.js";
+
 export const Drawer = (props = {}) => {
   const {
     header,
@@ -107,9 +109,9 @@ export const Drawer = (props = {}) => {
   // Sliding drawer panel.
   const drawerPanel = document.createElement("div");
   drawerPanel.style.position = "absolute";
-  drawerPanel.style.top = `${margin}px`;
-  drawerPanel.style.bottom = `${margin}px`;
-  drawerPanel.style.height = `calc(100% - ${margin * 2}px)`;
+  drawerPanel.style.top = toREM(margin);
+  drawerPanel.style.bottom = toREM(margin);
+  drawerPanel.style.height = `calc(100% - ${toREM(margin * 2)})`;
   drawerPanel.style.display = "flex";
   drawerPanel.style.flexDirection = "column";
   drawerPanel.style.backgroundColor = bgColor;
@@ -118,22 +120,22 @@ export const Drawer = (props = {}) => {
   // Apply border radius only to the corners that face away from the screen edge.
   // A left drawer gets rounded right corners; a right drawer gets rounded left corners.
   if (position === "left") {
-    drawerPanel.style.left = `${margin}px`;
+    drawerPanel.style.left = toREM(margin);
     drawerPanel.style.right = "auto";
-    drawerPanel.style.borderTopRightRadius = `${borderRadius}px`;
-    drawerPanel.style.borderBottomRightRadius = `${borderRadius}px`;
+    drawerPanel.style.borderTopRightRadius = toREM(borderRadius);
+    drawerPanel.style.borderBottomRightRadius = toREM(borderRadius);
     drawerPanel.style.borderTopLeftRadius = "0";
     drawerPanel.style.borderBottomLeftRadius = "0";
   } else {
-    drawerPanel.style.right = `${margin}px`;
+    drawerPanel.style.right = toREM(margin);
     drawerPanel.style.left = "auto";
-    drawerPanel.style.borderTopLeftRadius = `${borderRadius}px`;
-    drawerPanel.style.borderBottomLeftRadius = `${borderRadius}px`;
+    drawerPanel.style.borderTopLeftRadius = toREM(borderRadius);
+    drawerPanel.style.borderBottomLeftRadius = toREM(borderRadius);
     drawerPanel.style.borderTopRightRadius = "0";
     drawerPanel.style.borderBottomRightRadius = "0";
   }
 
-  drawerPanel.style.width = typeof width === "number" ? `${width}px` : width;
+  drawerPanel.style.width = toREM(width);
   // Start the panel off-screen so the entrance animation slides it in.
   drawerPanel.style.transform =
     position === "left" ? "translateX(-100%)" : "translateX(100%)";
@@ -160,8 +162,8 @@ export const Drawer = (props = {}) => {
       header &&
         Container({
           flexShrink: 0,
-          borderTopLeftRadius: position === "right" ? `${borderRadius}px` : "0",
-          borderTopRightRadius: position === "left" ? `${borderRadius}px` : "0",
+          borderTopLeftRadius: position === "right" ? toREM(borderRadius) : "0",
+          borderTopRightRadius: position === "left" ? toREM(borderRadius) : "0",
           overflow: "hidden",
           child: header,
         }),
@@ -188,9 +190,9 @@ export const Drawer = (props = {}) => {
         Container({
           flexShrink: 0,
           borderBottomLeftRadius:
-            position === "right" ? `${borderRadius}px` : "0",
+            position === "right" ? toREM(borderRadius) : "0",
           borderBottomRightRadius:
-            position === "left" ? `${borderRadius}px` : "0",
+            position === "left" ? toREM(borderRadius) : "0",
           overflow: "hidden",
           child: footer,
         }),

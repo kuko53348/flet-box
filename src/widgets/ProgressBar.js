@@ -6,6 +6,8 @@ import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 import { injectKeyframes } from "../utils/styleInjector.js";
 
+import { toREM } from "../utils/units.js";
+
 export const ProgressBar = (props) => {
   const {
     value = 0,
@@ -37,7 +39,7 @@ export const ProgressBar = (props) => {
     backgroundColor: color,
     borderRadius:
       typeof finalBorderRadius === "number"
-        ? `${finalBorderRadius}px`
+        ? toREM(finalBorderRadius)
         : finalBorderRadius,
     transition: indeterminate ? "none" : "width 0.3s ease",
     position: "relative",
@@ -73,11 +75,11 @@ export const ProgressBar = (props) => {
   // Track background
   const track = WidgetFactory({
     flex: 1,
-    height: typeof height === "number" ? `${height}px` : height,
+    height: toREM(height),
     backgroundColor: backgroundColor,
     borderRadius:
       typeof finalBorderRadius === "number"
-        ? `${finalBorderRadius}px`
+        ? toREM(finalBorderRadius)
         : finalBorderRadius,
     overflow: "hidden",
     position: "relative",
@@ -148,7 +150,7 @@ export const ProgressBar = (props) => {
     flexDirection: isColumn ? "column" : "row",
     alignItems: "center",
     gap: "8px",
-    width: typeof width === "number" ? `${width}px` : width,
+    width: toREM(width),
     children: children,
     ...rest,
   });

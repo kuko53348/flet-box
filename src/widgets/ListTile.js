@@ -7,6 +7,7 @@ import { Row } from "./Row.js";
 import { Column } from "./Column.js";
 import { Text } from "./Text.js";
 import { colors, subscribeTheme } from "../utils/themes.js";
+import { toREM } from "../utils/units.js";
 
 /**
  * @typedef {Object} ListTileProps
@@ -132,7 +133,7 @@ export const ListTile = (props) => {
   const contentRow = Row({
     alignItems: "center",
     gap: gap,
-    padding: `${paddingVertical}px ${paddingHorizontal}px`,
+    padding: `${toREM(paddingVertical)} ${toREM(paddingHorizontal)}`,
     width: "100%",
     boxSizing: "border-box",
     children: rowChildren,
@@ -199,8 +200,8 @@ export const ListTile = (props) => {
     const dividerLine = WidgetFactory({
       height: 1,
       backgroundColor: colors.border,
-      marginLeft: `${paddingHorizontal}px`,
-      width: `calc(100% - ${paddingHorizontal}px)`,
+      marginLeft: toREM(paddingHorizontal),
+      width: `calc(100% - ${toREM(paddingHorizontal)})`,
     });
 
     const container = WidgetFactory({

@@ -53,6 +53,9 @@ import { getCurrentPath, subscribe, goTo } from "./Router.js";
  *   - `getActiveIndex(): number` — returns the currently active tab index.
  *   - `getCurrentRoute(): string|null` — returns the current router path (router mode only).
  */
+import { toREM } from "../utils/units.js";
+import { SHADOW_LEVELS } from "../tools/shadow.js";
+
 export const BottomNavigation = (props) => {
   const {
     items = [],
@@ -90,24 +93,16 @@ export const BottomNavigation = (props) => {
   const finalMarginLeft = marginLeft || margin;
   const finalMarginRight = marginRight || margin;
   const finalBorderRadius =
-    typeof borderRadius === "number" ? `${borderRadius}px` : borderRadius;
-  const finalPadding = typeof padding === "number" ? `${padding}px` : padding;
+    toREM(borderRadius);
+  const finalPadding = toREM(padding);
 
-  // Material Design elevation → box-shadow lookup table.
-  const shadows = {
-    0: "none",
-    1: "0 1px 3px rgba(0,0,0,0.12)",
-    2: "0 3px 6px rgba(0,0,0,0.16)",
-    3: "0 6px 12px rgba(0,0,0,0.2)",
-    4: "0 10px 20px rgba(0,0,0,0.25)",
-    5: "0 15px 30px rgba(0,0,0,0.3)",
-  };
-  const boxShadow = shadow === true ? shadows[elevation] : shadow || "none";
+  // The framework's depth scale, not a local copy of it (src/tools/shadow.js).
+  const boxShadow = shadow === true ? SHADOW_LEVELS[elevation] : shadow || "none";
 
   const container = WidgetFactory({
     tag: "nav",
     display: "flex",
-    width: `calc(100% - ${finalMarginLeft}px - ${finalMarginRight}px)`,
+    width: `calc(100% - ${toREM(finalMarginLeft)} - ${toREM(finalMarginRight)})`,
     height: height,
     backgroundColor: backgroundColor,
     borderRadius: finalBorderRadius,

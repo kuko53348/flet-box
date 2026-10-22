@@ -10,9 +10,11 @@ export const InstallButton = (props) => {
     text = "📲 Install",
     variant = "filled",
     size = "medium",
-    borderRadius = 28,
-    padding = "12px 24px",
-    bottom = 20,
+    borderRadius = 16,
+    // A number is the framework's own form: Button doubles it horizontally
+    // (12 vertical, 24 horizontal) and the factory emits it as `rem`.
+    padding = 12,
+    bottom = 24,
     backgroundColor,
     color,
     onInstalled,
@@ -64,7 +66,7 @@ export const InstallButton = (props) => {
     borderRadius: borderRadius,
     padding: padding,
     position: "fixed",
-    bottom: `${bottom}px`,
+    bottom,
     left: "50%",
     transform: "translateX(-50%)",
     zIndex: 10000,

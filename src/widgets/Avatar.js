@@ -30,6 +30,8 @@ import { Text } from "./Text.js";
  * them (`backgroundColor`, `font-size`), so it can re-apply and re-subscribe
  * them better than this widget can.
  */
+import { toREM } from "../utils/units.js";
+
 const AVATAR_PROPS = [
   "src",
   "name",
@@ -53,8 +55,7 @@ const DOT_SIZE_RATIO = 0.3;
  */
 const DOT_INSET_RATIO = 0.12;
 
-/** CSS length for a number of pixels; any other value is passed through. */
-const px = (value) => (typeof value === "number" ? `${value}px` : value);
+/** Framework units → a CSS length that scales with the reader's base font. */
 
 /**
  * Extracts up to two initials from a full name.
@@ -131,7 +132,7 @@ export const Avatar = (inputProps = {}) => {
    * previous shape would stay on the element.
    */
   const radiusFor = () => {
-    if (shape === "rounded") return `${size * 0.2}px`;
+    if (shape === "rounded") return toREM(size * 0.2);
     if (shape === "square") return "0";
     return "50%";
   };
@@ -180,9 +181,12 @@ export const Avatar = (inputProps = {}) => {
    * `height` or `borderRadius` still wins, as it always has.
    */
   const paintGeometry = () => {
-    avatar.style.width = px(rest.width ?? size);
-    avatar.style.height = px(rest.height ?? size);
-    avatar.style.borderRadius = rest.borderRadius ?? radiusFor();
+    avatar.style.width = toREM(rest.width ?? size);
+    avatar.style.height = toREM(rest.height ?? size);
+    // `radiusFor()` is already a CSS value; a caller's `borderRadius: 8` is a
+    // framework number, and written straight to `style` it is an invalid value
+    // the browser drops. toREM tells the two apart and scales the first.
+    avatar.style.borderRadius = toREM(rest.borderRadius ?? radiusFor());
   };
 
   paintGeometry();
@@ -201,10 +205,10 @@ export const Avatar = (inputProps = {}) => {
   avatar.appendChild(dot);
 
   const paintDot = () => {
-    dot.style.width = `${Math.round(size * DOT_SIZE_RATIO)}px`;
-    dot.style.height = `${Math.round(size * DOT_SIZE_RATIO)}px`;
-    dot.style.right = `${Math.round(size * DOT_INSET_RATIO)}px`;
-    dot.style.bottom = `${Math.round(size * DOT_INSET_RATIO)}px`;
+    dot.style.width = toREM(Math.round(size * DOT_SIZE_RATIO));
+    dot.style.height = toREM(Math.round(size * DOT_SIZE_RATIO));
+    dot.style.right = toREM(Math.round(size * DOT_INSET_RATIO));
+    dot.style.bottom = toREM(Math.round(size * DOT_INSET_RATIO));
     dot.style.backgroundColor = badgeColor;
     dot.style.display = online ? "block" : "none";
   };

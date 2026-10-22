@@ -16,6 +16,8 @@ import { generateHighlightedHtml } from "../utils/syntaxHighlight.js";
  * @param {string} text - Raw text to escape.
  * @returns {string} Text with `&`, `<`, `>`, `"` and `'` replaced by entities.
  */
+import { toREM } from "../utils/units.js";
+
 const escapeCode = (text) =>
   String(text)
     .replace(/&/g, "&amp;")
@@ -877,15 +879,15 @@ export const Markdown = (props) => {
     tag: "div",
     widgetName: "Markdown",
     fontFamily: fontFamily,
-    fontSize: typeof fontSize === "number" ? `${fontSize}px` : fontSize,
+    fontSize: toREM(fontSize),
     lineHeight: lineHeight,
     color: color,
-    padding: typeof padding === "number" ? `${padding}px` : padding,
-    maxHeight: typeof maxHeight === "number" ? `${maxHeight}px` : maxHeight,
+    padding: toREM(padding),
+    maxHeight: toREM(maxHeight),
     overflow: overflow,
     backgroundColor: backgroundColor,
     borderRadius:
-      typeof borderRadius === "number" ? `${borderRadius}px` : borderRadius,
+      toREM(borderRadius),
     ...rest,
   });
 
@@ -1026,9 +1028,9 @@ export const Markdown = (props) => {
                 background-color: ${codeBgColor};
                 color: ${codeColor};
                 padding: ${codePadding};
-                border-radius: ${typeof codeBorderRadius === "number" ? `${codeBorderRadius}px` : codeBorderRadius};
+                border-radius: ${toREM(codeBorderRadius)};
                 font-family: ${codeFontFamily};
-                font-size: ${typeof codeFontSize === "number" ? `${codeFontSize}px` : codeFontSize};
+                font-size: ${toREM(codeFontSize)};
             }
             
             /* Bare <pre> elements (raw HTML injected via allowDangerousHtml or future extensions).
@@ -1036,7 +1038,7 @@ export const Markdown = (props) => {
             .markdown-content pre:not(.md-code-block pre) {
                 background-color: ${preBgColor};
                 padding: ${prePadding};
-                border-radius: ${typeof preBorderRadius === "number" ? `${preBorderRadius}px` : preBorderRadius};
+                border-radius: ${toREM(preBorderRadius)};
                 overflow: auto;
                 overflow-x: auto;
                 margin: ${preMargin};
@@ -1076,7 +1078,7 @@ export const Markdown = (props) => {
             .markdown-content img {
                 max-width: ${imageMaxWidth};
                 height: auto;
-                border-radius: ${typeof imageBorderRadius === "number" ? `${imageBorderRadius}px` : imageBorderRadius};
+                border-radius: ${toREM(imageBorderRadius)};
             }
             
             .markdown-content hr {
@@ -1096,7 +1098,7 @@ export const Markdown = (props) => {
                 max-width: 100%;
                 min-width: 0;
                 box-sizing: border-box;
-                border-radius: ${typeof preBorderRadius === "number" ? `${preBorderRadius}px` : preBorderRadius};
+                border-radius: ${toREM(preBorderRadius)};
                 overflow: hidden;
                 margin-top: 1em;
                 margin-bottom: 1em;
@@ -1172,7 +1174,7 @@ export const Markdown = (props) => {
                 /* Padding on <code> (not <pre>) keeps the scrollbar aligned. */
                 padding: ${prePadding};
                 font-family: ${codeFontFamily};
-                font-size: ${typeof codeFontSize === "number" ? `${codeFontSize}px` : codeFontSize};
+                font-size: ${toREM(codeFontSize)};
                 /* 1.5 matches VS Code / GitHub's code block density.
                    Setting it here AND on md-code-line stops any ancestor
                    line-height (the widget's default 1.6) from bleeding in. */

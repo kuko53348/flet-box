@@ -27,13 +27,14 @@ import { loadApi, collectSources } from "./checkApi.js";
 import { resolveInterfaceProps } from "../utils/dtsProps.js";
 import { c, banner, section } from "../utils/colors.js";
 
-/** The 8-based rhythm the app contract ships, plus the two display steps. */
-export const SPACING_SCALE = new Set([0, 4, 8, 12, 16, 18, 24, 32, 40, 48, 64, 96]);
-export const RADIUS_SCALE = new Set([0, 4, 8, 12, 16, 999]);
-export const TYPE_SCALE = new Set([12, 14, 16, 18, 24, 32, 40, 48]);
-
-/** Fitts: a finger needs this much target — the same number the app contract ships. */
-export const TAP_MINIMUM = 40;
+/**
+ * The 8-based rhythm, the radii and the Fitts floor. These are not this file's
+ * opinion: they are the framework's own `src/tools/scale.js`, the same table the
+ * widget defaults are drawn from. A gate that keeps its own copy drifts, and the
+ * app then gets told to be clean by numbers the widgets it uses do not follow.
+ */
+export { SPACING_SCALE, RADIUS_SCALE, TYPE_SCALE, TAP_MINIMUM } from "../../src/tools/scale.js";
+import { SPACING_SCALE, RADIUS_SCALE, TYPE_SCALE, TAP_MINIMUM } from "../../src/tools/scale.js";
 
 /** WCAG 2.1: 4.5:1 for body text, 3:1 for large text and for non-text UI. */
 export const CONTRAST_BODY = 4.5;

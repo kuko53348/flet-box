@@ -5,6 +5,8 @@
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 
+import { toREM } from "../utils/units.js";
+
 export const DataTable = (props) => {
   const {
     columns,
@@ -22,7 +24,7 @@ export const DataTable = (props) => {
 
     rowBgColor = "transparent",
     rowTextColor = colors.text,
-    rowFontSize = 13,
+    rowFontSize = 14,
 
     stripedRowBgColor = colors.gray50,
 
@@ -31,8 +33,12 @@ export const DataTable = (props) => {
     borderColor = colors.border,
     borderWidth = 1,
 
-    cellPadding = "10px 12px",
-    headerCellPadding = "12px",
+    // A padding the caller can hand as `8`, `"8px 12px"` or `"1rem"`: every
+    // write below goes through toREM, which scales the first two and leaves the
+    // third alone. Written straight to `style`, a bare number is an invalid CSS
+    // value the browser drops, and a string is a frozen pixel.
+    cellPadding = "8px 12px",
+    headerCellPadding = 12,
 
     // ========== OTHER PROPS ==========
     ...rest
@@ -61,7 +67,7 @@ export const DataTable = (props) => {
   for (const col of columns) {
     const th = document.createElement("th");
     th.textContent = typeof col === "string" ? col : col.label;
-    th.style.padding = headerCellPadding;
+    th.style.padding = toREM(headerCellPadding);
     th.style.textAlign = "left";
     th.style.borderBottom = `2px solid ${borderColor}`;
     th.style.backgroundColor = headerBgColor;
@@ -69,7 +75,7 @@ export const DataTable = (props) => {
     th.style.fontWeight = headerFontWeight;
     th.style.fontSize =
       typeof headerFontSize === "number"
-        ? `${headerFontSize}px`
+        ? toREM(headerFontSize)
         : headerFontSize;
 
     // Custom alignment per column
@@ -122,11 +128,11 @@ export const DataTable = (props) => {
       const value = row[key];
 
       td.textContent = value !== undefined ? String(value) : "";
-      td.style.padding = cellPadding;
+      td.style.padding = toREM(cellPadding);
       td.style.borderBottom = `${borderWidth}px solid ${borderColor}`;
       td.style.color = rowTextColor;
       td.style.fontSize =
-        typeof rowFontSize === "number" ? `${rowFontSize}px` : rowFontSize;
+        toREM(rowFontSize);
 
       // Custom alignment per column
       if (typeof col !== "string" && col.align) {
@@ -195,11 +201,11 @@ export const DataTable = (props) => {
         const value = row[key];
 
         td.textContent = value !== undefined ? String(value) : "";
-        td.style.padding = cellPadding;
+        td.style.padding = toREM(cellPadding);
         td.style.borderBottom = `${borderWidth}px solid ${borderColor}`;
         td.style.color = rowTextColor;
         td.style.fontSize =
-          typeof rowFontSize === "number" ? `${rowFontSize}px` : rowFontSize;
+          toREM(rowFontSize);
 
         if (typeof col !== "string" && col.align) {
           td.style.textAlign = col.align;
@@ -236,7 +242,7 @@ export const DataTable = (props) => {
     for (const col of newColumns) {
       const th = document.createElement("th");
       th.textContent = typeof col === "string" ? col : col.label;
-      th.style.padding = headerCellPadding;
+      th.style.padding = toREM(headerCellPadding);
       th.style.textAlign = "left";
       th.style.borderBottom = `2px solid ${borderColor}`;
       th.style.backgroundColor = headerBgColor;
@@ -244,7 +250,7 @@ export const DataTable = (props) => {
       th.style.fontWeight = headerFontWeight;
       th.style.fontSize =
         typeof headerFontSize === "number"
-          ? `${headerFontSize}px`
+          ? toREM(headerFontSize)
           : headerFontSize;
 
       if (typeof col !== "string" && col.align) {

@@ -4,6 +4,7 @@
  */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
+import { toREM } from "../utils/units.js";
 
 export const DraggBox = (props) => {
   const {
@@ -53,7 +54,7 @@ export const DraggBox = (props) => {
     clone.style.zIndex = "99999";
     clone.style.backgroundColor = dragOverlayColor;
     clone.style.border = `2px dashed ${dragBorderColor}`;
-    clone.style.borderRadius = "8px";
+    clone.style.borderRadius = toREM(8);
     document.body.appendChild(clone);
     return clone;
   };

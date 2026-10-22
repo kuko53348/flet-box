@@ -1,34 +1,20 @@
 /**
- * REM TOOL - Only converts numbers to REM
+ * @file remTool.js
+ * @description The engine's entry point to the framework's one unit converter.
+ *
+ * This file used to keep its own copy of the rule — `value / 16` for numbers,
+ * strings passed through untouched. Two converters in one framework means two
+ * meanings for one number: a widget that called `src/utils/units.js` honoured
+ * `setBaseFontSize()` and an engine-routed prop did not, so the same `40` painted
+ * 40px in one place and 50px in another. Both halves now call the same function,
+ * and a length written as pixels ("8px", "4px 12px") converts like the number
+ * that produced it instead of freezing at that size.
  */
+import { toREM as convert } from "../utils/units.js";
 
 /**
- * Converts a number to REM
- * @param {number} value - Number to convert
- * @param {number} baseFontSize - Base root font size (default: 16)
- * @returns {string} - Value in REM
+ * @param {number|string} value - A framework number, or a CSS length/value.
+ * @returns {string|*} `40` → `"2.5rem"`; `"8px 12px"` → `"0.5rem 0.75rem"`;
+ *   anything that is not a pixel length (`"50%"`, `"auto"`) is returned as given.
  */
-export const toREM = (value, baseFontSize = 16) => {
-  if (typeof value !== "number") return value;
-  return `${value / baseFontSize}rem`;
-};
-
-/**
- * Applies REM to a styles object
- * @param {Object} styles - Styles with numbers
- * @param {number} baseFontSize - Base root font size (default: 16)
- * @returns {Object} - Styles with REM
- */
-export const applyREM = (styles, baseFontSize = 16) => {
-  const result = {};
-
-  for (const [key, value] of Object.entries(styles)) {
-    if (typeof value === "number") {
-      result[key] = toREM(value, baseFontSize);
-    } else {
-      result[key] = value;
-    }
-  }
-
-  return result;
-};
+export const toREM = (value) => convert(value);

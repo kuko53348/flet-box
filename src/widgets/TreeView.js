@@ -5,6 +5,9 @@
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 
+import { toREM } from "../utils/units.js";
+import { TAP_MINIMUM } from "../tools/index.js";
+
 export const TreeView = (props) => {
   const {
     nodes = [],
@@ -13,7 +16,7 @@ export const TreeView = (props) => {
     /** @deprecated Use onPress instead */
     onPress: onPressProp,
     expandedNodes = [],
-    indent = 20,
+    indent = 16,
     showIcons = true,
     folderIcon = "folder",
     folderOpenIcon = "folder_open",
@@ -35,10 +38,10 @@ export const TreeView = (props) => {
     borderColor = colors.border,
 
     // Spacing props
-    nodePadding = "6px 4px",
+    nodePadding = `${toREM(8)} ${toREM(12)}`,
     nodeGap = 4,
-    childrenGap = 2,
-    borderRadius = 6,
+    childrenGap = 4,
+    borderRadius = 4,
 
     // Font props
     fontSize = 14,
@@ -96,13 +99,13 @@ export const TreeView = (props) => {
       tag: "div",
       display: "flex",
       alignItems: "center",
-      gap: `${nodeGap}px`,
+      gap: toREM(nodeGap),
       cursor: selectable ? "pointer" : "default",
       backgroundColor: isSelected ? selectedBgColor : bgColor,
       padding: nodePadding,
-      borderRadius:
-        typeof borderRadius === "number" ? `${borderRadius}px` : borderRadius,
-      marginLeft: `${level * indent}px`,
+      ...(selectable ? { minHeight: TAP_MINIMUM } : {}),
+      borderRadius: toREM(borderRadius),
+      marginLeft: toREM(level * indent),
       transition: `background-color ${transitionDuration} ease`,
     });
 
@@ -144,7 +147,7 @@ export const TreeView = (props) => {
         child: WidgetFactory({
           tag: "span",
           className: "material-icons",
-          fontSize: `${iconSize}px`,
+          fontSize: toREM(iconSize),
           color: iconColor,
           textContent: isExpanded ? collapseIcon : expandIcon,
         }),
@@ -184,7 +187,7 @@ export const TreeView = (props) => {
       const iconSpan = WidgetFactory({
         tag: "span",
         className: "material-icons",
-        fontSize: `${iconSize + 2}px`,
+        fontSize: toREM(iconSize + 2),
         color: node.iconColor || (hasChildren ? folderIconColor : iconColor),
         textContent: iconName,
       });
@@ -195,7 +198,7 @@ export const TreeView = (props) => {
     const labelSpan = WidgetFactory({
       tag: "span",
       flex: 1,
-      fontSize: `${fontSize}px`,
+      fontSize: toREM(fontSize),
       fontWeight: isSelected ? "bold" : "normal",
       color: isSelected ? selectedTextColor : textColor,
       textContent: node.label,
@@ -228,7 +231,7 @@ export const TreeView = (props) => {
         tag: "div",
         display: "flex",
         flexDirection: "column",
-        gap: `${childrenGap}px`,
+        gap: toREM(childrenGap),
       });
 
       node.children.forEach((child) => {
@@ -254,7 +257,7 @@ export const TreeView = (props) => {
       tag: "div",
       display: "flex",
       flexDirection: "column",
-      gap: `${childrenGap}px`,
+      gap: toREM(childrenGap),
     });
 
     nodes.forEach((node) => {

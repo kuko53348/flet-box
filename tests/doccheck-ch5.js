@@ -12,7 +12,7 @@ export default function run(ctx) {
     eq(cs(e).display, "flex");
     eq(cs(e).flexDirection, "column");
     eq(cs(e).gap, "24px");
-    eq(cs(e).paddingTop, "20px");
+    eq(cs(e).paddingTop, "24px"); // the spacing scale, not an invented 20
     eq(cs(e).borderTopWidth, "1px");
     eq(cs(e).overflow, "hidden");
   });
@@ -162,7 +162,7 @@ export default function run(ctx) {
     const row = e.children[0].children[0].children[0];
     eq(row.children.length, 3);
     eq(row.children[2].textContent, "Alpha");
-    eq(row.style.marginLeft, "0px");
+    eq(cs(row).marginLeft, "0px");
   });
 
   t("TreeView: showIcons:false drops the icon cell", () => {
@@ -185,7 +185,8 @@ export default function run(ctx) {
     const childRow = e.children[0].children[0].children[1].children[0].children[0];
     // children[2] is the label cell (children[1] is the file icon when showIcons=true).
     eq(childRow.children[2].textContent, "A1");
-    eq(childRow.style.marginLeft, "20px");
+    // One indent step is 16 — a scale value; the row also stays inside the panel on a phone.
+    eq(cs(childRow).marginLeft, "16px");
 
     e.collapseAll();
     eq(e.getExpanded().length, 0);

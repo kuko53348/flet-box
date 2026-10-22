@@ -1,0 +1,35 @@
+{
+  "src/widgets/Accordion.js": [
+    "height: height",
+    "height: height"
+  ],
+  "src/widgets/DraggBox.js": [
+    "top: \"-1000px\"",
+    "left: \"-1000px\""
+  ],
+  "src/widgets/Dropdown.js": [
+    "left: `${left}px`",
+    "top: `${top}px`",
+    "bottom: `${bottom}px`"
+  ],
+  "src/widgets/ListView.js": [
+    "height: `${getTotalHeight()}px`",
+    "top: `${getItemTop(i)}px`"
+  ],
+  "src/widgets/QRCode.js": [
+    "width: `${size}px`",
+    "height: `${size}px`"
+  ],
+  "src/widgets/Tooltip.js": [
+    "top: `${arrowTop}px`",
+    "left: `${arrowLeft}px`",
+    "top: `${arrowTop}px`",
+    "left: `${arrowLeft}px`",
+    "top: `${arrowTop}px`",
+    "left: `${arrowLeft}px`",
+    "top: `${arrowTop}px`",
+    "left: `${arrowLeft}px`",
+    "top: `${top}px`",
+    "left: `${left}px`"
+  ]
+}

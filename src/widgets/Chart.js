@@ -42,6 +42,8 @@ import { colors } from "../utils/themes.js";
  * @param {number} [props.borderRadius=8] - Corner radius of the chart container in pixels.
  * @returns {HTMLElement} The chart container element, augmented with `updateData` and `redraw` methods.
  */
+import { toREM } from "../utils/units.js";
+
 export const Chart = (props) => {
   const {
     type = "candle",
@@ -525,11 +527,11 @@ export const Chart = (props) => {
 
   const container = WidgetFactory({
     widgetName: "Chart",
-    width: typeof width === "number" ? `${width}px` : width,
-    height: typeof height === "number" ? `${height}px` : height,
+    width: toREM(width),
+    height: toREM(height),
     backgroundColor: bgColor,
     borderRadius:
-      typeof borderRadius === "number" ? `${borderRadius}px` : borderRadius,
+      toREM(borderRadius),
     overflow: "hidden",
     display: "flex",
     flexDirection: "column",

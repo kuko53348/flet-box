@@ -6,6 +6,8 @@ import { WidgetFactory } from "../widget-factory/index.js";
 import { Icon } from "./Icon.js";
 import { colors } from "../utils/themes.js";
 
+import { toREM } from "../utils/units.js";
+
 export const Carousel = (props) => {
   const {
     items = [],
@@ -59,12 +61,12 @@ export const Carousel = (props) => {
         dot.style.backgroundColor = dotActiveColor;
         dot.style.width =
           typeof dotActiveSize === "number"
-            ? `${dotActiveSize}px`
+            ? toREM(dotActiveSize)
             : dotActiveSize;
       } else {
         dot.style.backgroundColor = dotColor;
         dot.style.width =
-          typeof dotSize === "number" ? `${dotSize}px` : dotSize;
+          toREM(dotSize);
       }
     }
   };
@@ -154,8 +156,8 @@ export const Carousel = (props) => {
       cursor: "pointer",
       backgroundColor: buttonBgColor,
       borderRadius: "50%",
-      width: typeof buttonSize === "number" ? `${buttonSize}px` : buttonSize,
-      height: typeof buttonSize === "number" ? `${buttonSize}px` : buttonSize,
+      width: toREM(buttonSize),
+      height: toREM(buttonSize),
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
@@ -173,11 +175,11 @@ export const Carousel = (props) => {
   const container = WidgetFactory({
     widgetName: "Carousel",
     position: "relative",
-    width: typeof width === "number" ? `${width}px` : width,
-    height: typeof height === "number" ? `${height}px` : height,
+    width: toREM(width),
+    height: toREM(height),
     overflow: "hidden",
     borderRadius:
-      typeof borderRadius === "number" ? `${borderRadius}px` : borderRadius,
+      toREM(borderRadius),
     ...rest,
   });
 
@@ -255,12 +257,12 @@ export const Carousel = (props) => {
         width:
           index === currentIndex
             ? typeof dotActiveSize === "number"
-              ? `${dotActiveSize}px`
+              ? toREM(dotActiveSize)
               : dotActiveSize
             : typeof dotSize === "number"
-              ? `${dotSize}px`
+              ? toREM(dotSize)
               : dotSize,
-        height: typeof dotSize === "number" ? `${dotSize}px` : dotSize,
+        height: toREM(dotSize),
         borderRadius: "4px",
         backgroundColor: index === currentIndex ? dotActiveColor : dotColor,
         cursor: "pointer",

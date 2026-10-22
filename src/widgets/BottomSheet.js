@@ -9,6 +9,7 @@ import { Column } from "./Column.js";
 import { Text } from "./Text.js";
 import { Icon } from "./Icon.js";
 import { Container } from "./Container.js";
+import { toREM } from "../utils/units.js";
 
 export const BottomSheet = (props) => {
   const {
@@ -31,14 +32,16 @@ export const BottomSheet = (props) => {
     actionBorderColor = colors.border,
 
     // Borders and shadows
-    borderRadius = 24,
+    borderRadius = 16,
     shadow = "0 -4px 12px rgba(0,0,0,0.1)",
 
-    // Spacing
-    headerPadding = "0 16px 8px 16px",
-    contentPadding = "0 16px",
-    actionPadding = "12px 16px",
-    dragHandlePadding = "14px 0 8px 0",
+    // Spacing. These are CSS shorthands the widget writes by hand, so each
+    // number goes through `toREM` — a literal "16px" here would leave the sheet
+    // frozen at one text size while its own type grew.
+    headerPadding = `0 ${toREM(16)} ${toREM(8)} ${toREM(16)}`,
+    contentPadding = `0 ${toREM(16)}`,
+    actionPadding = `${toREM(12)} ${toREM(16)}`,
+    dragHandlePadding = `${toREM(16)} 0 ${toREM(8)} 0`,
     dragHandleWidth = 40,
     dragHandleHeight = 4,
 
@@ -166,7 +169,7 @@ onclick: (e) => e.stopPropagation(), // ✅ Prevents the click from reaching the
     right: 0,
     paddingBottom: 12,
     backgroundColor: backgroundColor,
-    borderRadius: `${borderRadius}px ${borderRadius}px 0 0`,
+    borderRadius: `${toREM(borderRadius)} ${toREM(borderRadius)} 0 0`,
     boxShadow: shadow,
     transform: "translateY(100%)",
     transition: `transform ${animationDuration}ms ease`,

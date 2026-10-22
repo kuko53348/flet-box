@@ -123,8 +123,17 @@ function applyUnit(def, value) {
   }
   if (value === true) return 1;
   if (value === false) return 0;
-  if (typeof value !== "number") return value;
   const unit = def.unit || "px";
+  // A rem prop written as a pixel *string* ("8px 12px") is the same framework
+  // number written a different way, so it converts like the number does. `toREM`
+  // only rewrites strings made entirely of pixel lengths, which leaves "100%",
+  // "auto", "calc(100% - 16px)" and "2px solid red" exactly as they were.
+  if (unit === "rem" && typeof value === "string") return toREM(value);
+  // A rem prop written as a *list* (`padding: [8, 16]`) is the same pair of
+  // framework units again; the generic formatter would suffix each item with px.
+  if (unit === "rem" && Array.isArray(value))
+    return value.map((item) => toREM(item)).join(" ");
+  if (typeof value !== "number") return value;
   if (unit === "none") return value;
   
   // Use the dynamic REM converter instead of a hard-coded division.

@@ -7,6 +7,8 @@ import { border } from "../tools/index.js";
 import { colors } from "../utils/themes.js";
 
 // Fallback colors (if the theme is not initialized yet)
+import { toREM } from "../utils/units.js";
+
 const FALLBACK = {
   gray800: "#1e293b",
   primary: "#6366f1",
@@ -92,13 +94,13 @@ export function SnackBar(options) {
   const snackbar = WidgetFactory({
     tag: "div",
     position: "fixed",
-    left: `${margin}px`,
+    left: toREM(margin),
     // borderRadius: borderRadius,
-    right: `${margin}px`,
-    [position]: `${margin}px`,
+    right: toREM(margin),
+    [position]: toREM(margin),
     backgroundColor: finalBg,
     borderRadius:
-      typeof borderRadius === "number" ? `${borderRadius}px` : borderRadius,
+      toREM(borderRadius),
     padding: padding,
     border: border(1, "solid", colors.gray100),
     zIndex: zIndex,
@@ -109,8 +111,8 @@ export function SnackBar(options) {
     opacity: 0,
     transform:
       position === "bottom"
-        ? `translateY(calc(100% + ${margin}px))`
-        : `translateY(calc(-100% - ${margin}px))`,
+        ? `translateY(calc(100% + ${toREM(margin)}))`
+        : `translateY(calc(-100% - ${toREM(margin)}))`,
     transition: `opacity ${animationDuration}ms ease, transform ${animationDuration}ms ease`,
     display: "flex",
     alignItems: "center",
@@ -156,8 +158,8 @@ export function SnackBar(options) {
     snackbar.style.opacity = "0";
     snackbar.style.transform =
       position === "bottom"
-        ? `translateY(calc(100% + ${margin}px))`
-        : `translateY(calc(-100% - ${margin}px))`;
+        ? `translateY(calc(100% + ${toREM(margin)}))`
+        : `translateY(calc(-100% - ${toREM(margin)}))`;
     setTimeout(() => {
       if (snackbar.parentNode) snackbar.parentNode.removeChild(snackbar);
       if (onClose) onClose();

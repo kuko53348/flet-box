@@ -14,6 +14,8 @@ import { Icon } from "./Icon.js";
 
 // ========== INTERNAL COMPONENTS ==========
 
+import { toREM } from "../utils/units.js";
+
 const ModalOverlay = ({
   closeOnOverlayClick,
   onClose,
@@ -224,10 +226,10 @@ const ModalContainer = ({
     backgroundColor: backgroundColor || colors.surface,
     borderRadius:
       typeof borderRadius === "number"
-        ? `${borderRadius}px`
+        ? toREM(borderRadius)
         : borderRadius || "16px",
-    width: typeof width === "number" ? `${width}px` : width,
-    minWidth: typeof minWidth === "number" ? `${minWidth}px` : minWidth,
+    width: toREM(width),
+    minWidth: toREM(minWidth),
     maxWidth: maxWidth || "90%",
     maxHeight: maxHeight || "80vh",
     overflow: "hidden",
@@ -273,7 +275,7 @@ export const Modal = (props = {}) => {
 
     // Main container styles
     backgroundColor = colors.surface,
-    borderRadius = 20,
+    borderRadius = 16,
     border = null,
     borderColor = colors.border,
     borderWidth = 1,
@@ -281,7 +283,7 @@ export const Modal = (props = {}) => {
     elevation = 3, // ← New: shadow by elevation
 
     // Content padding
-    padding = "20px",
+    padding = 24,
     contentBgColor = colors.surface,
     contentElevation = 0, // ← Optional inner shadow
 
@@ -374,7 +376,7 @@ export const Modal = (props = {}) => {
 
   const contentElement = ModalContent({
     content,
-    padding: typeof padding === "number" ? `${padding}px` : padding,
+    padding: toREM(padding),
     contentBgColor,
     contentElevation,
   });
@@ -468,7 +470,7 @@ export const Modal = (props = {}) => {
     updatePadding: (newPadding) => {
       if (contentElement) {
         contentElement.style.padding =
-          typeof newPadding === "number" ? `${newPadding}px` : newPadding;
+          toREM(newPadding);
       }
     },
 

@@ -4,6 +4,8 @@
  */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
+import { toREM } from "../utils/units.js";
+import { PILL, TAP_MINIMUM } from "../tools/index.js";
 
 export const Switch = (props) => {
   const {
@@ -20,13 +22,19 @@ export const Switch = (props) => {
   // onToggle kept as alias for backward compatibility
   const onPress = onPressProp || onToggle;
 
-  // Sizes
+  // Sizes. Track height is knob + 2 x pad, so the knob can never be asked to sit
+  // outside the pill it lives in.
   const sizes = {
-    small: { width: 40, height: 24, knob: 20 },
-    medium: { width: 51, height: 31, knob: 27 },
-    large: { width: 60, height: 36, knob: 32 },
+    small: { width: 40, height: 24, knob: 16 },
+    medium: { width: 48, height: 32, knob: 24 },
+    large: { width: 64, height: 40, knob: 32 },
   };
   const sz = sizes[size] || sizes.medium;
+  const PAD = 4;
+  /** The knob's travel, in framework units. It has to be rem, like the track: a
+   *  `px` offset here slides the knob short of the edge the moment the reader
+   *  raises their font and the (rem) track grows around it. */
+  const travel = () => toREM(sz.width - sz.knob - PAD * 2);
 
   let internalValue = value;
   let switchRef = null;
@@ -37,9 +45,7 @@ export const Switch = (props) => {
       switchRef.style.backgroundColor = newValue ? activeColor : colors.gray300;
     }
     if (knobRef) {
-      knobRef.style.transform = newValue
-        ? `translateX(${sz.width - sz.knob - 4}px)`
-        : "translateX(0)";
+      knobRef.style.transform = newValue ? `translateX(${travel()})` : "translateX(0)";
     }
   };
 
@@ -49,32 +55,41 @@ export const Switch = (props) => {
     height: sz.knob,
     backgroundColor: "#ffffff",
     borderRadius: "50%",
-    transform: internalValue
-      ? `translateX(${sz.width - sz.knob - 4}px)`
-      : "translateX(0)",
+    transform: internalValue ? `translateX(${travel()})` : "translateX(0)",
     transition: "transform 0.2s ease",
     boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
   });
   knobRef = knob;
 
-  // Createste main switch container
-  const switchContainer = WidgetFactory({
-    widgetName: "Switch",
+  // The visible pill. Everything the reader sees is painted here.
+  const track = WidgetFactory({
     width: sz.width,
     height: sz.height,
     backgroundColor: internalValue ? activeColor : colors.gray300,
-    borderRadius: sz.height / 2,
+    borderRadius: PILL,
     display: "flex",
     alignItems: "center",
-    padding: "2px",
+    padding: PAD,
     transition: "all 0.2s ease",
-    cursor: disabled ? "not-allowed" : "pointer",
-    opacity: disabled ? 0.5 : 1,
     boxSizing: "border-box",
     child: knob,
+  });
+  switchRef = track;
+
+  // The pressable box is the track's parent, not the track: a 32-unit pill is not
+  // a Fitts target, and stretching the pill to 40 would make it look like a
+  // button. The hit area grows, the switch does not.
+  const switchContainer = WidgetFactory({
+    widgetName: "Switch",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: TAP_MINIMUM,
+    cursor: disabled ? "not-allowed" : "pointer",
+    opacity: disabled ? 0.5 : 1,
+    child: track,
     ...rest,
   });
-  switchRef = switchContainer;
 
   // Handle click
   if (!disabled) {

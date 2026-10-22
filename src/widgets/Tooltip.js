@@ -6,6 +6,8 @@ import { WidgetFactory } from "../widget-factory/index.js";
 import { resolveReactive } from "../widget-factory/reactiveValue.js";
 import { colors } from "../utils/themes.js";
 
+import { toREM } from "../utils/units.js";
+
 export const Tooltip = (props) => {
   let {
     text,
@@ -20,8 +22,8 @@ export const Tooltip = (props) => {
     bgColor = colors.secondary,
     textColor = "#ffffff",
     fontSize = 12,
-    padding = "6px 10px",
-    borderRadius = 6,
+    padding = `${toREM(4)} ${toREM(8)}`,
+    borderRadius = 4,
     offset = 8,
     showArrow = true,
     disabled = false,
@@ -66,16 +68,16 @@ export const Tooltip = (props) => {
       widgetName: "Tooltip",
       backgroundColor: bgColor,
       borderRadius:
-        typeof borderRadius === "number" ? `${borderRadius}px` : borderRadius,
+        toREM(borderRadius),
       padding: padding,
-      maxWidth: typeof maxWidth === "number" ? `${maxWidth}px` : maxWidth,
+      maxWidth: toREM(maxWidth),
       boxShadow: shadow,
       border:
         borderWidth > 0 ? `${borderWidth}px solid ${borderColor}` : "none",
       child: WidgetFactory({
         tag: "span",
         text: text, // ✅ "text" is the correct prop in FletBox
-        fontSize: typeof fontSize === "number" ? `${fontSize}px` : fontSize,
+        fontSize: toREM(fontSize),
         color: textColor,
         textAlign: textAlign,
         display: "block",
@@ -129,7 +131,7 @@ export const Tooltip = (props) => {
         if (tooltipElement._arrow) {
           arrowTop = tooltipRect.height;
           arrowLeft = tooltipRect.width / 2 - arrowSize;
-          tooltipElement._arrow.style.borderWidth = `${arrowSize}px ${arrowSize}px 0 ${arrowSize}px`;
+          tooltipElement._arrow.style.borderWidth = `${toREM(arrowSize)} ${toREM(arrowSize)} 0 ${toREM(arrowSize)}`;
           tooltipElement._arrow.style.borderColor = `${bgColor} transparent transparent transparent`;
           tooltipElement._arrow.style.top = `${arrowTop}px`;
           tooltipElement._arrow.style.left = `${arrowLeft}px`;
@@ -141,7 +143,7 @@ export const Tooltip = (props) => {
         if (tooltipElement._arrow) {
           arrowTop = -arrowSize;
           arrowLeft = tooltipRect.width / 2 - arrowSize;
-          tooltipElement._arrow.style.borderWidth = `0 ${arrowSize}px ${arrowSize}px ${arrowSize}px`;
+          tooltipElement._arrow.style.borderWidth = `0 ${toREM(arrowSize)} ${toREM(arrowSize)} ${toREM(arrowSize)}`;
           tooltipElement._arrow.style.borderColor = `transparent transparent ${bgColor} transparent`;
           tooltipElement._arrow.style.top = `${arrowTop}px`;
           tooltipElement._arrow.style.left = `${arrowLeft}px`;
@@ -153,7 +155,7 @@ export const Tooltip = (props) => {
         if (tooltipElement._arrow) {
           arrowTop = tooltipRect.height / 2 - arrowSize;
           arrowLeft = tooltipRect.width;
-          tooltipElement._arrow.style.borderWidth = `${arrowSize}px 0 ${arrowSize}px ${arrowSize}px`;
+          tooltipElement._arrow.style.borderWidth = `${toREM(arrowSize)} 0 ${toREM(arrowSize)} ${toREM(arrowSize)}`;
           tooltipElement._arrow.style.borderColor = `transparent transparent transparent ${bgColor}`;
           tooltipElement._arrow.style.top = `${arrowTop}px`;
           tooltipElement._arrow.style.left = `${arrowLeft}px`;
@@ -165,7 +167,7 @@ export const Tooltip = (props) => {
         if (tooltipElement._arrow) {
           arrowTop = tooltipRect.height / 2 - arrowSize;
           arrowLeft = -arrowSize;
-          tooltipElement._arrow.style.borderWidth = `${arrowSize}px ${arrowSize}px ${arrowSize}px 0`;
+          tooltipElement._arrow.style.borderWidth = `${toREM(arrowSize)} ${toREM(arrowSize)} ${toREM(arrowSize)} 0`;
           tooltipElement._arrow.style.borderColor = `transparent ${bgColor} transparent transparent`;
           tooltipElement._arrow.style.top = `${arrowTop}px`;
           tooltipElement._arrow.style.left = `${arrowLeft}px`;

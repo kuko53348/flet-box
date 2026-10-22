@@ -12,6 +12,8 @@ import { Row } from "./Row.js";
 import { Column } from "./Column.js";
 import { Text } from "./Text.js";
 import { Icon } from "./Icon.js";
+import { toREM } from "../utils/units.js";
+import { TAP_MINIMUM } from "../tools/index.js";
 
 /**
  * Props owned by the Dropdown's closure state. Routed to the widget's `update`
@@ -97,10 +99,12 @@ export const Dropdown = (inputProps = {}) => {
   let resizeListener = null;
   let scrollListener = null;
 
+  /** [vertical, horizontal] in framework units — see `Input`: a `"8px 14px"`
+   *  string is raw CSS and stops the field growing with the reader's font. */
   const sizes = {
-    small: { padding: "6px 12px", fontSize: 12 },
-    medium: { padding: "8px 14px", fontSize: 14 },
-    large: { padding: "12px 16px", fontSize: 16 },
+    small: { padding: [4, 12], fontSize: 12, minHeight: 32 },
+    medium: { padding: [8, 12], fontSize: 14, minHeight: TAP_MINIMUM },
+    large: { padding: [12, 16], fontSize: 16, minHeight: 48 },
   };
   let currentSize = sizes[size] || sizes.medium;
 
@@ -197,14 +201,16 @@ export const Dropdown = (inputProps = {}) => {
     alignItems: "center",
     justifyContent: "space-between",
     width: "100%",
-    padding: currentSize.padding,
+    paddingVertical: currentSize.padding[0],
+    paddingHorizontal: currentSize.padding[1],
+    minHeight: currentSize.minHeight,
     backgroundColor:
       currentVariant === "filled" ? `${currentBgColor}CC` : "transparent",
     border:
       currentVariant === "outlined"
         ? `1px solid ${currentError ? colors.danger : colors.border}`
         : "none",
-    borderRadius: `${currentBorderRadius}px`,
+    borderRadius: currentBorderRadius,
     cursor: currentDisabled ? "not-allowed" : "pointer",
     opacity: currentDisabled ? 0.5 : 1,
     boxSizing: "border-box",
@@ -248,9 +254,9 @@ export const Dropdown = (inputProps = {}) => {
     const labelEl = WidgetFactory({
       tag: "label",
       textContent: currentLabel,
-      fontSize: "12px",
+      fontSize: 12,
       color: currentError ? colors.danger : colors.textSecondary,
-      marginBottom: "4px",
+      marginBottom: 4,
       display: "block",
     });
     container.appendChild(labelEl);
@@ -318,7 +324,7 @@ export const Dropdown = (inputProps = {}) => {
       zIndex: 10000,
       border: `1px solid ${colors.border}`,
       backgroundColor: currentBgColor,
-      borderRadius: `${currentBorderRadius}px`, // same borderRadius
+      borderRadius: currentBorderRadius, // same borderRadius
       boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
       maxHeight: "250px",
       overflowY: "auto",
@@ -348,12 +354,14 @@ export const Dropdown = (inputProps = {}) => {
       );
 
       const optionItem = Row({
-        padding: "10px 16px",
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        minHeight: TAP_MINIMUM,
         cursor: "pointer",
         backgroundColor: isSelected ? currentColor + "15" : "transparent",
         alignItems: "center",
         justifyContent: "space-between",
-        gap: "8px",
+        gap: 8,
         children: [
           Row({
             alignItems: "center",
@@ -496,8 +504,9 @@ export const Dropdown = (inputProps = {}) => {
     }
     if (needsDisplayUpdate) {
       updateDisplay();
-      selector.style.padding = currentSize.padding;
-      selector.style.borderRadius = `${currentBorderRadius}px`;
+      selector.style.padding = `${toREM(currentSize.padding[0])} ${toREM(currentSize.padding[1])}`;
+      selector.style.minHeight = toREM(currentSize.minHeight);
+      selector.style.borderRadius = toREM(currentBorderRadius);
       if (currentVariant === "outlined")
         selector.style.border = `1px solid ${currentError ? colors.danger : colors.border}`;
       else selector.style.border = "none";

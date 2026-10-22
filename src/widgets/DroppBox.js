@@ -5,6 +5,8 @@
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 
+import { toREM } from "../utils/units.js";
+
 export const DroppBox = (props) => {
   const {
     child,
@@ -58,12 +60,12 @@ export const DroppBox = (props) => {
     transition: `all ${transitionDuration} ${transitionTiming}`,
     backgroundColor: bgColor,
     borderRadius:
-      typeof borderRadius === "number" ? `${borderRadius}px` : borderRadius,
+      toREM(borderRadius),
     borderWidth: `${borderWidth}px`,
     borderStyle: borderStyle,
     borderColor: borderColor,
     boxShadow: shadow,
-    padding: typeof padding === "number" ? `${padding}px` : padding,
+    padding: toREM(padding),
     ...rest,
   });
 

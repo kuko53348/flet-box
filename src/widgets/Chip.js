@@ -10,6 +10,7 @@ import { Row } from "./Row.js";
 import { Text } from "./Text.js";
 import { Icon } from "./Icon.js";
 import { colors } from "../utils/themes.js";
+import { PILL, TAP_MINIMUM } from "../tools/index.js";
 
 /**
  * Creates a Chip widget — a small interactive label commonly used for tags,
@@ -24,8 +25,8 @@ import { colors } from "../utils/themes.js";
  * @param {string} [props.color=colors.primary] - Chip accent color: used as the background (filled) or border/text (outlined).
  * @param {string} [props.textColor] - Explicit text color override. Defaults to '#fff' (filled) or `color` (outlined).
  * @param {string} [props.borderColor] - Explicit border color override (outlined variant only). Defaults to `color`.
- * @param {number} [props.borderRadius=32] - Corner radius in pixels. High values produce a pill shape.
- * @param {string} [props.padding='4px 12px'] - Internal padding of the chip row.
+ * @param {number} [props.borderRadius=999] - Corner radius in framework units (converted to `rem`). The default clamps to a pill.
+ * @param {number|string} [props.padding] - Internal padding. A number is a uniform gutter (doubled horizontally); omitted it is 4 vertical x 12 horizontal, in framework units.
  * @param {number} [props.gap=4] - Gap in pixels between icon, label, and delete icon.
  * @param {number} [props.size=12] - Font size in pixels. Also scales the icons proportionally.
  * @param {number} [props.elevation=0] - Box-shadow depth. 0 means no shadow.
@@ -41,13 +42,25 @@ export const Chip = (props) => {
     color = colors.primary,
     textColor,
     borderColor,
-    borderRadius = 32,
-    padding = "4px 12px",
+    borderRadius = PILL,
+    padding,
     gap = 4,
     size = 12,
     elevation = 0,
     ...rest
   } = props;
+
+  /**
+   * `4px 12px` as a literal string reaches the factory as raw CSS and freezes
+   * there: the chip's type grew with the reader's font and its gutters did not.
+   * Numbers go through `toREM` instead, and the pair is on the spacing scale.
+   */
+  const chipPadding =
+    padding === undefined
+      ? { paddingVertical: 4, paddingHorizontal: 12 }
+      : typeof padding === "number"
+        ? { paddingVertical: padding, paddingHorizontal: padding * 2 }
+        : { padding };
 
   // Derive background, text, and border colors from the variant
   let bgColor, txtColor, brdColor;
@@ -88,7 +101,7 @@ export const Chip = (props) => {
   if (onDelete) {
     const closeIcon = Icon({
       name: "close",
-      size: size - 2,
+      size: Math.max(12, size - 2),
       color: txtColor,
       cursor: "pointer",
       onclick: (e) => {
@@ -106,7 +119,7 @@ export const Chip = (props) => {
     backgroundColor: bgColor,
     border: variant === "outlined" ? `1px solid ${brdColor}` : "none",
     borderRadius: borderRadius,
-    padding: padding,
+    ...chipPadding,
     width: "fit-content",
     minWidth: "auto",
     boxShadow:
@@ -116,10 +129,15 @@ export const Chip = (props) => {
     children: children,
   });
 
-  // Outer wrapper element enables the onclick without styling conflicts
+  // Outer wrapper element enables the onclick without styling conflicts.
+  // A chip you can press or dismiss is a target, so the wrapper carries the
+  // Fitts floor while the pill inside keeps its compact 23-unit height.
   const chip = WidgetFactory({
     widgetName: "Chip",
-    display: "inline-block",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    ...(onPress || onDelete ? { minHeight: TAP_MINIMUM } : {}),
     cursor: onPress ? "pointer" : "default",
     transition: "all 0.2s ease",
     child: chipContent,

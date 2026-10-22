@@ -42,6 +42,8 @@ import { colors } from "../utils/themes.js";
  * @returns {HTMLElement} The sidebar container element, augmented with:
  *   - `updateWidth(w: number|string)` — resize the sidebar programmatically.
  */
+import { toREM } from "../utils/units.js";
+
 export const CollapsibleSideBar = ({
   children,
   expanded = true,
@@ -81,7 +83,7 @@ export const CollapsibleSideBar = ({
     tag: "div",
     id,
     width:
-      typeof currentWidth === "number" ? `${currentWidth}px` : currentWidth,
+      toREM(currentWidth),
     height: "100%",
     display: "flex",
     flexDirection: "column",
@@ -130,7 +132,7 @@ export const CollapsibleSideBar = ({
    */
   container.updateWidth = (newWidth) => {
     container.style.width =
-      typeof newWidth === "number" ? `${newWidth}px` : newWidth;
+      toREM(newWidth);
   };
 
   return container;

@@ -8,11 +8,13 @@
 
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
+import { toREM } from "../utils/units.js";
 import { composeUpdate } from "../utils/composeUpdate.js";
 import { Container } from "./Container.js";
 import { Row } from "./Row.js";
 import { Text } from "./Text.js";
 import { Icon } from "./Icon.js";
+import { SHADOW_LEVELS } from "../tools/shadow.js";
 
 /**
  * Props owned by the Accordion's own closure state. They are routed to the
@@ -47,8 +49,8 @@ const ACCORDION_PROP_KEYS = [
  * @param {number} [props.borderWidth=1] - Border width in pixels (outlined variant).
  * @param {number} [props.titleSize=14] - Font size of the title text in pixels.
  * @param {string} [props.titleWeight='500'] - Font weight of the title text.
- * @param {string} [props.titlePadding='12px 16px'] - CSS padding for the title bar.
- * @param {string} [props.contentPadding='16px'] - CSS padding applied to the inner content area.
+ * @param {string} [props.titlePadding='0.75rem 1rem'] - CSS padding for the title bar.
+ * @param {string} [props.contentPadding='1rem'] - CSS padding applied to the inner content area.
  * @param {string} [props.iconCollapsed='chevron_right'] - Material icon name shown when collapsed.
  * @param {string} [props.iconExpanded='expand_more'] - Material icon name shown when expanded.
  * @param {string} [props.iconColor=colors.textSecondary] - Color of the expand/collapse icon.
@@ -83,7 +85,7 @@ export const Accordion = (props) => {
     titleWeight = "500",
     titlePadding = "12px 16px",
     // Content
-    contentPadding = "16px",
+    contentPadding = 16,
     // Icon
     iconCollapsed = "chevron_right",
     iconExpanded = "expand_more",
@@ -153,7 +155,7 @@ export const Accordion = (props) => {
     titleElement.style.color = isExpanded
       ? currentExpandedColor
       : currentTitleColor;
-    titleElement.style.fontSize = `${currentTitleSize}px`;
+    titleElement.style.fontSize = toREM(currentTitleSize);
     titleElement.style.fontWeight = currentTitleWeight;
 
     // Swap icon based on current expanded state. `Icon` renders its glyph as
@@ -163,12 +165,12 @@ export const Accordion = (props) => {
       ? currentIconExpanded
       : currentIconCollapsed;
     iconElement.style.color = currentIconColor;
-    iconElement.style.fontSize = `${currentIconSize}px`;
+    iconElement.style.fontSize = toREM(currentIconSize);
 
     // Title bar cursor and opacity reflect the disabled state
     titleBar.style.cursor = currentDisabled ? "not-allowed" : "pointer";
     titleBar.style.opacity = currentDisabled ? "0.5" : "1";
-    titleBar.style.padding = currentTitlePadding;
+    titleBar.style.padding = toREM(currentTitlePadding);
 
     // Tint the title bar background slightly when expanded (contained only)
     if (currentVariant === "contained") {
@@ -202,23 +204,18 @@ export const Accordion = (props) => {
       container.style.backgroundColor = "transparent";
     }
 
-    container.style.borderRadius = `${currentBorderRadius}px`;
+    container.style.borderRadius = toREM(currentBorderRadius);
     container.style.overflow = "hidden";
 
-    // Predefined shadow presets keyed by elevation level
+    // The framework's depth scale, not a local copy of it (src/tools/shadow.js).
     if (currentElevation > 0) {
-      const shadows = {
-        1: "0 1px 3px rgba(0,0,0,0.12)",
-        2: "0 3px 6px rgba(0,0,0,0.16)",
-        3: "0 6px 12px rgba(0,0,0,0.2)",
-        4: "0 10px 20px rgba(0,0,0,0.25)",
-      };
-      container.style.boxShadow = shadows[currentElevation] || shadows[2];
+      container.style.boxShadow =
+        SHADOW_LEVELS[currentElevation] || SHADOW_LEVELS[2];
     } else {
       container.style.boxShadow = "none";
     }
 
-    contentInner.style.padding = currentContentPadding;
+    contentInner.style.padding = toREM(currentContentPadding);
   };
 
   // ========== HEIGHT ANIMATION ==========
@@ -238,7 +235,7 @@ export const Accordion = (props) => {
     clone.style.visibility = "hidden";
     clone.style.display = "block";
     clone.style.height = "auto";
-    clone.style.padding = currentContentPadding;
+    clone.style.padding = toREM(currentContentPadding);
     document.body.appendChild(clone);
     const height = clone.offsetHeight;
     document.body.removeChild(clone);
@@ -508,7 +505,7 @@ export const Accordion = (props) => {
       currentTitlePadding = newProps.titlePadding;
     if (newProps.contentPadding !== undefined) {
       currentContentPadding = newProps.contentPadding;
-      contentInner.style.padding = currentContentPadding;
+      contentInner.style.padding = toREM(currentContentPadding);
     }
     if (newProps.iconCollapsed !== undefined)
       currentIconCollapsed = newProps.iconCollapsed;
