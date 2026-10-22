@@ -500,6 +500,36 @@ command converts it anyway and says so in the report: keep the JPEG — or a Web
 from a tool that carries a codec — for that picture, and let `to-png` do the flat
 art, the logos and the icons.
 
+## Check the UI
+
+`flet-box check-ui` reads your app's own `src/` and reports the design mistakes a
+static pass can prove: a hand-typed color literal instead of a token, a size that
+is not on the 8-based scale, a tap target below the Fitts floor, a form field with
+no label, and text whose contrast against the fill it sits on is below WCAG AA.
+
+```bash
+flet-box check-ui                  # scan ./src
+flet-box check-ui --root ../my-app # scan another project
+flet-box check-ui --tokens         # print the measured token contrast table
+flet-box check-ui --strict         # contrast warnings fail too
+flet-box check-ui --json           # machine-readable findings
+```
+
+Aliases: `flet-box ui`, `flet-box checkUi`. The command exits `1` when it finds an
+error, or when it finds a warning with `--strict`, so it works as a CI gate.
+
+Every prop name the checker uses comes from the installed package's own prop
+registry, so it cannot invent an API while judging yours. The scale, the radii and
+the tap minimum are the framework's own numbers, read from its `scale` module —
+the same table the widget defaults are drawn from.
+
+What it deliberately does not judge: taste, hierarchy, and whether the screen
+solves the user's problem. `flet-box create` writes the rules as a skill file
+alongside the app, and that file says so.
+
+The full contract — the 21 rules, every finding code, and how to fix one — is
+[Chapter 12, Clean UI](../guides/clean-ui.md).
+
 ## Command reference
 
 
@@ -529,6 +559,9 @@ art, the logos and the icons.
 | `flet-box to-png --dry-run` | Reports what would happen, writes nothing. |
 | `flet-box to-png --replace` | Deletes each source after its PNG was written and read back. |
 | `flet-box to-png --optimize` | Re-packs the PNGs already in the folder, and only when that makes them smaller. |
+| `flet-box check-ui` | Runs the clean-UI gate over `src/`: tokens, scale, tap targets, labels, contrast. |
+| `flet-box check-ui --tokens` | Prints the measured contrast of every color token, on the background and on the surface. |
+| `flet-box check-ui --strict` | Makes the contrast warnings fail the run, not just the errors. |
 | `flet-box pkg` | Opens the package manager. |
 | `flet-box --version` | Shows the CLI version. |
 | `flet-box --help` | Shows the command list. |
@@ -618,7 +651,7 @@ npm install --save-dev esbuild
 ## Continue reading
 
 - **Previous:** [FletBox utilities](../guides/utilities.md)
-- **Next:** [Minify and protect a FletBox build](../guides/minification-and-protection.md) — Appendix A
+- **Next:** [Clean UI](../guides/clean-ui.md) — Chapter 12
 - **Index:** [Guides index](../guides/README.md) · [The FletBox Book](../README.md)
 
 You are reading **Chapter 11 · The CLI**.

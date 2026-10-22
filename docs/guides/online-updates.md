@@ -136,6 +136,54 @@ To configure it by hand, create `fletbox.config.json`:
 }
 ```
 
+## The Pages address of a generated app
+
+The URL you paste into `update.url` is not a guess: `flet-box create` knows the
+address the app will be published to and prints it when it finishes.
+
+```bash
+flet-box create my-app --repo kuko53348/my-app
+```
+
+That `--repo` (or the same value typed at the interactive prompt) does three
+things at once:
+
+- sets `update.url` in `fletbox.config.json` to `https://kuko53348.github.io/my-app/`;
+- writes that address into the header of the generated `.github/workflows/build.yml`;
+- prints it in the closing summary, with the one-time setting Pages needs.
+
+Without `--repo` nothing is invented. `fletbox.config.json` keeps the generic
+placeholder `https://TU-USUARIO.github.io/TU-REPO/`, the workflow header names a
+guess built from the folder name, and the workflow says so in its own comment:
+write the real address in both files that state it.
+
+**The workflow log is the authority.** The header names the address you typed at
+scaffold time; the `Where this lives` step prints the address the run *actually*
+belongs to, read from GitHub itself:
+
+```text
+site:    https://kuko53348.github.io/my-app/     <- from the running repo
+header:  https://TU-USUARIO.github.io/my-app/    <- from the file
+version: 1.0.3
+```
+
+When those two disagree, trust `site:`. They disagree when the repository was
+created with a different name than the folder, or when the app was never pushed.
+Note the owner is lower-cased: GitHub Pages serves the site under the
+lower-cased login, so `Kuko53348` in your remote is `kuko53348` in the URL.
+
+**A green run that 404s has one cause.** The deploy job can only write to Pages
+after you enable the destination once: **Settings → Pages → Build and deployment
+→ Source: GitHub Actions**. Until you do, every run succeeds and no site exists —
+which is exactly what the `Where this lives` step prints in the log, so a failed
+release is never mistaken for a broken bundle.
+
+The address is a **sub-path** (`/<repo>/`), and that is why the bundle uses
+relative asset paths: the same `www/` a phone polls for updates is the one served
+under any path, with no rebuild for a custom domain or a rename. If you do move to
+a custom domain, change `update.url` in `fletbox.config.json` and rebuild — the
+native shell keeps the old bundle until the manifest tells it otherwise.
+
 ## Shipping extra files (release assets)
 
 OTA swaps **one file**: `src/app.js`. Anything your app reads from disk at runtime — markdown pages, JSON data, per-tenant config — keeps the copy baked into the build the device installed. So an app installed three releases ago can run a bundle that was updated over the air and still be missing files the current catalog refers to. The symptom is not a crash, it is a "this page does not exist" for content that clearly exists online.

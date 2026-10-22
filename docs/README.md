@@ -14,6 +14,7 @@ This documentation is one continuous book. Start at **Chapter 0** and follow the
 | 9 | [State, Router & Services](guides/state.md) | Shared state, navigation routes, storage, and HTTP | Intermediate |
 | 10 | [Tools & Utilities](tools/README.md) | The helper functions that ship with the framework | Intermediate |
 | 11 | [The CLI](cli/README.md) | Create, run, and build projects with `flet-box` | Intermediate |
+| 12 | [Clean UI](guides/clean-ui.md) | The design system every app ships with and the gate that enforces it | Intermediate |
 | A | [Appendices](guides/minification-and-protection.md) | Minification, mobile, compatibility, embedding, online updates (OTA) | Advanced |
 
 > **Levels.** *Beginner:* start here and read in order. *Intermediate:* continue in order — you are comfortable with widgets. *Advanced:* for when you ship, skip on a first read.
@@ -50,6 +51,7 @@ Front cover (this page)
 → Animation helpers · tools/animation.md
 → Utilities guide · guides/utilities.md
 → The CLI · cli/README.md
+→ Clean UI · guides/clean-ui.md
 → Appendices (minification → mobile → compatibility → embedding → online updates)
 → The end of the book
 ```
