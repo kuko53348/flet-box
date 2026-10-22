@@ -605,6 +605,10 @@ export const lightColors = {
     // \`colors.primary + '15'\`.
     onPrimary: '#ffffff',
     primaryBg: '#eef2ff',
+    // The translucent surface for a card with \`backdropFilter\`. A token, so the
+    // app never hand-writes an \`rgba()\` the clean-UI gate would reject.
+    glass: 'rgba(255, 255, 255, 0.66)',
+    glassBorder: 'rgba(255, 255, 255, 0.75)',
     error: '#ff3b30',
     errorBg: '#ffe5e5',
     successBg: '#e5f5e5',
@@ -640,6 +644,8 @@ export const darkColors = {
     // #818cf8 is a light fill: white on it is 2.98:1, the page's own ink is 5.98:1.
     onPrimary: '#0f172a',
     primaryBg: '#1e1b4b',
+    glass: 'rgba(30, 41, 59, 0.66)',
+    glassBorder: 'rgba(226, 232, 240, 0.22)',
     error: '#f87171',
     errorBg: '#3b1113',
     successBg: '#0c2f22',
@@ -2532,6 +2538,9 @@ export const agentsMd = (appName, template, version) =>
     '  means one of them is wrong.',
     '- Never type a hex or `rgb()` literal. If a token is missing, add it to a',
     '  `theme.js` in this app that re-exports `colors` — do not scatter the value.',
+    '- A frosted surface is `colors.glass` with `colors.glassBorder` plus a',
+    '  `backdropFilter`. It reads through to whatever is behind it, so there',
+    '  should be imagery or a gradient there, never body copy.',
     '- Text on a dark or brand fill is white, and it stays white: hierarchy comes',
     '  from size and weight, not from fading the ink to `rgba(255,255,255,.72)` —',
     '  faded white on `colors.primary` measures 3.16:1 and stops being body text.',
@@ -2888,6 +2897,9 @@ export const cleanUiSkill = () =>
     "  a one-off shade the rest of the app cannot reuse (`HAND_MIXED_COLOR`). The",
     "  tints exist: `colors.primaryBg`, `colors.errorBg`, `colors.successBg`,",
     "  `colors.warningBg`, `colors.infoBg`.",
+    "- A frosted surface is `colors.glass` with `colors.glassBorder` and a",
+    "  `backdropFilter`; it is translucent on purpose, so put it over imagery,",
+    "  not over body text. A hand-written `rgba()` is a `RAW_COLOR` like any other.",
     "- Text on a brand fill is `colors.onPrimary`, never a literal white.",
     "- Tap targets are at least 40 on a side (`SMALL_TAP_TARGET`). Reach it with",
     "  `height`, not with padding. The books argue this qualitatively (Fitts, p.099);",

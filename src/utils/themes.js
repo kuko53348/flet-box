@@ -30,6 +30,12 @@ const DEFAULT_COLORS = {
   onPrimary: "#ffffff",
   // The soft brand tint a card or icon chip uses instead of `primary + '15'`.
   primaryBg: "#eef2ff",
+  // Glass is a translucent surface meant to sit over content with
+  // `backdropFilter`. It is a token and not an `rgba()` in the app for the same
+  // reason as every other color: the theme has to be able to move it, and the
+  // app's clean-UI gate rejects a hand-written literal (`RAW_COLOR`).
+  glass: "rgba(255, 255, 255, 0.66)",
+  glassBorder: "rgba(255, 255, 255, 0.75)",
   border: "#e2e8f0",
   gray50: "#f8fafc",
   gray100: "#f1f5f9",
@@ -74,6 +80,8 @@ export const palettes = {
     // large-text line, so text on this brand color is the dark ink (6.65:1).
     onPrimary: "#0f172a",
     primaryBg: "#e6f9ff",
+    glass: "rgba(255, 255, 255, 0.66)",
+    glassBorder: "rgba(255, 255, 255, 0.75)",
     textSecondary: "#64748b",
     textDisabled: "#94a3b8",
     border: "#e2e8f0",
@@ -112,6 +120,10 @@ export const palettes = {
     // #00AFBC is a light fill too: white on it is 2.67:1. Dark ink reads 6.68:1.
     onPrimary: "#0f172a",
     primaryBg: "#0b3b41",
+    // Slate at the same alpha as the light token: on this page the frost is a
+    // dark pane with a light rim, not a white one.
+    glass: "rgba(30, 41, 59, 0.66)",
+    glassBorder: "rgba(226, 232, 240, 0.22)",
     textSecondary: "#94a3b8",
     textDisabled: "#64748b",
     border: "#334155",
