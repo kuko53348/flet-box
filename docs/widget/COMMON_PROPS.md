@@ -107,6 +107,25 @@ shorthands `roundedTop`, `roundedBottom`, `roundedLeft`, `roundedRight`, plus
 `transition`, `animation`, `transform`, `cursor`, `visibility`, `pointerEvents`,
 `userSelect`, `touchAction`.
 
+## Glass and filters
+
+`backdropFilter`, `filter`, `maskImage`. Each takes a raw CSS value string, not an
+object.
+
+```js
+Card({
+  bgColor: 'rgba(255, 255, 255, 0.34)',
+  backdropFilter: 'blur(14px) saturate(160%)',
+});
+```
+
+> A translucent `bgColor` alone is only see-through. `backdropFilter` blurs what is
+> behind the widget, which is what makes the card read as frosted glass.
+> `backdropFilter` and `maskImage` also write their `-webkit-` twin, so the effect
+> reaches Safari and the `WKWebView` inside a wrapped iOS app.
+> `filter` affects the widget's own pixels; `backdropFilter` affects only the
+> backdrop, so the widget's text stays sharp.
+
 ## Text content
 
 These set the element's text: `text`, `label`, `title`, `caption`, `description`,
