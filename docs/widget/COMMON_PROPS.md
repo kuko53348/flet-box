@@ -114,7 +114,9 @@ object.
 
 ```js
 Card({
-  bgColor: 'rgba(255, 255, 255, 0.34)',
+  bgColor: colors.glass,
+  borderColor: colors.glassBorder,
+  borderWidth: 1,
   backdropFilter: 'blur(14px) saturate(160%)',
 });
 ```

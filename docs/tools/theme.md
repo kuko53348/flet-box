@@ -39,6 +39,7 @@ Every token is available on `colors`:
 - **Surfaces:** `background`, `surface`, `card`, `overlay`.
 - **Text:** `text`, `textSecondary`, `textDisabled`, `divider`, `border`, `shadow`.
 - **Tints:** `gray50` … `gray900`, plus the soft backgrounds `errorBg`, `successBg`, `warningBg`, `infoBg`.
+- **Glass:** `glass` (the translucent surface) and `glassBorder` (its rim), meant to pair with `backdropFilter`. Light is white glass, dark is a slate pane with a light rim.
 
 The `dark` palette overrides the surface/text tokens; `gray*` and brand colors also shift to keep contrast. Read [the palette walkthrough](../guides/utilities.md) for usage patterns.
 
@@ -121,6 +122,7 @@ runApp(ThemeProvider({ children: ThemedApp() }), "root");
 ## Notes
 
 - The shared palette tokens are updated across all widgets when you switch themes; widgets referencing `colors.*` at build time pick up the active palette.
+- `colors.glass` is genuinely see-through: its contrast depends on whatever is behind it, so use it over photography or gradients with a scrim, and keep body copy off the most colourful part of the backdrop. The dark token is a dark pane, not white glass.
 - `watchSystemTheme()` and `applySystemTheme()` read `prefers-color-scheme`; both return/need cleanup to release listeners.
 - `subscribeTheme(callback)` fires with the new palette object — remember to unsubscribe when a feature is destroyed.
 
