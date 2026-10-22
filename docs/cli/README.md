@@ -62,6 +62,33 @@ http://localhost:8000
 
 The default project includes screens, an app bar, a drawer, routing, and the files needed to start experimenting.
 
+### Pointing the project at its repository
+
+`flet-box create` writes a GitHub Pages workflow into every project. Pass the
+repository with `--repo` and the same address is filled in everywhere it is
+needed:
+
+```bash
+flet-box create my-app --repo kuko53348/my-app
+```
+
+That sets `update.url` in `fletbox.config.json` (what an installed app polls for
+an over-the-air update), names the site at the top of
+`.github/workflows/build.yml`, and prints the address in the closing summary:
+
+```text
+⬆️  OTA updates: https://kuko53348.github.io/my-app/
+CI:      .github/workflows/build.yml publishes the web to GitHub Pages on every push.
+         It goes live at: https://kuko53348.github.io/my-app/
+         Enable it once: Settings → Pages → Source: GitHub Actions. The job prints the URL.
+```
+
+The first positional argument is always the project name; a flag that arrives
+before it is read as the name. Without `--repo` nothing is invented — the
+placeholder stays in both files and the workflow says which two to edit. The
+reason the workflow log, not the header, is the authority on the live address is
+explained in [The Pages address of a generated app](../guides/online-updates.md).
+
 ## Project templates
 
 FletBox provides four project templates.
@@ -540,6 +567,7 @@ The full contract — the 21 rules, every finding code, and how to fix one — i
 | `flet-box create <name> --full` | Creates a project with drawer and bottom navigation. |
 | `flet-box create <name> --sidebar` | Creates a desktop sidebar project. |
 | `flet-box create <name> --adaptive` | Creates a mobile and desktop project. |
+| `flet-box create <name> --repo <user>/<repo>` | Sets the GitHub Pages address, the OTA URL and the workflow header from the repo. |
 | `flet-box screen <name>` | Creates one screen. |
 | `flet-box screen <number>` | Creates up to ten screens. |
 | `flet-box component <name>` | Creates one component. |
