@@ -125,7 +125,7 @@ judging yours. Each finding carries a code, and the code maps to a rule above.
 | `OFF_SCALE_TYPE` | 08 | A font size off the type scale. |
 | `SMALL_TAP_TARGET` | 11 | A pressable widget under the Fitts floor, including a bare `Icon` with `onPress`. |
 | `LOW_CONTRAST` | 11 | Text measured below AA against the fill it actually sits on. |
-| `UNLABELED_FIELD` | 13 | An `Input` or `Dropdown` with no label and no accessible name. |
+| `UNLABELED_FIELD` | 13 | An `Input` or `Dropdown` with neither a `label` nor a `placeholder`. |
 | `UNLABELED_TOGGLE` | 13 | A `Switch`, `Checkbox` or `Radio` with nothing to say what it toggles. |
 | `DESTRUCTIVE_COLOR` | 14 | A delete/remove verb rendered in the brand fill instead of the danger one. |
 | `UNREADABLE` | — | A file the scanner could not parse, reported rather than skipped. |
@@ -169,10 +169,13 @@ Aliases: `flet-box ui`, `flet-box checkUi`. Exit code is `1` when an error is
 present (or a warning, with `--strict`), so it fits in CI as the app's
 `npm run ui`.
 
-`--tokens` is the one worth reading before you pick colors. It prints every
-token's measured ratio against `background` and `surface`, for both palettes, so
-a brand color that looks fine and reads at 2.1:1 is a number instead of an
-argument.
+`--tokens` is the one worth reading before you pick colors. It prints the
+measured ratio of every token against `background` and `surface` — for the
+palette in use, so switch the theme and read it again if you ship both. A brand
+color that looks fine and measures 2.15:1 (`colors.warning`, decoration only)
+becomes a number instead of an argument, and the table already tells you which
+tokens clear AA body text, which are large-text-or-UI only, and on which fill
+writing text is a mistake.
 
 ## Fixing a finding
 
