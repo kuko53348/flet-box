@@ -66,6 +66,9 @@ export const indexHtml = (appName = "FletBox App") => `<!DOCTYPE html>
 
 
 export const rootScreenJs = () => `// screens/RootScreen.js
+// This screen is a reference implementation of the app's own design contract:
+// colors only from the tokens, spacing/radius/type only from the scale, one
+// filled action per screen. The gate that enforces it is 'npm run ui'.
 import { Container, Column, Text, Button, Icon, colors, goTo } from 'flet-box';
 
 export const RootScreen = () => {
@@ -80,35 +83,53 @@ export const RootScreen = () => {
             alignItems: 'center',
             children: [
                 Container({
-                    width: 80,
-                    height: 80,
+                    width: 96,
+                    height: 96,
                     borderRadius: 16,
                     backgroundColor: colors.primaryBg,
                     justifyContent: 'center',
                     alignItems: 'center',
                     child: Icon({ name: 'rocket_launch', size: 48, color: colors.primary })
                 }),
-                Text({ 
-                    text: 'FletBox', 
-                    size: 40, 
-                    weight: 'bold', 
-                    color: colors.primary, 
-                    align: 'center' 
+                Column({
+                    gap: 8,
+                    alignItems: 'center',
+                    children: [
+                        Text({ text: 'FletBox', size: 40, weight: 'bold', color: colors.text }),
+                        // A lead is a sentence, not a paragraph: at desktop width this
+                        // line would sit on 120 characters and no eye can track it.
+                        Text({
+                            text: 'A screen, in plain JavaScript.',
+                            size: 16,
+                            color: colors.textSecondary,
+                            align: 'center'
+                        })
+                    ]
                 }),
-                Text({ 
-                    text: 'Ultra-lightweight UI framework for vanilla JavaScript', 
-                    size: 14, 
-                    color: colors.textSecondary, 
-                    align: 'center' 
-                }),
-                // A filled Button defaults to colors.surface, not to the brand:
-                // the primary action has to name the fill it wants.
-                Button({ 
-                    text: 'Get Started', 
-                    iconRight: 'arrow_forward',
-                    bgColor: colors.primary, 
-                    color: colors.onPrimary,
-                    onPress: () => goTo('/home') 
+                Column({
+                    gap: 12,
+                    alignItems: 'stretch',
+                    maxWidth: 280,
+                    children: [
+                        // A filled Button defaults to colors.surface, not to the brand:
+                        // the primary action has to name the fill it wants.
+                        Button({
+                            text: 'See the design system',
+                            iconRight: 'arrow_forward',
+                            bgColor: colors.primary,
+                            color: colors.onPrimary,
+                            fullWidth: true,
+                            onPress: () => goTo('/home')
+                        }),
+                        // One accent per screen: everything that is not the ask is quiet.
+                        Button({
+                            text: 'Preferences',
+                            variant: 'text',
+                            color: colors.text,
+                            fullWidth: true,
+                            onPress: () => goTo('/about')
+                        })
+                    ]
                 })
             ]
         })
@@ -119,7 +140,10 @@ export default RootScreen;
 `;
 
 export const homeScreenJs = () => `// screens/HomeScreen.js
-import { Container, Column, Text, Button, Icon, colors, goTo } from 'flet-box';
+// The screen that shows what the app is built on. Every number on this page is a
+// member of the framework's own scale, so the page documents the system it uses:
+// change one to an off-scale value and 'npm run ui' reports it.
+import { Container, Column, Row, Text, Icon, Chip, colors } from 'flet-box';
 
 // ========== GOOGLE ADMOB (optional — disabled by default) ==========
 // AdMob shows native ads in Android/iOS builds. To enable it:
@@ -135,69 +159,137 @@ import { Container, Column, Text, Button, Icon, colors, goTo } from 'flet-box';
 // import { AdMob } from 'flet-box';
 // =====================================================================
 
+const SPACING_STEPS = [4, 8, 12, 16, 24, 32, 48, 64];
+
+const TYPE_STEPS = [
+    { size: 12, label: 'Caption' },
+    { size: 14, label: 'Body' },
+    { size: 18, label: 'Title' },
+    { size: 24, label: 'Headline' },
+    { size: 32, label: 'Display' }
+];
+
+// Three roles, and each one says when it is allowed on the page. A fourth would
+// be decoration looking for a reason.
+const COLOR_ROLES = [
+    { token: 'primary', text: 'Brand', note: 'the one action this screen asks for' },
+    { token: 'successStrong', text: 'Feedback', note: 'status, never ornament' },
+    { token: 'dangerStrong', text: 'Danger', note: 'the red that carries words' }
+];
+
 export const HomeScreen = () => {
     return Container({
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
         padding: 24,
+        overflow: 'auto',
         backgroundColor: colors.background,
         child: Column({
-            gap: 32,
-            alignItems: 'center',
+            gap: 24,
+            // A reading column, not a full-width one: at 1400px a line of body
+            // text becomes unreadable, so the measure is capped and centred.
+            maxWidth: 640,
+            margin: '0 auto',
             children: [
-                Container({
-                    width: 96,
-                    height: 96,
-                    borderRadius: 16,
-                    backgroundColor: colors.primaryBg,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    child: Icon({ name: 'rocket_launch', size: 56, color: colors.primary })
-                }),
-                Text({ 
-                    text: 'Welcome to FletBox', 
-                    size: 32, 
-                    weight: 'bold', 
-                    color: colors.text, 
-                    align: 'center' 
-                }),
-                Text({ 
-                    text: 'Choose a section to explore:', 
-                    size: 16, 
-                    color: colors.textSecondary, 
-                    align: 'center' 
+                Column({
+                    gap: 8,
+                    children: [
+                        Text({ text: 'The system this app is built on', size: 32, weight: 'bold', color: colors.text }),
+                        Text({
+                            text: 'Three roles, one rhythm, one type scale. Nothing here is typed by hand.',
+                            size: 16,
+                            color: colors.textSecondary
+                        })
+                    ]
                 }),
                 Column({
                     gap: 12,
-                    alignItems: 'stretch',
-                    style: { width: '100%', maxWidth: 280 },
                     children: [
-                        Button({ 
-                            text: 'Home', 
-                            iconLeft: 'dashboard',
-                            iconRight: 'arrow_forward',
-                            bgColor: colors.primary, 
-                            color: colors.onPrimary,
-                            fullWidth: true,
-                            onPress: () => goTo('/home') 
+                        Text({ text: 'Spacing', size: 18, weight: 'bold', color: colors.text }),
+                        Row({
+                            gap: 12,
+                            alignItems: 'end',
+                            // Eight squares plus their labels need ~300 units. Without
+                            // wrapping they overflow a narrow column — a sidebar on a
+                            // small window, or this same screen beside a desktop nav.
+                            wrap: true,
+                            children: SPACING_STEPS.map((step) =>
+                                Column({
+                                    // Column is a 100%-wide block by default — the
+                                    // right answer for a page, the wrong one for eight
+                                    // cells in a row, where it makes them share the
+                                    // width out and the squares drift apart.
+                                    width: 'auto',
+                                    gap: 8,
+                                    alignItems: 'center',
+                                    children: [
+                                        Container({
+                                            width: step,
+                                            height: step,
+                                            borderRadius: 4,
+                                            backgroundColor: colors.primaryBg,
+                                            border: '1px solid ' + colors.border
+                                        }),
+                                        Text({ text: String(step), size: 12, color: colors.textSecondary })
+                                    ]
+                                })
+                            )
                         }),
-                        Button({ 
-                            text: 'About', 
-                            iconLeft: 'info',
-                            iconRight: 'arrow_forward',
-                            variant: 'outlined',
-                            color: colors.primary,
-                            fullWidth: true,
-                            onPress: () => goTo('/about') 
-                        }),
-                        Button({ 
-                            text: 'Back to Root', 
-                            iconLeft: 'arrow_back',
-                            variant: 'text',
-                            color: colors.text,
-                            fullWidth: true,
-                            onPress: () => goTo('/') 
+                        Text({
+                            text: 'These are framework units, not pixels: raise the browser font size and every square, gap and corner grows with the text.',
+                            size: 14,
+                            color: colors.textSecondary
+                        })
+                    ]
+                }),
+                Column({
+                    gap: 12,
+                    children: [
+                        Text({ text: 'Type', size: 18, weight: 'bold', color: colors.text }),
+                        Column({
+                            gap: 8,
+                            children: TYPE_STEPS.map((step) =>
+                                Row({
+                                    gap: 12,
+                                    alignItems: 'center',
+                                    children: [
+                                        Text({ text: step.label, size: step.size, weight: 'bold', color: colors.text }),
+                                        Text({ text: String(step.size), size: 12, color: colors.textSecondary })
+                                    ]
+                                })
+                            )
+                        })
+                    ]
+                }),
+                Column({
+                    gap: 12,
+                    children: [
+                        Text({ text: 'Color roles', size: 18, weight: 'bold', color: colors.text }),
+                        Column({
+                            gap: 8,
+                            children: COLOR_ROLES.map((role) =>
+                                Row({
+                                    gap: 12,
+                                    alignItems: 'center',
+                                    padding: 12,
+                                    borderRadius: 12,
+                                    backgroundColor: colors.surface,
+                                    children: [
+                                        Icon({ name: 'palette', size: 24, color: colors[role.token] }),
+                                        Column({
+                                            gap: 4,
+                                            flex: 1,
+                                            children: [
+                                                Text({ text: role.text, size: 16, weight: 'bold', color: colors.text }),
+                                                Text({ text: role.note, size: 14, color: colors.textSecondary })
+                                            ]
+                                        }),
+                                        // The token name is the lesson; a Chip is how a
+                                        // framework value gets shown without becoming a
+                                        // colour of its own.
+                                        Chip({ label: role.token, variant: 'outlined', color: colors.textSecondary, size: 12 })
+                                    ]
+                                })
+                            )
                         })
                     ]
                 })
@@ -219,83 +311,191 @@ export default HomeScreen;
 `;
 
 export const aboutScreenJs = () => `// screens/AboutScreen.js
-import { Container, Column, Row, Text, Button, Icon, colors, goTo } from 'flet-box';
+// Preferences, written the way the rest of the app should be written: state that
+// survives a re-render, a control that names itself, validation that speaks
+// instead of disabling, and one filled button per screen.
+import {
+    Container,
+    Column,
+    Row,
+    Text,
+    Button,
+    Input,
+    Dropdown,
+    Switch,
+    Slider,
+    Divider,
+    Tooltip,
+    Icon,
+    SnackBar,
+    AlertDialog,
+    Storage,
+    colors,
+    useState,
+    setTheme,
+    getTheme,
+    setBaseFontSize,
+    getBaseFontSize
+} from 'flet-box';
+
+// Key-based RAM keeps a value across re-renders and hot reloads; localStorage is
+// what keeps a choice across sessions. A preferences screen that writes neither
+// is a form that lies, so the size is read back at boot — before the first
+// render, and before the draft below seeds itself from the live value.
+const storedSize = Storage.getData('baseFontSize');
+if (storedSize) setBaseFontSize(storedSize);
+
+const [draftSize, setDraftSize] = useState('prefFontSize', getBaseFontSize());
+
+// The destructive action is built once, at module scope. The dialog puts Cancel
+// first on its own: the way out is the first thing the eye lands on.
+const resetDialog = AlertDialog({
+    title: 'Reset the text size?',
+    message: 'It goes back to 16, the size this browser asks for.',
+    variant: 'danger',
+    confirmText: 'Reset',
+    cancelText: 'Keep it',
+    onConfirm: () => {
+        setDraftSize(16);
+        setBaseFontSize(16);
+        // Resetting is the absence of a preference, not a new one: the key goes
+        // away, so the next boot answers to the browser again.
+        Storage.deleteData('baseFontSize');
+        SnackBar({ message: 'Text size reset', type: 'success' }).show();
+    }
+});
+
+// Validation runs before the action, so the error is a message and never a
+// disabled button the user has to discover.
+const save = (name, region) => {
+    if (name.length === 0) {
+        return SnackBar({ message: 'Give the profile a name first', type: 'error' }).show();
+    }
+    const size = draftSize.valueOf();
+    setBaseFontSize(size);
+    Storage.saveData('baseFontSize', size);
+    Storage.saveData('displayName', name);
+    Storage.saveData('region', region.valueOf());
+    SnackBar({ message: 'Preferences saved', type: 'success' }).show();
+};
 
 export const AboutScreen = () => {
+    const [name, setName] = useState('prefName', Storage.getData('displayName') || '');
+    const [region, setRegion] = useState('prefRegion', Storage.getData('region') || '');
+    const isDark = getTheme() === 'dark';
+    const size = draftSize.valueOf();
+
     return Container({
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
         padding: 24,
+        overflow: 'auto',
         backgroundColor: colors.background,
         child: Column({
-            gap: 32,
-            alignItems: 'center',
+            gap: 24,
+            maxWidth: 480,
+            margin: '0 auto',
             children: [
-                Container({
-                    width: 96,
-                    height: 96,
-                    borderRadius: 16,
-                    backgroundColor: colors.primaryBg,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    child: Icon({ name: 'rocket_launch', size: 56, color: colors.primary })
+                Column({
+                    gap: 8,
+                    children: [
+                        Text({ text: 'Preferences', size: 32, weight: 'bold', color: colors.text }),
+                        Text({
+                            text: 'Every control writes a real framework value: the slider moves the base font, the whole app rescales, and Save remembers it for the next visit.',
+                            size: 16,
+                            color: colors.textSecondary
+                        })
+                    ]
                 }),
-                Text({ 
-                    text: 'Welcome to FletBox', 
-                    size: 32, 
-                    weight: 'bold', 
-                    color: colors.text, 
-                    align: 'center' 
+                Input({
+                    label: 'Display name',
+                    placeholder: 'How the app should greet you',
+                    value: name.valueOf(),
+                    required: true,
+                    onChange: (value) => setName(value)
                 }),
-                Text({ 
-                    text: 'A simple and fast UI framework for building web apps with pure JavaScript.', 
-                    size: 16, 
-                    color: colors.textSecondary, 
-                    align: 'left',
-                    style: { maxWidth: 400 }
+                Dropdown({
+                    label: 'Region',
+                    options: [
+                        { value: 'cl', label: 'Chile' },
+                        { value: 'es', label: 'Spain' },
+                        { value: 'mx', label: 'Mexico' }
+                    ],
+                    placeholder: 'Where you are',
+                    value: region.valueOf(),
+                    onChange: (value) => setRegion(value)
                 }),
-                Container({
-                    marginTop: 16,
-                    padding: 24,
-                    borderRadius: 16,
-                    backgroundColor: colors.surface,
-                    style: { width: '100%', maxWidth: 400 },
-                    child: Column({
-                        gap: 12,
-                        children: [
-                            Text({ text: 'What is FletBox?', size: 18, weight: 'bold', color: colors.text }),
-                            Text({ text: 'FletBox helps you create web apps easily. No complex tools. Just write JavaScript.', size: 14, color: colors.textSecondary }),
-                            Container({ height: 1, backgroundColor: colors.border, marginVertical: 8 }),
-                            Row({ gap: 12, alignItems: 'center', children: [
-                                Icon({ name: 'check_circle', size: 20, color: colors.successStrong }),
-                                Text({ text: 'Zero dependencies - lightweight', size: 14, color: colors.text })
-                            ] }),
-                            Row({ gap: 12, alignItems: 'center', children: [
-                                Icon({ name: 'check_circle', size: 20, color: colors.successStrong }),
-                                Text({ text: '40+ ready-to-use widgets', size: 14, color: colors.text })
-                            ] }),
-                            Row({ gap: 12, alignItems: 'center', children: [
-                                Icon({ name: 'check_circle', size: 20, color: colors.successStrong }),
-                                Text({ text: 'Built-in navigation (router)', size: 14, color: colors.text })
-                            ] }),
-                            Row({ gap: 12, alignItems: 'center', children: [
-                                Icon({ name: 'check_circle', size: 20, color: colors.successStrong }),
-                                Text({ text: 'Dark / Light theme', size: 14, color: colors.text })
-                            ] }),
-                            Row({ gap: 12, alignItems: 'center', children: [
-                                Icon({ name: 'check_circle', size: 20, color: colors.successStrong }),
-                                Text({ text: 'Hot reload for fast development', size: 14, color: colors.text })
-                            ] })
-                        ]
-                    })
+                Divider(),
+                // A toggle that never says what it switches is a mystery control: the
+                // label is part of the Switch, and the row is the tap target.
+                Switch({
+                    label: 'Dark theme',
+                    value: isDark,
+                    activeColor: colors.primary,
+                    onPress: (value) => setTheme(value ? 'dark' : 'light')
                 }),
-                Button({ 
-                    text: 'Back to Root', 
-                    iconLeft: 'arrow_back',
-                    bgColor: colors.primary, 
-                    color: colors.onPrimary,
-                    onPress: () => goTo('/') 
+                Column({
+                    gap: 8,
+                    children: [
+                        Row({
+                            gap: 12,
+                            alignItems: 'center',
+                            children: [
+                                Text({ text: 'Text size', size: 16, weight: 'bold', color: colors.text }),
+                                Text({ text: size + 'px', size: 14, color: colors.textSecondary })
+                            ]
+                        }),
+                        Slider({
+                            min: 14,
+                            max: 22,
+                            step: 1,
+                            value: size,
+                            color: colors.primary,
+                            onPress: (value) => setDraftSize(value)
+                        }),
+                        Text({
+                            text: '16 is what the browser asks for. Anything larger is the reader asking to be readable.',
+                            size: 14,
+                            color: colors.textSecondary
+                        })
+                    ]
+                }),
+                Divider(),
+                Column({
+                    gap: 12,
+                    children: [
+                        // One filled button per screen: it is the thing this screen asks
+                        // for, and it is the only control on the page that stretches —
+                        // a full-width target is a decision, not a layout default.
+                        Button({
+                            text: 'Save preferences',
+                            iconLeft: 'check',
+                            bgColor: colors.primary,
+                            color: colors.onPrimary,
+                            fullWidth: true,
+                            onPress: () => save(name.valueOf(), region.valueOf())
+                        }),
+                        Row({
+                            gap: 12,
+                            alignItems: 'center',
+                            children: [
+                                // A second, quieter action: text variant, danger token,
+                                // and it asks before it destroys.
+                                Button({
+                                    text: 'Reset the size',
+                                    iconLeft: 'restart_alt',
+                                    variant: 'text',
+                                    color: colors.dangerStrong,
+                                    onPress: () => resetDialog.open()
+                                }),
+                                // An icon alone says nothing; the Tooltip is its name.
+                                Tooltip({
+                                    text: 'Resetting the size is not undoable from this screen',
+                                    position: 'right',
+                                    child: Icon({ name: 'help_outline', size: 24, color: colors.textSecondary })
+                                })
+                            ]
+                        })
+                    ]
                 })
             ]
         })
@@ -312,7 +512,8 @@ export const DrawerMenu = () => {
     return Drawer({
         header: Container({
             padding: 24,
-            backgroundColor: colors.primary,
+            backgroundColor: colors.surface,
+            borderBottom: \`1px solid \${colors.border}\`,
             child: Column({
                 gap: 12,
                 alignItems: 'center',
@@ -321,32 +522,32 @@ export const DrawerMenu = () => {
                         width: 60,
                         height: 60,
                         borderRadius: 999,
-                        backgroundColor: colors.onPrimary,
+                        backgroundColor: colors.primaryBg,
                         justifyContent: 'center',
                         alignItems: 'center',
                         child: Icon({ name: 'rocket_launch', size: 32, color: colors.primary })
                     }),
-                    Text({ text: 'FletBox', size: 18, weight: 'bold', color: colors.onPrimary }),
-                    Text({ text: 'UI Framework', size: 12, color: colors.onPrimary })
+                    Text({ text: 'FletBox', size: 18, weight: 'bold', color: colors.text }),
+                    Text({ text: 'Starter app', size: 12, color: colors.textSecondary })
                 ]
             })
         }),
         body: [
             DrawerItem({ 
-                icon: 'dashboard', 
-                label: 'Dashboard', 
+                icon: 'palette', 
+                label: 'Design system', 
                 route: '/home',
                 onPress: () => closeDrawer()
             }),
             DrawerItem({ 
-                icon: 'info', 
-                label: 'About', 
+                icon: 'tune', 
+                label: 'Preferences', 
                 route: '/about',
                 onPress: () => closeDrawer()
             }),
             DrawerItem({ 
                 icon: 'home', 
-                label: 'Root', 
+                label: 'Start here', 
                 route: '/',
                 onPress: () => closeDrawer()
             })
@@ -1408,7 +1609,9 @@ package-lock.json
 
 export const readme = (name, _template, appId) => `# ${name}
 
-FletBox app with 3 screens: Root, Home and About, plus Drawer menu.
+FletBox app with 3 screens: Root, Home (the design system) and About
+(preferences), plus Drawer menu. Read \`src/screens/HomeScreen.js\` first: it is
+the contract this app is built on, and \`npm run ui\` enforces it.
 The generated Capacitor configuration uses package id \`${appId}\`.
 
 ## Quick Start
@@ -1663,9 +1866,13 @@ updates:
 
 ## Features
 
-- Welcome screen with rocket icon
-- Dashboard screen with welcome message
-- About screen with framework info
+- Root screen: one filled action, one quiet one
+- Home screen: the spacing rhythm, the type scale and the three color roles,
+  drawn from the framework's own scale
+- About screen: \`useState\`, an \`Input\`, a \`Dropdown\`, a labelled \`Switch\`,
+  a \`Slider\` that moves the base font size, a \`SnackBar\` reply and an
+  \`AlertDialog\` before the destructive action
+- Neutral app bar with a theme toggle that carries a \`Tooltip\` name
 - Drawer menu for navigation
 - PWA icons and Capacitor Android launcher/splash assets
 - Capacitor iOS project, icon and launch screen assets
@@ -1700,22 +1907,91 @@ MIT
 
 // Additional screen for adaptive template
 export const profileScreenJs = () => `// screens/ProfileScreen.js
-import { Container, Column, Text, Icon, colors } from 'flet-box';
+import { Container, Column, Row, Text, Icon, Divider, colors, Storage, goTo } from 'flet-box';
+
+// Two words, from whatever the reader typed on the Preferences screen.
+const initials = (name) =>
+    name.trim().split(/\\s+/).slice(0, 2).map((word) => word[0]).join('').toUpperCase();
+
+const linkRow = (icon, label, note, route) => Container({
+    padding: 16,
+    cursor: 'pointer',
+    child: Row({
+        gap: 12,
+        alignItems: 'center',
+        children: [
+            Icon({ name: icon, size: 20, color: colors.textSecondary }),
+            Column({
+                flex: 1,
+                gap: 4,
+                alignItems: 'stretch',
+                children: [
+                    Text({ text: label, size: 16, color: colors.text }),
+                    Text({ text: note, size: 12, color: colors.textSecondary })
+                ]
+            }),
+            Icon({ name: 'chevron_right', size: 20, color: colors.textSecondary })
+        ]
+    }),
+    onclick: () => goTo(route)
+});
 
 export const ProfileScreen = () => {
+    const name = Storage.getData('displayName') || '';
+
     return Container({
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
         padding: 24,
         backgroundColor: colors.background,
         child: Column({
             gap: 24,
-            alignItems: 'center',
+            alignItems: 'stretch',
+            maxWidth: 480,
+            margin: '0 auto',
             children: [
-                Icon({ name: 'person', size: 80, color: colors.primary }),
-                Text({ text: 'User Profile', size: 24, weight: 'bold', color: colors.text }),
-                Text({ text: 'This is your profile page.', size: 16, color: colors.textSecondary })
+                Row({
+                    gap: 16,
+                    alignItems: 'center',
+                    children: [
+                        Container({
+                            width: 64,
+                            height: 64,
+                            borderRadius: 999,
+                            backgroundColor: colors.primaryBg,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            child: Text({
+                                text: initials(name) || 'P',
+                                size: 24,
+                                weight: 'bold',
+                                color: colors.primary
+                            })
+                        }),
+                        Column({
+                            flex: 1,
+                            gap: 4,
+                            alignItems: 'stretch',
+                            children: [
+                                Text({ text: name || 'No name yet', size: 18, weight: 'bold', color: colors.text }),
+                                Text({
+                                    text: name ? 'Saved on this device' : 'Add one under Preferences',
+                                    size: 14,
+                                    color: colors.textSecondary
+                                })
+                            ]
+                        })
+                    ]
+                }),
+                Divider(),
+                Column({
+                    gap: 4,
+                    alignItems: 'stretch',
+                    children: [
+                        linkRow('tune', 'Preferences', 'name, region, theme and text size', '/about'),
+                        linkRow('palette', 'Design system', 'the spacing, type and color scales', '/home')
+                    ]
+                })
             ]
         })
     });
@@ -1736,14 +2012,24 @@ export { AboutScreen } from './AboutScreen.js';${
 
 // Layout components
 export const appBarComponentJs = () => `// components/layouts/AppBarComponent.js
-import { AppBar, Icon, Tooltip, colors, openDrawer } from 'flet-box';
+import { AppBar, Icon, Tooltip, colors, openDrawer, toggleTheme, getTheme } from 'flet-box';
 
+// The bar is neutral — the surface token, not the brand — because a coloured strip
+// on every screen competes with the one action the screen is asking for. One
+// elevation step is enough to keep it off the page.
+//
+// It reads the theme instead of subscribing to it: setTheme() re-renders the app,
+// so a component that subscribed would add a listener on every render and never
+// remove it.
 export const AppBarComponent = ({ title, isMobile = false, showBack = false, onBack }) => {
+    const isDark = getTheme() === 'dark';
+
     return AppBar({
         title: title,
-        backgroundColor: colors.primary,
-        titleColor: colors.onPrimary,
-        centerTitle: true,
+        backgroundColor: colors.surface,
+        titleColor: colors.text,
+        iconColor: colors.text,
+        centerTitle: false,
         showBackButton: showBack,
         leading: isMobile ? Tooltip({
             text: 'Open the menu',
@@ -1752,27 +2038,44 @@ export const AppBarComponent = ({ title, isMobile = false, showBack = false, onB
                 name: 'menu',
                 size: 24,
                 height: 40,
-                color: colors.onPrimary,
+                color: colors.text,
                 onclick: () => openDrawer()
             })
         }) : null,
+        // An icon-only control still needs a name: the Tooltip is what says so.
+        actions: [
+            Tooltip({
+                text: isDark ? 'Switch to light' : 'Switch to dark',
+                position: 'bottom',
+                child: Icon({
+                    name: isDark ? 'light_mode' : 'dark_mode',
+                    size: 24,
+                    height: 40,
+                    color: colors.text,
+                    onclick: () => toggleTheme()
+                })
+            })
+        ],
         onBackPress: onBack,
-        elevation: 2
+        elevation: 1
     });
 };
 `;
 
 export const bottomNavJs = () => `// components/layouts/BottomNav.js
-import { BottomNavigation, colors, goTo } from 'flet-box';
+import { BottomNavigation, colors, goTo, getCurrentPath } from 'flet-box';
 
-export const BottomNav = ({ items = [], currentRoute } = {}) => {
+// Scaffold re-runs this on every route change, which is why the current path is
+// read here rather than passed in by the app.
+export const BottomNav = ({ items = [] } = {}) => {
     const defaultItems = [
-        { icon: 'home', label: 'Home', route: '/home' },
-        { icon: 'info', label: 'About', route: '/about' }
+        { icon: 'home', label: 'Start', route: '/' },
+        { icon: 'palette', label: 'System', route: '/home' },
+        { icon: 'tune', label: 'Preferences', route: '/about' }
     ];
     const navItems = items.length ? items : defaultItems;
     // BottomNavigation selects a tab by index, not by route.
-    const currentIndex = Math.max(0, navItems.findIndex((item) => item.route === currentRoute));
+    const currentIndex = Math.max(0, navItems.findIndex((item) => item.route === getCurrentPath()));
     return BottomNavigation({
         items: navItems,
         currentIndex,
@@ -1784,53 +2087,54 @@ export const BottomNav = ({ items = [], currentRoute } = {}) => {
 `;
 
 export const sidebarJs = () => `// components/layouts/Sidebar.js
-import { Container, Column, Row, Text, Icon, colors, goTo } from 'flet-box';
+import { Container, Column, Row, Text, Icon, colors, goTo, getCurrentPath } from 'flet-box';
 
-export const Sidebar = ({ items = [], currentRoute } = {}) => {
+// Scaffold re-runs this on every route change, so the active item can read the
+// route itself instead of being rebuilt by the app.
+export const Sidebar = ({ items = [] } = {}) => {
     const defaultItems = [
-        { icon: 'dashboard', label: 'Dashboard', route: '/home' },
-        { icon: 'info', label: 'About', route: '/about' },
-        { icon: 'home', label: 'Root', route: '/' }
+        { icon: 'home', label: 'Start here', route: '/' },
+        { icon: 'palette', label: 'Design system', route: '/home' },
+        { icon: 'tune', label: 'Preferences', route: '/about' }
     ];
     const menuItems = items.length ? items : defaultItems;
-    return Container({
-        width: 260,
+    const currentRoute = getCurrentPath();
+    // Scaffold puts this in a flex row *below* the app bar and sizes it with
+    // leftNavBarWidth, so the sidebar has to stay in flow. A position: fixed
+    // panel escapes that box: its header ends up hidden behind the bar and the
+    // width prop stops meaning anything.
+    return Column({
+        height: '100%',
         backgroundColor: colors.surface,
         borderRight: \`1px solid \${colors.border}\`,
-        height: '100vh',
-        position: 'fixed',
-        left: 0,
-        top: 0,
-        child: Column({
-            children: [
-                Container({
-                    padding: 24,
-                    backgroundColor: colors.primary,
-                    child: Column({
-                        alignItems: 'center',
-                        children: [
-                            Icon({ name: 'rocket_launch', size: 40, color: colors.onPrimary }),
-                            Text({ text: 'FletBox', size: 18, weight: 'bold', color: colors.onPrimary, marginTop: 12 })
-                        ]
-                    })
+        children: [
+            Container({
+                padding: 24,
+                borderBottom: \`1px solid \${colors.border}\`,
+                child: Column({
+                    alignItems: 'center',
+                    children: [
+                        Icon({ name: 'rocket_launch', size: 40, color: colors.primary }),
+                        Text({ text: 'FletBox', size: 18, weight: 'bold', color: colors.text, marginTop: 12 })
+                    ]
+                })
+            }),
+            ...menuItems.map(item => Container({
+                padding: '12px 16px',
+                cursor: 'pointer',
+                backgroundColor: currentRoute === item.route ? colors.primaryBg : 'transparent',
+                borderLeft: currentRoute === item.route ? \`3px solid \${colors.primary}\` : 'none',
+                child: Row({
+                    gap: 12,
+                    alignItems: 'center',
+                    children: [
+                        Icon({ name: item.icon, size: 20, color: currentRoute === item.route ? colors.primary : colors.textSecondary }),
+                        Text({ text: item.label, size: 14, weight: currentRoute === item.route ? 'bold' : 'normal', color: colors.text })
+                    ]
                 }),
-                ...menuItems.map(item => Container({
-                    padding: '12px 16px',
-                    cursor: 'pointer',
-                    backgroundColor: currentRoute === item.route ? colors.primaryBg : 'transparent',
-                    borderLeft: currentRoute === item.route ? \`3px solid \${colors.primary}\` : 'none',
-                    child: Row({
-                        gap: 12,
-                        alignItems: 'center',
-                        children: [
-                            Icon({ name: item.icon, size: 20, color: currentRoute === item.route ? colors.primary : colors.textSecondary }),
-                            Text({ text: item.label, size: 14, weight: currentRoute === item.route ? 'bold' : 'normal', color: colors.text })
-                        ]
-                    }),
-                    onclick: () => goTo(item.route)
-                }))
-            ]
-        })
+                onclick: () => goTo(item.route)
+            }))
+        ]
     });
 };
 `;
@@ -1841,21 +2145,22 @@ import { Drawer, DrawerItem, Container, Column, Text, Icon, colors, closeDrawer 
 
 export const DrawerMenu = ({ items = [] } = {}) => {
     const defaultItems = [
-        { icon: 'dashboard', label: 'Dashboard', route: '/home' },
-        { icon: 'info', label: 'About', route: '/about' },
-        { icon: 'home', label: 'Root', route: '/' }
+        { icon: 'home', label: 'Start here', route: '/' },
+        { icon: 'palette', label: 'Design system', route: '/home' },
+        { icon: 'tune', label: 'Preferences', route: '/about' }
     ];
     const menuItems = items.length ? items : defaultItems;
     return Drawer({
         header: Container({
             padding: 24,
-            backgroundColor: colors.primary,
+            backgroundColor: colors.surface,
+            borderBottom: \`1px solid \${colors.border}\`,
             child: Column({
                 alignItems: 'center',
                 children: [
-                    Icon({ name: 'rocket_launch', size: 48, color: colors.onPrimary }),
-                    Text({ text: 'FletBox', size: 18, weight: 'bold', color: colors.onPrimary, marginTop: 12 }),
-                    Text({ text: 'UI Framework', size: 12, color: colors.onPrimary })
+                    Icon({ name: 'rocket_launch', size: 40, color: colors.primary }),
+                    Text({ text: 'FletBox', size: 18, weight: 'bold', color: colors.text, marginTop: 12 }),
+                    Text({ text: 'Starter app', size: 12, color: colors.textSecondary })
                 ]
             })
         }),
@@ -1967,7 +2272,9 @@ const MyApp = () => {
         routes,
         appBar: AppBarComponent({ title: 'FletBox', isMobile }),
         drawer: DrawerMenu(),
-        bottomBar: isMobile ? BottomNav() : null,
+        // A function, not an element: Scaffold re-runs it on each route change,
+        // which is what keeps the active tab lit.
+        bottomBar: isMobile ? () => BottomNav() : null,
         backgroundColor: colors.background
     });
 };
@@ -1994,7 +2301,9 @@ const routes = {
 const MyApp = () => Scaffold({
     routes,
     appBar: AppBarComponent({ title: 'FletBox', isMobile: false }),
-    leftNavBar: Sidebar(),
+    // A function, not an element: Scaffold re-runs it on each route change,
+    // which is what keeps the active row lit.
+    leftNavBar: () => Sidebar(),
     backgroundColor: colors.background
 });
 
@@ -2032,6 +2341,16 @@ const routes = {
 const [viewportWidth, setViewportWidth] = useState('viewportWidth', dimensions.getWidth());
 dimensions.addListener(({ width }) => setViewportWidth(width));
 
+// One menu, three surfaces: the drawer and the bottom bar on a phone, the
+// sidebar on a desktop. The labels stay short because the bottom bar has to fit
+// all four across a 360px screen.
+const menu = [
+    { icon: 'home', label: 'Start', route: '/' },
+    { icon: 'palette', label: 'System', route: '/home' },
+    { icon: 'tune', label: 'Preferences', route: '/about' },
+    { icon: 'person', label: 'Profile', route: '/profile' }
+];
+
 const MyApp = () => {
     // Structural read of the keyed viewport state, so crossing the breakpoint
     // re-renders the shell (drawer + bottom bar <-> sidebar).
@@ -2039,9 +2358,11 @@ const MyApp = () => {
     return Scaffold({
         routes,
         appBar: AppBarComponent({ title: 'FletBox', isMobile }),
-        drawer: isMobile ? DrawerMenu() : null,
-        bottomBar: isMobile ? BottomNav() : null,
-        leftNavBar: !isMobile ? Sidebar() : null,
+        drawer: isMobile ? DrawerMenu({ items: menu }) : null,
+        // Functions, not elements: Scaffold re-runs them on each route change,
+        // which is what keeps the active item lit.
+        bottomBar: isMobile ? () => BottomNav({ items: menu }) : null,
+        leftNavBar: !isMobile ? () => Sidebar({ items: menu }) : null,
         backgroundColor: colors.background
     });
 };
