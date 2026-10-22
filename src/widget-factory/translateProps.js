@@ -184,6 +184,34 @@ export const ALL_PROPS = [
   { prop: "elevation", domProp: "boxShadow", type: "style", unit: "none", reactive: true },
 
   // ============================================================
+  // GLASS & FILTERS
+  // ============================================================
+  // A translucent card is only glass when what sits behind it blurs, and there
+  // is no `style` object in this API — so if `backdrop-filter` were not routed,
+  // the effect would be unreachable rather than merely undocumented.
+  //
+  // Both names are written because WebKit only lifted the `-webkit-` requirement
+  // for `backdrop-filter` in Safari 18, and this framework ships iOS apps.
+  {
+    prop: "backdropFilter",
+    domProp: "backdropFilter",
+    type: "style",
+    unit: "none",
+    reactive: true,
+    targets: ["backdropFilter", "WebkitBackdropFilter"],
+  },
+  // Composes with the object builder in `src/tools/filter.js`.
+  { prop: "filter", domProp: "filter", type: "style", unit: "none", reactive: true },
+  {
+    prop: "maskImage",
+    domProp: "maskImage",
+    type: "style",
+    unit: "none",
+    reactive: true,
+    targets: ["maskImage", "WebkitMaskImage"],
+  },
+
+  // ============================================================
   // DISPLAY & LAYOUT
   // ============================================================
   { prop: "display", domProp: "display", type: "style", unit: "none", reactive: true },

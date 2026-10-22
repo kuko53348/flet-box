@@ -1784,6 +1784,27 @@
       "cursor: \"pointer\","
     ]
   },
+  "FletBox widgets backdropFilter": {
+    "prefix": "backdropFilter",
+    "description": "Make a FletBox widgets backdropFilter widget",
+    "body": [
+      "backdropFilter: \"blur(12px)\","
+    ]
+  },
+  "FletBox widgets filter": {
+    "prefix": "filter",
+    "description": "Make a FletBox widgets filter widget",
+    "body": [
+      "filter: \"blur(4px) brightness(0.9)\","
+    ]
+  },
+  "FletBox widgets maskImage": {
+    "prefix": "maskImage",
+    "description": "Make a FletBox widgets maskImage widget",
+    "body": [
+      "maskImage: \"linear-gradient(to bottom, #000 60%, transparent)\","
+    ]
+  },
   "FletBox widgets onPress": {
     "prefix": "onPress",
     "description": "Make a FletBox widgets onPress widget",

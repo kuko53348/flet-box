@@ -49,6 +49,12 @@ declare module 'flet-box' {
     borderRadius?: number | string;
     elevation?: number;
     shadow?: string;
+    // Glass and filters. A CSS value string, not an object: `backdropFilter` is
+    // what makes a translucent card frosted rather than merely see-through, and
+    // `maskImage` is what fades a list out at its end.
+    filter?: string;
+    backdropFilter?: string;
+    maskImage?: string;
     opacity?: number;
     visible?: boolean;
     disabled?: boolean;

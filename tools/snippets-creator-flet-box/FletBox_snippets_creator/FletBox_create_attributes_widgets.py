@@ -361,6 +361,9 @@ attrs_all_placeholders_complete = {
     'transition': 'transition: "all 0.2s ease",',
     'overflow': 'overflow: "auto",',
     'cursor': 'cursor: "pointer",',
+    'backdropFilter': 'backdropFilter: "blur(12px)",',
+    'filter': 'filter: "blur(4px) brightness(0.9)",',
+    'maskImage': 'maskImage: "linear-gradient(to bottom, #000 60%, transparent)",',
 
     # ---------- Eventos genéricos ----------
     'onPress': 'onPress: () => console.log("clicked"),',
