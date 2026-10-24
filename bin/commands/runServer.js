@@ -154,7 +154,11 @@ export const runDevServer = async (options = {}) => {
         url = req.url;
       }
 
-      const safePath = path.normalize(url).replace(/^(\.\.[\/\\])+/, "");
+      // The query is part of the request, not of the file name: `?theme=dark`
+      // and the CSS hot-swap's `?t=` cache-buster were being resolved on disk
+      // and answered with a 404.
+      const pathname = url.split("?")[0].split("#")[0];
+      const safePath = path.normalize(pathname).replace(/^(\.\.[\/\\])+/, "");
       let filePath = path.join(
         projectRoot,
         safePath === "/" ? "index.html" : safePath,
@@ -186,7 +190,12 @@ export const runDevServer = async (options = {}) => {
           // still resolves `./loader.js` against `/demo/forms/`, so the page came
           // up blank on every shared link. Anchoring the page at the served root
           // keeps the app's relative URLs working whatever the route is.
-          if (isFallback && ext === ".html") {
+          //
+          // The root document needs the same anchor: a client router pushes
+          // `/widget/Button` without a reload, and from then on the browser
+          // re-resolves a relative `<link rel="icon">` against that path. The
+          // favicon then 404s on every in-app navigation.
+          if (spaMode && ext === ".html" && (isFallback || safePath === "/")) {
             let html = content.toString("utf-8");
             if (!/<base [^>]*href=/i.test(html)) {
               html = html.replace(/<head(\s[^>]*)?>/i, (m) => `${m}\n<base href="/">`);
