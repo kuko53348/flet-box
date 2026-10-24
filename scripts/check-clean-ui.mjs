@@ -273,6 +273,152 @@ await check("the depth advice comes from the installed package", async () => {
   assert.ok(!/\bListView\b/.test(names), "a widget with no depth is listed as if it had one");
 });
 
+// 4 — the contrast numbers come from the palettes a person actually sees.
+// `colors` is what the module boots with; `palettes.light` and `palettes.dark`
+// are what renders. A rule that measures only the boot object reports a token
+// nobody paints (boot `primary` is #6165ef; the themes paint #18181B and
+// #FAFAFA) and hides one that only the light theme dislikes (`info`).
+const CONTRAST_CODES = [
+  "LOW_CONTRAST",
+  "LOW_CONTRAST_UI",
+  "LOW_CONTRAST_SOFT",
+  "LOW_CONTRAST_ON_SURFACE",
+];
+
+const IMPORTS = `import { AppBar, Chip, Container, Icon, Row, Slider, Text, colors } from "flet-box";\n`;
+
+/** A screen that must come back with no contrast finding at all. */
+const quiet = (name, body) =>
+  check(`${name} → stays quiet`, async () => {
+    const hits = (await scan(`${IMPORTS}\nconst screen = () => ${body};\n`)).filter((item) =>
+      CONTRAST_CODES.includes(item.code),
+    );
+    assert.deepEqual(
+      hits.map((item) => `${item.code} L${item.line} ${item.message}`),
+      [],
+      "a contrast rule fired on a screen that reads in both themes",
+    );
+  });
+
+await quiet(
+  "the brand token, which only the boot palette dislikes",
+  `Text({ text: "Total", size: 16, color: colors.primary })`,
+);
+
+await quiet(
+  "words on a fill this pass cannot name",
+  `const slide = (title, tone) =>
+     Container({ backgroundColor: tone, child: Text({ text: title, size: 24, weight: "600", color: colors.onPrimary }) });`,
+);
+
+await quiet(
+  "an icon on a gradient bar",
+  `AppBar({
+       title: "Tonight's special",
+       gradient: \`linear-gradient(90deg, \${colors.primary}, \${colors.secondary})\`,
+       actions: [Icon({ name: "favorite", size: 22, color: colors.onPrimary })],
+     })`,
+);
+
+await check("the light theme's own failure still bites, and says so", async () => {
+  const findings = await scan(
+    `${IMPORTS}\nconst screen = () => Text({ text: "Total", size: 16, color: colors.info });\n`,
+  );
+  const hit = findings.find((item) => item.code === "LOW_CONTRAST_ON_SURFACE");
+  assert.ok(hit, "info as body ink is 3.52:1 on the light surface and the gate said nothing");
+  assert.match(hit.message, /light theme/, `the finding blames no theme: ${hit.message}`);
+});
+
+// `*Strong` is the red an app writes *words* in, and it has to clear AA in the
+// theme that is on screen. It used to be a deep plate in dark — 1.77:1 there —
+// so a delete labelled `color: colors.dangerStrong` was unreadable for every
+// reader on a dark page, and a gate that only measured the boot palette said
+// nothing. The deep fills moved to `*Plate`, which is what the widgets that
+// write white on them now read.
+await quiet(
+  "the readable red, written as words in either theme",
+  `Row({
+       children: [
+         Text({ text: "Delete 3 files", size: 16, weight: "600", color: colors.dangerStrong }),
+         Text({ text: "Restore", size: 16, color: colors.successStrong }),
+       ],
+     })`,
+);
+
+await check("a plate colour written as words still bites, and blames the dark theme", async () => {
+  const findings = await scan(
+    `${IMPORTS}\nconst screen = () => Text({ text: "Delete 3 files", size: 16, color: colors.dangerPlate });\n`,
+  );
+  const hit = findings.find((item) => CONTRAST_CODES.includes(item.code));
+  assert.ok(hit, "dangerPlate is 1.77:1 on a dark surface and the gate let it through");
+  assert.match(hit.message, /dark theme/, `the finding blames no theme: ${hit.message}`);
+});
+
+// A widget that reads `color` into a plate writes its own ink on it, so the app
+// never chose that ink and is not being told about it. `Slider` puts the accent
+// on a track with no words at all; the reading that matters for `Chip` is
+// `colors.onPrimary` — white in light, the page's own ink in dark — on the accent.
+await quiet(
+  "an accent with no words on it",
+  `Slider({ value: 50, color: colors.info })`,
+);
+
+await check("a chip too light to carry its own label bites as the chip's problem", async () => {
+  const findings = await scan(
+    `${IMPORTS}\nconst screen = () => Chip({ label: "Info", color: colors.info });\n`,
+  );
+  const hits = findings.filter((item) => CONTRAST_CODES.includes(item.code));
+  assert.equal(hits.length, 1, `expected one contrast finding, got ${hits.length}`);
+  const hit = hits[0];
+  assert.match(hit.message, /writes .* on its `color` plate/, `the finding blames the wrong half: ${hit.message}`);
+  assert.match(hit.message, /light theme/, "the light theme is the one where white on #3b82f6 is 3.68:1");
+  assert.ok(!/3\.52/.test(hit.message), "it still measured the accent as words on the page");
+});
+
+await quiet(
+  "a chip on an accent that carries its label",
+  `Chip({ label: "Primary", color: colors.primary })`,
+);
+
+// The accent reading is variant-bound, not widget-bound: an outlined chip paints
+// no plate and writes `color` as its own label, so that one is still ink on the
+// page and the same #3b82f6 is a finding again.
+await check("an outlined chip still answers for its own words", async () => {
+  const findings = await scan(
+    `${IMPORTS}\nconst screen = () => Chip({ label: "Info", variant: "outlined", color: colors.info });\n`,
+  );
+  const hit = findings.find((item) => item.code === "LOW_CONTRAST_ON_SURFACE");
+  assert.ok(hit, "the outlined chip writes its accent as its label and 3.52:1 went unreported");
+  assert.match(hit.message, /3\.5\d:1/, `the finding lost the page number: ${hit.message}`);
+});
+
+// The Tooltip half of the name rule is lexical, so a control built by a helper
+// and wrapped at the call site reads as a bare glyph. An `aria-label` on the
+// control itself is the same promise and this pass can see it.
+await check("a glyph control that names itself is not nameless", async () => {
+  const findings = await scan(
+    `${IMPORTS}\nconst iconButton = (name, label) => Button({ icon: name, "aria-label": label, onPress: () => {} });\nconst screen = () => iconButton("share", "Share");\n`,
+  );
+  const hits = findings.filter((item) => item.code === "ICON_ONLY_CONTROL");
+  assert.deepEqual(hits, [], "an aria-labelled button was still reported as an unnamed glyph");
+});
+
+// The example files print the call under each widget as the text the reader
+// copies, so one screen holds the same call twice by design. Only the one that
+// renders can be wrong, and a finding for the copy teaches the reader to distrust
+// the count.
+await check("an example shown twice is reported once", async () => {
+  const findings = await scan(
+    `${IMPORTS}\nconst example = {\n  build: () => Chip({ label: "Info", color: colors.info }),\n  code: 'Chip({ label: "Info", color: colors.info })',\n};\n`,
+  );
+  const hits = findings.filter((item) => CONTRAST_CODES.includes(item.code));
+  assert.equal(
+    hits.length,
+    1,
+    `one call rendered and the same call written as text produced ${hits.length} findings`,
+  );
+});
+
 console.log(
   failures.length
     ? `\n❌ ${failures.length} clean-UI contract failure(s): ${failures.join(", ")}\n`

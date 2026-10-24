@@ -232,6 +232,26 @@ export const blankComments = (src) => {
 };
 
 /**
+ * The byte ranges that are string or template text. A widget call written inside
+ * one is documentation, not a call the screen makes: every example file ships the
+ * same call twice on purpose — once built, once as the `code:` line the reader
+ * copies — and reporting both prints one finding per pixel and half the list.
+ *
+ * @param {string} code comment-free source
+ * @returns {Array<[number, number]>}
+ */
+const stringSpans = (code) => {
+  const spans = [];
+  for (let i = 0; i < code.length; i++) {
+    if (!isQuote(code[i])) continue;
+    const end = skipString(code, i);
+    spans.push([i, end]);
+    i = end - 1;
+  }
+  return spans;
+};
+
+/**
  * Find every `Widget({ … })` call, nested ones included.
  *
  * @param {string} code comment-free source
@@ -239,9 +259,12 @@ export const blankComments = (src) => {
  */
 export const findCalls = (code) => {
   const calls = [];
+  const spans = stringSpans(code);
+  const inText = (index) => spans.some(([start, end]) => index > start && index < end);
   const ident = /[A-Za-z_$][\w$]*[ \t]*\([ \t]*\{/g;
   let match;
   while ((match = ident.exec(code))) {
+    if (inText(match.index)) continue;
     const name = match[0].slice(0, match[0].indexOf("(")).trim();
     if (!/^[A-Z]/.test(name)) continue;
     const open = match.index + match[0].length - 1;
@@ -417,59 +440,178 @@ const isLargeText = (props) => {
   return size >= 18 && /bold|['"]?(600|700)['"]?/.test(props.get("weight")?.value ?? "");
 };
 
+/** The props that paint the plate a label sits on, in the order they win. */
+const FILL_KEYS = ["bgColor", "backgroundColor", "gradient"];
+
+/** The first colour a gradient string names — the stop the words sit on. */
+const gradientStop = (value, tokens) => {
+  const token = /colors\.([A-Za-z0-9_]+)/.exec(value);
+  if (token) return tokens[token[1]] ?? null;
+  const hex = /#([0-9a-fA-F]{3,8})/.exec(value);
+  return hex ? `#${hex[1]}` : null;
+};
+
 const fillOf = (props, tokens) => {
-  for (const key of ["bgColor", "backgroundColor"]) {
-    const resolved = resolveColor(props.get(key)?.value ?? "", tokens);
+  for (const key of FILL_KEYS) {
+    const entry = props.get(key);
+    if (!entry) continue;
+    const resolved =
+      key === "gradient"
+        ? gradientStop(entry.value, tokens)
+        : resolveColor(entry.value, tokens);
     if (resolved) return resolved;
   }
   return null;
 };
 
 /**
+ * Does this call say it paints a plate, whether or not this pass can name the
+ * colour? A `backgroundColor` fed by a parameter is a fill the reader sees and
+ * the checker cannot resolve, and measuring its text against the page would
+ * report a surface that is never painted.
+ */
+const declaresFill = (props) => FILL_KEYS.some((key) => props.has(key));
+
+/**
+ * Widgets whose `color` is an accent, not a sentence: the implementation reads it
+ * into a background, a track, a tint or an indicator, so the number that matters
+ * is what the words written *on* it measure, not what the colour measures on the
+ * page. Measuring it as ink reported `Chip({ label: "info", color: colors.info })`
+ * as 3.52:1 text no reader ever sees — the chip's label is `colors.onPrimary`.
+ *
+ * Each entry cites the line that turns the prop into a fill, and says which token
+ * writes on it (`null` = nothing does). The literal is what `resolveColor` gets,
+ * so the finding still names a real hex.
+ */
+const ACCENTS = {
+  // Slider.js:171 `backgroundColor: color` — the track and thumb, no words on it.
+  Slider: { when: () => true, ink: () => null },
+  // ProgressBar.js:39 `backgroundColor: color` — the bar; its label is
+  // `colors.textSecondary` painted outside it (:99).
+  ProgressBar: { when: () => true, ink: () => null },
+  // Tabs.js:111/231 the indicator and the `${color}1A` pill tint; the active label
+  // is `colors.text` (:107) unless the slider variant puts it on the thumb itself.
+  Tabs: { when: () => true, ink: (props) => (variantOf(props) === "slider" ? "onPrimary" : null) },
+  // Pagination.js:88-89 the active page is `bgColor: color` with `colors.onPrimary`.
+  Pagination: { when: () => true, ink: () => "onPrimary" },
+  // Chip.js:70-78 filled paints the plate and writes `colors.onPrimary` on it;
+  // outlined paints nothing and uses `color` *as the label*, so that one stays an
+  // ordinary ink measurement and its 3.52:1 blue on a light page is reported.
+  Chip: { when: (props) => variantOf(props) !== "outlined", ink: () => "onPrimary" },
+};
+
+const variantOf = (props) => (props.get("variant")?.value ?? "").replace(/['"]/g, "").trim();
+
+/**
  * Contrast between a text color and the fill it is written on, measured with the
  * package's own `color()` — WCAG 2.1 relative luminance, not an opinion.
  *
- * The fill is the call's own `bgColor`, else the nearest enclosing call that paints
- * one (so a label inside a brand header is judged on the brand), else neither — in
- * which case the two surfaces a screen paints are both tested and only a warning
- * is raised, because the real background is a layout fact this pass cannot see.
+ * The fill is the call's own `bgColor`/`backgroundColor`/`gradient`, else the
+ * nearest enclosing call that paints one (so a label inside a brand header is
+ * judged on the brand). When nothing paints a plate, the two surfaces a screen
+ * uses are both tested, because the real background is a layout fact this pass
+ * cannot see.
+ *
+ * Every number is measured once per theme the package ships. `colors` is the
+ * object the module boots with, and a token can clear AA in one theme and fail
+ * in the other — `info` is 3.52:1 on the light surface and 6.97:1 on the dark
+ * one — so the worst theme is what gets reported, and a token only the boot
+ * palette dislikes stops generating findings nobody can reproduce.
  *
  * @param {string} widget
  * @param {Map<string, {value: string}>} props
- * @param {string | null} scopeFill fill inherited from the enclosing calls
+ * @param {Map<string, {value: string}> | null} scopeProps nearest enclosing call that declares a fill
  * @param {object} ctx
  * @param {number} line
  * @returns {object | null}
  */
-const checkContrast = (widget, props, scopeFill, ctx, line) => {
+const checkContrast = (widget, props, scopeProps, ctx, line) => {
   if (!ctx.contrast) return null;
-  const fgEntry = props.get("color") || props.get("textColor");
+  let fgEntry = props.get("color") || props.get("textColor");
   if (!fgEntry) return null;
   if ((props.get("disabled")?.value ?? "").trim() === "true") return null;
 
-  const fg = resolveColor(fgEntry.value, ctx.tokens);
-  if (!fg) return null;
+  // An accent call is measured the other way round: the plate is `color` and the
+  // words are the theme's own ink, so `colors.onPrimary` on a pale brand fill is
+  // the finding worth printing and the colour on the page is not a sentence.
+  let accent = null;
+  const accentRule = ACCENTS[widget];
+  const accentEntry =
+    accentRule && accentRule.when(props) && !declaresFill(props) ? props.get("color") : null;
+  if (accentEntry) {
+    const inkToken = accentRule.ink(props);
+    if (!inkToken) return null;
+    accent = accentEntry;
+    fgEntry = { value: `colors.${inkToken}` };
+  }
 
   const graphic = ICON_WIDGETS.includes(widget);
-  const ownFill = fillOf(props, ctx.tokens);
-  const bg = ownFill ?? scopeFill;
   const minimum = graphic
     ? CONTRAST_LARGE
     : isLargeText(props)
       ? CONTRAST_LARGE
       : CONTRAST_BODY;
 
-  const measure = (value) => ctx.contrast(fg, value);
+  const fillProps = declaresFill(props) ? props : scopeProps;
+  const themes = ctx.themes ?? [{ name: "default", tokens: ctx.tokens }];
+
+  /** The theme whose answer is hardest to read, plus the numbers to print. */
+  let worst = null;
+  for (const theme of themes) {
+    const fg = resolveColor(fgEntry.value, theme.tokens);
+    if (!fg) continue;
+    if (accent) {
+      const bg = resolveColor(accent.value, theme.tokens);
+      if (!bg) continue;
+      const ratio = ctx.contrast(fg, bg);
+      if (!worst || ratio < worst.ratio) worst = { ratio, fg, bg, theme: theme.name };
+      continue;
+    }
+    if (fillProps) {
+      const bg = fillOf(fillProps, theme.tokens);
+      if (!bg) continue;
+      const ratio = ctx.contrast(fg, bg);
+      if (!worst || ratio < worst.ratio) worst = { ratio, fg, bg, theme: theme.name };
+      continue;
+    }
+    const onBackground = ctx.contrast(fg, theme.tokens.background);
+    const onSurface = ctx.contrast(fg, theme.tokens.surface);
+    const ratio = Math.min(onBackground, onSurface);
+    if (!worst || ratio < worst.ratio) {
+      worst = { ratio, fg, onBackground, onSurface, theme: theme.name };
+    }
+  }
+  // A fill is declared but no theme can name it (a parameter, a runtime
+  // gradient): those words are on that plate, not on the page.
+  if (!worst) return null;
+
+  const fg = worst.fg;
+  const bg = worst.bg ?? null;
+  const inTheme = worst.theme === "default" ? "" : ` in the ${worst.theme} theme`;
+
+  // The plate came from the accent prop, so the advice is about the plate: the
+  // widget picks the ink itself and the app never wrote it.
+  if (accent) {
+    const ratio = worst.ratio;
+    if (ratio + 1e-9 >= minimum) return null;
+    return finding(
+      ctx,
+      line,
+      ratio < CONTRAST_LARGE ? "LOW_CONTRAST" : "LOW_CONTRAST_SOFT",
+      `${widget} writes ${fg} on its \`color\` plate, ${bg}, and it measures ${ratio.toFixed(2)}:1${inTheme} (needs ${minimum}:1).`,
+      `The label is not yours to recolor — \`${widget}\` paints the theme's own ink on the accent you passed. Pick an accent that carries it: \`colors.primary\` does, and a signal tone like \`colors.info\` (#3b82f6, 3.68:1) is too light. \`flet-box check-ui --tokens\` prints the number for each.`,
+    );
+  }
 
   if (bg) {
-    const ratio = measure(bg);
+    const ratio = worst.ratio;
     if (ratio + 1e-9 >= minimum) return null;
     if (ratio < CONTRAST_LARGE) {
       return finding(
         ctx,
         line,
         graphic ? "LOW_CONTRAST_UI" : "LOW_CONTRAST",
-        `${widget} ${fg} on ${bg} measures ${ratio.toFixed(2)}:1 — ${graphic ? "a meaningful graphic needs" : "text needs"} ${minimum}:1.`,
+        `${widget} ${fg} on ${bg} measures ${ratio.toFixed(2)}:1${inTheme} — ${graphic ? "a meaningful graphic needs" : "text needs"} ${minimum}:1.`,
         graphic
           ? "An icon that carries information is UI, not decoration: 3:1. Darken it (`colors.gray700`) or put it on a fill that carries it."
           : "Below 3:1 no size makes it readable. Use `colors.text` on this fill, or move the text to `background`/`surface`.",
@@ -479,20 +621,19 @@ const checkContrast = (widget, props, scopeFill, ctx, line) => {
       ctx,
       line,
       "LOW_CONTRAST_SOFT",
-      `${widget} text ${fg} on ${bg} measures ${ratio.toFixed(2)}:1 (AA body text is ${minimum}:1).`,
+      `${widget} text ${fg} on ${bg} measures ${ratio.toFixed(2)}:1${inTheme} (AA body text is ${minimum}:1).`,
       "Legal only as large text: 24px, or 18px bold. Small body text on this fill needs a darker token.",
     );
   }
 
-  // No fill visible in this call or any enclosing one: warn against the surfaces.
-  const onBackground = measure(ctx.tokens.background);
-  const onSurface = measure(ctx.tokens.surface);
+  // No fill this pass can name: warn against the surfaces of the worst theme.
+  const { onBackground, onSurface } = worst;
   if (onBackground >= minimum && onSurface >= minimum) return null;
   return finding(
     ctx,
     line,
     graphic ? "LOW_CONTRAST_UI" : "LOW_CONTRAST_ON_SURFACE",
-    `${widget} ${fg} measures ${onBackground.toFixed(2)}:1 on \`background\` and ${onSurface.toFixed(2)}:1 on \`surface\` (needs ${minimum}:1).`,
+    `${widget} ${fg} measures ${onBackground.toFixed(2)}:1 on \`background\` and ${onSurface.toFixed(2)}:1 on \`surface\`${inTheme} (needs ${minimum}:1).`,
     graphic
       ? "A graphic that carries meaning needs 3:1 against the page. If it is decoration next to a label, ignore this one."
       : `Body text needs ${minimum}:1. If this sits on a brand or dark fill, give the call that \`bgColor\` — or the fill is inherited and this is the number to beat.`,
@@ -536,13 +677,14 @@ const checkFile = (file, ctx) => {
   });
 
   /**
-   * The fill this call inherits: its own `bgColor`, else the nearest enclosing
-   * call that paints one. Text on a brand header is judged on the brand.
+   * The nearest enclosing call that says it paints a plate. Its props are handed
+   * to the contrast rule, which resolves the colour per theme — the call itself
+   * is what matters, since a fill this pass cannot name still means the text is
+   * not sitting on the page.
    */
-  const inheritedFill = (call) => {
+  const inheritedFillProps = (call) => {
     for (const other of enclosing(call)) {
-      const fill = fillOf(other.props, ctx.tokens);
-      if (fill) return fill;
+      if (declaresFill(other.props)) return other.props;
     }
     return null;
   };
@@ -590,6 +732,17 @@ const checkFile = (file, ctx) => {
 
   const namedByTooltip = (call) =>
     enclosing(call).some((other) => other.name === "Tooltip" && other.props.has("text"));
+
+  /**
+   * A glyph control that carries its own accessible name is named, even when this
+   * pass cannot see the wrapper: an app that builds the control inside a helper
+   * and wraps the *result* in a Tooltip has a `child: iconButton("share")` at the
+   * call site, and a lexical scan stops at the helper's own braces. `aria-*` is a
+   * routed passthrough (translateProps.js:948), so the name really does reach the
+   * DOM — which is the sentence the finding asks for.
+   */
+  const namedByAria = (call) =>
+    [...call.props.keys()].some((key) => /^aria-(label|labelledby)$/i.test(key));
 
   const isFilled = (call) =>
     call.name === "Button" &&
@@ -762,13 +915,14 @@ const checkFile = (file, ctx) => {
       ICON_WIDGETS.includes(call.name) &&
       tappable &&
       !labeledBySibling(call) &&
-      !namedByTooltip(call)
+      !namedByTooltip(call) &&
+      !namedByAria(call)
     ) {
       push(
         line,
         "ICON_ONLY_CONTROL",
         `${call.name} is pressable and carries no name.`,
-        "Wrap it in `Tooltip({ text, child })` or put a `Text` beside it. A glyph with no words is a guess, and a screen reader says nothing at all.",
+        "Wrap it in `Tooltip({ text, child })`, put a `Text` beside it, or name the control itself with `\"aria-label\": \"Share\"`. A glyph with no words is a guess, and a screen reader says nothing at all.",
       );
     }
     if (
@@ -776,7 +930,8 @@ const checkFile = (file, ctx) => {
       ["icon", "iconLeft", "iconRight"].some((key) => props.has(key)) &&
       !props.has("text") &&
       !labeledBySibling(call) &&
-      !namedByTooltip(call)
+      !namedByTooltip(call) &&
+      !namedByAria(call)
     ) {
       push(
         line,
@@ -836,13 +991,13 @@ const checkFile = (file, ctx) => {
             line,
             "DESTRUCTIVE_COLOR",
             `Button "${label}" destroys something and is not in the danger color.`,
-            "Red is the convention that makes a person pause: `bgColor: colors.danger` on a filled button, `color: colors.danger` on a text one. A delete in the brand color reads as the safe choice.",
+            "Red is the convention that makes a person pause: `bgColor: colors.danger` on a filled button, `color: colors.dangerStrong` on a text one — `danger` is the signal, `dangerStrong` is the red that clears AA as words in this theme. A delete in the brand color reads as the safe choice.",
           );
         }
       }
     }
 
-    const contrast = checkContrast(call.name, props, inheritedFill(call), ctx, line);
+    const contrast = checkContrast(call.name, props, inheritedFillProps(call), ctx, line);
     if (contrast) findings.push(contrast);
 
     if (
@@ -976,6 +1131,7 @@ export const tokenTable = (tokens, contrast) => {
     "dangerStrong",
     "successStrong",
     "warningStrong",
+    "infoStrong",
     "warning",
     "success",
     "border",
@@ -1008,6 +1164,7 @@ export const tokenTable = (tokens, contrast) => {
     "warning",
     "success",
     "info",
+    "infoStrong",
     "gray900",
   ]) {
     const fill = tokens[name];
@@ -1122,10 +1279,29 @@ export const checkUi = async (argv = [], io = {}) => {
     .filter(isTokenFile)
     .reduce((all, file) => ({ ...all, ...appPalette(file) }), { ...packageTokens });
 
+  // Which palettes a person actually sees. `colors` is the object the module
+  // boots with; `palettes.light` and `palettes.dark` are what `setTheme()`
+  // paints, and the two disagree about a token: `primary` is #6165ef at boot,
+  // #18181B in the light theme and #FAFAFA in the dark one, so a finding raised
+  // only against the boot object cannot be reproduced on any screen. A package
+  // with no `palettes` export is measured against the boot object alone.
+  const themes = (() => {
+    const real = barrel.palettes;
+    const named =
+      real && typeof real === "object"
+        ? Object.entries(real).filter(
+          ([, palette]) => palette && typeof palette === "object",
+        )
+        : [];
+    if (!named.length) return [{ name: "default", tokens }];
+    return named.map(([name, palette]) => ({ name, tokens: { ...tokens, ...palette } }));
+  })();
+
   const ctx = {
     currentFile: "",
     propKinds: propKindsFromRegistry(api),
     tokens,
+    themes,
     contrast,
     declaredProps,
     elevationReaders: readElevationReaders(),

@@ -592,6 +592,16 @@ export const lightColors = {
     // they may be a label, an icon that carries meaning, or a plate.
     successStrong: '#047857',
     warningStrong: '#b45309',
+    // \`*Plate\` is the fill white words sit on. On this page it is the same tone
+    // as the matching Strong, and it is a separate name because on a dark page the
+    // two part ways: the readable red goes light, the plate goes dark.
+    dangerPlate: '#b91c1c',
+    successPlate: '#047857',
+    warningPlate: '#b45309',
+    // \`info\` (#3b82f6) carries white at 3.68:1, so a filled chip or a tooltip in
+    // the info hue needs this one: 6.70:1 in both directions.
+    infoStrong: '#1d4ed8',
+    infoPlate: '#1d4ed8',
     info: '#3b82f6',
     background: '#ffffff',
     surface: '#f8fafc',
@@ -626,12 +636,20 @@ export const darkColors = {
     // On a dark page the light red is the readable one: 6.45:1 against the
     // background. The plate a person presses goes the other way.
     danger: '#f87171',
-    // #f1f5f9 on this measures 9.15:1 — the destructive button in the dark theme.
-    dangerStrong: '#7f1d1d',
-    // The same convention: in the dark theme the light tone is the readable word
-    // (9.29:1, 10.69:1) and these deep ones are the plates under the page ink.
-    successStrong: '#14532d',
-    warningStrong: '#78350f',
+    // \`*Strong\` is the answer to "what may I write words in?" and on this page
+    // that is the light end of the ladder: 9.41:1, 11.71:1, 12.38:1 on the
+    // background — all AA, and a step clearer than the signal tone above.
+    dangerStrong: '#fca5a5',
+    successStrong: '#6ee7b7',
+    warningStrong: '#fcd34d',
+    // \`*Plate\` is the fill with white words on it, and that has to go dark here:
+    // 10.02:1, 9.11:1, 9.07:1. These are the tones that used to hide inside
+    // \`*Strong\`, which is why a delete written in \`dangerStrong\` was invisible.
+    dangerPlate: '#7f1d1d',
+    successPlate: '#14532d',
+    warningPlate: '#78350f',
+    infoStrong: '#93c5fd',
+    infoPlate: '#1e40af',
     info: '#60a5fa',
     background: '#0f172a',
     surface: '#1e293b',
