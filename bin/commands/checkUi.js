@@ -109,12 +109,53 @@ export const WARN_CODES = new Set([
   "UNCONSTRAINED_FORM_WIDTH",
 ]);
 
-const INFO_CODES = new Set([
+export const INFO_CODES = new Set([
   "SMALL_PRESET",
   "CROWDED_FORM",
   "LIST_WITHOUT_STATE",
   "MULTIPLE_PRIMARY_ACTIONS",
 ]);
+
+/**
+ * Which design rule each code proves, and the number the finding prints.
+ *
+ * The gate is the machine half of a contract whose human half is
+ * `skills/fletbox-design/SKILL.md`: 25 numbered rules, read by the agent that
+ * builds the screen. A finding that says `OFF_SCALE_SPACING` tells the reader the
+ * value is wrong; a finding that says `OFF_SCALE_SPACING — rule 07` tells them to
+ * open rule 07 and learn *why*, which is the only way the next screen is right
+ * without being told twice. `scripts/check-skills.mjs` fails if a code is missing
+ * here, if a number here is not a heading in the skill, or if the skill does not
+ * name that code inside the rule it is filed under — so this table and that file
+ * cannot drift apart.
+ */
+export const CODE_RULE = {
+  RAW_COLOR: "03",
+  OFF_SCALE_SPACING: "07",
+  OFF_SCALE_RADIUS: "03",
+  OFF_SCALE_TYPE: "08",
+  SMALL_TAP_TARGET: "03",
+  LOW_CONTRAST: "11",
+  UNLABELED_FIELD: "13",
+  UNLABELED_TOGGLE: "11",
+  DESTRUCTIVE_COLOR: "14",
+  UNREADABLE: "00",
+  LOW_CONTRAST_SOFT: "11",
+  LOW_CONTRAST_UI: "11",
+  LOW_CONTRAST_ON_SURFACE: "11",
+  HAND_MIXED_COLOR: "03",
+  DEAD_ELEVATION: "10",
+  IMAGE_NO_ALT: "11",
+  ICON_ONLY_CONTROL: "11",
+  CENTERED_BODY_TEXT: "08",
+  GENERIC_ACTION_LABEL: "14",
+  CONFIRM_ORDER: "14",
+  UNCONSTRAINED_FORM_WIDTH: "13",
+  SMALL_PRESET: "03",
+  CROWDED_FORM: "06",
+  LIST_WITHOUT_STATE: "12",
+  MULTIPLE_PRIMARY_ACTIONS: "04",
+};
 
 /**
  * The legal home for a hex value is the app's own token file. Anything else in
@@ -1319,7 +1360,15 @@ export const checkUi = async (argv = [], io = {}) => {
 
   if (asJson) {
     print(
-      JSON.stringify({ package: api.pkg.version, scanned: files.length, findings }, null, 2),
+      JSON.stringify(
+        {
+          package: api.pkg.version,
+          scanned: files.length,
+          findings: findings.map((item) => ({ rule: CODE_RULE[item.code] || null, ...item })),
+        },
+        null,
+        2,
+      ),
     );
   } else {
     print(
@@ -1338,10 +1387,11 @@ export const checkUi = async (argv = [], io = {}) => {
       byCode.get(item.code).push(item);
     }
     for (const [code, list] of byCode) {
+      const rule = CODE_RULE[code];
       print(
         section(
           "•",
-          `${code} — ${list.length} finding(s)`,
+          `${code}${rule ? ` — rule ${rule}` : ""} — ${list.length} finding(s)`,
           ERROR_CODES.has(code) ? "#f87171" : INFO_CODES.has(code) ? "#94a3b8" : "#fbbf24",
         ),
       );

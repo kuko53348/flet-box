@@ -19,7 +19,15 @@ import * as templates from "../utils/templates.js";
 import { parseGithubRepo } from "../utils/bundleConfig.js";
 import { checkApi } from "../commands/checkApi.js";
 import { unpack } from "../commands/unpack.js";
+import { skillNames, readSkill } from "../utils/skills.js";
 import { c, banner, gradient } from "../utils/colors.js";
+
+/**
+ * Skills that every screen needs, whatever the task. Their Cursor twin rule loads
+ * with the file instead of waiting to be picked by description; the rest are
+ * read when their description matches what the agent is about to do.
+ */
+const ALWAYS_ON_SKILLS = new Set(["fletbox-rules", "fletbox-design"]);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -216,8 +224,8 @@ export const createProject = async (projectName, rawArgs = []) => {
     ".fletbox/api",
     ".fletbox/memory/notes",
     ".claude",
-    ".claude/skills/fletbox-clean-ui",
-    ".qoder/skills/fletbox-clean-ui",
+    ".claude/skills",
+    ".qoder/skills",
     ".cursor/rules",
   ];
   const extraDirs =
@@ -437,23 +445,36 @@ export const createProject = async (projectName, rawArgs = []) => {
     templates.cursorRules(),
   );
 
-  // The clean-UI skill. Claude Code loads `.claude/skills/<name>/SKILL.md` by
-  // description, so the agent picks it up whenever it touches a screen without
-  // being told. `.qoder/skills/` holds a byte-identical copy because Qoder reads
-  // the same shape from a different root — one text, two loaders, never two edits.
-  const cleanUiSkill = templates.cleanUiSkill();
-  createFile(
-    path.join(projectPath, ".claude/skills/fletbox-clean-ui/SKILL.md"),
-    cleanUiSkill,
-  );
-  createFile(
-    path.join(projectPath, ".qoder/skills/fletbox-clean-ui/SKILL.md"),
-    cleanUiSkill,
-  );
-  createFile(
-    path.join(projectPath, ".cursor/rules/fletbox-clean-ui.mdc"),
-    templates.cleanUiCursorRule(),
-  );
+  // The agent skills: `skills/` at the package root is the only source, one
+  // kebab-case folder per subject (rules, design, motion, memory). The app gets
+  // the same text twice over: once as `skills/` at its own root — the folder any
+  // assistant or person reads first, and the one AGENTS.md §0 indexes — and once
+  // mirrored into `.claude/skills/` and `.qoder/skills/`, because Claude Code and
+  // Qoder load a skill by frontmatter description from those two roots and offer it
+  // without being told. Cursor has no skills folder, so each skill also ships as a
+  // pointer rule in `.cursor/rules/`. One text, three loaders, never three edits.
+  const skillList = skillNames();
+  if (skillList.length === 0) {
+    console.log(
+      c(
+        "yellow",
+        "⚠️  This flet-box package ships no skills/ folder — the app will have no design or motion contract.",
+      ),
+    );
+  }
+  for (const name of skillList) {
+    const text = readSkill(name);
+    createFile(path.join(projectPath, "skills", name, "SKILL.md"), text);
+    createFile(
+      path.join(projectPath, ".claude/skills", name, "SKILL.md"),
+      text,
+    );
+    createFile(path.join(projectPath, ".qoder/skills", name, "SKILL.md"), text);
+    createFile(
+      path.join(projectPath, ".cursor/rules", `${name}.mdc`),
+      templates.skillCursorRule(name, { alwaysApply: ALWAYS_ON_SKILLS.has(name) }),
+    );
+  }
   createFile(
     path.join(projectPath, "scripts/check-ui.mjs"),
     templates.checkUiScript(finalName),
@@ -466,6 +487,10 @@ export const createProject = async (projectName, rawArgs = []) => {
   createFile(
     path.join(projectPath, ".fletbox/memory/notes/baseline.md"),
     templates.memoryBaselineMd(finalName, template, pkgVersion),
+  );
+  createFile(
+    path.join(projectPath, ".fletbox/memory/notes/current-status.md"),
+    templates.memoryStatusMd(finalName, template),
   );
   createFile(
     path.join(projectPath, "scripts/check-app.mjs"),

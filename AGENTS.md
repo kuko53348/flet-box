@@ -17,6 +17,8 @@ FletBox: zero-runtime-dependency vanilla-JS UI framework with a Flet-like declar
   - `node scripts/check-api-surface.mjs` — API coupling across the three surfaces. It imports `src/index.js` for real, so it also fails when the barrel re-exports a name that no longer exists, or when the package stops being importable in Node (module-scope `window`/`document`).
   - `node scripts/check-router-base.mjs` — deployment base path.
   - `node scripts/check-cli-install.mjs` — the shape of the **published** package: it `npm pack`s the repo, extracts the tarball and runs `bin/cli.js` from it with no `node_modules` in scope, which is the only place where a `bin/` module reaching for a devDependency at import time shows up (it used to break every CLI command for consumers, since the checkout always has `ws`/`chokidar`). It also asserts `docs/widget/` shipped.
+  - `node scripts/check-clean-ui.mjs` — the contract for `flet-box check-ui`: the screen the design skill recommends must produce **no** finding, and every tier must be proven to bite by breaking it. Its last section asserts the two themes expose the same token names — the light palette once answered five fewer tints than the dark one and the boot palette, so `setTheme("light")` deleted `colors.errorBg` & friends out from under an app that was already writing them.
+  - `node scripts/check-skills.mjs` — the `skills/` folder contract (see Skills below): each file loads, every API it teaches is real (fenced blocks through `checkApi`, inline `Widget({ prop: … })` through `bin/utils/dtsProps.js`, every `colors.X` against **both** palettes, every effect against `AnimatedBox`, every rule number against the codes `checkUi` reports), the folder is in the tarball, and a freshly created app gets byte-identical copies in all three loader roots with every markdown link resolving. Both halves are mutation-tested: an invented prop and a pointer at nothing must fail the script.
   - `python3 tools/snippets-creator-flet-box/build_snippets.py --check` + `node scripts/check-snippets.mjs` — the VSCode snippet library (see Snippets below).
   Behavioral tests are browser harnesses in `tests/` (below).
 - `python3 scripts/generate_widget_docs.py` — regenerates `docs/widget/*.md` from `src/index.d.ts` + the curated examples in `scripts/_docdata/`. Run after changing a widget's public props/types. Prop blurbs live in the flat `DESC` map, which is keyed by prop name **alone** — adding `markers` there for one widget rewrites every page that documents a `markers` prop. When a name already means something else elsewhere (`markers` = pins on a map, ticks on an arc), put the blurb in `WIDGET_DESC[Widget][prop]` instead.
@@ -41,9 +43,41 @@ FletBox: zero-runtime-dependency vanilla-JS UI framework with a Flet-like declar
 - The generated app's agent contract is `templates.agentsMd()` in `bin/utils/templates.js`, mirrored by `claudeMd()` and `cursorRules()` — all three are arrays of single-quoted lines joined with `\n`, so an apostrophe inside a line must be escaped or the template stops compiling. Its numbered sections are load-bearing and cross-referenced by number ("the design system in section 4", "the checker in section 5"): inserting or removing a section means renumbering the rest and that prose. §4 is the design system (one brand color per screen from the `colors` tokens, no hex literals; spacing/radius/type only from the 8-based scale 4·8·12·16·18·24·32·48) and every token name in it was read off the real `colors` export — do not "tidy" one into a name that does not exist.
 - `flet-box create <name> --template <basic|adaptive|blank|full|sidebar>` (and `--template=<name>`) is equivalent to the `--blank`-style flags. The **first** positional is always the project name; a later one is treated as an unclaimed flag value and is ignored, because a value that leaked past the parser used to rename the project (`create myapp --template blank` built a folder called `blank`).
 
+## Skills
+
+`skills/` at the repo root is the framework's knowledge of how to build and design
+a FletBox app, written as four real markdown files — one per subject, not one per
+idea:
+
+- `fletbox-rules` — the working contract: FletBox syntax only, never invent an
+  API (and the four ways to look one up), the rem rule, aliases, cleanup, the two
+  gates, the memory duty.
+- `fletbox-design` — the numbered design rules (00…24). Every code `flet-box
+  check-ui` reports maps to one of them, and `docs/guides/clean-ui.md` keeps the
+  code→rule table, so renumbering a rule means editing that table in the same
+  change; `scripts/check-skills.mjs` already fails if a code the gate emits is not
+  named by the skill.
+- `fletbox-motion` — whether a thing may move, and through which of `AnimatedBox`,
+  `AnimatedText`, `ParallaxBox` or `animate`.
+- `fletbox-memory` — the `.fletbox/memory/` journal that hands progress from one
+  AI to the next, including `notes/current-status.md`.
+
+`bin/utils/skills.js` reads them (`skillRoot`/`skillNames`/`readSkill`/
+`readFrontmatter`) and `flet-box create` **copies the bytes** into the app at
+`skills/`, `.claude/skills/<name>/` and `.qoder/skills/<name>/` — the last two are
+where those assistants load a skill from, so they are mirrors, never the source —
+plus a `.cursor/rules/<name>.mdc` pointer per skill (`templates.skillCursorRule`;
+`fletbox-rules` and `fletbox-design` are `alwaysApply: true`, the other two fire on
+their subject). Keep `package.json` `files` carrying `skills/` or an installed app
+has no design contract at all. `scripts/check-skills.mjs` proves the whole chain.
+
+Do not add a fifth skill for one new idea — extend the file that owns the subject,
+and move anything the four already cover out of `templates.js` prose. The set is
+four on purpose: an agent that is sent to nine files reads none.
+
 ## Generated mobile projects
 
-`flet-box create` writes the Capacitor scaffolding: `capacitor.config.json`, `assets/logo.png`, and one asset script per platform (`scripts/sync-android-icons.mjs`, `scripts/sync-ios-assets.mjs`) wired into the `android:sync` / `ios:sync` npm scripts. All templates are strings in `bin/utils/templates.js`.
+`flet-box create` writes the Capacitor scaffolding: `capacitor.config.json`, `assets/logo.png`, and one asset script per platform (`scripts/sync-android-icons.mjs`, `scripts/sync-ios-assets.mjs`) wired into the `android:sync` / `ios:sync` npm scripts. Every template is a string in `bin/utils/templates.js` **except** the skills, which are files in `skills/` precisely so the prose has one copy.
 
 Quirks that are easy to break when editing those templates:
 

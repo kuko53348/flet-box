@@ -419,6 +419,34 @@ await check("an example shown twice is reported once", async () => {
   );
 });
 
+// 5 — the two themes answer the same token names.
+//
+// A contrast rule can only measure a token that exists, and the advice the gate
+// prints ("`colors.primaryBg`, `colors.errorBg` and friends are the tints") is the
+// same sentence in either theme. The light palette used to be missing `error`,
+// `errorBg`, `successBg`, `warningBg` and `infoBg` — dark invented them because a
+// pale fill dies on a black page, and nobody noticed that the boot palette
+// (`DEFAULT_COLORS`) had them all along, so `setTheme("light")` deleted five tokens
+// an app was already writing. An app that painted an error card the framework way
+// got `bgColor: undefined` and no card at all: not a contrast finding, because
+// there was no fill to measure.
+await check("both themes carry the same token names", async () => {
+  const { palettes, colors } = await import("../src/utils/themes.js");
+  const light = Object.keys(palettes.light);
+  const dark = Object.keys(palettes.dark);
+  const onlyLight = light.filter((name) => !dark.includes(name));
+  const onlyDark = dark.filter((name) => !light.includes(name));
+  assert.deepEqual(
+    { onlyLight, onlyDark },
+    { onlyLight: [], onlyDark: [] },
+    "a token exists in one theme and not the other",
+  );
+  for (const name of ["error", "errorBg", "successBg", "warningBg", "infoBg"]) {
+    assert.ok(name in palettes.light, `the light theme has no ${name} for the gate to suggest`);
+    assert.ok(name in colors, `the boot palette has no ${name} either`);
+  }
+});
+
 console.log(
   failures.length
     ? `\n❌ ${failures.length} clean-UI contract failure(s): ${failures.join(", ")}\n`

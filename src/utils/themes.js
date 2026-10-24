@@ -103,6 +103,22 @@ export const palettes = {
     infoStrong: "#1d4ed8",
     infoPlate: "#1d4ed8",
     info: "#3b82f6",
+    // The alert tints, and the red the word "error" names. `check-ui` tells an app
+    // that "`colors.primaryBg`, `colors.errorBg` and friends are the tints" and the
+    // boot palette has had these five since the start, but the light palette did
+    // not — so an app that themed its alerts the framework way lost every tint the
+    // moment it booted into light (`colors.errorBg` came back `undefined`, and a
+    // `bgColor` of undefined is no background at all). Dark answered them first
+    // because a pale pink fill is unreadable on a black page and had to be
+    // invented; this is the same idea read from the light end: the tint is nearly
+    // white, so the ink on it is the `*Strong` of that hue — 5.91, 5.21, 4.84 and
+    // 6.16:1 in order, all over the AA line — and the page ink `#09090B` sits on
+    // all four at 18:1 and up.
+    error: "#ef4444",
+    errorBg: "#fef2f2",
+    successBg: "#ecfdf5",
+    warningBg: "#fffbeb",
+    infoBg: "#eff6ff",
     background: "#ffffff",
     surface: "#fafafa",
     card: "#ffffff",
