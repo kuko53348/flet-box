@@ -18,6 +18,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { c, banner, gradient, section } from "../utils/colors.js";
 import { buildBundleConfig, collectAssets, getGitRemoteUrl, resolveAssetPatterns, absoluteShareTags } from "../utils/bundleConfig.js";
+import { normaliseManifest, writeSpaFallback } from "../utils/pwaShell.js";
 import { INITIAL_VERSION, incrementVersion, isValidVersion } from "../utils/version.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -57,6 +58,7 @@ const copyFolderSync = (src, dest) => {
  * ```
  * <target>/
  *   index.html
+ *   404.html          ← copy of the shell, so a refresh on a deep link serves the app
  *   manifest.json
  *   service-worker.js
  *   run.sh
@@ -406,6 +408,25 @@ export const createBundle = async (targetArg) => {
       fs.writeFileSync(shareIndex, stamped);
       console.log(c("green", `✅ share card → absolute images at ${bundleConfig.update.url}`));
     }
+  }
+
+  // ---- Installable, deep-linkable output ----------------------------------
+  // Both corrections belong to the deployable folder, not to the project: the
+  // app's own manifest.json stays host-agnostic and this bundle is what a static
+  // host serves. See bin/utils/pwaShell.js for the two failure modes.
+  const manifestFixes = normaliseManifest(targetDir);
+  if (manifestFixes.length) {
+    console.log(c("green", `✅ manifest.json → ${manifestFixes.length} correction(s)`));
+    for (const fix of manifestFixes) console.log(c("gray", `      ${fix}`));
+  }
+
+  if (writeSpaFallback(targetDir)) {
+    console.log(
+      c(
+        "green",
+        "✅ 404.html → copy of the shell (hosts without SPA rewrites now serve the app on a refresh)",
+      ),
+    );
   }
 
   // Preserve the app source tree so the in-app "View code" feature can read it.
