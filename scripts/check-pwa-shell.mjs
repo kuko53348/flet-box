@@ -251,6 +251,111 @@ check("the fallback is copied after the share tags are stamped (so it is identic
 check("the manifest is corrected during the bundle, not by an app script", createBundle.includes("normaliseManifest(targetDir)"), true);
 check("both corrections run before the build reports success", iSrcTree > iFallback, true);
 
+// ---------------------------------------------------------------------------
+// 4. The browser chrome: what an installed app paints before it can paint itself.
+// ---------------------------------------------------------------------------
+// An installed PWA takes its status bar and navigation bar from
+// <meta name="theme-color">, and its splash from the manifest. Those are static
+// files, so they carried the pre-zinc indigo long after the palette moved to
+// zinc — the reader toggled the theme, the app changed, the bars did not. Two
+// separate guards keep that from coming back.
+const nodeThemes = await import("../src/utils/themes.js");
+const { palettes } = nodeThemes;
+
+const freshIndex = templates.indexHtml("Guard Test");
+const freshCapacitor = JSON.parse(templates.capacitorConfig("Guard Test", "com.guard.test"));
+const shellFiles = {
+  "index.html": freshIndex,
+  "manifest.json": JSON.stringify(freshManifest),
+  "capacitor.config.json": JSON.stringify(freshCapacitor),
+  "scripts/sync-android-icons.mjs": templates.syncAndroidIconsScript(),
+  "scripts/sync-ios-assets.mjs": templates.syncIOSAssetsScript(),
+  "AGENTS.md": templates.agentsMd("Guard Test", "basic", "0.0.0"),
+  "README.md": templates.readme("Guard Test", "basic", "com.guard.test"),
+};
+
+check(
+  "nothing a fresh app is born with still carries the old shell indigo",
+  Object.entries(shellFiles)
+    .filter(([, text]) => /#1a1a2e/i.test(text))
+    .map(([name]) => name),
+  [],
+);
+check(
+  "the launch plate IS the dark palette's surface — one value, so the two cannot drift apart again",
+  templates.SHELL_BRAND,
+  palettes.dark.surface,
+);
+check(
+  "the splash, the manifest and the meta all read that one constant",
+  [
+    freshIndex.includes(`<meta name="theme-color" content="${templates.SHELL_BRAND}">`),
+    freshManifest.theme_color === templates.SHELL_BRAND,
+    freshManifest.background_color === templates.SHELL_BRAND,
+    freshCapacitor.backgroundColor === templates.SHELL_BRAND,
+  ],
+  [true, true, true, true],
+);
+check(
+  "the icon scripts composite the same brand, as channels",
+  [
+    templates.syncAndroidIconsScript().includes(`const background = { r: ${templates.SHELL_BRAND_RGB.r}, g: ${templates.SHELL_BRAND_RGB.g}, b: ${templates.SHELL_BRAND_RGB.b} };`),
+    templates.syncIOSAssetsScript().includes(`const background = { r: ${templates.SHELL_BRAND_RGB.r}, g: ${templates.SHELL_BRAND_RGB.g}, b: ${templates.SHELL_BRAND_RGB.b} };`),
+    [templates.SHELL_BRAND_RGB.r, templates.SHELL_BRAND_RGB.g, templates.SHELL_BRAND_RGB.b],
+  ],
+  [true, true, templates.SHELL_BRAND.slice(1).match(/../g).map((h) => parseInt(h, 16))],
+);
+
+// The framework's own demo is a PWA too (`flet-box run` serves it, the docs
+// tunnel ships it), so it has to agree with what `create` writes.
+const demoIndex = readFileSync(path.join(repoRoot, "index.html"), "utf8");
+const demoManifest = JSON.parse(readFileSync(path.join(repoRoot, "manifest.json"), "utf8"));
+check(
+  "the framework demo's own shell carries the live brand, not a remembered one",
+  [
+    !/#1a1a2e/i.test(demoIndex) && !/#1a1a2e/i.test(JSON.stringify(demoManifest)),
+    demoIndex.includes(`<meta name="theme-color" content="${templates.SHELL_BRAND}">`),
+    demoManifest.theme_color,
+  ],
+  [true, true, templates.SHELL_BRAND],
+);
+
+// The runtime half: applyPalette must rewrite the meta, not only the CSS vars.
+// Without this the bars are frozen at whatever the scaffold wrote, which is
+// exactly the defect, because Chrome reads the document, not the stylesheet.
+const themesSrc = readFileSync(path.join(repoRoot, "src", "utils", "themes.js"), "utf8");
+const applyBody = themesSrc.slice(
+  themesSrc.indexOf("const applyPalette = "),
+  themesSrc.indexOf("export const setTheme"),
+);
+check("applyPalette repaints the browser chrome", applyBody.includes("syncBrowserChrome()"), true);
+const syncBody = themesSrc.slice(
+  themesSrc.indexOf("const syncBrowserChrome = "),
+  themesSrc.indexOf("const applyPalette = "),
+);
+check(
+  "it updates the single theme-color meta and follows the palette's surface",
+  [
+    syncBody.includes('meta[name="theme-color"]'),
+    /setAttribute\(\s*"content",\s*colors\.surface\s*\)/.test(syncBody),
+    syncBody.includes("style.colorScheme"),
+  ],
+  [true, true, true],
+);
+// `nodeThemes` was imported above for the palette, in this same Node process —
+// so calling `setTheme` here is the honest proof that the chrome sync is a no-op
+// when there is no `document`, not a crash on import.
+let nodeSafe = true;
+let nodeError = "";
+try {
+  nodeThemes.setTheme("dark");
+  nodeThemes.setTheme("light");
+} catch (e) {
+  nodeSafe = false;
+  nodeError = String(e && e.message);
+}
+check("painting the chrome in Node is a no-op, not a crash", [nodeSafe, nodeError], [true, ""]);
+
 if (failures) {
   console.error(`\nPWA shell: ${failures} guard(s) failed.`);
   process.exit(1);

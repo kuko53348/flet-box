@@ -1,4 +1,5 @@
 // src/components/flet-box/utils/themes.js
+import { readableInk } from "./readableInk.js";
 
 // ========== DEFAULT COLORS (static, safe) ==========
 const DEFAULT_COLORS = {
@@ -248,6 +249,41 @@ const notifyThemeChange = () => {
 
 // ========== THEME FUNCTIONS ==========
 /**
+ * Moves the browser's own chrome — the PWA status bar and navigation bar, the
+ * scrollbar and form-control canvases — onto the palette that was just painted.
+ *
+ * An installed web app paints those bars from `<meta name="theme-color">`, which
+ * is a document-level value the page must rewrite itself: nothing in CSS reaches
+ * it. Left alone, the app keeps whatever literal the scaffold wrote — the indigo
+ * every FletBox PWA shipped before the zinc rebuild — and the reader sees a
+ * system bar from the old palette hanging over the new one. `color-scheme` is the
+ * same problem in the other direction: without it the OS draws light-mode
+ * scrollbars and form controls on a dark page.
+ *
+ * @private
+ */
+const syncBrowserChrome = () => {
+  try {
+    let meta = document.querySelector('meta[name="theme-color"]');
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.name = "theme-color";
+      document.head.appendChild(meta);
+    }
+    // The bars sit directly against the AppBar and the BottomNavigation, and
+    // both paint `surface` — matching `background` would put a band of the page
+    // color between two panels and look like a gap in the chrome.
+    meta.setAttribute("content", colors.surface);
+    // Whether the page is dark is read from its own background, not from the
+    // palette's name: `registerPalette` lets an app call a dark scale anything.
+    document.documentElement.style.colorScheme =
+      readableInk(colors.background, "#ffffff") === "#ffffff" ? "dark" : "light";
+  } catch (e) {
+    // Non-browser environments have no chrome to sync.
+  }
+};
+
+/**
  * Copies a registered palette onto the live `colors` object and refreshes the
  * CSS custom properties. Shared by `setTheme` and `registerPalette`; it does not
  * persist anything, because "this is the palette now" and "the user picked this
@@ -275,6 +311,8 @@ const applyPalette = (themeName) => {
     // Silently fail in non-browser environments
   }
 
+  syncBrowserChrome();
+
   notifyThemeChange();
   return colors;
 };
@@ -291,10 +329,16 @@ export const setTheme = (themeName) => {
   // and a subscriber that reads `getTheme()` while it rebuilds (a toggle button
   // labelling itself, a theme-aware screen) has to see the theme it is being
   // rebuilt for, not the one being replaced.
-  try {
-    localStorage.setItem("fletbox-theme", themeName);
-  } catch (e) {
-    // Silently fail
+  //
+  // `window` is the test, not a try/catch around the call: Node 22+ defines a
+  // global `localStorage` that only answers with a warning and then throws, so
+  // an import-time theme would print an ExperimentalWarning on every server run.
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem("fletbox-theme", themeName);
+    } catch (e) {
+      // Silently fail
+    }
   }
 
   applyPalette(themeName);

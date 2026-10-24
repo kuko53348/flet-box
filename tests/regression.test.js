@@ -1706,6 +1706,56 @@ async function run() {
     }
   });
 
+  // ------------ An installed PWA repaints its system bars with the palette
+  // Chrome paints the status bar and the navigation bar from
+  // <meta name="theme-color"> and only reads it once per document unless the
+  // page rewrites it. While applyPalette left that meta alone, a generated app
+  // shipped whatever literal its scaffold hard-coded — #1a1a2e, the pre-zinc
+  // indigo — and the bars stayed that color through every theme change. That is
+  // the "the bar and the installed app keep the old colors" report.
+  await t("applyPalette moves theme-color and color-scheme with the theme", async () => {
+    const savedPref = localStorage.getItem("fletbox-theme");
+    const savedScheme = document.documentElement.style.colorScheme;
+    try {
+      document.documentElement.style.colorScheme = "";
+      setTheme("dark");
+      const darkMeta = document.querySelector('meta[name="theme-color"]');
+      ok(
+        darkMeta && darkMeta.getAttribute("content") === palettes.dark.surface,
+        `dark theme left theme-color at ${darkMeta ? darkMeta.getAttribute("content") : "no meta"} — the bars must read the live palette's surface, the color under the AppBar and the bottom bar`,
+      );
+      ok(
+        document.documentElement.style.colorScheme === "dark",
+        `dark theme set color-scheme to "${document.documentElement.style.colorScheme}" — the OS draws its controls (scrollbars, form widgets, the status-bar glyphs) from it`,
+      );
+
+      setTheme("light");
+      const lightMeta = document.querySelector('meta[name="theme-color"]');
+      ok(
+        lightMeta && lightMeta.getAttribute("content") === palettes.light.surface,
+        `light theme left theme-color at ${lightMeta ? lightMeta.getAttribute("content") : "no meta"}`,
+      );
+      ok(
+        document.documentElement.style.colorScheme === "light",
+        `light theme set color-scheme to "${document.documentElement.style.colorScheme}"`,
+      );
+
+      // One meta, not one per theme: a page that appends instead of updating
+      // hands Chrome several values at once and the bars stop being predictable.
+      ok(
+        document.querySelectorAll('meta[name="theme-color"]').length === 1,
+        `${document.querySelectorAll('meta[name="theme-color"]').length} theme-color metas — a theme change must reuse the same element`,
+      );
+    } finally {
+      document.documentElement.style.colorScheme = savedScheme;
+      if (savedPref) setTheme(savedPref);
+      else {
+        localStorage.removeItem("fletbox-theme");
+        applySystemTheme();
+      }
+    }
+  });
+
   // ------------------------------------------- Slider: thumb retry loop
   await t("Slider: the thumb retry loop stops when the widget unmounts", async () => {
     const origRaf = window.requestAnimationFrame;

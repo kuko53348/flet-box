@@ -1,5 +1,21 @@
 // bin/utils/templates.js
 
+/**
+ * The plate behind everything a reader sees before the app paints: the PWA
+ * splash (`manifest.json`), the Android and iOS launch screens, the adaptive
+ * icon background, and the static `<meta name="theme-color">`.
+ *
+ * It is the dark palette's `surface` — the zinc scale the 2026-10 design rebuild
+ * moved to, replacing the indigo shell color that stayed in the scaffold and kept
+ * showing on installed PWAs long after the app itself had changed color. One
+ * value because a native splash cannot follow a theme; `applyPalette()` writes
+ * the live palette onto `<meta name="theme-color">` at runtime, so the bars do.
+ */
+export const SHELL_BRAND = "#18181b";
+
+/** `SHELL_BRAND` as the channels the icon and splash scripts composite with. */
+export const SHELL_BRAND_RGB = { r: 24, g: 24, b: 27 };
+
 export const indexHtml = (appName = "FletBox App") => `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -19,7 +35,7 @@ export const indexHtml = (appName = "FletBox App") => `<!DOCTYPE html>
     <meta property="og:description" content="${appName} built with Flet-Box.">
     <meta property="og:type" content="website">
 
-    <meta name="theme-color" content="#1a1a2e">
+    <meta name="theme-color" content="${SHELL_BRAND}">
 
     <!-- ============================================================
          GOOGLE ADSENSE (optional — disabled by default)
@@ -904,7 +920,7 @@ export const capacitorConfig = (appName, appId) => `${JSON.stringify(
     appId,
     appName,
     webDir: "www",
-    backgroundColor: "#1a1a2e",
+    backgroundColor: SHELL_BRAND,
     server: { androidScheme: "https", iosScheme: "https" },
   },
   null,
@@ -960,7 +976,7 @@ const densities = [
   ["xxhdpi", 144],
   ["xxxhdpi", 192],
 ];
-const background = { r: 26, g: 26, b: 46 };
+const background = { r: ${SHELL_BRAND_RGB.r}, g: ${SHELL_BRAND_RGB.g}, b: ${SHELL_BRAND_RGB.b} };
 
 for (const [density, size] of densities) {
   const directory = path.join(androidRes, \`mipmap-\${density}\`);
@@ -998,7 +1014,7 @@ const backgroundColor = /(<color name="ic_launcher_background">)#(?:[A-Fa-f0-9]{
 if (!backgroundColor.test(xml)) {
   throw new Error(\`Invalid adaptive icon background resource: \${backgroundPath}\`);
 }
-await writeFile(backgroundPath, xml.replace(backgroundColor, "$1#1a1a2e$2"));
+await writeFile(backgroundPath, xml.replace(backgroundColor, "$1${SHELL_BRAND}$2"));
 
 // SPLASH SCREENS
 // The launch theme (AppTheme.NoActionBarLaunch) shows @drawable/splash while the
@@ -1066,8 +1082,8 @@ const infoPlistPath = path.join(nativeAppDir, "Info.plist");
 const launchScreenPath = path.join(nativeAppDir, "Base.lproj", "LaunchScreen.storyboard");
 const logoPath = path.join(projectRoot, "assets", "logo.png");
 
-// Brand background, the same #1a1a2e as theme-color in index.html and manifest.json.
-const background = { r: 26, g: 26, b: 46 };
+// Brand background, the same value as theme-color in index.html and manifest.json.
+const background = { r: ${SHELL_BRAND_RGB.r}, g: ${SHELL_BRAND_RGB.g}, b: ${SHELL_BRAND_RGB.b} };
 const backgroundComponent = (value) => Number((value / 255).toFixed(6));
 
 const requireExists = async (target) => {
@@ -1245,8 +1261,8 @@ export const manifest = (appName = "FletBox App") => `{
   "scope": "./",
   "display": "standalone",
   "display_override": ["window-controls-overlay"],
-  "theme_color": "#1a1a2e",
-  "background_color": "#1a1a2e",
+  "theme_color": "${SHELL_BRAND}",
+  "background_color": "${SHELL_BRAND}",
   "orientation": "any",
   "icons": [
     {
@@ -1739,7 +1755,7 @@ run \`npm run ios:open\`.
 
 Replace \`assets/logo.png\` with a 1024×1024 logo before distributing; the icon,
 the launch images and the launch background are all generated from it. The
-launch background is the app brand color \`#1a1a2e\`, which lives in
+launch background is the app brand color \`${SHELL_BRAND}\`, which lives in
 \`scripts/sync-ios-assets.mjs\`.
 
 Capacitor uses a local HTTPS origin (\`https://localhost\`) in the Android and
