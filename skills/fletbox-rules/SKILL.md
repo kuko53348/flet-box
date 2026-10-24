@@ -152,3 +152,53 @@ learns something and does not write it is a session that has to be repeated.
 They cover the same screen from three angles and do not repeat each other. When
 they disagree, this file wins about the API, `fletbox-design` wins about the
 screen, and the checker wins about a value.
+
+## R12 The tools are the short form — use one before you hand-write it
+
+`flet-box` exports 66 helpers alongside the widgets. They exist because the code
+they replace is longer, and because the longer version is the one every model
+writes from memory. The rule is not "wrap everything in a helper": it is that a
+hand-written replacement has to be **shorter or clearer** than the tool, and for
+the list below it is not.
+
+| What you were about to write | Use instead |
+| --- | --- |
+| `Array.from({ length: n }, (_, i) => …)`, and a second branch for an object | `mapList(source, fn)` — takes an array, a number or an object |
+| a mock list built field by field | `createList(row, 12)` with `row = { name: () => random.fullName(), price: () => random.number(5, 40) }` |
+| `list.map` + `sort` + `[...new Set(…)]` chains | `sort(rows, 'price', 'desc')`, `unique(xs)`, `shuffle`, `chunk`, `reverse` |
+| a `for (let i = 0; …)` that only builds children | `range(0, 10)`, `repeat(3, Divider({}))` |
+| `'0px 4px 12px 0px rgba(…)'` typed out | `shadow(0, 4, 12, 0, rgba(0, 0, 0, 0.12))` |
+| `` `rgba(${r},${g},${b},${a})` `` and `` `linear-gradient(…)` `` | `rgba(37, 99, 235, 0.2)`, `gradient('linear', [a, b], 135)` |
+| a `transform` string you have to keep in sync by hand | `transform({ translate: [10, 20], rotate: 45, scale: 1.5 })` |
+| `'all 0.3s ease 0s'`, `'blur(5px) brightness(0.8)'` | `transition({ property: 'opacity', duration: 0.3 })`, `filter({ blur: 5, brightness: 0.8 })` |
+| a hex you re-lighten by eye, or hand-picked tints | `color(colors.primary).darken(12).hex()` |
+| `Math.floor(Math.random() * …)` and `Math.random().toString(36)` | `random.number(a, b)`, `random.choice(list)`, `shortId()`, `uuid()`, `timestampId()` |
+| `new Date().toLocaleDateString()` chains | `formatDate(d, 'YYYY-MM-DD')`, `relativeTime(iso)` |
+| `new Promise(r => setTimeout(r, ms))`, a retry loop written twice | `delay(ms)`, `withMinDelay(p, 600)` (a spinner that never flashes), `retry(fn, 3, 500)` |
+| a `const cache = {}` keyed by `JSON.stringify(args)` | `memo(fn)`, `memoWithKey(fn, keyFn)` |
+| `obj[k] !== undefined ? obj[k] : d`, `Object.entries(o).map(…)` | `dict(obj).get(k, d)`, `.items()`, `.has(k)`, `fromJSON(text)` |
+| `console.log('[' + label + '] ' + msg)` | `print('synced', 'success', { label: 'cart' })` |
+| `let el = null` plus `ref: (v) => (el = v)` | `const display = ref()`, then `Text({ ref: display })` and `display.update({ text: '…' })` |
+| `window.innerWidth >= 768`, and a resize listener that fires per pixel | `atLeast('md')`, `pick({ xs: 16, md: 24 })`, `onBreakpointChange(cb)` |
+| `navigator.clipboard.writeText(x)` (which throws without a gesture fallback) | `clipboard.copy(x)` |
+| injecting a `<link>` for a webfont | `loadFont('Inter', { weights: [400, 600] })`, then `fontsReady()` before a canvas paint |
+| a `theme` object rebuilt per screen from hex literals | `colors.*`, `setTheme`, `subscribeTheme` |
+
+Three traps, because the rule is only honest with them:
+
+1. **A routed prop already *is* the short form.** `Container({ padding: 16 })` is
+   shorter and more correct than `padding: padding(16)` — the number reaches the
+   rem contract; the helper returns a **string** of pixels. Reach for
+   `padding(...)`/`margin(...)` only when you are writing a CSS value the props
+   cannot express (a `styles` object, a computed shorthand). Asymmetric sides have
+   props: `px: 20, py: 12`, `pt`, `pr`, `pb`, `pl`.
+2. **`filter` is the CSS filter, not a list filter.** `mapList`, `sort`, `unique`
+   and `createList` do list work; `filter({ blur: 5 })` builds a string.
+3. **`color()` is a chain, not a value.** `color(x).lighten(20)` is a `Color`; it
+   only becomes CSS at `.hex()`, `.rgb()` or `.rgba()`.
+
+R2 still outranks this one: when the exact signature is not in memory,
+`npm run check -- --list` and `flet-box unpack` say what is real. A confident wrong
+call is worse than the plain JavaScript it replaced — and `npm run check` will
+catch it, which is the point of running it.
+

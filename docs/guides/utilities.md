@@ -2,6 +2,20 @@
 
 FletBox includes small helpers for common UI and application tasks. Import only the helpers you need from `flet-box`.
 
+These 66 helpers are the **short form** of code you would otherwise write by hand —
+a shadow, a gradient, a mock list, a retry, a relative date. The rule that goes with
+them is a comparison, not a prohibition: reach for a helper when the code it replaces
+is longer or less clear, which for the examples below it is.
+
+The one trap: **a routed prop is already the short form**. `Container({ padding: 16 })`
+is shorter and more correct than `padding: padding(16)`, because the number reaches the
+rem contract and the helper returns a pixel string. Use the string builders for a CSS
+value a prop cannot express, not instead of a number.
+
+Two names that read as something else: `filter({ blur: 5 })` builds a CSS filter, it
+does not filter a list (that is `mapList`, `sort`, `unique`), and `color(x).lighten(20)`
+is a chain that only becomes a color at `.hex()`, `.rgb()` or `.rgba()`.
+
 ## Layout helpers
 
 Use direct props for the simplest code:
