@@ -5,8 +5,9 @@ defaults, and every later screen copies the screen before it. This page is the
 contract that makes the copy look like one product — the numbers, the tokens,
 and the two commands that prove a screen obeys them.
 
-It is the published version of the rule file that ships inside every generated
-app, so the app's agent and the framework's documentation cannot disagree.
+It is the published version of the `fletbox-design` skill — one of four files in
+the framework's `skills/` folder that `flet-box create` copies into every app — so
+the app's agent and the framework's documentation cannot disagree.
 
 ## The two gates
 
@@ -26,12 +27,24 @@ one replaces opening the page.
 
 ## Where the rules live
 
+A generated app is handed four skills — one file per subject, in a visible
+`skills/` folder at its root, mirrored byte for byte to `.claude/skills/` and
+`.qoder/skills/` because that is where those assistants load a skill from, and
+pointed at from one `.cursor/rules/<name>.mdc` each:
+
+| Skill | What it owns |
+| --- | --- |
+| `fletbox-rules` | The working contract: FletBox syntax only, never invent an API and the four ways to look one up, the rem rule, aliases, cleanup, the two gates, the memory duty. |
+| `fletbox-design` | The 25 numbered rules below — tokens, the scale, hierarchy, the four states, measured contrast, composition, the framework traps, the dated tells, density. |
+| `fletbox-motion` | Whether a thing may move at all, and through which of `AnimatedBox`, `AnimatedText`, `ParallaxBox` or `animate`. |
+| `fletbox-memory` | The `.fletbox/memory/` journal that hands progress from one AI to the next. |
+
 | Home | What it holds |
 | --- | --- |
-| `.claude/skills/fletbox-clean-ui/SKILL.md` | The 21 numbered rules below, written for the agent that builds the screen. Mirrored to `.qoder/skills/…` and `.cursor/rules/fletbox-clean-ui.mdc`. |
+| `skills/fletbox-design/SKILL.md` (framework) → `skills/…`, `.claude/skills/…`, `.qoder/skills/…` (app) | The rules as the agent reads them, in 25 numbered sections. The app's copies are generated; edit the framework file and regenerate, never the mirror. |
 | `AGENTS.md` §4 of the app | The short version: one brand color per screen, no hex literals, spacing and radius only from the scale. |
 | `src/tools/scale.js` in the framework | The tables themselves — `SPACING_SCALE`, `RADIUS_SCALE`, `TYPE_SCALE`, `TAP_MINIMUM`, `PILL`, `LABEL_TEXT`. |
-| `bin/commands/checkUi.js` | The gate. It re-exports those same tables instead of keeping its own copy. |
+| `bin/commands/checkUi.js` | The gate. It re-exports those same tables instead of keeping its own copy, and `scripts/check-skills.mjs` fails when a skill and the gate stop naming the same codes. |
 
 That last line matters more than it looks. A gate that carries its own numbers
 drifts from the widgets, and the app then gets told to be clean by values the
@@ -80,7 +93,7 @@ The framework keeps this honest with its own gate, `scripts/check-widget-scale.m
 (part of `npm test`): a length written straight to `el.style.*` that is neither
 `toREM(...)` nor measured geometry fails the build.
 
-## The 21 rules
+## The 25 rules
 
 When two of them conflict, take them in this order: **consistency · clarity ·
 accessibility · usability · scalability · maintainability · conversion**.
@@ -104,10 +117,14 @@ accessibility · usability · scalability · maintainability · conversion**.
 | 14 | Destructive actions designed last | A delete that is the closest, fastest, most colorful thing on the screen. |
 | 15 | Reduce interaction cost | Taps, scrolls and keystrokes that carry no information. |
 | 16 | Respect the platform | Fighting the browser's own conventions — back, scroll, text selection. |
-| 17 | The review | Shipping before reading your own diff as the user. |
-| 18 | Where these books are wrong | Following a guideline that measurement disagrees with. |
-| 19 | What no checker can see | Taste, hierarchy in the wild, whether the screen solves the problem. |
-| 20 | The loop | Fixing the checker instead of the code, or leaving a rule you had to break undocumented. |
+| 17 | Composition starts as a sentence | A screen that begins as "a hero, then three cards, then a footer" instead of a decision the page carries. |
+| 18 | The framework traps | `Container` assumed invisible, a `flex: 1` with no sibling, `alignItems: "center"` mistaken for centered text, absolute coordinates where a `Stack` belongs. |
+| 19 | The dated tells | An eyebrow label, `01 · 02 · 03`, glass everywhere, resting shadows, a hairline `Divider` under every row, copy that says "seamless". |
+| 20 | Density is one dial | Two rhythms in one screen — a gap, a padding and a body size chosen three different times. |
+| 21 | The review | Shipping before reading your own diff as the user. |
+| 22 | Where these books are wrong | Following a guideline that measurement disagrees with. |
+| 23 | What no checker can see | Taste, hierarchy in the wild, whether the screen solves the problem. |
+| 24 | The loop | Fixing the checker instead of the code, or leaving a rule you had to break undocumented. |
 
 ## What `flet-box check-ui` proves
 
@@ -123,12 +140,12 @@ judging yours. Each finding carries a code, and the code maps to a rule above.
 | `OFF_SCALE_SPACING` | 07 | A padding, margin, gap or size off the spacing scale — including inside a `"12px 20px"` shorthand. |
 | `OFF_SCALE_RADIUS` | 03 | A corner radius that is not a scale step. |
 | `OFF_SCALE_TYPE` | 08 | A font size off the type scale. |
-| `SMALL_TAP_TARGET` | 11 | A pressable widget under the Fitts floor, including a bare `Icon` with `onPress`. |
+| `SMALL_TAP_TARGET` | 03 | A pressable widget under the Fitts floor, including a bare `Icon` with `onPress`. The floor is a scale value, so rule 03 owns it. |
 | `LOW_CONTRAST` | 11 | Text measured below AA against the fill it actually sits on. |
 | `UNLABELED_FIELD` | 13 | An `Input` or `Dropdown` with neither a `label` nor a `placeholder`. |
-| `UNLABELED_TOGGLE` | 13 | A `Switch`, `Checkbox` or `Radio` with nothing to say what it toggles. |
+| `UNLABELED_TOGGLE` | 11 | A `Switch`, `Checkbox` or `Radio` with nothing to say what it toggles. |
 | `DESTRUCTIVE_COLOR` | 14 | A delete/remove verb rendered in the brand fill instead of the danger one. |
-| `UNREADABLE` | — | A file the scanner could not parse, reported rather than skipped. |
+| `UNREADABLE` | 00 | A file the scanner could not parse, reported rather than skipped — and nothing else in that file was judged. |
 
 ### Warnings (fail with `--strict`)
 
@@ -140,17 +157,17 @@ judging yours. Each finding carries a code, and the code maps to a rule above.
 | `HAND_MIXED_COLOR` | 03 | `colors.primary + "22"` — a one-off shade no other screen can reuse. |
 | `DEAD_ELEVATION` | 10 | A numeric `elevation` on a widget that never reads it: CSS drops the bare number and the box stays flat in silence. |
 | `IMAGE_NO_ALT` | 11 | An `Image` with no `alt` — `alt: ""` is a decision, a missing prop is an oversight. |
-| `ICON_ONLY_CONTROL` | 15 | A pressable glyph with no name; wrap it in `Tooltip({ text, child })`. |
+| `ICON_ONLY_CONTROL` | 11 | A pressable glyph with no name; wrap it in `Tooltip({ text, child })`. |
 | `CENTERED_BODY_TEXT` | 08 | A paragraph centered; a paragraph needs a left edge to find the next line. |
-| `GENERIC_ACTION_LABEL` | 06 | "OK", "Submit", "Click here" — a label that says nothing about what pressing it does. |
+| `GENERIC_ACTION_LABEL` | 14 | "OK", "Submit", "Click here" — a label that says nothing about what pressing it does. |
 | `CONFIRM_ORDER` | 14 | A destructive button placed before Cancel in the same row. |
-| `UNCONSTRAINED_FORM_WIDTH` | 08 | A form block whose fields run to the full width of a desktop window. |
+| `UNCONSTRAINED_FORM_WIDTH` | 13 | A form block whose fields run to the full width of a desktop window. |
 
 ### Informational
 
 | Code | Rule | What it says |
 | --- | --- | --- |
-| `SMALL_PRESET` | 11 | `size: "small"` on a control that is the screen's main action (~30px). |
+| `SMALL_PRESET` | 03 | `size: "small"` on a control that is the screen's main action (~30px). |
 | `CROWDED_FORM` | 06 | Many fields in one file: group them, or split the task. |
 | `LIST_WITHOUT_STATE` | 12 | A list with no loading, empty or failed state in this file. |
 | `MULTIPLE_PRIMARY_ACTIONS` | 04 | Several filled buttons on one screen. |
@@ -190,7 +207,8 @@ right twice, it is a defect in the scale, not in the app.
 
 `check-ui` has no eyes. It cannot tell you that the screen is ugly, that the
 hierarchy reads wrong at a glance, or that the flow does not solve the user's
-problem. Those are rules 17 and 19, and they are the ones that need a person.
+problem. Those are rules 17, 19, 21 and 23 — composition, the tells, the review
+and this section — and they are the ones that need a person.
 Run the gate, then open the page.
 
 ## Related pages
