@@ -219,8 +219,9 @@ export const MatrixRain = (props = {}) => {
   // above), because the canvas has no parent until the caller appends it.
 
   /**
-   * Stops the animation loop, removes event listeners, disconnects the
-   * ResizeObserver, and removes the canvas from the DOM.
+   * Stops the animation loop, removes the window listeners and disconnects the
+   * ResizeObserver. The canvas stays where it is: the caller owns the element and
+   * decides whether to remove it, which is what the module contract documents.
    *
    * @returns {void}
    */
@@ -228,7 +229,6 @@ export const MatrixRain = (props = {}) => {
     if (animationId) cancelAnimationFrame(animationId);
     window.removeEventListener("resize", handleResize);
     if (resizeObserver) resizeObserver.disconnect();
-    if (canvas && canvas.parentNode) canvas.parentNode.removeChild(canvas);
   };
 
   // Chain cleanup so any previously assigned _cleanup is also called

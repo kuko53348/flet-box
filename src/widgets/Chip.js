@@ -23,7 +23,7 @@ import { PILL, TAP_MINIMUM } from "../tools/index.js";
  * @param {Function} [props.onDelete] - When provided, renders a close ("×") icon on the right side of the chip. Called when that icon is clicked.
  * @param {'filled'|'outlined'} [props.variant='filled'] - Visual style. 'filled' uses a solid background; 'outlined' uses a transparent background with a border.
  * @param {string} [props.color=colors.primary] - Chip accent color: used as the background (filled) or border/text (outlined).
- * @param {string} [props.textColor] - Explicit text color override. Defaults to '#fff' (filled) or `color` (outlined).
+ * @param {string} [props.textColor] - Explicit text color override. Defaults to `colors.onPrimary` (filled) or `color` (outlined).
  * @param {string} [props.borderColor] - Explicit border color override (outlined variant only). Defaults to `color`.
  * @param {number} [props.borderRadius=999] - Corner radius in framework units (converted to `rem`). The default clamps to a pill.
  * @param {number|string} [props.padding] - Internal padding. A number is a uniform gutter (doubled horizontally); omitted it is 4 vertical x 12 horizontal, in framework units.
@@ -71,7 +71,10 @@ export const Chip = (props) => {
     brdColor = borderColor || color;
   } else {
     bgColor = color;
-    txtColor = textColor || "#fff";
+    // The label sits on the primary plate, so its ink is the theme's, not a
+    // literal white: in dark mode a primary chip is near-white and white words
+    // would vanish.
+    txtColor = textColor || colors.onPrimary;
     brdColor = "transparent";
   }
 

@@ -88,7 +88,7 @@ const getInitials = (fullName) => {
  * @param {number} [props.fontSize=16] - Font size of the avatar box in pixels; initials are sized from `size`.
  * @param {'circle'|'rounded'|'square'} [props.shape='circle'] - Shape of the avatar container.
  * @param {string} [props.bgColor=colors.primary] - Background color shown behind icons or initials.
- * @param {string} [props.textColor=colors.text] - Color of icon or initials.
+ * @param {string} [props.textColor=colors.onPrimary] - Color of icon or initials.
  * @param {string} [props.icon] - Material icon name to display instead of an image or initials.
  * @param {boolean} [props.online=false] - Shows a presence dot in the bottom-right corner.
  * @param {string} [props.badgeColor=colors.success] - Color of the presence dot.
@@ -118,7 +118,9 @@ export const Avatar = (inputProps = {}) => {
     fontSize = 16,
     shape = "circle",
     bgColor = colors.primary,
-    textColor = colors.text,
+    // The default plate is `primary`, so the initials are its ink. Reading
+    // `colors.text` here put near-white letters on a near-white avatar in dark.
+    textColor = colors.onPrimary,
     icon,
     online = false,
     badgeColor = colors.success,

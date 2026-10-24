@@ -11,7 +11,15 @@
 //
 // It publishes `window.__REGRESSION = { pass, fail, results }`.
 import * as W from "../src/widgets/index.js";
-import { AppBar, Tabs, Scaffold, Drawer, BottomNavigation } from "../src/navigations/index.js";
+import {
+  AppBar,
+  Tabs,
+  Scaffold,
+  Drawer,
+  DrawerItem,
+  BottomNavigation,
+  CollapsibleSideBar,
+} from "../src/navigations/index.js";
 import { goTo, getCurrentPath, initRouter, clearRouter } from "../src/navigations/Router.js";
 import { WidgetFactory } from "../src/widget-factory/index.js";
 import { AnimatedBox } from "../src/animations/AnimatedBox.js";
@@ -21,6 +29,8 @@ import { animate, pulse, stopAnimation } from "../src/animations/animate.js";
 import { runApp } from "../src/core/runApp.js";
 import { useState, saveState, getState } from "../src/tools/useState.js";
 import { colors, palettes, setTheme, applySystemTheme } from "../src/utils/themes.js";
+import { color } from "../src/tools/color.js";
+import { TAP_MINIMUM } from "../src/tools/scale.js";
 
 const results = [];
 let pass = 0;
@@ -50,6 +60,21 @@ document.body.appendChild(host);
 const mount = (el) => {
   host.appendChild(el);
   return el;
+};
+
+// Ink measurements have to hold in both palettes: a light-only fix for a
+// white-on-bright-plate bug looks perfect on the machine that wrote it.
+const withBothThemes = (fn) => {
+  const saved = localStorage.getItem("fletbox-theme");
+  try {
+    for (const name of ["light", "dark"]) {
+      setTheme(name);
+      fn(name);
+    }
+  } finally {
+    if (saved) setTheme(saved);
+    else applySystemTheme();
+  }
 };
 
 async function run() {
@@ -137,6 +162,131 @@ async function run() {
     await wait(400);
   });
 
+  // ------------------------------------------------------- Ink follows plate
+  await t("Button: a named fill keeps its label readable in both themes", () => {
+    // `bgColor` used to leave the label with the theme ink, so a button filled
+    // with the theme's own primary painted a near-invisible label: black on
+    // near-black in light, near-white on near-white in dark.
+    withBothThemes((theme) => {
+      for (const fill of [colors.primary, colors.secondary, "#facc15"]) {
+        const btn = mount(W.Button({ text: "Go", bgColor: fill }));
+        const s = getComputedStyle(btn);
+        const ratio = color(s.color).contrastRatio(s.backgroundColor);
+        ok(
+          ratio >= 4.5,
+          `${theme}: ${s.color} on ${s.backgroundColor} fill is ${ratio.toFixed(2)}:1`,
+        );
+        btn.remove();
+      }
+    });
+  });
+
+  await t("SnackBar: signal presets keep their label readable in both themes", () => {
+    // The presets painted the theme ink on the signal plate; in dark that is
+    // near-white on a bright green/amber, measured under 2.5:1.
+    withBothThemes((theme) => {
+      for (const type of ["success", "error", "warning", "info"]) {
+        const el = W.SnackBar({ message: "saved", type, duration: 0 }).getElement();
+        const s = getComputedStyle(el);
+        const ratio = color(s.color).contrastRatio(s.backgroundColor);
+        ok(
+          ratio >= 4.5,
+          `${theme} ${type}: ${s.color} on ${s.backgroundColor} is ${ratio.toFixed(2)}:1`,
+        );
+        el.remove();
+      }
+    });
+  });
+
+  await t("CodeViewer: syntax tokens stay readable on the code block in both themes", () => {
+    // The One Dark map was applied to the light theme's #F4F4F5 pane, where its
+    // green string measured 1.6:1. The palette now follows the block's surface.
+    const code = 'const greeting = "hello"; // note\nconst fn = (x) => x + 1;\nreturn 42;';
+    withBothThemes((theme) => {
+      const cv = mount(W.CodeViewer({ code, showLineNumbers: true }));
+      const bg = getComputedStyle(cv.children[0]).backgroundColor;
+      const spans = [...cv.querySelectorAll('span[style*="color"]')];
+      ok(spans.length >= 5, `${theme}: only ${spans.length} coloured tokens`);
+      for (const span of spans) {
+        const fg = getComputedStyle(span).color;
+        const ratio = color(fg).contrastRatio(bg);
+        ok(
+          ratio >= 4.5,
+          `${theme}: ${fg} on ${bg} is ${ratio.toFixed(2)}:1 ("${span.textContent}")`,
+        );
+      }
+      cv.remove();
+
+      // Raw characters (`=`, `=>`, `+`) used to be left unspanned, so they
+      // inherited the page ink and vanished on a pane of the opposite theme.
+      const paneBg = theme === "light" ? "#0f172a" : "#fafafa";
+      const pane = mount(
+        W.CodeViewer({ code, backgroundColor: paneBg, showLineNumbers: true }),
+      );
+      const offBg = getComputedStyle(pane.children[0]).backgroundColor;
+      const plain = [...pane.querySelectorAll('span[style*="color"]')].filter(
+        (s) => s.textContent === "=" || s.textContent === ">" || s.textContent === "+",
+      );
+      ok(plain.length >= 2, `${theme}: "=" and ">" were left to inherit the page ink`);
+      for (const span of plain) {
+        const fg = getComputedStyle(span).color;
+        const ratio = color(fg).contrastRatio(offBg);
+        ok(
+          ratio >= 4.5,
+          `${theme}: ${fg} on ${offBg} is ${ratio.toFixed(2)}:1 ("${span.textContent}")`,
+        );
+      }
+      // The gutter default follows the pane too: the theme's textSecondary on an
+      // opposite pane measured under 3:1.
+      const gutter = pane.children[0].firstElementChild.firstElementChild;
+      const gutterInk = getComputedStyle(gutter).color;
+      const gutterRatio = color(gutterInk).contrastRatio(offBg);
+      ok(
+        gutterRatio >= 4.5,
+        `${theme}: gutter ${gutterInk} on ${offBg} is ${gutterRatio.toFixed(2)}:1`,
+      );
+      pane.remove();
+    });
+  });
+
+  await t("CodeViewer: the copy button is visible and copies the raw code", async () => {
+    const code = 'const x = "y";';
+    const saved = localStorage.getItem("fletbox-theme");
+    const realClipboard = navigator.clipboard;
+    let copied = null;
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText: (text) => { copied = text; return Promise.resolve(); } },
+    });
+    try {
+      for (const theme of ["light", "dark"]) {
+        setTheme(theme);
+        const cv = mount(W.CodeViewer({ code, title: "x.js" }));
+        const btn = [...cv.querySelectorAll("button")].find((b) => b.textContent === "Copy");
+        ok(btn, `${theme}: the header has no copy button`);
+        const s = getComputedStyle(btn);
+        const ratio = color(s.color).contrastRatio(s.backgroundColor);
+        ok(
+          ratio >= 4.5,
+          `${theme}: copy label ${s.color} on ${s.backgroundColor} is ${ratio.toFixed(2)}:1`,
+        );
+        btn.click();
+        await wait(20);
+        ok(copied === code, `${theme}: clipboard received ${JSON.stringify(copied)}`);
+        ok(btn.textContent === "Copied", `${theme}: feedback label is "${btn.textContent}"`);
+        cv.remove();
+        copied = null;
+      }
+    } finally {
+      Object.defineProperty(navigator, "clipboard", {
+        configurable: true,
+        value: realClipboard,
+      });
+      if (saved) setTheme(saved);
+      else applySystemTheme();
+    }
+  });
+
   // ------------------------------------------------------------- AnimatedBox
   await t("AnimatedBox: identical keyframes are injected only once", () => {
     const count = () => document.head.querySelectorAll("style").length;
@@ -163,6 +313,32 @@ async function run() {
     });
   });
 
+  await t("AnimatedBox: a from→to animation holds `to` at 100% unless reverse is set", () => {
+    // The sine-wave cycle used to be the default, so every documented entry
+    // animation (opacity 0→1, translateY 16→0) snapped back to `from` at the end:
+    // faded text became invisible again and letters stayed 16px down.
+    const keyframesFor = (anim) => {
+      AnimatedBox({
+        animations: [anim],
+        child: W.Text({ text: "x" }),
+      });
+      const styles = [...document.head.querySelectorAll("style")]
+        .map((s) => s.textContent)
+        .filter((text) => text.includes("@keyframes anim-") && text.includes("translateY("));
+      return styles[styles.length - 1] || "";
+    };
+    const forward = keyframesFor({ effect: "translateY", from: 14, to: 0, duration: 300 });
+    ok(
+      /100% \{[^}]*translateY\(0(?:rem|px)?\)/.test(forward),
+      `forward animation ends at ${(forward.match(/100% \{[^}]*\}/) || ["(no 100% frame)"])[0]}`,
+    );
+    const cycled = keyframesFor({ effect: "translateY", from: 14, to: 3, reverse: true, duration: 300 });
+    ok(
+      /100% \{[^}]*translateY\(0\.875rem\)/.test(cycled),
+      `reverse:true must cycle back, ends at ${(cycled.match(/100% \{[^}]*\}/) || ["(no 100% frame)"])[0]}`,
+    );
+  });
+
   // ---------------------------------------------------------------- Markdown
   await t("Markdown: a `>` inside a quoted attribute cannot smuggle an on* handler", async () => {
     // `<[^<>]+>` stops at the first `>`, so this payload used to sail through the
@@ -182,6 +358,44 @@ async function run() {
     const a = link.querySelector("a[href]");
     ok(a !== null, 'the anchor lost its href (documented behaviour is href="#")');
     ok(!a.getAttribute("href").includes("javascript:"), "javascript: URL survived");
+  });
+
+  await t("Markdown: a `-` list renders one <ul> with dots, not a nested <ol>", () => {
+    // The ordered-list pass re-wrapped the first unordered item, so `- a\n- b`
+    // came out as `<ul><ol><li>a</li></ol><li>b</li></ul>`: the first bullet was
+    // numbered and sat one indent level deeper than the second.
+    const md = W.Markdown({ text: "- uno\n- dos\n\n1. first\n2. second" });
+    const uls = md.querySelectorAll("ul");
+    const ols = md.querySelectorAll("ol");
+    ok(uls.length === 1, `${uls.length} <ul> for one unordered list`);
+    ok(ols.length === 1, `${ols.length} <ol> for one ordered list`);
+    ok(
+      md.querySelector("ul ol") === null && md.querySelector("ol ul") === null,
+      `a list is nested inside the other: ${md.innerHTML.slice(0, 160)}`,
+    );
+    ok(uls[0].querySelectorAll(":scope > li").length === 2, "the <ul> does not hold both items");
+    ok(ols[0].querySelectorAll(":scope > li").length === 2, "the <ol> does not hold both items");
+
+    for (const marker of ["*", "+"]) {
+      const list = W.Markdown({ text: `${marker} uno\n${marker} dos` });
+      ok(
+        list.querySelectorAll("ul > li").length === 2,
+        `"${marker}" is not accepted as a list marker: ${list.innerHTML.slice(0, 120)}`,
+      );
+      ok(!list.textContent.includes(marker), `the "${marker}" marker leaked into the words`);
+    }
+
+    // An outside marker hangs ~1.5px left of the li text at the default 14px
+    // font, and the root clips with `overflow: auto`, so a 1em indent showed
+    // half a disc. The default has to leave the whole marker inside.
+    mount(md);
+    const ulStyle = getComputedStyle(uls[0]);
+    const indent = parseFloat(ulStyle.paddingLeft);
+    const em = parseFloat(ulStyle.fontSize);
+    ok(
+      indent >= em * 1.25 - 0.01,
+      `the list indent is ${indent}px: an outside marker hangs past the root edge and gets clipped`,
+    );
   });
 
   // ------------------------------------------------------------------- Input
@@ -247,6 +461,170 @@ async function run() {
     ok(calls.length === 1, `onPress fired ${calls.length} times, expected 1`);
   });
 
+  await t("Radio: the 40-unit hit box does not push the ring off the label", async () => {
+    // Row's default `align-items: stretch` stretched a label beside the radio to
+    // the hit box's 40 units, and the block text sat at the top of that box: the
+    // ring measured ~10 units below the words' centre, and a requested 10-unit
+    // `gap` read as 20 because the box's padding sat inside the gap.
+    const row = mount(
+      W.Row({ gap: 10, children: [W.Radio({}), W.Text({ text: "Option A" })] }),
+    );
+    await wait(30);
+    const box = row.firstElementChild.getBoundingClientRect();
+    const ring = row.firstElementChild.firstElementChild.getBoundingClientRect();
+    const label = row.lastElementChild.getBoundingClientRect();
+    const rowBox = row.getBoundingClientRect();
+
+    ok(
+      box.height >= ring.height + 19 && box.width >= ring.width + 19,
+      `the press target shrank to ${box.width}x${box.height} around a ${ring.width}x${ring.height} ring`,
+    );
+    ok(
+      Math.abs(rowBox.height - ring.height) < 1,
+      `the row is ${rowBox.height}px tall around a ${ring.height}px ring`,
+    );
+    ok(
+      Math.abs(ring.top + ring.height / 2 - (label.top + label.height / 2)) < 1,
+      `ring centre ${ring.top + ring.height / 2} vs label centre ${label.top + label.height / 2}`,
+    );
+    ok(
+      Math.abs(label.left - ring.right - 10) < 1.5,
+      `the visible gap is ${label.left - ring.right}px, expected 10`,
+    );
+  });
+
+  await t("Radio: the unselected ring is visible in both themes", () => {
+    // The rim used `colors.border`, which is a hairline: 1.27:1 on the light
+    // page and 1.16:1 on the dark card, so an empty radio disappeared. 3:1 is
+    // the WCAG minimum for a control boundary that carries state.
+    withBothThemes((theme) => {
+      const radio = mount(W.Radio({}));
+      const rim = getComputedStyle(radio.firstElementChild).borderTopColor;
+      const ratio = color(rim).contrastRatio(colors.card);
+      ok(ratio >= 3, `${theme}: rim ${rim} on ${colors.card} is ${ratio.toFixed(2)}:1`);
+      radio.remove();
+    });
+  });
+
+  await t("Radio: the documented label sits beside the ring, not before it", () => {
+    // `label` went to the factory as a flat prop, so it became the root's
+    // textContent: the words rendered *before* the ring, outside the press
+    // target, and the requested `gap` was never used. It now composes the
+    // label like Switch and Checkbox do.
+    const radio = mount(W.Radio({ label: "Monthly" }));
+    const ring = radio.firstElementChild;
+    const label = radio.lastElementChild;
+    ok(
+      ring.tagName === "DIV" && ring.style.borderRadius === "50%",
+      "the label replaced the ring",
+    );
+    ok(label.textContent === "Monthly", `label reads "${label.textContent}"`);
+    ok(radio.firstChild === ring, "the text still comes before the ring");
+    const frame = ring.getBoundingClientRect();
+    const words = label.getBoundingClientRect();
+    const row = radio.getBoundingClientRect();
+    ok(
+      Math.abs(frame.top + frame.height / 2 - (words.top + words.height / 2)) < 1,
+      "the ring and the label are not on the same centre line",
+    );
+    ok(words.left > frame.right, "the label is not beside the ring");
+    ok(row.height >= TAP_MINIMUM, `the labelled row is ${row.height}px tall`);
+    radio.click();
+    ok(radio.isSelected() === true, "clicking the label did not select the radio");
+  });
+
+  await t("Checkbox: the hit box aligns with its label and its rim is visible", async () => {
+    // Same defect as the Radio: a 40-unit box in the layout stretched the row
+    // and left the label at the top of it, and the unchecked rim was
+    // `colors.border` — 1.3:1 on white, 1.2:1 on the dark card.
+    withBothThemes((theme) => {
+      const row = mount(
+        W.Row({ gap: 10, children: [W.Checkbox({}), W.Text({ text: "Accept" })] }),
+      );
+      const box = row.firstElementChild.getBoundingClientRect();
+      const square = row.firstElementChild.firstElementChild.getBoundingClientRect();
+      const label = row.lastElementChild.getBoundingClientRect();
+      const rowBox = row.getBoundingClientRect();
+      ok(
+        box.height >= square.height + 19 && box.width >= square.width + 19,
+        `${theme}: the press target shrank to ${box.width}x${box.height}`,
+      );
+      ok(
+        Math.abs(rowBox.height - square.height) < 1,
+        `${theme}: the row is ${rowBox.height}px tall around a ${square.height}px box`,
+      );
+      ok(
+        Math.abs(square.top + square.height / 2 - (label.top + label.height / 2)) < 1,
+        `${theme}: box centre ${square.top + square.height / 2} vs label centre ${label.top + label.height / 2}`,
+      );
+      ok(
+        Math.abs(label.left - square.right - 10) < 1.5,
+        `${theme}: the visible gap is ${label.left - square.right}px, expected 10`,
+      );
+      const rim = getComputedStyle(row.firstElementChild.firstElementChild).borderTopColor;
+      const ratio = color(rim).contrastRatio(colors.card);
+      ok(ratio >= 3, `${theme}: rim ${rim} on ${colors.card} is ${ratio.toFixed(2)}:1`);
+      row.remove();
+    });
+    await wait(20);
+  });
+
+  await t("Switch: pressing does not scale the labelled row", async () => {
+    // The root of a labelled Switch is the whole row and the root is what
+    // carries the click, so `applyEffects` scaled the label and the toggle
+    // together like a button. The knob's slide is the feedback; the row now
+    // opts out with `disableTransform`.
+    const sw = mount(W.Switch({ label: "Notifications", value: true }));
+    await wait(20);
+    const label = sw.firstElementChild;
+    const before = label.getBoundingClientRect();
+    sw.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+    await wait(30);
+    ok(sw.style.scale === "", `mousedown scaled the row to "${sw.style.scale}"`);
+    const after = label.getBoundingClientRect();
+    ok(
+      after.width === before.width && after.height === before.height,
+      `the label changed from ${before.width}x${before.height} to ${after.width}x${after.height}`,
+    );
+    sw.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
+    sw.click();
+    ok(sw.getValue() === false, "the switch stopped toggling");
+  });
+
+  await t("Button: hover raises the shadow one elevation step, not two", async () => {
+    // Hover replaced the button's level-2 shadow (0 3px 6px) with a hardcoded
+    // 0 8px 16px — two steps up and not even on the scale — so the button read
+    // as jumping off the page. It now steps to the next SHADOW_LEVELS entry.
+    const px = (el) => (getComputedStyle(el).boxShadow.match(/-?\d*\.?\d+px/g) || []).map(parseFloat);
+    const btn = mount(W.Button({ text: "Hover", onPress: () => {} }));
+    await wait(30);
+    const base = px(btn);
+    ok(
+      base.length === 4 && base[1] === 3 && base[2] === 6,
+      `base shadow ${getComputedStyle(btn).boxShadow}`,
+    );
+    btn.dispatchEvent(new MouseEvent("mouseenter"));
+    // the button transitions the shadow for 0.2s; read the settled value
+    await wait(320);
+    ok(
+      px(btn)[1] === 6 && px(btn)[2] === 12,
+      `hover shadow ${getComputedStyle(btn).boxShadow}`,
+    );
+    // an update over a hovered button must not climb the scale again
+    btn.update({ opacity: 0.99 });
+    await wait(320);
+    ok(
+      px(btn)[1] === 6,
+      `an update while hovered lifted the button to ${getComputedStyle(btn).boxShadow}`,
+    );
+    btn.dispatchEvent(new MouseEvent("mouseleave"));
+    await wait(320);
+    ok(
+      px(btn)[1] === 3 && px(btn)[2] === 6,
+      `leaving restored ${getComputedStyle(btn).boxShadow}`,
+    );
+  });
+
   // ------------------------------------------------------------------- Chart
   await t("Chart: all-negative data is still drawn inside the canvas", async () => {
     // `Math.max(0, minVal - padding)` inverted the range (min > max) for negative
@@ -257,9 +635,23 @@ async function run() {
     const canvas = el.querySelector("canvas");
     ok(canvas !== null, "no canvas produced");
     const d = canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height).data;
-    let dark = 0;
-    for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 128 && d[i] < 200) dark++;
-    ok(dark > 1000, `only ${dark} dark pixels — negative data was not drawn`);
+    // Count the bars' own colour, not "dark" pixels: in the dark theme the
+    // primary fill is near-white, so a luminance heuristic measured only the
+    // grid lines and reported a chart that had drawn correctly as empty.
+    const barRGB = [0, 2, 4].map((i) =>
+      parseInt(colors.primary.slice(1 + i, 3 + i), 16),
+    );
+    let bars = 0;
+    for (let i = 0; i < d.length; i += 4) {
+      if (
+        d[i + 3] === 255 &&
+        d[i] === barRGB[0] &&
+        d[i + 1] === barRGB[1] &&
+        d[i + 2] === barRGB[2]
+      )
+        bars++;
+    }
+    ok(bars > 1000, `only ${bars} bar pixels — negative data was not drawn`);
   });
 
   // --------------------------------------------------------------- Accordion
@@ -279,6 +671,37 @@ async function run() {
   });
 
   // ----------------------------------------------------------------- TreeView
+  await t("TreeView: folders use the brand tone, files stay neutral", () => {
+    // `folderIconColor` defaulted to `colors.warning`, turning every folder the
+    // only amber element in a tree whose chevrons and files are grey.
+    const tv = W.TreeView({
+      nodes: [
+        { id: "src", label: "src", children: [{ id: "x", label: "x.js" }] },
+      ],
+      defaultExpanded: true,
+    });
+    mount(tv);
+    const icons = [...tv.querySelectorAll(".material-icons")].filter((i) =>
+      /folder|insert_drive_file/.test(i.textContent),
+    );
+    const folder = icons.find((i) => i.textContent.startsWith("folder"));
+    const file = icons.find((i) => i.textContent === "insert_drive_file");
+    ok(folder, "no folder icon rendered");
+    ok(file, "no file icon rendered");
+    const rgb = (hex) => {
+      const n = parseInt(hex.slice(1), 16);
+      return `rgb(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255})`;
+    };
+    ok(
+      getComputedStyle(folder).color === rgb(colors.primary),
+      `folder colour=${getComputedStyle(folder).color}, expected ${rgb(colors.primary)}`,
+    );
+    ok(
+      getComputedStyle(file).color === rgb(colors.textSecondary),
+      `file colour=${getComputedStyle(file).color}`,
+    );
+  });
+
   await t("TreeView: updateNodes keeps the selection unless null is passed", () => {
     const tv = W.TreeView({ data: [{ id: "a", label: "A" }, { id: "b", label: "B" }] });
     mount(tv);
@@ -538,6 +961,25 @@ async function run() {
     }
   });
 
+  await t("Scaffold: static mode mounts the appBar, bottomBar and FAB", async () => {
+    // Those three zones were only filled in router mode, so the documented
+    // `Scaffold({ appBar, body })` example rendered a bare body with no bar.
+    const sc = Scaffold({
+      appBar: W.Text({ text: "static-top" }),
+      body: W.Text({ text: "static-body" }),
+      bottomBar: W.Text({ text: "static-bottom" }),
+      fab: W.Icon({ name: "add" }),
+    });
+    host.appendChild(sc);
+    await wait(40);
+    const slots = [...sc.children];
+    ok(slots[0]?.textContent.includes("static-top"), "appBar slot is empty");
+    ok(slots[1]?.textContent.includes("static-body"), "body slot is empty");
+    ok(slots[2]?.textContent.includes("static-bottom"), "bottomBar slot is empty");
+    ok(slots[3]?.children.length === 1, "fab slot is empty");
+    sc.remove();
+  });
+
   await t("Drawer: body rows keep content height instead of being squeezed", async () => {
     // The scrollable body is a `flex: 1` column inside a fixed-height panel and
     // every widget defaults to `flex-shrink: 1`, so as soon as the rows did not
@@ -597,6 +1039,65 @@ async function run() {
     bs.open();
     await wait(400); // past the stale timer
     ok(overlay.style.visibility === "visible", "the stale timer hid an OPEN sheet");
+  });
+
+  await t("Modal: closeOnOverlayClick dismisses from the backdrop only", async () => {
+    // The prop was documented on both overlays while the backdrop handler sat
+    // commented out, so `closeOnOverlayClick: true` (the default) closed nothing.
+    const m = W.Modal({ title: "T", content: W.Text({ text: "x" }) });
+    await wait(20);
+    const overlay = document.body.lastElementChild;
+    m.open();
+    await wait(20);
+    overlay.firstChild?.dispatchEvent?.(
+      new MouseEvent("click", { bubbles: true }),
+    );
+    await wait(20);
+    ok(m.isOpen === true, "a click inside the panel closed the modal");
+    overlay.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    await wait(20);
+    ok(m.isOpen === false, "a backdrop click did not close the modal");
+    m.destroy?.();
+
+    const kept = W.Modal({
+      title: "T",
+      content: W.Text({ text: "x" }),
+      closeOnOverlayClick: false,
+    });
+    await wait(20);
+    const keptOverlay = document.body.lastElementChild;
+    kept.open();
+    await wait(20);
+    keptOverlay.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    await wait(20);
+    ok(kept.isOpen === true, "closeOnOverlayClick:false still closed on the backdrop");
+    kept.destroy?.();
+  });
+
+  await t("BottomSheet: closeOnOverlayClick dismisses from the backdrop only", async () => {
+    const bs = W.BottomSheet({ content: W.Text({ text: "sheet" }) });
+    await wait(20);
+    const overlay = document.body.lastElementChild;
+    bs.open();
+    await wait(60);
+    overlay.firstChild?.dispatchEvent?.(new MouseEvent("click", { bubbles: true }));
+    await wait(20);
+    ok(
+      overlay.style.opacity === "1",
+      `a click inside the sheet closed it (opacity ${overlay.style.opacity})`,
+    );
+    overlay.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    await wait(20);
+    ok(
+      overlay.style.opacity === "0",
+      `a backdrop click did not close the sheet (opacity ${overlay.style.opacity})`,
+    );
+    await wait(350); // visibility flips after animationDuration (300 ms)
+    ok(
+      overlay.style.visibility === "hidden",
+      "the sheet stayed in the DOM after closing",
+    );
+    bs.destroy?.();
   });
 
   // ---------------------------------------------------------------- animate.js
@@ -943,6 +1444,38 @@ async function run() {
       window.requestAnimationFrame = origRaf;
       window.cancelAnimationFrame = origCaf;
     }
+  });
+
+  await t("MatrixRain: _cleanup() stops the loop and keeps the canvas mounted", async () => {
+    // The documented contract is "call it when removing the canvas from the DOM",
+    // so a caller that only wants to freeze the rain must not lose the element.
+    const snapshot = (canvas) => {
+      const ctx = canvas.getContext("2d");
+      const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      let sum = 0;
+      for (let i = 0; i < data.length; i += 401) sum += data[i];
+      return sum;
+    };
+
+    const canvas = MatrixRain({ fontSize: 14 });
+    host.appendChild(canvas);
+    await wait(80);
+    const first = snapshot(canvas);
+    await wait(150);
+    const second = snapshot(canvas);
+    ok(first !== second, "the rain never painted — nothing to freeze");
+
+    canvas._cleanup();
+    ok(canvas.parentNode === host, "_cleanup() removed the canvas from its parent");
+    ok(canvas.isConnected, "_cleanup() detached a canvas the caller still holds");
+
+    const frozen = snapshot(canvas);
+    await wait(150);
+    ok(snapshot(canvas) === frozen, "the loop kept painting after _cleanup()");
+
+    // Releasing twice is what a teardown sweep plus an onUnmount handler does.
+    canvas._cleanup();
+    canvas.remove();
   });
 
   // -------------------------------------------------- animate: cancelable loops
@@ -1414,17 +1947,20 @@ async function run() {
   await t("Checkbox/Radio/Switch: activeColor paints the active state", async () => {
     // The three controls hardcoded the theme color when active, so the documented
     // `activeColor` prop changed nothing.
-    // The fill is on the painted element, not on the widget: each control is now a
+    // The paint is on the drawn element, not on the widget: each control is now a
     // 40-unit hit box wrapping a smaller visual, so stretching the colour to the
     // root would make the control itself the size of the target.
     // The inline value, not the computed one: the track cross-fades over 200 ms,
     // so getComputedStyle still reports the colour it is leaving for a moment.
     const paint = (el) => el.firstElementChild.style.backgroundColor;
+    // The checkbox is an outlined square: its active paint is the rim and the
+    // tick, not a filling plate.
+    const rim = (el) => getComputedStyle(el.firstElementChild).borderTopColor;
     const box = mount(W.Checkbox({ checked: true, activeColor: "rgb(37, 99, 235)" }));
-    ok(paint(box) === "rgb(37, 99, 235)", `Checkbox bg=${paint(box)}`);
+    ok(rim(box) === "rgb(37, 99, 235)", `Checkbox rim=${rim(box)}`);
     const untoggled = mount(W.Checkbox({ activeColor: "rgb(37, 99, 235)" }));
     untoggled.setChecked(true);
-    ok(paint(untoggled) === "rgb(37, 99, 235)", `after setChecked: ${paint(untoggled)}`);
+    ok(rim(untoggled) === "rgb(37, 99, 235)", `after setChecked: ${rim(untoggled)}`);
 
     const radio = mount(W.Radio({ activeColor: "rgb(22, 163, 74)" }));
     radio.select();
@@ -1436,7 +1972,62 @@ async function run() {
     ok(paint(sw) !== "rgb(124, 58, 237)", "the off state kept the active color");
 
     const themed = mount(W.Checkbox({ checked: true }));
-    ok(paint(themed) !== "rgba(0, 0, 0, 0)", "the default theme color disappeared");
+    ok(rim(themed) !== "rgb(0, 0, 0)", "the default theme color disappeared");
+  });
+
+  await t("Checkbox: a square frame with a bordered rim and a centred tick", () => {
+    // The box was a filled 4-unit-radius blob: the rounding made a 20-unit
+    // control read as a pill, and the fill painted over the border it was
+    // supposed to show. It is now a flush square whose rim is visible in both
+    // states, with the tick centred inside it.
+    withBothThemes((theme) => {
+      const cb = mount(W.Checkbox({ checked: true }));
+      const boxEl = cb.firstElementChild;
+      const cs = getComputedStyle(boxEl);
+      ok(cs.borderRadius === "0px", `${theme}: corners are ${cs.borderRadius}`);
+      ok(cs.borderTopWidth === "2px" && cs.borderTopStyle === "solid", `${theme}: rim is ${cs.borderTop}`);
+      ok(
+        cs.backgroundColor === "rgba(0, 0, 0, 0)",
+        `${theme}: the plate ${cs.backgroundColor} hides the rim`,
+      );
+      const ratio = color(cs.borderTopColor).contrastRatio(colors.card);
+      ok(ratio >= 3, `${theme}: active rim ${cs.borderTopColor} is ${ratio.toFixed(2)}:1`);
+
+      const mark = boxEl.firstElementChild.getBoundingClientRect();
+      const frame = boxEl.getBoundingClientRect();
+      ok(
+        Math.abs(mark.left + mark.width / 2 - (frame.left + frame.width / 2)) < 1 &&
+          Math.abs(mark.top + mark.height / 2 - (frame.top + frame.height / 2)) < 1,
+        `${theme}: tick centre ${mark.left + mark.width / 2},${mark.top + mark.height / 2} ` +
+          `vs frame centre ${frame.left + frame.width / 2},${frame.top + frame.height / 2}`,
+      );
+      cb.remove();
+    });
+  });
+
+  await t("Checkbox: the documented label sits beside the box, not over it", () => {
+    // `label` went to the factory as a flat prop, which writes the root's
+    // textContent and deletes every child — the quick start's checkbox rendered
+    // as bare words with no box. It now composes the label like Switch does.
+    const cb = mount(W.Checkbox({ label: "Accept terms" }));
+    const box = cb.firstElementChild;
+    const label = cb.lastElementChild;
+    ok(
+      box.tagName === "DIV" && box.style.border.includes("solid"),
+      "the label replaced the box",
+    );
+    ok(label.textContent === "Accept terms", `label reads "${label.textContent}"`);
+    const row = cb.getBoundingClientRect();
+    const words = label.getBoundingClientRect();
+    const frame = box.getBoundingClientRect();
+    ok(
+      Math.abs(frame.top + frame.height / 2 - (words.top + words.height / 2)) < 1,
+      "the box and the label are not on the same centre line",
+    );
+    ok(words.left > frame.right, "the label is not beside the box");
+    ok(row.height >= TAP_MINIMUM, `the labelled row is ${row.height}px tall`);
+    cb.click();
+    ok(cb.getChecked() === true, "clicking the label did not toggle the box");
   });
 
   await t("Stack: alignment anchors children at the documented nine points", async () => {
@@ -2236,6 +2827,283 @@ async function run() {
       }),
     );
     ok(page.children[1].offsetHeight >= 280, `flex:1 stretched to ${page.children[1].offsetHeight}px`);
+  });
+
+  await t("Rating: a fractional score paints a half star", () => {
+    const glyphs = (el) =>
+      [...el.querySelectorAll("span.material-icons")].map((s) => s.textContent);
+
+    const fourFour = mount(
+      W.Rating({ value: 4.4, max: 5, allowHalf: true, readOnly: true }),
+    );
+    ok(
+      glyphs(fourFour).join("|") === "star|star|star|star|star_half",
+      `4.4 rendered "${glyphs(fourFour).join("|")}"`,
+    );
+
+    const fourNine = mount(
+      W.Rating({ value: 4.9, max: 5, allowHalf: true, readOnly: true }),
+    );
+    ok(
+      glyphs(fourNine).join("|") === "star|star|star|star|star",
+      `4.9 rendered "${glyphs(fourNine).join("|")}"`,
+    );
+
+    const noHalf = mount(
+      W.Rating({ value: 4.4, max: 5, allowHalf: false, readOnly: true }),
+    );
+    ok(
+      !glyphs(noHalf).includes("star_half"),
+      `allowHalf:false rendered "${glyphs(noHalf).join("|")}"`,
+    );
+  });
+
+  await t("stackPosition: a false placement shorthand does not apply", () => {
+    const off = mount(
+      WidgetFactory({
+        tag: "div",
+        position: "stack",
+        full: false,
+        fullWidth: false,
+        fullHeight: false,
+        center: false,
+        centerX: false,
+        centerY: false,
+      }),
+    );
+    ok(off.style.position === "absolute", `position is "${off.style.position}"`);
+    ok(off.style.width !== "100%", `full:false set width "${off.style.width}"`);
+    ok(off.style.height !== "100%", `full:false set height "${off.style.height}"`);
+    ok(off.style.top === "", `center:false set top "${off.style.top}"`);
+    ok(off.style.left === "", `center:false set left "${off.style.left}"`);
+    ok(off.style.transform === "", `center:false set transform "${off.style.transform}"`);
+  });
+
+  await t("stackPosition: centerX + centerY compose", () => {
+    const both = mount(
+      WidgetFactory({ tag: "div", position: "stack", centerX: true, centerY: true }),
+    );
+    ok(
+      both.style.transform === "translateX(-50%) translateY(-50%)",
+      `centerX+centerY produced "${both.style.transform}"`,
+    );
+  });
+
+  await t("Inspector: the documented props object returns a widget that shows the dump", () => {
+    // The doc page and InspectorProps both describe `Inspector({ widget, indent })`,
+    // but the implementation only ever took a node, so the documented call fell
+    // through to `String(props)` and painted "[object Object]".
+    const node = W.Button({ text: "Save" });
+    const view = mount(W.Inspector({ widget: node, indent: 1 }));
+    ok(
+      view instanceof HTMLElement,
+      `Inspector({ widget }) returned ${typeof view}, not an element`,
+    );
+    const dump = view.textContent || "";
+    ok(
+      dump.startsWith("Button("),
+      `the printout did not name the widget: "${dump.slice(0, 40)}"`,
+    );
+    ok(
+      dump.includes("'Save'"),
+      `the printout lost the inspected prop: "${dump.slice(0, 60)}"`,
+    );
+    // The positional form is what printWidgetCode and inspectWidget call.
+    const text = W.Inspector(node);
+    ok(
+      typeof text === "string" && text.startsWith("Button("),
+      `Inspector(node) stopped returning a string: ${String(text).slice(0, 40)}`,
+    );
+  });
+
+  // ------------------------------------------------------- navigation shells
+  await t("Scaffold: a boolean slot value builds instead of throwing", () => {
+    // The slots are typed `Widget | boolean` and only `false` was handled, so
+    // `appBar: true` fell through to appendChild(true) and threw on the spot.
+    for (const cfg of [
+      { appBar: true },
+      { bottomBar: true },
+      { fab: true },
+      { appBar: true, bottomBar: true, fab: true },
+    ]) {
+      const shell = mount(
+        Scaffold({ ...cfg, body: W.Text({ text: "body" }) })
+      );
+      ok(
+        shell instanceof HTMLElement,
+        `Scaffold(${JSON.stringify(cfg)}) did not build`
+      );
+      shell._cleanup();
+      shell.remove();
+    }
+    // A slot that is "true" with nothing behind it stays empty; the boolean
+    // must not reach the DOM as text.
+    const shell = mount(
+      Scaffold({ appBar: true, body: W.Text({ text: "body" }) })
+    );
+    ok(
+      !shell.textContent.includes("true"),
+      `a boolean leaked into the DOM: "${shell.textContent}"`
+    );
+    shell._cleanup();
+    shell.remove();
+  });
+
+  await t("Tabs: iconPosition puts the icon after, above or below the label", () => {
+    // Only "left" had a branch, so every other documented value dropped the
+    // icon entirely instead of moving it.
+    const read = (pos) => {
+      const tabs = mount(
+        Tabs({
+          tabs: [{ label: "Go", icon: "home" }],
+          showIcon: true,
+          iconPosition: pos,
+          children: [W.Text({ text: "panel" })],
+        })
+      );
+      const inner = tabs.querySelector('[role="tab"]').firstElementChild;
+      const shape = {
+        icons: inner.querySelectorAll(".material-icons").length,
+        order: [...inner.children]
+          .map((c) => (c.classList.contains("material-icons") ? "i" : "t"))
+          .join(""),
+        dir: getComputedStyle(inner).flexDirection,
+      };
+      tabs._cleanup();
+      tabs.remove();
+      return shape;
+    };
+    const left = read("left");
+    ok(left.icons === 1 && left.order === "it", `"left" gave ${JSON.stringify(left)}`);
+    const right = read("right");
+    ok(right.icons === 1 && right.order === "ti", `"right" gave ${JSON.stringify(right)}`);
+    const top = read("top");
+    ok(
+      top.icons === 1 && top.order === "it" && top.dir === "column",
+      `"top" gave ${JSON.stringify(top)}`
+    );
+    const bottom = read("bottom");
+    ok(
+      bottom.icons === 1 && bottom.order === "ti" && bottom.dir === "column",
+      `"bottom" gave ${JSON.stringify(bottom)}`
+    );
+  });
+
+  await t("DrawerItem: onSelect marks the transition, onPress every tap", () => {
+    // Both callbacks ran on every tap, so a screen that counted "opened"
+    // counted one per tap while its own doc page promised the first only.
+    const seen = [];
+    const item = mount(
+      DrawerItem({
+        label: "Notifications",
+        closeOnPress: false,
+        onSelect: () => seen.push("select"),
+        onPress: () => seen.push("press"),
+      })
+    );
+    item.click();
+    item.click();
+    item.click();
+    const selects = seen.filter((s) => s === "select").length;
+    const presses = seen.filter((s) => s === "press").length;
+    ok(
+      selects === 1,
+      `onSelect fired ${selects} times — it must fire once, when the item becomes selected`
+    );
+    ok(presses === 3, `onPress fired ${presses} times — it must fire on every tap`);
+    ok(
+      seen.join(",") === "select,press,press,press",
+      `unexpected order: ${seen.join(",")}`
+    );
+    item._cleanup();
+    item.remove();
+  });
+
+  await t("CollapsibleSideBar: the toggle repaints width, chevron and content", async () => {
+    // toggle() only wrote the persisted state, so the bar kept the width, the
+    // glyph and the content opacity it was built with: it never collapsed.
+    const bar = mount(
+      CollapsibleSideBar({
+        children: W.Text({ text: "nav" }),
+        id: "collapse-guard",
+        widthExpanded: 200,
+        widthCollapsed: 60,
+      })
+    );
+    const toggle = bar.firstElementChild;
+    const content = bar.lastElementChild;
+    const shape = () => ({
+      width: getComputedStyle(bar).width,
+      icon: toggle.textContent.trim(),
+      opacity: content.style.opacity,
+      pointerEvents: content.style.pointerEvents,
+      mounted: bar.contains(content),
+    });
+    const open = shape();
+    ok(
+      open.width === "200px" && open.icon === "chevron_left" && open.opacity === "1",
+      `initial state: ${JSON.stringify(open)}`
+    );
+    toggle.click();
+    await wait(400);
+    const collapsed = shape();
+    ok(
+      collapsed.width === "60px",
+      `the bar did not narrow on toggle: ${collapsed.width}`
+    );
+    ok(
+      collapsed.icon === "chevron_right",
+      `the chevron did not flip: ${collapsed.icon}`
+    );
+    ok(
+      collapsed.opacity === "0" && collapsed.pointerEvents === "none",
+      `collapsed content stayed interactive: ${JSON.stringify(collapsed)}`
+    );
+    ok(collapsed.mounted, "collapsing removed the content from the DOM");
+    toggle.click();
+    await wait(400);
+    const again = shape();
+    ok(
+      again.width === "200px" && again.icon === "chevron_left" && again.opacity === "1",
+      `expanding back gave ${JSON.stringify(again)}`
+    );
+    bar._cleanup();
+    bar.remove();
+  });
+
+  // --------------------------------------------------------------------- AdMob
+  // `autoShow` is the mount switch. It used to sit inside showBanner() itself,
+  // so autoShow:false silenced the manual container.show() too and a banner
+  // saved for a paywall moment could never be asked for.
+  await t("AdMob: autoShow:false silences the mount, not the manual show()", async () => {
+    const calls = [];
+    const plugin = {
+      initialize: () => {
+        calls.push("initialize");
+        return Promise.resolve();
+      },
+      showBanner: (options) => {
+        calls.push(`showBanner:${options.position}:${options.adId}`);
+        return Promise.resolve();
+      },
+      removeBanner: () => {
+        calls.push("removeBanner");
+        return Promise.resolve();
+      },
+    };
+    const node = mount(
+      W.AdMob({ plugin, autoInitialize: true, autoShow: false, position: "top" }),
+    );
+    await wait(30);
+    ok(calls.length === 0, `autoShow:false still asked the plugin on mount (${calls.join(", ")})`);
+    await node.show();
+    ok(
+      calls.includes("showBanner:TOP_CENTER:ca-app-pub-3940256099942544/6300978111"),
+      `show() never reached the plugin (${calls.join(", ") || "no calls"})`,
+    );
+    await node.hide();
+    ok(calls.includes("removeBanner"), "hide() did not remove the banner");
+    node.remove();
   });
 
   // ------------------------------------------------------------------ report

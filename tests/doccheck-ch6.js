@@ -372,9 +372,12 @@ export default function run(ctx) {
   t("CodeViewer: DIV container with a single scroll panel when there is no title", () => {
     const e = mount(W.CodeViewer({ code: "let a = 1;" }));
     eq(e.tagName, "DIV");
-    eq(e.children.length, 1);
+    // The copy button floats over the panel, so it is a second child.
+    eq(e.children.length, 2);
+    eq(e.lastElementChild.tagName, "BUTTON");
     eq(cs(e).display, "flex");
     eq(cs(e).flexDirection, "column");
+    eq(cs(e).position, "relative");
     const panel = e.children[0];
     eq(cs(panel).maxHeight, "400px");
     eq(cs(panel).overflowY, "auto");
@@ -384,7 +387,7 @@ export default function run(ctx) {
     const e = mount(W.CodeViewer({ code: 'const s = "hi"; // note' }));
     if (!e.textContent.includes('const s = "hi";')) throw new Error("code text missing");
     if (e.querySelectorAll("span").length === 0) throw new Error("no highlight spans");
-    const wrap = e.lastElementChild.firstElementChild;
+    const wrap = e.children[0].firstElementChild;
     eq(cs(wrap).fontFamily, "monospace");
     eq(cs(wrap).fontSize, "12px");
     eq(cs(wrap).whiteSpace, "pre");
@@ -393,16 +396,20 @@ export default function run(ctx) {
   t("CodeViewer: title + showHeader render a header bar above the panel", () => {
     const e = mount(W.CodeViewer({ code: "a", title: "app.js" }));
     eq(e.children.length, 2);
-    eq(e.children[0].textContent, "app.js");
+    const header = e.children[0];
+    eq(header.firstElementChild.textContent, "app.js");
+    eq(header.lastElementChild.textContent, "Copy");
     const hidden = mount(W.CodeViewer({ code: "a", title: "app.js", showHeader: false }));
-    eq(hidden.children.length, 1);
+    // No header: the panel plus the floating copy button.
+    eq(hidden.children.length, 2);
+    eq(hidden.children[0].tagName, "DIV");
   });
 
   t("CodeViewer: showLineNumbers builds a gutter div per line", () => {
     const e = mount(
       W.CodeViewer({ code: "a\nb\nc", showLineNumbers: true, startingLineNumber: 5 }),
     );
-    const flex = e.lastElementChild.firstElementChild;
+    const flex = e.children[0].firstElementChild;
     const gutter = flex.children[0];
     const codeCol = flex.children[1];
     eq(gutter.children.length, 3);

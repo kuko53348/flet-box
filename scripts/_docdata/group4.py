@@ -90,7 +90,7 @@ WIDGET_DOCS = {
         "related": ["CodeViewer", "TreeView", "Text"],
         "tips": [
             "Pass the widget instance you want to examine to widget; the tree follows its current children.",
-            "Increase indent to make deep nesting easier to scan.",
+            "Increase indent shifts the whole printout right; it is a depth count, not a pixel gap.",
             "Remove Inspector from production screens since it is a diagnostic tool.",
         ],
         "accessibility": [
@@ -108,7 +108,7 @@ WIDGET_DOCS = {
     padding: 16,
     child: Text({ text: "Profile" }),
   }),
-  indent: 16,
+  indent: 1,
 });''',
         "full": '''const debug = Inspector({
   widget: Container({
@@ -120,7 +120,7 @@ WIDGET_DOCS = {
       Button({ text: "Save" }),
     ],
   }),
-  indent: 24,
+  indent: 2,
 });''',
     },
     "Pagination": {

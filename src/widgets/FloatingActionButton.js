@@ -16,7 +16,7 @@ export const FloatingActionButton = (props) => {
     label,
     onPress,
     backgroundColor = colors.primary,
-    foregroundColor = "#ffffff",
+    foregroundColor = colors.onPrimary,
     // Depth is the 0-5 scale, like every other widget; 6 was a number the scale
     // does not have, which only worked because this widget built its own string.
     elevation = 4,

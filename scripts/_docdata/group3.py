@@ -8,7 +8,7 @@ WIDGET_DOCS = {
             "Set selected for the initial choice and let onSelect write the change back into your own state.",
         ],
         "accessibility": [
-            "The circle carries no visible label on its own; render a Text beside it and never rely on color alone.",
+            "The `label` prop renders the words beside the ring inside the same pressable row; never rely on color alone to convey the selection.",
         ],
         "behavior": [
             "Clicking an already-selected Radio is a no-op, so onSelect only fires when the selection actually changes.",

@@ -31,7 +31,7 @@ one style would otherwise fight, and the older animation would resume after the 
 
 ## Widgets
 
-- `AnimatedBox({ animations, timing, delay, fillMode, child, top, right, bottom, left })` — animates a child widget. `animations` is an array of `{ effect, from, to, duration }` entries; effects include `backgroundColor`, `color`, `borderRadius`, `opacity`, `scale`, `translate`, `rotate`, `width`, `height`, spacing, `boxShadow`, and gradients.
+- `AnimatedBox({ animations, timing, delay, fillMode, child, top, right, bottom, left })` — animates a child widget. `animations` is an array of `{ effect, from, to, duration }` entries; each plays once and holds `to` at the end (add `reverse: true` to cycle back, and `loop: true` to repeat); effects include `backgroundColor`, `color`, `borderRadius`, `opacity`, `scale`, `translate`, `rotate`, `width`, `height`, spacing, `boxShadow`, and gradients.
 - `AnimatedText({ child, animations, sameTime, delayBetween, orientation })` — animates a `Text` widget (letters split per animation).
 - `MatrixRain({ chars, fontSize, speed, fadeAmount, resetProbability, useDynamicColor, position, zIndex })` — the falling-characters canvas effect (returns a `canvas`).
 - `ParallaxBox({ type, speed, direction, maxOffset, reverse, child })` — content that moves; `type` is `"scroll"`, `"mouse"`, or `"hover"`, `direction` is `"vertical"`, `"horizontal"`, or `"both"`.

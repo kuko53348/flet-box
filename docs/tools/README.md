@@ -98,7 +98,7 @@ Helpers for shaping collections and generating data.
 
 - `parseMarkdown(md)`, `parseInlineMarkdown(md)` — reserved placeholders that pass text through unchanged (real rendering is `markdownToWidgets`/`parseInlineToWidgets`).
 - `markdownToWidgets(md)` / `parseMarkdownToWidgets(md)` — markdown string → widgets (alias names for the same function).
-- `tokenize(code)`, `generateHighlightedHtml(code)`, `highlightColors` — syntax highlighting.
+- `tokenize(code)`, `generateHighlightedHtml(code, palette?)`, `highlightColors` — syntax highlighting (light and dark token maps; the highlighter picks one from the active theme).
 - `escapeHtml(text)` — escape untrusted text before inserting it as HTML.
 
 ## Visual effects

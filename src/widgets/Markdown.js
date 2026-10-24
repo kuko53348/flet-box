@@ -635,25 +635,31 @@ const parseMarkdown = (text) => {
       `<a href="${escapeCode(href)}" target="_blank" rel="noopener">${label}</a>`,
   );
 
-  // Unordered lists — wrap consecutive <li> items produced by the "-" rule in
-  // a single <ul>. The replacement uses a non-greedy match anchored to the
-  // first <li> so it does not accidentally swallow ordered-list items too.
-  // Step 1: convert each "- item" line into a raw <li>.
-  html = html.replace(/^[ \t]*-[ \t]+(.*$)/gm, "<li>$1</li>");
-  // Step 2: group consecutive unordered <li> runs. We tag them with a
-  // data-ul attribute so the ordered-list pass below does not re-wrap them.
+  // Unordered lists — tag each "- item" line as an unordered <li>, then group
+  // the consecutive runs. `*` and `+` are CommonMark markers for the same list,
+  // so they are accepted too: `* uno` used to stay a literal paragraph. Emphasis
+  // has already run by now, which is why `**bold**` and `*italic*` at the start
+  // of a line are no longer reachable here. The tag is what keeps the ordered
+  // pass below from touching these items; without it, a `- a\n- b` run came out
+  // as `<ul><ol><li>a</li></ol><li>b</li></ul>`, so the first bullet rendered as
+  // the number "1." one indent level deeper than the second.
+  html = html.replace(/^[ \t]*[-*+][ \t]+(.*$)/gm, '<li data-list="ul">$1</li>');
   html = html.replace(
-    /(<li>(?:(?!<\/ol>).)*?<\/li>(\n|$))+/gs,
-    (match) => `<ul>${match.replace(/\n$/, "")}</ul>\n`,
+    /(<li data-list="ul">(?:(?!<\/li>).)*?<\/li>(\n|$))+/g,
+    (match) =>
+      `<ul>${match
+        .replace(/\n$/, "")
+        .replace(/<li data-list="(?:ul|ol)">/g, "<li>")}</ul>\n`,
   );
 
-  // Ordered lists
-  // Step 1: convert each "1. item" line into a raw <li>.
-  html = html.replace(/^[ \t]*\d+\.[ \t]+(.*$)/gm, "<li>$1</li>");
-  // Step 2: group consecutive ordered <li> runs that are NOT already inside a <ul>.
+  // Ordered lists — the same two steps with their own tag.
+  html = html.replace(/^[ \t]*\d+\.[ \t]+(.*$)/gm, '<li data-list="ol">$1</li>');
   html = html.replace(
-    /(<li>(?:(?!<\/ul>).)*?<\/li>(\n|$))+/gs,
-    (match) => `<ol>${match.replace(/\n$/, "")}</ol>\n`,
+    /(<li data-list="ol">(?:(?!<\/li>).)*?<\/li>(\n|$))+/g,
+    (match) =>
+      `<ol>${match
+        .replace(/\n$/, "")
+        .replace(/<li data-list="(?:ul|ol)">/g, "<li>")}</ol>\n`,
   );
 
   // Blockquotes
@@ -844,7 +850,10 @@ export const Markdown = (props) => {
 
     // List styling
     listMargin = "0em 0",
-    listPadding = "0 0 0 1em",
+    // An outside marker hangs 1.5px left of the li text at 14px font, so a 1em
+    // indent leaves the disc straddling the root's left edge and `overflow: auto`
+    // clips half of it. The extra 0.25em keeps the whole marker inside.
+    listPadding = "0 0 0 1.25em",
     listItemMargin = "0.0em 0",
 
     // Image styling

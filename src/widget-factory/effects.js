@@ -1,5 +1,42 @@
 // core/effects.js
 
+import { SHADOW_LEVELS } from "../tools/shadow.js";
+
+/**
+ * The three geometry numbers of a CSS shadow: x, y and blur.
+ * The colour is stripped first, because the scale writes `0 3px 6px` while the
+ * browser serialises the live style as `0px 3px 6px 0px` — matching numbers
+ * instead of tokens is what lets both forms compare equal.
+ */
+const shadowGeometry = (value) => {
+  const numbers = String(value ?? "")
+    .replace(/rgba?\([^)]*\)/g, "")
+    .trim()
+    .split(/\s+/)
+    .map(parseFloat);
+  return numbers.length >= 3 && numbers.every(Number.isFinite)
+    ? numbers.slice(0, 3)
+    : null;
+};
+
+/**
+ * The next `SHADOW_LEVELS` entry above `value`, or `null` when the shadow is not
+ * one of the scale's levels. Matching is by geometry, not by string: the browser
+ * serialises "0 3px 6px rgba(0,0,0,0.16)" as "rgba(0, 0, 0, 0.16) 0px 3px 6px",
+ * so comparing the literals would never find a level.
+ */
+const nextElevation = (value) => {
+  const geometry = shadowGeometry(value);
+  if (!geometry) return null;
+  const level = Object.keys(SHADOW_LEVELS).find((key) => {
+    const candidate = shadowGeometry(SHADOW_LEVELS[key]);
+    return candidate && candidate.every((n, i) => Math.abs(n - geometry[i]) < 0.01);
+  });
+  if (level === undefined) return null;
+  return SHADOW_LEVELS[Number(level) + 1] ?? null;
+};
+
+
 /**
  * Applies interactive visual effects to a widget that has a click handler.
  *
@@ -19,7 +56,8 @@
  * - On press end (`mouseup` / `touchend` / `mouseleave` / `touchcancel`):
  *   restores the original scale and shadow.
  * - On hover enter (`mouseenter`): translates the widget up by `0.5px` and
- *   enhances the box shadow when one was present.
+ *   raises the box shadow by one `SHADOW_LEVELS` step when the widget already
+ *   carries a shadow from that scale.
  * - On hover leave (`mouseleave`): restores the original translate and shadow.
  * - Sets `cursor: pointer`.
  *
@@ -47,7 +85,12 @@ export const applyEffects = (widget) => {
   if (!hasClick) return widget;
 
   // Store the current shadow so it can be restored after press / hover effects.
-  widget._originalShadow = widget.style.boxShadow || "";
+  //
+  // Skipped while the pointer is over the widget: `update()` re-runs
+  // `applyEffects`, and capturing the lifted hover shadow as the base would make
+  // every update climb one more elevation step.
+  if (!widget._hovering) widget._originalShadow = widget.style.boxShadow || "";
+  const hoverShadow = nextElevation(widget._originalShadow);
 
   const disableTransform = widget._originalProps?.disableTransform === true;
   const listeners = [];
@@ -98,11 +141,10 @@ export const applyEffects = (widget) => {
      */
     const onHoverEnter = () => {
       if (isPressed) return;
+      widget._hovering = true;
       // Use the independent `translate` property.
       widget.style.translate = "0 -0.5px";
-      if (widget._originalShadow && widget._originalShadow !== "none") {
-        widget.style.boxShadow = "0 8px 16px rgba(0,0,0,0.2)";
-      }
+      if (hoverShadow) widget.style.boxShadow = hoverShadow;
     };
 
     /**
@@ -115,12 +157,21 @@ export const applyEffects = (widget) => {
       // Restore translate without touching transform.
       widget.style.translate = "";
       widget.style.boxShadow = widget._originalShadow || "";
+      widget._hovering = false;
     };
 
     widget.addEventListener("mouseenter", onHoverEnter, { passive: true });
     widget.addEventListener("mouseleave", onHoverLeave, { passive: true });
     listeners.push({ event: "mouseenter", handler: onHoverEnter });
     listeners.push({ event: "mouseleave", handler: onHoverLeave });
+
+    // An update re-applies the props' own shadow and translate, which cancels a
+    // hover that is still in progress. Re-assert it, from the same base, so a
+    // reactive update neither drops the lift nor climbs another step.
+    if (widget._hovering) {
+      widget.style.translate = "0 -0.5px";
+      if (hoverShadow) widget.style.boxShadow = hoverShadow;
+    }
 
     widget.style.cursor = "pointer";
   }

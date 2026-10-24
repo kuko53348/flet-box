@@ -9,6 +9,7 @@ import { Text } from "./Text.js";
 import { Icon } from "./Icon.js";
 import { colors } from "../utils/themes.js";
 import { toREM } from "../utils/units.js";
+import { TAP_MINIMUM } from "../tools/scale.js";
 
 export const Pagination = (props) => {
   const {
@@ -57,10 +58,13 @@ export const Pagination = (props) => {
   };
 
   const pageNumbers = getPageNumbers();
+  // Every size is at least TAP_MINIMUM units tall: a page number is a thumb
+  // target, and the strip may only get smaller by type and gap, never below the
+  // 40-unit floor the rest of the framework holds itself to.
   const sizes = {
-    small: { buttonSize: 32, fontSize: 12, iconSize: 16, gap: 4 },
-    medium: { buttonSize: 36, fontSize: 14, iconSize: 20, gap: 6 },
-    large: { buttonSize: 42, fontSize: 16, iconSize: 24, gap: 8 },
+    small: { buttonSize: TAP_MINIMUM, fontSize: 12, iconSize: 16, gap: 4 },
+    medium: { buttonSize: TAP_MINIMUM, fontSize: 14, iconSize: 20, gap: 6 },
+    large: { buttonSize: 48, fontSize: 16, iconSize: 24, gap: 8 },
   };
   const sz = sizes[size] || sizes.medium;
 
@@ -73,10 +77,10 @@ export const Pagination = (props) => {
 
   const createPageButton = (page, isActive = false) => {
     const buttonVariant = isActive ? "filled" : variant;
-    // FIX: antes `isActive ? color : colors.textSecondary` — pero bgColor también
-    // es `color`, así que texto y fondo eran el mismo tono → número invisible.
-    // Uso blanco para el activo (texto sobre fondo de color).
-    const buttonColor = isActive ? "#ffffff" : colors.textSecondary;
+    // The active page is a primary plate, so its number is the theme's ink. It
+    // is disabled only to say "you are already here" — disabling it made Button
+    // repaint the plate grey and the number grey, erasing the accent.
+    const buttonColor = isActive ? colors.onPrimary : colors.textSecondary;
 
     return Button({
       text: String(page),
@@ -86,7 +90,7 @@ export const Pagination = (props) => {
       size: size,
       ...buttonBase,
       onPress: () => handlePageChange(page),
-      disabled: disabled || isActive,
+      disabled: disabled,
     });
   };
 

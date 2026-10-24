@@ -31,9 +31,47 @@ declare module 'flet-box' {
   }
 
   // =========================================================================
+  // Posicionamiento
+  // =========================================================================
+  /**
+   * Positional props accepted by every widget.
+   *
+   * `position: 'stack'` takes the widget out of normal flow and places it
+   * against its nearest positioned ancestor; the `center*` / `full*` shorthands
+   * only take effect in that mode. Numeric offsets are framework units (pixels
+   * on the 16px base, emitted as rem).
+   *
+   * A few widgets give `position` their own meaning — the toast/badge/tooltip
+   * anchor — and therefore omit this declaration, as does `Maps` for `center`.
+   */
+  export interface StackPositionProps {
+    position?: 'static' | 'relative' | 'absolute' | 'fixed' | 'sticky' | 'stack';
+    /** Alias of `position`. */
+    pos?: 'static' | 'relative' | 'absolute' | 'fixed' | 'sticky' | 'stack';
+    top?: Size;
+    right?: Size;
+    bottom?: Size;
+    left?: Size;
+    inset?: Size;
+    /** Logical spelling of `left`. */
+    start?: Size;
+    /** Logical spelling of `right`. */
+    end?: Size;
+    /** Alias of `zIndex`. */
+    z?: number;
+    zIndex?: number;
+    centerX?: boolean;
+    centerY?: boolean;
+    center?: boolean;
+    fullWidth?: boolean;
+    fullHeight?: boolean;
+    full?: boolean;
+  }
+
+  // =========================================================================
   // Props comunes (heredadas by todos the widgets)
   // =========================================================================
-  export interface CommonProps {
+  export interface CommonProps extends StackPositionProps {
     width?: Size;
     height?: Size;
     // `Size`, not `number`: for a Text this is a font size and for a Button it is
@@ -248,7 +286,7 @@ declare module 'flet-box' {
 
   export interface StackProps extends CommonProps {
     children?: Widget[];
-    position?: 'relative' | 'absolute';
+    position?: 'relative' | 'absolute' | 'stack';
     alignment?: 'top-left' | 'top-center' | 'top-right' | 'center-left' | 'center' | 'center-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
   }
   export function Stack(props: StackProps): Widget;
@@ -495,7 +533,7 @@ declare module 'flet-box' {
     getElement(): Widget;
   };
 
-  export interface AdMobProps extends CommonProps {
+  export interface AdMobProps extends Omit<CommonProps, 'position'> {
     adId?: string;
     isTesting?: boolean;
     position?: 'top' | 'bottom';
@@ -526,7 +564,7 @@ declare module 'flet-box' {
     getPlugin(): object | null;
   };
 
-  export interface BadgeProps extends CommonProps {
+  export interface BadgeProps extends Omit<CommonProps, 'position'> {
     value: string | number;
     child: Widget;
     bgColor?: Color;
@@ -1288,9 +1326,14 @@ declare module 'flet-box' {
   };
 
   export interface InspectorProps {
+    /** The widget whose call is reconstructed and painted. */
     widget: Widget;
+    /** Starting indentation depth of the printout. */
     indent?: number;
   }
+  /** Paints the reconstructed call of a widget tree. */
+  export function Inspector(props: InspectorProps): Widget;
+  /** Rebuilds the call that made a widget, as a string. */
   export function Inspector(widget: Widget, indent?: number): string;
   export function printWidgetCode(widget: Widget): void;
   export function inspectWidget(widget: Widget): Widget;
@@ -1368,7 +1411,7 @@ declare module 'flet-box' {
     getCurrentIndex(): number;
   };
 
-  export interface TooltipProps extends CommonProps {
+  export interface TooltipProps extends Omit<CommonProps, 'position'> {
     text: string;
     child: Widget;
     position?: 'top' | 'bottom' | 'left' | 'right';
@@ -1776,7 +1819,7 @@ declare module 'flet-box' {
     heading: number | null;
   }
 
-  export interface MapsProps extends CommonProps {
+  export interface MapsProps extends Omit<CommonProps, 'center'> {
     /** Initial view centre. Defaults to `[20, 0]`. */
     center?: LatLng;
     /** Integer zoom level, 0 = the whole world. Defaults to `2`. */
@@ -2208,5 +2251,5 @@ declare module 'flet-box' {
   // =========================================================================
   export const highlightColors: Record<string, string>;
   export function tokenize(code: string): Array<{ type: string; value: string }>;
-  export function generateHighlightedHtml(code: string): string;
+  export function generateHighlightedHtml(code: string, palette?: Record<string, string>): string;
 }

@@ -74,6 +74,37 @@ These expand to two sides at once (numeric values are pixels):
 `flexBasis`, `gap`, `boxSizing`, `overflow`, `overflowX`, `overflowY`,
 `position` (`pos`), `top`, `right`, `bottom`, `left`, `inset`, `zIndex` (`z`).
 
+### Stack positioning
+
+`position: 'stack'` takes the widget out of normal flow and pins it to its
+nearest positioned ancestor. The placement shorthands below apply **only** in
+that mode; the plain offsets still work with any CSS `position` value.
+
+| Prop | Effect |
+| --- | --- |
+| `top` / `right` / `bottom` / `left` | Edge offsets. A number is pixels on the 16px base, written as rem. |
+| `start` / `end` | `left` / `right` under the logical names. |
+| `centerX` / `centerY` | Centre on one axis. |
+| `center` | Centre on both axes. |
+| `fullWidth` / `fullHeight` | Stretch to the parent's width / height. |
+| `full` | Stretch on both axes. |
+
+```js
+Stack({
+  width: "100%",
+  height: 320,
+  children: [
+    Image({ src: "cover.jpg", position: "stack", full: true, fit: "cover" }),
+    Text({ text: "Centred", position: "stack", center: true }),
+  ],
+});
+```
+
+A `false` shorthand means "do not apply", so `full: false` leaves the widget at
+its natural size. [`Button`](Button.md), [`Input`](Input.md) and
+[`Tabs`](Tabs.md) also read `fullWidth` as a plain layout prop, independent of
+`position`.
+
 ## Size and spacing
 
 `width` (`w`), `height` (`h`), `minWidth`/`maxWidth`, `minHeight`/`maxHeight`,

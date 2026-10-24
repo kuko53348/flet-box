@@ -41,7 +41,7 @@ export const Badge = (props) => {
     value,
     child,
     bgColor = colors.secondary,
-    color = colors.text,
+    color = colors.onSecondary,
     size = 20,
     position = "top-right",
     borderWidth = 2,

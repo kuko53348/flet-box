@@ -98,6 +98,11 @@ export const Switch = (props) => {
     minHeight: TAP_MINIMUM,
     cursor: disabled ? "not-allowed" : "pointer",
     opacity: disabled ? 0.5 : 1,
+    // The root carries the click, so the default press effect scaled whatever
+    // the root happens to be — with a label that is the whole row, and the words
+    // shrank with the switch. The knob's slide is this control's feedback; the
+    // row must not behave like a button.
+    disableTransform: true,
     child: isLabelled
       ? [
           Text({

@@ -4,6 +4,7 @@
  */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
+import { readableInk } from "../utils/readableInk.js";
 
 import { toREM } from "../utils/units.js";
 
@@ -23,7 +24,10 @@ export const CircularChart = (props) => {
     centerContent = null,
     showLabels = false,
     labelSize = 12,
-    labelColor = colors.text,
+    // Unset by default: every slice has its own fill, and the theme's ink is
+    // the same colour as the primary slice in both palettes, so the label has
+    // to be chosen against the slice it sits on (see `labelInk`).
+    labelColor = null,
     onClick = null,
     onHover = null,
     defaultColors = [
@@ -44,7 +48,7 @@ export const CircularChart = (props) => {
     borderColor = null,
     borderWidth = 0,
     sliceBorderWidth = 0,
-    sliceBorderColor = "#ffffff",
+    sliceBorderColor = colors.card,
     ...rest
   } = props;
 
@@ -199,6 +203,13 @@ export const CircularChart = (props) => {
     return defaultColors[index % defaultColors.length];
   };
 
+  const labelInk = (fill) => {
+    if (labelColor) return labelColor;
+    if (fill === colors.primary) return colors.onPrimary;
+    if (fill === colors.secondary) return colors.onSecondary;
+    return readableInk(fill, colors.text);
+  };
+
   // Draw each segment with rounded ends (each one with its own color)
   const drawRoundedSegment = (slice, index) => {
     const r = getRadiusVal() / 2;
@@ -276,7 +287,7 @@ export const CircularChart = (props) => {
       const x = cx + labelRadius * Math.cos(midAngle);
       const y = cy + labelRadius * Math.sin(midAngle);
       ctx.font = `${labelSize}px system-ui`;
-      ctx.fillStyle = labelColor;
+      ctx.fillStyle = labelInk(color);
       ctx.shadowBlur = 0;
       const percent = Math.round(
         (slice.value / (slice.end - slice.start)) * 100,

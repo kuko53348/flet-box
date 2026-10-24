@@ -34,7 +34,10 @@ export const TreeView = (props) => {
     textColor = colors.text,
     selectedTextColor = colors.primary,
     iconColor = colors.textSecondary,
-    folderIconColor = colors.warning,
+    // Folders carry the brand tone, the same accent as the selected row. They
+    // used to default to `colors.warning`, which made a neutral folder the only
+    // alarm-coloured element in an otherwise grey tree.
+    folderIconColor = colors.primary,
     borderColor = colors.border,
 
     // Spacing props
@@ -103,6 +106,10 @@ export const TreeView = (props) => {
       cursor: selectable ? "pointer" : "default",
       backgroundColor: isSelected ? selectedBgColor : bgColor,
       padding: nodePadding,
+      // A raw factory div is content-box, so without this the 40px touch
+      // target was added on top of the 8px vertical padding and every row
+      // measured 56px, spreading the tree far more than its 8px rhythm.
+      boxSizing: "border-box",
       ...(selectable ? { minHeight: TAP_MINIMUM } : {}),
       borderRadius: toREM(borderRadius),
       marginLeft: toREM(level * indent),
@@ -209,7 +216,9 @@ export const TreeView = (props) => {
     if (node.badge) {
       const badge = WidgetFactory({
         tag: "div",
-        backgroundColor: colors.danger,
+        // `danger` is the signal tone; the plate is the fill white words can
+        // actually sit on (6.47:1 in the light theme, 10.02:1 in the dark one).
+        backgroundColor: colors.dangerPlate,
         borderRadius: "12px",
         padding: "2px 8px",
         child: WidgetFactory({

@@ -103,6 +103,21 @@ DESC = {
     "minHeight": "Minimum height the widget may shrink to.",
     "maxHeight": "Maximum height the widget may grow to.",
     "position": "CSS `position` value, or `stack` for centered stacking.",
+    "pos": "Alias of `position`.",
+    "top": "Offset from the top edge. A number is pixels; a string uses any CSS unit.",
+    "right": "Offset from the right edge. A number is pixels; a string uses any CSS unit.",
+    "bottom": "Offset from the bottom edge. A number is pixels; a string uses any CSS unit.",
+    "left": "Offset from the left edge. A number is pixels; a string uses any CSS unit.",
+    "inset": "Shorthand for the four edge offsets (`top`/`right`/`bottom`/`left`).",
+    "start": "Logical alias of `left`, used by the stack placement shorthands.",
+    "end": "Logical alias of `right`, used by the stack placement shorthands.",
+    "z": "Alias of `zIndex`.",
+    "zIndex": "Stacking order: a widget with a higher value paints above lower ones.",
+    "centerX": "Centres the widget horizontally in stack mode.",
+    "centerY": "Centres the widget vertically in stack mode.",
+    "center": "Centres the widget on both axes in stack mode.",
+    "fullHeight": "Stretches the widget to the full height of its parent in stack mode.",
+    "full": "Stretches the widget to fill its parent on both axes in stack mode.",
     "alignment": "How children are aligned inside the stack.",
     "display": "CSS `display` value for the container.",
     "spacing": "Space between grid items.",
@@ -347,12 +362,11 @@ DESC = {
     "isTesting": "Requests test ads instead of live ones.",
     "interstitialId": "AdMob interstitial ad unit id.",
     "rewardedId": "AdMob rewarded ad unit id.",
-    "autoShow": "Shows the ad automatically when it is ready.",
+    "autoShow": "Shows the banner automatically on mount. false silences only the mount; show() still asks for the ad.",
     "onLoaded": "Fired when the ad loads.",
     "onFailed": "Fired when the ad fails to load.",
     "onDismissed": "Fired when the ad is dismissed.",
     # Maps
-    "center": "View centre as `[lat, lng]`, `{lat, lng}` or `{latitude, longitude}`.",
     "zoom": "Integer zoom level: `0` shows the whole world, each step doubles the scale.",
     "minZoom": "Lowest zoom level the user can reach.",
     "maxZoom": "Highest zoom level the user can reach, usually the provider's last tile level.",
@@ -383,12 +397,25 @@ DESCRIPTION_FALLBACKS = []
 # one widget's row silently rewrites every other page that uses the name.
 WIDGET_DESC = {
     "Maps": {
+        "center": "View centre as `[lat, lng]`, `{lat, lng}` or `{latitude, longitude}`.",
         "markers": "Pins to draw: bare positions or `{position, label, color, id, rotation, clickable, data}` records.",
     },
     # `delay` in DESC is written for animations; on a tooltip it is the wait
     # before the bubble appears, and `tooltipDelay` is its old name.
     "Tooltip": {
+        "position": "Side of the child the bubble appears on.",
         "delay": "Milliseconds the pointer has to stay on the widget before the tooltip appears.",
         "tooltipDelay": "Deprecated alias of `delay`.",
+    },
+    "AdMob": {
+        "position": "Pins the banner to the top or bottom of the viewport.",
+    },
+    # DESC's `indent` is written for TreeView, where it is a pixel gap. On
+    # Inspector it is a depth count, so the generic blurb would be wrong here.
+    "Inspector": {
+        "indent": "Starting indentation depth of the printout; each level is two spaces.",
+    },
+    "Badge": {
+        "position": "Corner of the child the badge sits on.",
     },
 }

@@ -23,7 +23,7 @@ const debug = Inspector({
 | Prop | Type | Description |
 | --- | --- | --- |
 | `widget` | `Widget` | The DOM node or widget to inspect. |
-| `indent` | `number` | Indentation depth used when printing nested structures. |
+| `indent` | `number` | Starting indentation depth of the printout; each level is two spaces. |
 
 ## Examples
 
@@ -37,7 +37,7 @@ const debug = Inspector({
     padding: 16,
     child: Text({ text: "Profile" }),
   }),
-  indent: 16,
+  indent: 1,
 });
 ```
 

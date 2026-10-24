@@ -43,7 +43,7 @@ const ACCORDION_PROP_KEYS = [
  * @param {number} [props.borderRadius=8] - Corner radius in pixels.
  * @param {string} [props.bgColor=colors.surface] - Background color of the container (used in 'contained' variant).
  * @param {string} [props.titleColor=colors.text] - Text color of the title when collapsed.
- * @param {string} [props.expandedColor=colors.primary] - Accent color applied to the title and background when expanded.
+ * @param {string} [props.expandedColor=colors.primary] - Accent color applied to the title-bar background when expanded.
  * @param {string|null} [props.border=null] - Explicit CSS border shorthand. Overrides variant-based border logic.
  * @param {string} [props.borderColor=colors.border] - Border color used in 'outlined' variant.
  * @param {number} [props.borderWidth=1] - Border width in pixels (outlined variant).
@@ -151,10 +151,10 @@ export const Accordion = (props) => {
       titleElement.textContent = currentTitle;
     }
 
-    // Title color shifts to the accent color when expanded
-    titleElement.style.color = isExpanded
-      ? currentExpandedColor
-      : currentTitleColor;
+    // The accent marks the open state through the title-bar tint; the title
+    // itself keeps `titleColor`. Painting it with `primary` put #00A5FF words
+    // on a 6% primary wash (2.4:1) in the light theme.
+    titleElement.style.color = currentTitleColor;
     titleElement.style.fontSize = toREM(currentTitleSize);
     titleElement.style.fontWeight = currentTitleWeight;
 

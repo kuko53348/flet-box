@@ -381,7 +381,10 @@ const generateKeyframes = (animations) => {
 
     animations.forEach((anim) => {
       const effect = effectMap[anim.effect] || anim.effect;
-      const { from, to, reverse = true } = anim;
+      // Straight `from → to` is the default: a one-shot entry animation must hold
+      // `to`. Cycling back is opt-in, or every documented `opacity 0 → 1` faded
+      // to invisible again at 100%.
+      const { from, to, reverse = false } = anim;
 
       // A descriptor without `from`/`to` is malformed. Skip it with a warning
       // rather than throwing a TypeError out of the caller's entire render.

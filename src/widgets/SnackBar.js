@@ -5,29 +5,9 @@
 import { WidgetFactory } from "../widget-factory/index.js";
 import { border } from "../tools/index.js";
 import { colors } from "../utils/themes.js";
+import { readableInk } from "../utils/readableInk.js";
 
-// Fallback colors (if the theme is not initialized yet)
 import { toREM } from "../utils/units.js";
-
-const FALLBACK = {
-  gray800: "#1e293b",
-  primary: "#6366f1",
-  success: "#10b981",
-  danger: "#ef4444",
-  warning: "#f59e0b",
-  info: "#3b82f6",
-  gray900: "#0f172a",
-  white: "#ffffff",
-};
-
-// Safe function to get theme color
-const getThemeColor = (name, fallback) => {
-  try {
-    return (colors && colors[name]) || fallback;
-  } catch {
-    return fallback;
-  }
-};
 
 /**
  * SnackBar - Notificación temporal
@@ -56,7 +36,20 @@ export function SnackBar(options) {
     onClose,
   } = options;
 
-  // Presets using theme colors (with fallback)
+  // A preset plate is a solid signal colour, and the theme's ink is not always
+  // readable on it: in dark mode `colors.text` is near-white, which measured
+  // 1.9:1 on the green. The label follows the plate it is painted on.
+  const plateInk = (bg) => {
+    if (bg === colors.primary) return colors.onPrimary;
+    if (bg === colors.secondary) return colors.onSecondary;
+    return readableInk(bg, colors.text);
+  };
+
+  const successInk = plateInk(colors.success);
+  const dangerInk = plateInk(colors.danger);
+  const warningInk = plateInk(colors.warning);
+  const infoInk = plateInk(colors.info);
+
   const presets = {
     normal: {
       bg: colors.surface,
@@ -65,30 +58,31 @@ export function SnackBar(options) {
     },
     success: {
       bg: colors.success,
-      text: colors.text,
-      action: colors.primary,
+      text: successInk,
+      action: successInk,
     },
     error: {
       bg: colors.danger,
-      text: colors.text,
-      action: colors.primary,
+      text: dangerInk,
+      action: dangerInk,
     },
     warning: {
       bg: colors.warning,
-      text: colors.text,
-      action: getThemeColor("gray900", FALLBACK.gray900),
+      text: warningInk,
+      action: warningInk,
     },
     info: {
       bg: colors.info,
-      text: colors.text,
-      action: FALLBACK.white,
+      text: infoInk,
+      action: infoInk,
     },
   };
 
   const preset = presets[type] || presets.normal;
   const finalBg = customBg || preset.bg;
-  const finalText = customText || preset.text;
-  const finalAction = customAction || preset.action;
+  const finalText = customText || (customBg ? plateInk(finalBg) : preset.text);
+  const finalAction =
+    customAction || (customBg ? finalText : preset.action);
 
   // Createste main container
   const snackbar = WidgetFactory({

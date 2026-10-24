@@ -53,12 +53,22 @@ export const Rating = (props) => {
       let iconName = iconInactive;
       let color = inactiveColor;
 
-      if (starNumber <= currentValue) {
+      // A score like 4.4 must still show a half star. Matching `starNumber - 0.5
+      // === currentValue` only covered exact halves, so every fractional score
+      // fell through and the last star stayed empty.
+      const whole = Math.floor(currentValue);
+      const fraction = currentValue - whole;
+      if (starNumber <= whole) {
         iconName = iconActive;
         color = activeColor;
-      } else if (allowHalf && starNumber - 0.5 === currentValue) {
-        iconName = iconHalf;
-        color = activeColor;
+      } else if (allowHalf && starNumber === whole + 1) {
+        if (fraction >= 0.75) {
+          iconName = iconActive;
+          color = activeColor;
+        } else if (fraction >= 0.25) {
+          iconName = iconHalf;
+          color = activeColor;
+        }
       }
 
       span.textContent = iconName;

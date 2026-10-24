@@ -99,9 +99,9 @@ const toast = AnimatedBox({
 ## Tips
 
 - Each animation is { effect, from, to } where effect is a CSS property like opacity,
-- scale, translateY, or backgroundColor.
-- Set timing (ease, ease-out, linear) and delay at the widget level; per-step reverse
-- cycles the animation back instead of running it once.
+- scale, translateY, or backgroundColor. It runs once and holds `to` at the end.
+- Set timing (ease, ease-out, linear) and delay at the widget level; add reverse: true
+- to cycle back to `from`, together with loop: true for a breathing pulse.
 - top, right, bottom, and left are forwarded to the child as positioning hints for
 - layout systems.
 

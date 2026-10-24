@@ -1,4 +1,6 @@
 // utils/syntaxHighlight.js
+import { color } from "../tools/color.js";
+import { getTheme } from "./themes.js";
 
 // ========== FLETBOX COLORS ==========
 const fletboxColors = {
@@ -118,21 +120,82 @@ const TokenType = {
   PUNCTUATION: "punctuation",
   FLETBOX_COLOR: "fletbox-color",
   FLETBOX_WIDGET: "fletbox-widget",
+  /** Anything the tokenizer did not classify, e.g. `=`, `=>`, `+`. */
+  TEXT: "text",
 };
 
 // ========== COLORS PER TOKEN ==========
-export const highlightColors = {
+// Two palettes, chosen by the surface the code sits on. One Dark's values were
+// designed for a dark pane and measure 1.6–2.3:1 on the light theme's #F4F4F5
+// code block — the green string and the amber widget were the worst offenders.
+// The light map is GitHub's light scale, which clears AA on that grey.
+const DARK_HIGHLIGHT_COLORS = {
   [TokenType.KEYWORD]: "#c678dd", // purple
   [TokenType.STRING]: "#98c379", // green
   [TokenType.NUMBER]: "#d19a66", // orange
-  [TokenType.COMMENT]: "#5c6370", // gray
+  // One Dark's #5C6370 measures 2.73:1 on the dark code block; a comment still
+  // has to be read, so the grey is the one GitHub paints comments with.
+  [TokenType.COMMENT]: "#8b949e",
   [TokenType.PROPERTY]: "#e06c75", // red
   [TokenType.FUNCTION]: "#61afef", // blue
   [TokenType.BRACKET]: "#abb2bf", // light gray
   [TokenType.PUNCTUATION]: "#abb2bf", // light gray
   [TokenType.FLETBOX_COLOR]: "#56b6c2", // cyan
   [TokenType.FLETBOX_WIDGET]: "#e5c07b", // yellow
+  // Raw characters used to inherit the page ink, which vanishes when the pane
+  // is painted in the opposite theme. They now carry the pane's own ink.
+  [TokenType.TEXT]: "#fafafa",
+  /** Muted ink for line numbers and similar chrome (not a token colour). */
+  muted: "#a1a1aa",
 };
+
+const LIGHT_HIGHLIGHT_COLORS = {
+  [TokenType.KEYWORD]: "#cf222e", // red
+  [TokenType.STRING]: "#0a3069", // navy
+  [TokenType.NUMBER]: "#0550ae", // blue
+  [TokenType.COMMENT]: "#57606a", // gray
+  [TokenType.PROPERTY]: "#953800", // brown
+  [TokenType.FUNCTION]: "#8250df", // purple
+  [TokenType.BRACKET]: "#57606a", // gray
+  [TokenType.PUNCTUATION]: "#57606a", // gray
+  [TokenType.FLETBOX_COLOR]: "#0e7490", // teal
+  [TokenType.FLETBOX_WIDGET]: "#116329", // green
+  [TokenType.TEXT]: "#09090b",
+  muted: "#52525b",
+};
+
+export const highlightPalettes = {
+  light: LIGHT_HIGHLIGHT_COLORS,
+  dark: DARK_HIGHLIGHT_COLORS,
+};
+
+/**
+ * The map the highlighter exported before it became theme-aware. It is the dark
+ * palette, and it is still what a caller receives when it passes none.
+ */
+export const highlightColors = DARK_HIGHLIGHT_COLORS;
+
+const SOLID_BACKGROUND = /^(#[0-9a-f]{3,8}|rgba?\(\s*\d)/i;
+
+/**
+ * Picks the syntax palette for the surface the code is painted on, by that
+ * surface's own lightness. A dark block on the light theme still gets readable
+ * spans, and the widget default (`colors.gray100`) lands on the right map in
+ * both themes. Falls back to the active theme when the background is not a
+ * solid colour this module can measure (a gradient, a CSS variable) — guessing
+ * there is worse than the theme's answer.
+ * @param {string} [background] - CSS background colour of the code block.
+ * @returns {Record<string, string>} Token colour map.
+ */
+export const syntaxPaletteFor = (background) => {
+  if (typeof background === "string" && SOLID_BACKGROUND.test(background)) {
+    return color(background).isDark()
+      ? DARK_HIGHLIGHT_COLORS
+      : LIGHT_HIGHLIGHT_COLORS;
+  }
+  return highlightPalettes[getTheme()] || DARK_HIGHLIGHT_COLORS;
+};
+
 
 // ========== DETECT FLETBOX COLORS ==========
 /**
@@ -284,7 +347,7 @@ export const tokenize = (code) => {
     }
 
     // ========== ANY OTHER CHARACTER ==========
-    tokens.push({ type: "text", value: char });
+    tokens.push({ type: TokenType.TEXT, value: char });
     i++;
   }
 
@@ -294,12 +357,17 @@ export const tokenize = (code) => {
 // ========== GENERATE HTML WITH COLORS ==========
 /**
  * Tokenizes `code` and wraps each token in a `<span>` with an inline `color`
- * style matching {@link highlightColors}. Whitespace and unrecognized tokens
- * are emitted without a wrapper.
+ * style from `palette`. Whitespace and unrecognized tokens are emitted without
+ * a wrapper.
  * @param {string} code - Source code to highlight.
+ * @param {Record<string, string>} [palette] - Token colour map; defaults to the
+ *   palette of the active theme.
  * @returns {string} HTML string safe for insertion into `innerHTML`.
  */
-export const generateHighlightedHtml = (code) => {
+export const generateHighlightedHtml = (
+  code,
+  palette = syntaxPaletteFor(),
+) => {
   const tokens = tokenize(code);
   let html = "";
 
@@ -307,9 +375,9 @@ export const generateHighlightedHtml = (code) => {
     if (token.type === "whitespace") {
       html += token.value;
     } else {
-      const color = highlightColors[token.type];
-      if (color) {
-        html += `<span style="color: ${color};">${escapeHtml(token.value)}</span>`;
+      const tokenColor = palette[token.type];
+      if (tokenColor) {
+        html += `<span style="color: ${tokenColor};">${escapeHtml(token.value)}</span>`;
       } else {
         html += escapeHtml(token.value);
       }
@@ -336,4 +404,4 @@ const escapeHtml = (text) => {
     .replace(/'/g, "&#39;");
 };
 
-export default { tokenize, generateHighlightedHtml, highlightColors };
+export default { tokenize, generateHighlightedHtml, highlightColors, highlightPalettes, syntaxPaletteFor };

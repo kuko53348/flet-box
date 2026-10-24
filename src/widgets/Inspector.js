@@ -1,5 +1,7 @@
 // utils/Inspector.js
 import { getWidgetProps } from "../utils/getWidgetProps.js";
+import { WidgetFactory } from "../widget-factory/index.js";
+import { colors } from "../utils/themes.js";
 
 /**
  * Converts a JavaScript value to its source-code string representation.
@@ -139,6 +141,44 @@ const collectChildren = (widget) => {
 };
 
 /**
+ * The widget form: a monospace block holding the reconstructed call.
+ *
+ * `Inspector` itself is a string builder, which is what the console helpers
+ * need. A screen that wants to *show* a tree asks for this one, by passing the
+ * props object the documentation describes.
+ *
+ * @param {{ widget?: HTMLElement, indent?: number }} props
+ * @returns {HTMLElement}
+ */
+const InspectorView = ({ widget, indent = 0, ...rest }) => {
+  const dump = widget
+    ? Inspector(widget, indent)
+    : 'Inspector({ widget }) — nothing to inspect.';
+
+  const container = WidgetFactory({
+    widgetName: "Inspector",
+    tag: "pre",
+    text: dump,
+    fontFamily:
+      'ui-monospace, SFMono-Regular, Menlo, Consolas, "Courier New", monospace',
+    fontSize: 12,
+    color: colors.text,
+    backgroundColor: colors.card,
+    padding: 16,
+    borderRadius: 8,
+    overflowX: "auto",
+    width: "100%",
+    ...rest,
+  });
+
+  // A <pre> that wraps is a dump nobody can read; the horizontal scroll above
+  // is the deal.
+  container.style.whiteSpace = "pre";
+
+  return container;
+};
+
+/**
  * Converts a widget element back into its equivalent source-code representation,
  * recursively reconstructing its full prop tree and children.
  *
@@ -149,7 +189,20 @@ const collectChildren = (widget) => {
  * @param {number} [indent=0] - Starting indentation depth for pretty-printing.
  * @returns {string} Source code string such as `Row({ gap: 8, children: [...] })`.
  */
-export const Inspector = (widget, indent = 0) => {
+export const Inspector = (target, indent = 0) => {
+  // Two calls, one function. `Inspector({ widget, indent })` is the documented
+  // widget: it paints the dump so a settings screen can show a tree. Called
+  // with a node it stays the string builder `printWidgetCode` uses.
+  if (
+    target &&
+    typeof target === "object" &&
+    target.nodeType !== 1 &&
+    "widget" in target
+  ) {
+    return InspectorView(target);
+  }
+
+  const widget = target;
   if (!widget || widget.nodeType !== 1) {
     return String(widget);
   }

@@ -39,19 +39,19 @@ Tabs({
 | `onChange` | function | — | Fired with the new index when the tab changes. |
 | `variant` | `'underline'`/`'filled'`/`'slider'`/`'pills'` | `'underline'` | Visual treatment of the tab bar. |
 | `size` | `'small'`/`'medium'`/`'large'` | `'medium'` | Font, padding, icon, and height presets. |
-| `textColor` | Color | `colors.text` | Inactive label/icon color. |
-| `activeTextColor` | Color | `colors.white` | Active label/icon color. |
+| `textColor` | Color | `colors.textSecondary` | Inactive label/icon color. |
+| `activeTextColor` | Color | ink on `slider`, `colors.text` otherwise | Active label/icon color. |
 | `bgColor` | Color | `colors.gray100` | Bar background for `slider`/`filled` variants. |
-| `buttonColor` | Color | `colors.secondary` | Background of the `slider` indicator and `pills`. |
+| `buttonColor` | Color | `color` | Background of the `slider` indicator. |
 | `dividerColor` | Color | `colors.border` | Bottom border for the `underline` variant (when `showDivider`). |
 | `fullWidth` | boolean | `true` | Tabs share the full width; otherwise they hug their content. |
 | `showDivider` | boolean | `true` | Bottom divider under an `underline` bar. |
 | `showIcon` | boolean | `false` | Show the per-tab `icon`. |
-| `iconPosition` | `'left'`/`'right'`/`'top'`/`'bottom'` | `'left'` | Where the icon sits: `'left'` places it before the label; any other value places it after. |
+| `iconPosition` | `'left'`/`'right'`/`'top'`/`'bottom'` | `'left'` | Where the icon sits: `'left'` before the label, `'right'` after it, `'top'`/`'bottom'` stacked above/below the label row. |
 | `iconSize` | number | `18` | Icon size in pixels. |
 | `badges` | array | `[]` | Badge values per tab (`badges[i]`), or set them inline via `{ badge }`. |
 | `alignment` | `'left'`/`'center'`/`'right'` | `'left'` | Accepted for API compatibility; currently has no visual effect. |
-| `color` | Color | `colors.primary` | Accepted for API compatibility; active styling uses `activeTextColor`/`buttonColor` instead. |
+| `color` | Color | `colors.primary` | Accent: the `underline` indicator, the `pills` tint, and the default `buttonColor`. |
 
 These are the props specific to `Tabs`. It also accepts every [common prop](COMMON_PROPS.md).
 

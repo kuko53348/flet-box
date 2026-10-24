@@ -4,6 +4,7 @@
  */
 import { WidgetFactory } from "../widget-factory/index.js";import { colors } from "../utils/themes.js";
 import { SHADOW_LEVELS, TAP_MINIMUM } from "../tools/index.js";
+import { readableInk } from "../utils/readableInk.js";
 import { Text } from "./Text.js";
 import { Icon } from "./Icon.js";
 
@@ -44,10 +45,19 @@ function computeBackground(variant, disabled, bgColor, gradient) {
   return "transparent";
 }
 
-function computeTextColor(variant, disabled, color, bgColor) {
+function computeTextColor(variant, disabled, color, background, inkFromFill) {
   if (disabled) return colors.textDisabled;
-  if (variant === "filled") return color || "#fff";
-  return color || bgColor || colors.primary;
+  if (variant === "filled") {
+    // The default `color` is the theme's ink, which is the right answer for a
+    // filled button sitting on the default surface. Once the caller names the
+    // fill, that ink can be the fill itself (dark on the light theme's primary,
+    // near-white on the dark theme's), so the label has to follow the plate.
+    if (!inkFromFill) return color;
+    if (background === colors.primary) return colors.onPrimary;
+    if (background === colors.secondary) return colors.onSecondary;
+    return readableInk(background, colors.text);
+  }
+  return color || background || colors.primary;
 }
 
 function computeBorder(variant, disabled, color, bgColor, borderColor, namesItsOwnFill) {
@@ -187,13 +197,19 @@ export const Button = (props) => {
   const shadow = SHADOW_LEVELS[lifted] || SHADOW_LEVELS[0];
 
   const background = computeBackground(variant, disabled, bgColor, gradient);
-  const textColor = computeTextColor(variant, disabled, color, bgColor);
   // `bgColor` above always has a value (the default is the surface), so whether
   // the caller chose the fill has to be read off the props, not the local.
   const namesItsOwnFill =
     props.bgColor !== undefined ||
     props.backgroundColor !== undefined ||
     !!gradient;
+  const textColor = computeTextColor(
+    variant,
+    disabled,
+    color,
+    background,
+    props.color === undefined && namesItsOwnFill,
+  );
   const border = computeBorder(
     variant,
     disabled,

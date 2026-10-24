@@ -20,7 +20,7 @@ export const Tooltip = (props) => {
     /** @deprecated Use `delay` instead. */
     tooltipDelay = null,
     bgColor = colors.secondary,
-    textColor = "#ffffff",
+    textColor = colors.onSecondary,
     fontSize = 12,
     padding = `${toREM(4)} ${toREM(8)}`,
     borderRadius = 4,

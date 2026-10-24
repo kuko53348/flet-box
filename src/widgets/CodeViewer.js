@@ -5,7 +5,8 @@
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 import { composeUpdate } from "../utils/composeUpdate.js";
-import { generateHighlightedHtml } from "../utils/syntaxHighlight.js";
+import { generateHighlightedHtml, syntaxPaletteFor } from "../utils/syntaxHighlight.js";
+import { clipboard } from "../tools/clipboard.js";
 
 import { toREM } from "../utils/units.js";
 
@@ -22,22 +23,32 @@ code = "",
     showLineNumbers = false,
     startingLineNumber = 1,
     lineNumberWidth = 40,
-    lineNumberColor = colors.secondary,
+    lineNumberColor,
     ...rest
   } = props;
+
+  // The token map follows the block's own surface: the light theme's #F4F4F5
+  // pane needs the light map, and a caller that paints a dark pane on the light
+  // theme still gets spans that read.
+  const syntaxPalette = syntaxPaletteFor(backgroundColor);
+  // The gutter is not a token: it takes the muted ink of the pane's palette, so
+  // a custom pane does not get the page theme's grey on top of it.
+  const gutterInk = lineNumberColor || syntaxPalette.muted;
 
   let currentCode =
     typeof code === "string" ? code : JSON.stringify(code, null, 2);
   let currentTitle = title;
   let headerRef = null;
+  let headerTitleRef = null;
   let scrollWrapperRef = null;
   let lineNumbersColRef = null;
   let codeColRef = null;
   let codeWrapperRef = null;
+  let copyResetTimer = null;
 
   const refreshContent = () => {
     const lines = currentCode.split("\n");
-    const highlightedLines = lines.map((line) => generateHighlightedHtml(line));
+    const highlightedLines = lines.map((line) => generateHighlightedHtml(line, syntaxPalette));
 
     if (showLineNumbers) {
       // Update line numbers
@@ -81,28 +92,86 @@ code = "",
     width: "100%",
     display: "flex",
     flexDirection: "column",
+    position: "relative",
     ...rest,
   });
+
+  // The copy button carries its own solid plate, so it reads on the primary
+  // header and on any caller-painted pane, and it never relies on the page ink.
+  const copyButtonRef = WidgetFactory({
+    tag: "button",
+    type: "button",
+    textContent: "Copy",
+    backgroundColor: colors.card,
+    color: colors.text,
+    border: `1px solid ${colors.border}`,
+    borderRadius: 6,
+    padding: "2px 8px",
+    fontFamily: "monospace",
+    fontSize: 11,
+    lineHeight: "1.6",
+    flexShrink: 0,
+    cursor: "pointer",
+    onclick: () => {
+      clipboard.copy(currentCode);
+      copyButtonRef.textContent = "Copied";
+      clearTimeout(copyResetTimer);
+      copyResetTimer = setTimeout(() => {
+        copyButtonRef.textContent = "Copy";
+      }, 1500);
+    },
+  });
+
+  // Inside the header when there is one; floating over the block otherwise.
+  const attachCopyButton = () => {
+    if (headerRef) {
+      copyButtonRef.style.position = "";
+      copyButtonRef.style.top = "";
+      copyButtonRef.style.right = "";
+      copyButtonRef.style.zIndex = "";
+      headerRef.appendChild(copyButtonRef);
+    } else {
+      copyButtonRef.style.position = "absolute";
+      copyButtonRef.style.top = toREM(8);
+      copyButtonRef.style.right = toREM(8);
+      copyButtonRef.style.zIndex = "3";
+      container.appendChild(copyButtonRef);
+    }
+  };
 
   // Header. Built through a helper so a later `title` update can create one on a
   // widget that was constructed without it.
   const ensureHeader = (text) => {
     if (!showHeader || !text) return null;
     if (headerRef) {
-      headerRef.textContent = text;
+      headerTitleRef.textContent = text;
       return headerRef;
     }
     headerRef = WidgetFactory({
       tag: "div",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 8,
       padding: "8px 12px",
       backgroundColor: colors.primary,
       borderRadius: `${toREM(borderRadius)} ${toREM(borderRadius)} 0 0`,
-      color: "#fff",
+      // The header is a primary plate; in dark mode that plate is near-white,
+      // so a literal white title disappeared into it.
+      color: colors.onPrimary,
       fontSize: "14px",
       fontWeight: "bold",
-      textContent: text,
     });
+    headerTitleRef = WidgetFactory({
+      tag: "span",
+      textContent: text,
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+      whiteSpace: "nowrap",
+    });
+    headerRef.appendChild(headerTitleRef);
     container.insertBefore(headerRef, container.firstChild);
+    attachCopyButton();
     return headerRef;
   };
   ensureHeader(currentTitle);
@@ -139,7 +208,7 @@ code = "",
       fontSize: toREM(fontSize),
       lineHeight: "1.5",
       textAlign: "right",
-      color: lineNumberColor,
+      color: gutterInk,
       userSelect: "none",
       width: toREM(lineNumberWidth),
       flexShrink: 0,
@@ -182,10 +251,12 @@ code = "",
   }
 
   container.appendChild(scrollWrapperRef);
+  if (!headerRef) attachCopyButton();
+  container.onUnmount(() => clearTimeout(copyResetTimer));
 
   // Fill initial content
   const lines = currentCode.split("\n");
-  const highlightedLines = lines.map((line) => generateHighlightedHtml(line));
+  const highlightedLines = lines.map((line) => generateHighlightedHtml(line, syntaxPalette));
 
   if (showLineNumbers) {
     for (let i = 0; i < lines.length; i++) {

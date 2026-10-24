@@ -26,9 +26,16 @@ export const stackPosition = (widget, props) => {
   // Absolute positioning
   widget.style.position = "absolute";
 
+  // `centerX` + `centerY` must compose: writing each transform as it is found
+  // would let the second one erase the first.
+  const transforms = [];
+
   // Process each position prop
   for (const [key, value] of Object.entries(props)) {
     if (key === "position") continue;
+    // The placement shorthands are booleans: a present `false` means "do not
+    // apply", not "the key exists".
+    if (value === false) continue;
 
     switch (key) {
       case "top":
@@ -51,16 +58,16 @@ export const stackPosition = (widget, props) => {
         break;
       case "centerX":
         widget.style.left = "50%";
-        widget.style.transform = "translateX(-50%)";
+        transforms.push("translateX(-50%)");
         break;
       case "centerY":
         widget.style.top = "50%";
-        widget.style.transform = "translateY(-50%)";
+        transforms.push("translateY(-50%)");
         break;
       case "center":
         widget.style.top = "50%";
         widget.style.left = "50%";
-        widget.style.transform = "translate(-50%, -50%)";
+        transforms.push("translate(-50%, -50%)");
         break;
       case "fullWidth":
         widget.style.width = "100%";
@@ -79,6 +86,14 @@ export const stackPosition = (widget, props) => {
         widget.style.left = "0";
         break;
     }
+  }
+
+  if (transforms.length) {
+    // `center` already covers both axes; mixing it with a single-axis shorthand
+    // must not shift the widget twice.
+    widget.style.transform = transforms.includes("translate(-50%, -50%)")
+      ? "translate(-50%, -50%)"
+      : transforms.join(" ");
   }
 
   return widget;

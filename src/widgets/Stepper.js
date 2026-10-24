@@ -87,7 +87,7 @@ export const Stepper = (props) => {
           bgColor: isActive
             ? colors.primary
             : isCompleted
-              ? colors.success
+              ? colors.successPlate
               : colors.gray300,
           justifyContent: "center",
           alignItems: "center",
@@ -97,7 +97,9 @@ export const Stepper = (props) => {
                 text: String(idx + 1),
                 size: 14,
                 weight: "bold",
-                color: isActive ? "#fff" : colors.textSecondary,
+                // On the grey step plate, `textSecondary` measured 4.07:1 in
+                // dark; gray700 stays muted and clears AA on both themes.
+                color: isActive ? colors.onPrimary : colors.gray700,
               }),
         });
       } else if (variant === "numbers") {
@@ -105,13 +107,13 @@ export const Stepper = (props) => {
           text: String(idx + 1),
           size: 16,
           weight: "bold",
-          color: isActive ? colors.primary : colors.textSecondary,
+          color: isActive ? colors.primary : colors.gray700,
         });
       } else {
         indicator = Icon({
           name: step.icon || "circle",
           size: 24,
-          color: isActive ? colors.primary : colors.gray300,
+          color: isActive ? colors.primary : colors.gray500,
         });
       }
 

@@ -103,7 +103,7 @@ const option = Radio({
 
 ## Accessibility
 
-- The circle carries no visible label on its own; render a Text beside it and never rely on color alone.
+- The `label` prop renders the words beside the ring inside the same pressable row; never rely on color alone to convey the selection.
 
 ## Behavior
 

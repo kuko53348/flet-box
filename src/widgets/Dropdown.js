@@ -242,11 +242,15 @@ export const Dropdown = (inputProps = {}) => {
     ],
   });
 
-  // Main container
+  // The root must not paint a surface: only the selector does, and an
+  // `outlined` selector is deliberately transparent. Container's default
+  // background otherwise showed through behind the label as a full-width
+  // block, and painted the outlined field as if it were filled.
   const container = Container({
     widgetName: "Dropdown",
     position: "relative",
     width: width,
+    bgColor: "transparent",
     ...rest,
   });
 

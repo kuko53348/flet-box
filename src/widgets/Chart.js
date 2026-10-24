@@ -132,6 +132,19 @@ export const Chart = (props) => {
       maxVal = Math.max(...data);
       minVal = Math.min(...data);
     }
+    // Bars are measured from zero: if the scale started at the smallest
+    // value instead, `getYPosition(0)` fell below the axis and every bar
+    // ran past the baseline to the canvas edge, so the bottom label (6)
+    // did not describe where the bars started.
+    if (type === "bar") {
+      maxVal = Math.max(0, maxVal);
+      minVal = Math.min(0, minVal);
+      const barRange = maxVal - minVal || 1;
+      return {
+        maxValue: maxVal + (maxVal > 0 ? barRange * 0.1 : 0),
+        minValue: minVal - (minVal < 0 ? barRange * 0.1 : 0),
+      };
+    }
     const range = maxVal - minVal;
     const paddingRange = range * 0.1;
     return {
@@ -172,8 +185,11 @@ export const Chart = (props) => {
    */
   const drawBar = (ctx, canvasWidth, chartHeight, maxValue, minValue) => {
     const availableWidth = canvasWidth - pad.left - pad.right;
-    const barWidth = (availableWidth / data.length) * 0.7;
-    const barSpacing = (availableWidth / data.length) * 0.3;
+    const bandWidth = availableWidth / data.length;
+    // 70/30 left a gap 43% as wide as the bar; on a wide chart the columns
+    // read as unrelated blocks instead of one series.
+    const barWidth = bandWidth * 0.8;
+    const barSpacing = bandWidth - barWidth;
 
     data.forEach((value, index) => {
       const x = pad.left + index * (barWidth + barSpacing) + barSpacing / 2;
@@ -188,6 +204,11 @@ export const Chart = (props) => {
         ctx.fillStyle = textColor;
         ctx.font = "8px sans-serif";
         ctx.fillText(value, x + barWidth / 2 - 5, y - 2);
+      }
+      // Bars are data points too: `showLabels` used to be ignored here
+      // unless `showValues` was on, so the documented default drew no
+      // x-axis labels at all.
+      if (showLabels && labels[index]) {
         ctx.save();
         ctx.translate(x + barWidth / 2, chartHeight - pad.bottom + 8);
         ctx.rotate(-0.3);

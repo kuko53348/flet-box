@@ -44,10 +44,11 @@ const ModalOverlay = ({
       timing: "ease",
       delay: 0.1,
     }),
-    // transition: "opacity 0.3s ease, visibility 0.3s ease",
-    // onclick: () => {
-    //   if (closeOnOverlayClick) onClose();
-    // },
+    onclick: (e) => {
+      // The panel is the overlay's only child, so a click whose target is the
+      // overlay itself landed on the backdrop and nowhere else.
+      if (e.target === e.currentTarget && closeOnOverlayClick) onClose();
+    },
   });
 };
 

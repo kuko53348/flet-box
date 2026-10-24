@@ -2,6 +2,7 @@
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 import { Container } from "../widgets/Container.js";
+import { Column } from "../widgets/Column.js";
 import { Row } from "../widgets/Row.js";
 import { Text } from "../widgets/Text.js";
 import { Icon } from "../widgets/Icon.js";
@@ -67,14 +68,16 @@ export const Tabs = (props) => {
     variant = "underline",
     size = "medium",
     color = colors.primary,
-    textColor = colors.text,
-    // FIX: `colors.white` no existe en themes.js → caía a `undefined`
-    // y el tab activo no se distinguía visualmente. Uso `colors.background`
-    // (que es "#ffffff" en el tema claro y "#0f172a" en el oscuro, que es
-    // lo correcto: contraste sobre el fondo del tab activo).
-    activeTextColor = colors.background,
+    textColor = colors.textSecondary,
+    // `background` made the active label the page color, so it vanished on a
+    // transparent tab bar (2.4:1 in light, 1.3:1 in dark). Resolved per variant
+    // below: the slider sits on a secondary thumb and needs the ink color.
+    activeTextColor,
     bgColor = colors.gray100,
-    buttonColor = colors.secondary,
+    // The thumb carries the accent, and its label is the ink color in both
+    // themes. `secondary` missed AA on the light thumb (4.23:1); primary is
+    // 6.65:1 with ink, 6.68:1 in dark.
+    buttonColor = color,
     alignment = "left",
     fullWidth = true,
     showDivider = true,
@@ -87,7 +90,7 @@ export const Tabs = (props) => {
   } = props;
 
   let currentIndex = activeIndex;
-  let sliderIndicator = null;
+  let activeIndicator = null;
   let tabsWrapperRef = null;
   let tabButtonsRef = [];
 
@@ -99,6 +102,16 @@ export const Tabs = (props) => {
     large: { p: "12px 20px", f: 16, g: 10, i: 22, cp: 20, h: 48 },
   };
   const sz = sizes[size] || sizes.medium;
+
+  const resolvedActiveTextColor =
+    activeTextColor ?? (variant === "slider" ? colors.onPrimary : colors.text);
+
+  const tabBackground = (isActive) => {
+    if (!isActive) return "transparent";
+    if (variant === "pills") return `${color}1A`;
+    if (variant === "filled") return colors.card;
+    return "transparent";
+  };
 
   /** Extract display label from a tab definition or plain string. */
   const getLabel = (t) =>
@@ -158,43 +171,64 @@ export const Tabs = (props) => {
     const badge = getBadge(idx);
     const isActive = currentIndex === idx;
 
-    // Build the row of content inside each tab button.
-    const content = [];
-    if (showIcon && icon && iconPosition === "left") {
-      content.push(
-        Icon({
-          name: icon,
-          size: iconSize || sz.i,
-          color: isActive ? activeTextColor : textColor,
-        }),
-      );
-    }
-    if (label) {
-      content.push(
-        Text({
+    // Build the content inside each tab button. Every documented value of
+    // `iconPosition` keeps the icon: "left" puts it before the label, "right"
+    // after it, and "top"/"bottom" stack it above/below the label row.
+    const iconWidget =
+      showIcon && icon
+        ? Icon({
+            name: icon,
+            size: iconSize || sz.i,
+            color: isActive ? resolvedActiveTextColor : textColor,
+          })
+        : null;
+    const labelWidget = label
+      ? Text({
           text: label,
           size: sz.f,
-          color: isActive ? activeTextColor : textColor,
+          color: isActive ? resolvedActiveTextColor : textColor,
           weight: isActive ? "500" : "400",
-        }),
-      );
-    }
-    if (badge) {
-      content.push(
-        Container({
+        })
+      : null;
+    const badgeWidget = badge
+      ? Container({
           backgroundColor: colors.danger,
           borderRadius: 10,
           padding: "2px 6px",
           marginLeft: 4,
           child: Text({ text: String(badge), size: 10, color: "#fff" }),
-        }),
-      );
+        })
+      : null;
+
+    const line = [labelWidget, badgeWidget].filter(Boolean);
+    if (iconWidget && iconPosition !== "top" && iconPosition !== "bottom") {
+      if (iconPosition === "left") line.unshift(iconWidget);
+      else line.push(iconWidget);
     }
+    const labelRow = Row({
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 4,
+      children: line,
+    });
+    const stacked =
+      iconWidget && (iconPosition === "top" || iconPosition === "bottom");
+    const content = stacked
+      ? Column({
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 4,
+          children:
+            iconPosition === "top"
+              ? [iconWidget, labelRow]
+              : [labelRow, iconWidget],
+        })
+      : labelRow;
 
     const btn = Container({
       borderRadius: variant === "slider" ? 20 : variant === "pills" ? 20 : 0,
-      backgroundColor: "transparent",
-      color: isActive ? activeTextColor : textColor,
+      backgroundColor: tabBackground(isActive),
+      color: isActive ? resolvedActiveTextColor : textColor,
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
@@ -221,12 +255,7 @@ export const Tabs = (props) => {
           }
         }
       },
-      child: Row({
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 4,
-        children: content,
-      }),
+      child: content,
     });
 
     btn.onclick = () => {
@@ -243,20 +272,34 @@ export const Tabs = (props) => {
   tabButtonsRef = tabButtons;
 
   // The slider variant uses an absolutely positioned "thumb" div that
-  // animates to the active tab's position via CSS transform.
-  if (variant === "slider") {
-    sliderIndicator = WidgetFactory({
+  // animates to the active tab's position via CSS transform. The default
+  // `underline` variant needs the same moving element: without it the active
+  // tab had no cue besides its label color.
+  const usesIndicator = variant === "slider" || variant === "underline";
+  if (usesIndicator) {
+    activeIndicator = WidgetFactory({
       tag: "div",
       position: "absolute",
-      top: "4px",
-      left: "4px",
-      height: "calc(100% - 8px)",
-      backgroundColor: buttonColor,
-      borderRadius: 20,
+      ...(variant === "slider"
+        ? {
+            top: "4px",
+            left: "4px",
+            height: "calc(100% - 8px)",
+            backgroundColor: buttonColor,
+            borderRadius: 20,
+          }
+        : {
+            bottom: "0",
+            left: "0",
+            height: "2px",
+            backgroundColor: color,
+            borderRadius: "2px 2px 0 0",
+          }),
       transition: "transform 0.3s ease, width 0.3s ease",
+      pointerEvents: "none",
       zIndex: 1,
     });
-    tabsWrapper.appendChild(sliderIndicator);
+    tabsWrapper.appendChild(activeIndicator);
   }
 
   tabBar.appendChild(tabsWrapper);
@@ -285,13 +328,13 @@ export const Tabs = (props) => {
    * Reads live DOM rectangles so it stays accurate after layout changes.
    */
   const updateSliderPosition = () => {
-    if (!sliderIndicator || !tabButtonsRef[currentIndex]) return;
+    if (!activeIndicator || !tabButtonsRef[currentIndex]) return;
     const btn = tabButtonsRef[currentIndex];
     const wrapperRect = tabsWrapperRef.getBoundingClientRect();
     const btnRect = btn.getBoundingClientRect();
     const left = btnRect.left - wrapperRect.left;
-    sliderIndicator.style.width = `${btnRect.width}px`;
-    sliderIndicator.style.transform = `translateX(${left}px)`;
+    activeIndicator.style.width = `${btnRect.width}px`;
+    activeIndicator.style.transform = `translateX(${left}px)`;
   };
 
   /**
@@ -309,14 +352,15 @@ export const Tabs = (props) => {
 
       const textSpan = btn.querySelector("span:not(.material-icons)");
       if (textSpan) {
-        textSpan.style.color = isActive ? activeTextColor : textColor;
+        textSpan.style.color = isActive ? resolvedActiveTextColor : textColor;
         textSpan.style.fontWeight = isActive ? "500" : "400";
       }
       const iconEl = btn.querySelector(".material-icons");
       if (iconEl) {
-        iconEl.style.color = isActive ? activeTextColor : textColor;
+        iconEl.style.color = isActive ? resolvedActiveTextColor : textColor;
       }
-      btn.style.color = isActive ? activeTextColor : textColor;
+      btn.style.color = isActive ? resolvedActiveTextColor : textColor;
+      btn.style.backgroundColor = tabBackground(isActive);
     });
 
     updateSliderPosition();
@@ -342,17 +386,17 @@ export const Tabs = (props) => {
   const handleResize = () => {
     clearTimeout(resizeTimeout);
     resizeTimeout = setTimeout(() => {
-      if (sliderIndicator && tabButtonsRef[currentIndex]) {
+      if (activeIndicator && tabButtonsRef[currentIndex]) {
         updateSliderPosition();
       }
     }, 100);
   };
   window.addEventListener("resize", handleResize);
 
-  // Also observe the tab bar element itself so the thumb repositions when
+  // Also observe the tab bar element itself so the indicator repositions when
   // the container resizes independently of the window (e.g. sidebar toggle).
-  // Only the slider variant has a thumb, so skip it for the other variants.
-  if (variant === "slider" && typeof ResizeObserver !== "undefined") {
+  // Only slider and underline render an indicator, so skip it for the others.
+  if (usesIndicator && typeof ResizeObserver !== "undefined") {
     resizeObserver = new ResizeObserver(() => updateSliderPosition());
     if (tabsWrapperRef) resizeObserver.observe(tabsWrapperRef);
   }

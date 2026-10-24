@@ -205,7 +205,7 @@ export const AdMob = (props) => {
   }
 
   const showBanner = () => {
-    if (disposed || !autoShow || bannerVisible) return Promise.resolve(null);
+    if (disposed || bannerVisible) return Promise.resolve(null);
     return withPlugin((plugin) =>
       Promise.resolve(
         plugin.showBanner({
@@ -305,7 +305,12 @@ export const AdMob = (props) => {
   };
   container.onUnmount(dispose);
 
-  container.onMount(showBanner);
+  // `autoShow` is the mount switch, nothing more. An app that holds the banner
+  // back for a paywall moment still has to be able to ask for it later with
+  // `container.show()`, so the flag must not gate that method.
+  container.onMount(() => {
+    if (autoShow) showBanner();
+  });
 
   refreshPlaceholder();
 

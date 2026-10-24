@@ -108,11 +108,15 @@ export const Scaffold = (props) => {
    * Normalises a prop value to an HTMLElement.
    * Accepts an HTMLElement directly, a factory function, or null/undefined.
    *
-   * @param {HTMLElement|Function|null} item
+   * A boolean is the documented "show / hide this slot" value, never a widget,
+   * so it resolves to an empty slot instead of reaching appendChild() and
+   * throwing on a non-Node.
+   *
+   * @param {HTMLElement|Function|boolean|null} item
    * @returns {HTMLElement|null}
    */
   const toElement = (item) => {
-    if (!item) return null;
+    if (!item || typeof item === "boolean") return null;
     if (item instanceof HTMLElement) return item;
     if (typeof item === "function") return item();
     return item;
@@ -361,9 +365,17 @@ export const Scaffold = (props) => {
       if (closeDrawerOnNavigate && drawerInstance && drawerInstance.close) {
         drawerInstance.close();
       }
-    } else if (body) {
-      const bodyWidget = makeFullSize(toElement(body));
-      if (bodyWidget) mainContentContainer.appendChild(bodyWidget);
+    } else {
+      if (body) {
+        const bodyWidget = makeFullSize(toElement(body));
+        if (bodyWidget) mainContentContainer.appendChild(bodyWidget);
+      }
+      // Static mode mounts the shell zones too. They used to be router-only, so
+      // the documented `Scaffold({ appBar, body })` example rendered the body
+      // with no top bar, bottom bar or FAB at all.
+      updateAppBar(originalAppBar !== false);
+      updateBottomBar(originalBottomBar !== false);
+      updateFab(originalFab !== false);
     }
   };
 

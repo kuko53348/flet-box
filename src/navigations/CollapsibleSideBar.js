@@ -66,13 +66,32 @@ export const CollapsibleSideBar = ({
   let expandedState = Boolean(stateValue.valueOf());
 
   /**
+   * Paint the expanded/collapsed state onto the elements built below.
+   *
+   * The toggle has to do more than record the state: the width, the chevron
+   * glyph and the content's interactivity are all written once at build time,
+   * so without this the bar never moved.
+   *
+   * @param {boolean} isExpanded
+   * @returns {void}
+   */
+  const paint = (isExpanded) => {
+    container.style.width = toREM(isExpanded ? widthExpanded : widthCollapsed);
+    chevron.textContent = isExpanded ? "chevron_left" : "chevron_right";
+    contentWrapper.style.opacity = isExpanded ? "1" : "0";
+    contentWrapper.style.pointerEvents = isExpanded ? "auto" : "none";
+  };
+
+  /**
    * Toggle the sidebar between expanded and collapsed states.
-   * Updates the persisted state and fires the `onToggle` callback.
+   * Updates the persisted state, repaints the bar and fires the `onToggle`
+   * callback.
    */
   const toggle = () => {
     const newState = !expandedState;
     expandedState = newState;
     setIsExpanded(newState);
+    paint(newState);
     if (onToggle) onToggle(newState);
   };
 
@@ -97,15 +116,16 @@ export const CollapsibleSideBar = ({
 
   // Toggle button — always visible so the user can expand/collapse regardless
   // of the current state. The icon flips direction to reflect the state.
+  const chevron = Icon({
+    name: expandedState ? "chevron_left" : "chevron_right",
+    size: iconSize,
+    color: colors.textSecondary,
+  });
   const toggleButton = Container({
     padding: 16,
     cursor: "pointer",
     onclick: toggle,
-    child: Icon({
-      name: expandedState ? "chevron_left" : "chevron_right",
-      size: iconSize,
-      color: colors.textSecondary,
-    }),
+    child: chevron,
   });
   container.appendChild(toggleButton);
 

@@ -143,6 +143,8 @@ export const DrawerItem = (props) => {
    * Order of operations: mark selected → fire callbacks → navigate → close drawer.
    */
   const handleClick = () => {
+    // `onSelect` marks the transition into the selected state — it is what an
+    // app counts to open a section once. `onPress` fires on every tap.
     if (!isSelected) {
       isSelected = true;
       updateUI();
@@ -150,8 +152,8 @@ export const DrawerItem = (props) => {
       selectionEvent.dispatchEvent(
         new CustomEvent("drawer-item-selected", { detail: { id: label } }),
       );
+      if (onSelect) onSelect();
     }
-    if (onSelect) onSelect();
     if (onPress) onPress();
     if (route) goTo(route);
     if (closeOnPress) closeDrawer();

@@ -79,12 +79,10 @@ export const BottomSheet = (props) => {
     opacity: 0,
     visibility: "hidden",
     transition: `opacity ${animationDuration}ms ease, visibility ${animationDuration}ms ease`,
-    // onclick: (e) => {
-    //   // ✅ Only close if the click was directly on the overlay (not on the sheet)
-    //   if (e.target === overlay && closeOnOverlayClick) {
-    //     close();
-    //   }
-    // },
+    onclick: (e) => {
+      // Only close if the click was directly on the overlay, not on the sheet.
+      if (e.target === e.currentTarget && closeOnOverlayClick) close();
+    },
   });
 
   // ✅ Drag handle with stopPropagation

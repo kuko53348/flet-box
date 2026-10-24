@@ -31,7 +31,7 @@ const banner = AdMob({
 | `margin` | `number` | Space outside the widget, between it and its neighbors. |
 | `interstitialId` | `string` | AdMob interstitial ad unit id. |
 | `rewardedId` | `string` | AdMob rewarded ad unit id. |
-| `autoShow` | `boolean` | Shows the ad automatically when it is ready. |
+| `autoShow` | `boolean` | Shows the banner automatically on mount. false silences only the mount; show() still asks for the ad. |
 | `autoInitialize` | `boolean` | The `autoInitialize` value for the widget. |
 | `width` | `Size` | Width of the widget. A number is pixels; a string uses any CSS unit. |
 | `height` | `Size` | Height of the widget. A number is pixels; a string uses any CSS unit. |

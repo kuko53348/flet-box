@@ -24,9 +24,9 @@ import { parseMarkdown, markdownToWidgets, escapeHtml } from "flet-box";
 | `parseMarkdown` | `parseMarkdown(text)` | `string` | Reserved API: currently returns the input unchanged. Use `markdownToWidgets`. |
 | `parseInlineMarkdown` | `parseInlineMarkdown(text)` | `string` | Reserved API: currently returns the input unchanged. Use `parseInlineToWidgets`. |
 | `tokenize` | `tokenize(code)` | `{ type, value }[]` | Split code into token objects. |
-| `generateHighlightedHtml` | `generateHighlightedHtml(code)` | `string` | Code → highlighted HTML. |
+| `generateHighlightedHtml` | `generateHighlightedHtml(code, palette?)` | `string` | Code → highlighted HTML. Picks the light or dark token map automatically; pass a map to override. |
 | `escapeHtml` | `escapeHtml(text)` | `string` | Escape `<`, `>`, `&`, quotes so text is safe as HTML. |
-| `highlightColors` | const | `Record<string, string>` | The token color map used by the highlighter. |
+| `highlightColors` | const | `Record<string, string>` | The dark-theme token map (One Dark scale). |
 
 `markdownToWidgets` options: `{ codeMaxHeight?: number, codeFontSize?: number }`.
 
@@ -61,7 +61,7 @@ const safe = escapeHtml(userInput); // safe to put into innerHTML
 - `markdownToWidgets` builds real widget elements (headings, paragraphs, code blocks, lists) that you can place inside any container — this is what the `Markdown` widget uses.
 - `parseMarkdown` and `parseInlineMarkdown` are reserved placeholders that currently pass text through unchanged; the widget rendering is `markdownToWidgets`/`parseInlineToWidgets`.
 - `escapeHtml` should be used for **any** text you insert into the DOM that you did not write yourself. Never trust raw input.
-- `tokenize` returns flat token objects and is the base for custom highlighters; `highlightColors` lets you theme them.
+- `tokenize` returns flat token objects and is the base for custom highlighters; `generateHighlightedHtml` reads the active theme, and its second argument accepts a token map when you paint your own surface.
 
 ## Related pages
 - [Themes](theme.md) — previous chapter.
