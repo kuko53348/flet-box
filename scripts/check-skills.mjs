@@ -24,7 +24,7 @@
 // is actually handed, and `flet-box create` copies them rather than writing them.
 
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -343,14 +343,54 @@ await check("the inline proof bites — a name it must reject", () => {
 // 3 — it ships
 // ---------------------------------------------------------------------------
 
-await check("the published package carries the skills", () => {
-  const pkg = JSON.parse(fs.readFileSync(path.join(repoRoot, "package.json"), "utf8"));
-  assert.ok(pkg.files.includes("skills/"), "package.json files is missing skills/");
-  const listing = execFileSync("npm", ["pack", "--dry-run", "--json"], {
+/**
+ * The exact paths the published tarball carries.
+ *
+ * Read from the artifact, not from `npm pack --json`: the release of v1.1.0
+ * died here in CI with "Cannot read properties of undefined (reading 'files')"
+ * while passing on the laptop, because the workflow installs `npm@latest` and
+ * that npm prints a different shape (and mixes an `npm warn` into stdout). A
+ * contract that only holds on one npm version is not a contract, so this packs
+ * for real and lists the bytes.
+ *
+ * @returns {Set<string>}
+ */
+const packedFiles = () => {
+  const out = path.join(scratch, "pack");
+  fs.mkdirSync(out, { recursive: true });
+  const packed = spawnSync("npm", ["pack", "--pack-destination", out], {
     cwd: repoRoot,
     encoding: "utf8",
   });
-  const packed = new Set(JSON.parse(listing)[0].files.map((f) => f.path));
+  const tarball = fs
+    .readdirSync(out)
+    .filter((f) => f.endsWith(".tgz"))
+    .map((f) => path.join(out, f))[0];
+  if (!tarball) {
+    const npmVersion = spawnSync("npm", ["--version"], { encoding: "utf8" }).stdout.trim();
+    assert.fail(
+      `npm pack produced no tarball to inspect (npm ${npmVersion}): ` +
+        `${(packed.stderr || packed.stdout || "").split("\n").filter(Boolean).slice(-3).join(" / ")}`,
+    );
+  }
+  const listed = spawnSync("tar", ["tzf", tarball], { encoding: "utf8" });
+  assert.equal(listed.status, 0, `tar could not read ${tarball}`);
+  fs.rmSync(tarball, { force: true });
+  return new Set(
+    listed.stdout
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => line.replace(/^package\//, "")),
+  );
+};
+
+await check("the published package carries the skills", () => {
+  const pkg = JSON.parse(fs.readFileSync(path.join(repoRoot, "package.json"), "utf8"));
+  assert.ok(pkg.files.includes("skills/"), "package.json files is missing skills/");
+  const packed = packedFiles();
+  assert.ok(packed.size > 100, `the tarball listed ${packed.size} files — that is not the package`);
+  assert.ok(packed.has("bin/cli.js"), "the tarball has no CLI to run");
   for (const name of names) {
     assert.ok(packed.has(`skills/${name}/SKILL.md`), `skills/${name}/SKILL.md is not in the tarball`);
   }
