@@ -234,6 +234,13 @@ export const collectSources = (projectRoot) => {
 /**
  * Read the keys of an object literal starting at its opening brace.
  *
+ * Only the object's own level is scanned: a comma inside an array, a call or a
+ * nested brace belongs to that inner expression, not to the props object.
+ * Without the group counter, `children: [slot, line]` was split on its inner
+ * commas and every widget variable in the list was reported as a shorthand prop
+ * (`Column({ line })` — UNKNOWN_PROP), which is the single most common shape in
+ * a FletBox app.
+ *
  * @param {string} code Comment/string-free source.
  * @param {number} open Index of `{`.
  * @returns {{ keys: string[], opaque: boolean }} `opaque` when a top-level
@@ -242,6 +249,7 @@ export const collectSources = (projectRoot) => {
 const literalKeys = (code, open) => {
   const keys = [];
   let depth = 0;
+  let group = 0;
   let current = "";
   let opaque = false;
   const flush = () => {
@@ -267,7 +275,11 @@ const literalKeys = (code, open) => {
         flush();
         return { keys, opaque };
       }
-    } else if (depth === 1 && ch === ",") {
+    } else if (ch === "[" || ch === "(") {
+      group++;
+    } else if (ch === "]" || ch === ")") {
+      if (group > 0) group--;
+    } else if (depth === 1 && group === 0 && ch === ",") {
       flush();
       continue;
     }
