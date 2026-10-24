@@ -71,8 +71,11 @@ export const Skeleton = (props) => {
     }
     if (animation === "wave") {
       return {
-        background: `linear-gradient(90deg, ${bgColor} 25%, ${highlightColor} 50%, ${bgColor} 75%)`,
-        backgroundSize: "200% 100%",
+        // `gradient` and `bgSize` are the registered names for `background` and
+        // `background-size`. A raw CSS name still paints — the factory falls back
+        // to writing it as an inline style — but warns on every placeholder built.
+        gradient: `linear-gradient(90deg, ${bgColor} 25%, ${highlightColor} 50%, ${bgColor} 75%)`,
+        bgSize: "200% 100%",
         animation: `skeleton-wave ${waveDuration} ease-in-out infinite`,
       };
     }
