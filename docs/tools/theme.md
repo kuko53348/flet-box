@@ -122,6 +122,7 @@ runApp(ThemeProvider({ children: ThemedApp() }), "root");
 ## Notes
 
 - The shared palette tokens are updated across all widgets when you switch themes; widgets referencing `colors.*` at build time pick up the active palette.
+- Switching a theme also repaints the browser's own chrome: the `<meta name="theme-color">` the installed PWA takes for its status and navigation bars, and the root `color-scheme` that decides how the OS draws scrollbars and form controls. Both read the live palette, so an app that changes `colors.surface` changes its system bars with it — see [Mobile and platforms](../guides/mobile-and-platforms.md#the-browser-chrome-follows-the-theme).
 - `colors.glass` is genuinely see-through: its contrast depends on whatever is behind it, so use it over photography or gradients with a scrim, and keep body copy off the most colourful part of the backdrop. The dark token is a dark pane, not white glass.
 - `watchSystemTheme()` and `applySystemTheme()` read `prefers-color-scheme`; both return/need cleanup to release listeners.
 - `subscribeTheme(callback)` fires with the new palette object — remember to unsubscribe when a feature is destroyed.

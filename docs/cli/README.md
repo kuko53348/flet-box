@@ -448,7 +448,7 @@ Capacitor template with different slots keeps working. It:
   status bar style ignored.
 
 The script is idempotent: running it twice leaves identical files. The brand
-color `#1a1a2e` is defined at the top of the script.
+color `#18181b` is defined at the top of the script.
 
 ## Convert asset images to PNG
 
