@@ -650,6 +650,48 @@
       "truncate(\"flet-box is awesome\", 10, \"...\")"
     ]
   },
+  "FletBox widgets startsWith": {
+    "prefix": "startsWith",
+    "description": "Make a FletBox widgets startsWith widget",
+    "body": [
+      "startsWith(\"flet-box\", \"flet\")"
+    ]
+  },
+  "FletBox widgets endsWith": {
+    "prefix": "endsWith",
+    "description": "Make a FletBox widgets endsWith widget",
+    "body": [
+      "endsWith(\"flet-box\", \"box\")"
+    ]
+  },
+  "FletBox widgets includes": {
+    "prefix": "includes",
+    "description": "Make a FletBox widgets includes widget",
+    "body": [
+      "includes(\"flet-box is awesome\", \"awesome\")"
+    ]
+  },
+  "FletBox widgets split": {
+    "prefix": "split",
+    "description": "Make a FletBox widgets split widget",
+    "body": [
+      "split(\"flet-box,light,weight\", \",\")"
+    ]
+  },
+  "FletBox widgets join": {
+    "prefix": "join",
+    "description": "Make a FletBox widgets join widget",
+    "body": [
+      "join([\"flet-box\", \"light\", \"weight\"], \" \")"
+    ]
+  },
+  "FletBox widgets trim": {
+    "prefix": "trim",
+    "description": "Make a FletBox widgets trim widget",
+    "body": [
+      "trim(\"   flet-box   \")"
+    ]
+  },
   "FletBox widgets formatDate": {
     "prefix": "formatDate",
     "description": "Make a FletBox widgets formatDate widget",
@@ -676,6 +718,316 @@
     "description": "Make a FletBox widgets now widget",
     "body": [
       "now()"
+    ]
+  },
+  "FletBox widgets seconds": {
+    "prefix": "seconds",
+    "description": "Make a FletBox widgets seconds widget",
+    "body": [
+      "seconds(90)"
+    ]
+  },
+  "FletBox widgets minutes": {
+    "prefix": "minutes",
+    "description": "Make a FletBox widgets minutes widget",
+    "body": [
+      "minutes(5)"
+    ]
+  },
+  "FletBox widgets hours": {
+    "prefix": "hours",
+    "description": "Make a FletBox widgets hours widget",
+    "body": [
+      "hours(2)"
+    ]
+  },
+  "FletBox widgets days": {
+    "prefix": "days",
+    "description": "Make a FletBox widgets days widget",
+    "body": [
+      "days(7)"
+    ]
+  },
+  "FletBox widgets weeks": {
+    "prefix": "weeks",
+    "description": "Make a FletBox widgets weeks widget",
+    "body": [
+      "weeks(3)"
+    ]
+  },
+  "FletBox widgets months": {
+    "prefix": "months",
+    "description": "Make a FletBox widgets months widget",
+    "body": [
+      "months(6)"
+    ]
+  },
+  "FletBox widgets years": {
+    "prefix": "years",
+    "description": "Make a FletBox widgets years widget",
+    "body": [
+      "years(1)"
+    ]
+  },
+  "FletBox widgets today": {
+    "prefix": "today",
+    "description": "Make a FletBox widgets today widget",
+    "body": [
+      "today()"
+    ]
+  },
+  "FletBox widgets yesterday": {
+    "prefix": "yesterday",
+    "description": "Make a FletBox widgets yesterday widget",
+    "body": [
+      "yesterday()"
+    ]
+  },
+  "FletBox widgets tomorrow": {
+    "prefix": "tomorrow",
+    "description": "Make a FletBox widgets tomorrow widget",
+    "body": [
+      "tomorrow()"
+    ]
+  },
+  "FletBox widgets dayOfWeek": {
+    "prefix": "dayOfWeek",
+    "description": "Make a FletBox widgets dayOfWeek widget",
+    "body": [
+      "dayOfWeek(new Date())"
+    ]
+  },
+  "FletBox widgets monthName": {
+    "prefix": "monthName",
+    "description": "Make a FletBox widgets monthName widget",
+    "body": [
+      "monthName(new Date())"
+    ]
+  },
+  "FletBox widgets isToday": {
+    "prefix": "isToday",
+    "description": "Make a FletBox widgets isToday widget",
+    "body": [
+      "isToday(\"2024-01-15\")"
+    ]
+  },
+  "FletBox widgets isYesterday": {
+    "prefix": "isYesterday",
+    "description": "Make a FletBox widgets isYesterday widget",
+    "body": [
+      "isYesterday(\"2024-01-15\")"
+    ]
+  },
+  "FletBox widgets isTomorrow": {
+    "prefix": "isTomorrow",
+    "description": "Make a FletBox widgets isTomorrow widget",
+    "body": [
+      "isTomorrow(\"2024-01-15\")"
+    ]
+  },
+  "FletBox widgets isWeekend": {
+    "prefix": "isWeekend",
+    "description": "Make a FletBox widgets isWeekend widget",
+    "body": [
+      "isWeekend(new Date())"
+    ]
+  },
+  "FletBox widgets isLeapYear": {
+    "prefix": "isLeapYear",
+    "description": "Make a FletBox widgets isLeapYear widget",
+    "body": [
+      "isLeapYear(2024)"
+    ]
+  },
+  "FletBox widgets formatDateLong": {
+    "prefix": "formatDateLong",
+    "description": "Make a FletBox widgets formatDateLong widget",
+    "body": [
+      "formatDateLong(new Date())"
+    ]
+  },
+  "FletBox widgets formatDateShort": {
+    "prefix": "formatDateShort",
+    "description": "Make a FletBox widgets formatDateShort widget",
+    "body": [
+      "formatDateShort(new Date(), \"es-ES\")"
+    ]
+  },
+  "FletBox widgets formatTime": {
+    "prefix": "formatTime",
+    "description": "Make a FletBox widgets formatTime widget",
+    "body": [
+      "formatTime(new Date())"
+    ]
+  },
+  "FletBox widgets formatTimeAmPm": {
+    "prefix": "formatTimeAmPm",
+    "description": "Make a FletBox widgets formatTimeAmPm widget",
+    "body": [
+      "formatTimeAmPm(new Date())"
+    ]
+  },
+  "FletBox widgets parseDate": {
+    "prefix": "parseDate",
+    "description": "Make a FletBox widgets parseDate widget",
+    "body": [
+      "parseDate(\"15/01/2024\", \"DD/MM/YYYY\")"
+    ]
+  },
+  "FletBox widgets dateDiff": {
+    "prefix": "dateDiff",
+    "description": "Make a FletBox widgets dateDiff widget",
+    "body": [
+      "dateDiff(\"2024-01-01\", \"2024-01-15\", \"days\")"
+    ]
+  },
+  "FletBox widgets addDays": {
+    "prefix": "addDays",
+    "description": "Make a FletBox widgets addDays widget",
+    "body": [
+      "addDays(new Date(), 7)"
+    ]
+  },
+  "FletBox widgets addHours": {
+    "prefix": "addHours",
+    "description": "Make a FletBox widgets addHours widget",
+    "body": [
+      "addHours(new Date(), 3)"
+    ]
+  },
+  "FletBox widgets addMinutes": {
+    "prefix": "addMinutes",
+    "description": "Make a FletBox widgets addMinutes widget",
+    "body": [
+      "addMinutes(new Date(), 30)"
+    ]
+  },
+  "FletBox widgets addSeconds": {
+    "prefix": "addSeconds",
+    "description": "Make a FletBox widgets addSeconds widget",
+    "body": [
+      "addSeconds(new Date(), 45)"
+    ]
+  },
+  "FletBox widgets subtractDays": {
+    "prefix": "subtractDays",
+    "description": "Make a FletBox widgets subtractDays widget",
+    "body": [
+      "subtractDays(new Date(), 7)"
+    ]
+  },
+  "FletBox widgets subtractHours": {
+    "prefix": "subtractHours",
+    "description": "Make a FletBox widgets subtractHours widget",
+    "body": [
+      "subtractHours(new Date(), 3)"
+    ]
+  },
+  "FletBox widgets subtractMinutes": {
+    "prefix": "subtractMinutes",
+    "description": "Make a FletBox widgets subtractMinutes widget",
+    "body": [
+      "subtractMinutes(new Date(), 30)"
+    ]
+  },
+  "FletBox widgets subtractSeconds": {
+    "prefix": "subtractSeconds",
+    "description": "Make a FletBox widgets subtractSeconds widget",
+    "body": [
+      "subtractSeconds(new Date(), 45)"
+    ]
+  },
+  "FletBox widgets timeAgo": {
+    "prefix": "timeAgo",
+    "description": "Make a FletBox widgets timeAgo widget",
+    "body": [
+      "timeAgo(now() - minutes(5))"
+    ]
+  },
+  "FletBox widgets timeAgoLocale": {
+    "prefix": "timeAgoLocale",
+    "description": "Make a FletBox widgets timeAgoLocale widget",
+    "body": [
+      "timeAgoLocale(now() - hours(1), \"es\")"
+    ]
+  },
+  "FletBox widgets waitFor": {
+    "prefix": "waitFor",
+    "description": "Make a FletBox widgets waitFor widget",
+    "body": [
+      "await waitFor(seconds(1))"
+    ]
+  },
+  "FletBox widgets wait": {
+    "prefix": "wait",
+    "description": "Make a FletBox widgets wait widget",
+    "body": [
+      "await wait(seconds(1))"
+    ]
+  },
+  "FletBox widgets waitUntil": {
+    "prefix": "waitUntil",
+    "description": "Make a FletBox widgets waitUntil widget",
+    "body": [
+      "// Resolves true as soon as the predicate holds; throws at the timeout.",
+      "await waitUntil(() => document.querySelector(\"#cart\"), seconds(10), seconds(1))"
+    ]
+  },
+  "FletBox widgets waitForElement": {
+    "prefix": "waitForElement",
+    "description": "Make a FletBox widgets waitForElement widget",
+    "body": [
+      "// Needs a document: call it from a screen, never at module scope.",
+      "const node = await waitForElement(\"#cart\", seconds(5), seconds(0.5))"
+    ]
+  },
+  "FletBox widgets timer": {
+    "prefix": "timer",
+    "description": "Make a FletBox widgets timer widget",
+    "body": [
+      "const watch = timer(\"render\");",
+      "await sleep(seconds(1));",
+      "watch.stop(); // logs the elapsed milliseconds"
+    ]
+  },
+  "FletBox widgets every": {
+    "prefix": "every",
+    "description": "Make a FletBox widgets every widget",
+    "body": [
+      "const tick = every(seconds(1), () => console.log(now()));",
+      "clearInterval(tick);"
+    ]
+  },
+  "FletBox widgets everySecond": {
+    "prefix": "everySecond",
+    "description": "Make a FletBox widgets everySecond widget",
+    "body": [
+      "const tick = everySecond(() => console.log(now()));",
+      "clearInterval(tick);"
+    ]
+  },
+  "FletBox widgets everyMinute": {
+    "prefix": "everyMinute",
+    "description": "Make a FletBox widgets everyMinute widget",
+    "body": [
+      "const tick = everyMinute(() => console.log(now()));",
+      "clearInterval(tick);"
+    ]
+  },
+  "FletBox widgets everyHour": {
+    "prefix": "everyHour",
+    "description": "Make a FletBox widgets everyHour widget",
+    "body": [
+      "const tick = everyHour(() => console.log(now()));",
+      "clearInterval(tick);"
+    ]
+  },
+  "FletBox widgets everyDay": {
+    "prefix": "everyDay",
+    "description": "Make a FletBox widgets everyDay widget",
+    "body": [
+      "const tick = everyDay(() => console.log(now()));",
+      "clearInterval(tick);"
     ]
   },
   "FletBox widgets transform_fn": {

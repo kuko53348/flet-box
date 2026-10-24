@@ -6,6 +6,35 @@
  * ============================================================
  */
 
+// ========== INPUT ==========
+
+/**
+ * Turns any accepted date input into a `Date`, reading a bare calendar date as a
+ * calendar date.
+ *
+ * `new Date("2024-01-15")` is not January the fifteenth: the spec parses a
+ * date-only string as UTC midnight, and every getter then reads it back in the
+ * local zone. West of Greenwich that is the fourteenth, which is how
+ * `isToday(today())` came back `false` and `dayOfWeek("2024-01-15")` said
+ * "Sunday" — the module disagreeing with itself, on a date the module produced.
+ *
+ * A value that carries a time, an offset or a `Z` is a timestamp, not a day, and
+ * `new Date` already places it; only `YYYY-MM-DD` needs the local reading.
+ *
+ * @param {Date|number|string} date - Any value a time helper accepts.
+ * @returns {Date}
+ */
+const toDate = (date) => {
+  if (typeof date === "string") {
+    const calendarDay = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
+    if (calendarDay) {
+      const [, year, month, day] = calendarDay;
+      return new Date(Number(year), Number(month) - 1, Number(day));
+    }
+  }
+  return new Date(date);
+};
+
 // ========== TIME UNITS ==========
 
 /**
@@ -100,7 +129,7 @@ export const dayOfWeek = (date) => {
     "Friday",
     "Saturday",
   ];
-  return days[new Date(date).getDay()];
+  return days[toDate(date).getDay()];
 };
 
 /**
@@ -123,7 +152,7 @@ export const monthName = (date) => {
     "November",
     "December",
   ];
-  return months[new Date(date).getMonth()];
+  return months[toDate(date).getMonth()];
 };
 
 /**
@@ -152,7 +181,7 @@ export const isTomorrow = (date) => formatDate(date) === tomorrow();
  * @param {Date|number|string} date - Date to check.
  * @returns {boolean}
  */
-export const isWeekend = (date) => [0, 6].includes(new Date(date).getDay());
+export const isWeekend = (date) => [0, 6].includes(toDate(date).getDay());
 
 /**
  * Returns `true` if the given year is a leap year.
@@ -179,7 +208,7 @@ export const isLeapYear = (year) => {
  * formatDate(new Date(), "YYYY-MM-DD HH:mm:ss") // "2024-01-15 09:30:00"
  */
 export const formatDate = (date, format = "YYYY-MM-DD") => {
-  const d = new Date(date);
+  const d = toDate(date);
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
@@ -204,7 +233,7 @@ export const formatDate = (date, format = "YYYY-MM-DD") => {
  * @returns {string} Long date string, e.g. `"Monday, January 15, 2024"`.
  */
 export const formatDateLong = (date, locale = "en-US") => {
-  return new Date(date).toLocaleDateString(locale, {
+  return toDate(date).toLocaleDateString(locale, {
     weekday: "long",
     year: "numeric",
     month: "long",
@@ -220,7 +249,7 @@ export const formatDateLong = (date, locale = "en-US") => {
  * @returns {string} Short date string, e.g. `"Jan 15, 2024"`.
  */
 export const formatDateShort = (date, locale = "en-US") => {
-  return new Date(date).toLocaleDateString(locale, {
+  return toDate(date).toLocaleDateString(locale, {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -240,7 +269,7 @@ export const formatTime = (date) => formatDate(date, "HH:mm:ss");
  * @returns {string} Time string, e.g. `"02:05:30 PM"`.
  */
 export const formatTimeAmPm = (date) => {
-  const d = new Date(date);
+  const d = toDate(date);
   let hours = d.getHours();
   const ampm = hours >= 12 ? "PM" : "AM";
   hours = hours % 12 || 12;
@@ -304,7 +333,7 @@ export const parseDate = (str, format = "YYYY-MM-DD") => {
  * dateDiff("2024-01-01", "2024-01-15", "days") // 14
  */
 export const dateDiff = (date1, date2, unit = "days") => {
-  const diff = Math.abs(new Date(date1) - new Date(date2));
+  const diff = Math.abs(toDate(date1) - toDate(date2));
   const units = {
     milliseconds: 1,
     seconds: 1000,
@@ -322,12 +351,24 @@ export const dateDiff = (date1, date2, unit = "days") => {
 
 /**
  * Adds `n` days to a date and returns a new `Date`.
+ *
+ * Whole days are counted on the calendar, not in milliseconds: a 24h step lands
+ * an hour off the wall clock either side of a DST change, so
+ * `addDays("2024-10-26", 7)` in Madrid would print November 1. A fractional `n`
+ * is elapsed time and keeps the millisecond walk.
+ *
  * @param {Date|number|string} date - Base date.
  * @param {number} n - Number of days to add (negative to subtract).
  * @returns {Date}
  */
-export const addDays = (date, n) =>
-  new Date(new Date(date).getTime() + days(n));
+export const addDays = (date, n) => {
+  const d = toDate(date);
+  if (Number.isInteger(n)) {
+    d.setDate(d.getDate() + n);
+    return d;
+  }
+  return new Date(d.getTime() + days(n));
+};
 
 /**
  * Adds `n` hours to a date and returns a new `Date`.
@@ -336,7 +377,7 @@ export const addDays = (date, n) =>
  * @returns {Date}
  */
 export const addHours = (date, n) =>
-  new Date(new Date(date).getTime() + hours(n));
+  new Date(toDate(date).getTime() + hours(n));
 
 /**
  * Adds `n` minutes to a date and returns a new `Date`.
@@ -345,7 +386,7 @@ export const addHours = (date, n) =>
  * @returns {Date}
  */
 export const addMinutes = (date, n) =>
-  new Date(new Date(date).getTime() + minutes(n));
+  new Date(toDate(date).getTime() + minutes(n));
 
 /**
  * Adds `n` seconds to a date and returns a new `Date`.
@@ -354,7 +395,7 @@ export const addMinutes = (date, n) =>
  * @returns {Date}
  */
 export const addSeconds = (date, n) =>
-  new Date(new Date(date).getTime() + seconds(n));
+  new Date(toDate(date).getTime() + seconds(n));
 
 /**
  * Subtracts `n` days from a date and returns a new `Date`.
@@ -402,7 +443,7 @@ export const subtractSeconds = (date, n) => addSeconds(date, -n);
  */
 export const timeAgo = (date) => {
   const now = new Date();
-  const d = new Date(date);
+  const d = toDate(date);
   const diff = Math.floor((now - d) / 1000);
 
   const intervals = [
@@ -439,7 +480,7 @@ export const relativeTime = timeAgo;
  * timeAgoLocale(Date.now() - 3600000, "es") // "hace 1 hora"
  */
 export const timeAgoLocale = (date, locale = "en") => {
-  const d = new Date(date);
+  const d = toDate(date);
   const now = new Date();
   const diff = Math.floor((now - d) / 1000);
 

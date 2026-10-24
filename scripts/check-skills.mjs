@@ -222,6 +222,41 @@ await check("every helper the skills call is exported", () => {
   }
 });
 
+await check("the number of helpers R12 quotes is the number there are", async () => {
+  // A count in a skill is a promise: it is how an agent decides whether reading
+  // the table is worth it. It went stale twice — the tools barrel grew by 49
+  // names and the sentence still said 66 — so it is read off `src/tools/index.js`
+  // instead of remembered. The generated app says the same number, so it is
+  // checked against the same source: two copies of a figure is how it drifted.
+  const tools = await import("../src/tools/index.js");
+  const actual = Object.keys(tools).length;
+  const { agentsMd } = await import("../bin/utils/templates.js");
+  const stated = (re, body, miss) => {
+    const m = re.exec(body);
+    assert.ok(m, miss);
+    return Number(m[1]);
+  };
+  const places = {
+    "skills/fletbox-rules": stated(
+      /`flet-box` exports (\d+) helpers/,
+      readSkill("fletbox-rules"),
+      'R12 no longer opens with "`flet-box` exports N helpers"',
+    ),
+    "the generated AGENTS.md": stated(
+      /exports (\d+) helpers next to the widgets/,
+      agentsMd("demo", "basic", "0.0.0"),
+      "templates.agentsMd no longer states the helper count",
+    ),
+  };
+  for (const [where, number] of Object.entries(places)) {
+    assert.equal(
+      number,
+      actual,
+      `${where} says ${number} helpers, src/tools/index.js exports ${actual}`,
+    );
+  }
+});
+
 await check("the motion skill only claims effects AnimatedBox implements", () => {
   const source = fs.readFileSync(
     path.join(repoRoot, "src/animations/AnimatedBox.js"),

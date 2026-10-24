@@ -155,7 +155,7 @@ screen, and the checker wins about a value.
 
 ## R12 The tools are the short form — use one before you hand-write it
 
-`flet-box` exports 66 helpers alongside the widgets. They exist because the code
+`flet-box` exports 123 helpers alongside the widgets. They exist because the code
 they replace is longer, and because the longer version is the one every model
 writes from memory. The rule is not "wrap everything in a helper": it is that a
 hand-written replacement has to be **shorter or clearer** than the tool, and for
@@ -173,8 +173,11 @@ the list below it is not.
 | `'all 0.3s ease 0s'`, `'blur(5px) brightness(0.8)'` | `transition({ property: 'opacity', duration: 0.3 })`, `filter({ blur: 5, brightness: 0.8 })` |
 | a hex you re-lighten by eye, or hand-picked tints | `color(colors.primary).darken(12).hex()` |
 | `Math.floor(Math.random() * …)` and `Math.random().toString(36)` | `random.number(a, b)`, `random.choice(list)`, `shortId()`, `uuid()`, `timestampId()` |
-| `new Date().toLocaleDateString()` chains | `formatDate(d, 'YYYY-MM-DD')`, `relativeTime(iso)` |
-| `new Promise(r => setTimeout(r, ms))`, a retry loop written twice | `delay(ms)`, `withMinDelay(p, 600)` (a spinner that never flashes), `retry(fn, 3, 500)` |
+| `new Date(d).toLocaleDateString()` chains, a hand-written `"… ago"` | `formatDate(d, 'YYYY-MM-DD')`, `formatDateLong(d)`, `formatTimeAmPm(d)`, `relativeTime(iso)`, `timeAgoLocale(d, 'es')` |
+| `d.getTime() + 7 * 86400000` and a `(b - a) / 86400000` you have to re-derive | `addDays(d, 7)`, `subtractHours(d, 3)`, `dateDiff(a, b, 'days')`, and `days(7)` where you need the milliseconds |
+| `new Date().getDay() === 0`, a weekday name built from an array | `dayOfWeek(d)`, `monthName(d)`, `isWeekend(d)`, `isToday(d)` |
+| `new Promise(r => setTimeout(r, ms))`, a retry loop written twice, a poll loop written twice | `delay(ms)`, `withMinDelay(p, 600)` (a spinner that never flashes), `retry(fn, 3, 500)`, `waitUntil(() => ready, seconds(30))` |
+| a timer loop plus a handle you have to remember to clear | `everySecond(fn)`, `every(minutes(5), fn)` — and per R6, release the id it hands back on unmount |
 | a `const cache = {}` keyed by `JSON.stringify(args)` | `memo(fn)`, `memoWithKey(fn, keyFn)` |
 | `obj[k] !== undefined ? obj[k] : d`, `Object.entries(o).map(…)` | `dict(obj).get(k, d)`, `.items()`, `.has(k)`, `fromJSON(text)` |
 | `console.log('[' + label + '] ' + msg)` | `print('synced', 'success', { label: 'cart' })` |
@@ -182,9 +185,10 @@ the list below it is not.
 | `window.innerWidth >= 768`, and a resize listener that fires per pixel | `atLeast('md')`, `pick({ xs: 16, md: 24 })`, `onBreakpointChange(cb)` |
 | `navigator.clipboard.writeText(x)` (which throws without a gesture fallback) | `clipboard.copy(x)` |
 | injecting a `<link>` for a webfont | `loadFont('Inter', { weights: [400, 600] })`, then `fontsReady()` before a canvas paint |
+| `String(arr).split(sep)`, `s.trim().startsWith(x)` written as three calls | `split(s, sep)`, `join(arr, sep)`, `trim(s)`, `startsWith(s, x)`, `endsWith(s, x)`, `includes(s, x)` |
 | a `theme` object rebuilt per screen from hex literals | `colors.*`, `setTheme`, `subscribeTheme` |
 
-Three traps, because the rule is only honest with them:
+Four traps, because the rule is only honest with them:
 
 1. **A routed prop already *is* the short form.** `Container({ padding: 16 })` is
    shorter and more correct than `padding: padding(16)` — the number reaches the
@@ -196,6 +200,12 @@ Three traps, because the rule is only honest with them:
    and `createList` do list work; `filter({ blur: 5 })` builds a string.
 3. **`color()` is a chain, not a value.** `color(x).lighten(20)` is a `Color`; it
    only becomes CSS at `.hex()`, `.rgb()` or `.rgba()`.
+4. **`months()` and `years()` are approximations, and a day is not 24 hours.**
+   `months(1)` is 30 days and `years(1)` is 365 — fine for a cache window, wrong
+   for a birthday. Whole-day steps (`addDays`, `subtractDays`) count on the
+   calendar, so they hold across a DST night; `addHours` and below count in real
+   elapsed time, which is what a countdown needs and what a "same time tomorrow"
+   must not use.
 
 R2 still outranks this one: when the exact signature is not in memory,
 `npm run check -- --list` and `flet-box unpack` say what is real. A confident wrong

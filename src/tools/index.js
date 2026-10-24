@@ -46,8 +46,71 @@ export {
   upperCase,
   reverseString,
   truncate,
+  startsWith,
+  endsWith,
+  includes,
+  split,
+  join,
+  trim,
 } from "./string.js";
-export { formatDate, relativeTime, sleep, now } from "./time.js";
+export {
+  // units
+  seconds,
+  minutes,
+  hours,
+  days,
+  weeks,
+  months,
+  years,
+  // current
+  now,
+  today,
+  yesterday,
+  tomorrow,
+  // info
+  dayOfWeek,
+  monthName,
+  isToday,
+  isYesterday,
+  isTomorrow,
+  isWeekend,
+  isLeapYear,
+  // format
+  formatDate,
+  formatDateLong,
+  formatDateShort,
+  formatTime,
+  formatTimeAmPm,
+  // parse & diff
+  parseDate,
+  dateDiff,
+  // manipulate
+  addDays,
+  addHours,
+  addMinutes,
+  addSeconds,
+  subtractDays,
+  subtractHours,
+  subtractMinutes,
+  subtractSeconds,
+  // relative
+  timeAgo,
+  relativeTime,
+  timeAgoLocale,
+  // wait
+  waitFor,
+  wait,
+  sleep,
+  waitUntil,
+  waitForElement,
+  // timer & interval
+  timer,
+  every,
+  everySecond,
+  everyMinute,
+  everyHour,
+  everyDay,
+} from "./time.js";
 export { transform } from "./transform.js";
 export { transition } from "./transition.js";
 export { useState, useWatchState } from "./useState.js";

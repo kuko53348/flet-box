@@ -2239,8 +2239,114 @@ declare module 'flet-box' {
     isSafe(value: string): boolean;
   };
 
-  export function formatDate(date: Date | string | number, format?: string): string;
-  export function relativeTime(date: Date | string | number): string;
+  /** Tokens `YYYY MM DD HH mm ss`; anything else passes through. Defaults to `YYYY-MM-DD`. */
+  export function formatDate(date: DateInput, format?: string): string;
+  export function relativeTime(date: DateInput): string;
+  export function timeAgo(date: DateInput): string;
+  export function timeAgoLocale(date: DateInput, locale?: "en" | "es"): string;
+
+  /** Anything `new Date()` accepts. */
+  export type DateInput = Date | string | number;
+
+  /** Unit names accepted by {@link dateDiff}; a calendar month counts as 30 days and a year as 365. */
+  export type DateDiffUnit =
+    | "milliseconds"
+    | "seconds"
+    | "minutes"
+    | "hours"
+    | "days"
+    | "weeks"
+    | "months"
+    | "years";
+
+  /** Milliseconds in `n` seconds. */
+  export function seconds(n: number): number;
+  /** Milliseconds in `n` minutes. */
+  export function minutes(n: number): number;
+  /** Milliseconds in `n` hours. */
+  export function hours(n: number): number;
+  /** Milliseconds in `n` days. */
+  export function days(n: number): number;
+  /** Milliseconds in `n` weeks. */
+  export function weeks(n: number): number;
+  /** Milliseconds in `n` months, a month being 30 days. */
+  export function months(n: number): number;
+  /** Milliseconds in `n` years, a year being 365 days. */
+  export function years(n: number): number;
+
+  export function today(): string;
+  export function yesterday(): string;
+  export function tomorrow(): string;
+
+  /** Full English weekday name, e.g. `"Monday"`. */
+  export function dayOfWeek(date: DateInput): string;
+  /** Full English month name, e.g. `"January"`. */
+  export function monthName(date: DateInput): string;
+
+  export function isToday(date: DateInput): boolean;
+  export function isYesterday(date: DateInput): boolean;
+  export function isTomorrow(date: DateInput): boolean;
+  export function isWeekend(date: DateInput): boolean;
+  export function isLeapYear(year: number): boolean;
+
+  /** `"Monday, January 15, 2024"` — the Intl long date for `locale`. */
+  export function formatDateLong(date: DateInput, locale?: string): string;
+  export function formatDateShort(date: DateInput, locale?: string): string;  /** 24-hour `HH:mm:ss`. */
+  export function formatTime(date: DateInput): string;
+  /** 12-hour `hh:mm:ss AM`. */
+  export function formatTimeAmPm(date: DateInput): string;
+
+  /** Token-based parse; the separators of `format` are `-`, `/`, `:` or a space. */
+  export function parseDate(str: string, format?: string): Date;
+
+  /** Absolute difference, so the argument order does not matter. */
+  export function dateDiff(date1: DateInput, date2: DateInput, unit?: DateDiffUnit): number;
+
+  /** New `Date` — the input is never mutated. A negative `n` subtracts. */
+  export function addDays(date: DateInput, n: number): Date;
+  export function addHours(date: DateInput, n: number): Date;
+  export function addMinutes(date: DateInput, n: number): Date;
+  export function addSeconds(date: DateInput, n: number): Date;
+  export function subtractDays(date: DateInput, n: number): Date;
+  export function subtractHours(date: DateInput, n: number): Date;
+  export function subtractMinutes(date: DateInput, n: number): Date;
+  export function subtractSeconds(date: DateInput, n: number): Date;
+
+  /** Alias of {@link sleep}. */
+  export function waitFor(ms: number): Promise<void>;
+  /** Alias of {@link sleep}. */
+  export function wait(ms: number): Promise<void>;
+
+  /**
+   * Polls `condition` until it is truthy.
+   * @throws when `timeout` elapses first.
+   */
+  export function waitUntil(
+    condition: () => boolean,
+    timeout?: number,
+    interval?: number,
+  ): Promise<true>;
+
+  /**
+   * Polls the DOM for `selector` until the element appears. Needs a document:
+   * use it in a browser, never at module scope.
+   * @throws when `timeout` elapses first.
+   */
+  export function waitForElement(
+    selector: string,
+    timeout?: number,
+    interval?: number,
+  ): Promise<Element>;
+
+  /** One-shot performance clock. `stop()` logs and returns the ms; `elapsed()` reads without logging. */
+  export function timer(label: string): { stop(): number; elapsed(): number };
+
+  /** `setInterval` with the arguments in the order a reader expects. */
+  export function every(ms: number, callback: () => void): number;
+  export function everySecond(callback: () => void): number;
+  export function everyMinute(callback: () => void): number;
+  export function everyHour(callback: () => void): number;
+  export function everyDay(callback: () => void): number;
   export function formatMediaTime(seconds: number): string;
   export function formatMediaTimeLong(seconds: number): string;
   export function getProgressPercent(current: number, total: number): number;
@@ -2403,6 +2509,12 @@ declare module 'flet-box' {
   export function upperCase(str: string): string;
   export function reverseString(str: string): string;
   export function truncate(str: string, length?: number, suffix?: string): string;
+  export function startsWith(str: string, prefix: string): boolean;
+  export function endsWith(str: string, suffix: string): boolean;
+  export function includes(str: string, substr: string): boolean;
+  export function split(str: string, separator: string): string[];
+  export function join(arr: readonly any[], separator?: string): string;
+  export function trim(str: string): string;
 
   export function shuffle<T>(arr: T[]): T[];
   export function reverse<T>(arr: T[]): T[];
