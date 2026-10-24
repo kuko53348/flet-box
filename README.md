@@ -23,6 +23,7 @@ Real DOM · No Virtual DOM · No build config to learn.
 <br><br>
 
 <a href="https://kuko53348.github.io/flet-box-docs/">📖 Docs</a> •
+<a href="https://kuko53348.github.io/flet-box-widgets-exemples/">🧪 Widget gallery</a> •
 <a href="#quick-start">Quick start</a> •
 <a href="https://www.youtube.com/@flet-box">▶ YouTube</a> •
 <a href="#support--sponsorship">❤️ Sponsor</a>
@@ -156,6 +157,8 @@ Full guide, including manual `npx cap` workflows: [Mobile and platforms](docs/gu
 Read the docs online: **[The FletBox Book — kuko53348.github.io/flet-box-docs](https://kuko53348.github.io/flet-box-docs/)**.
 
 They are **one continuous book** — the cover maps every page: [The FletBox Book source](docs/README.md).
+
+Rather than read, click: **[the live widget gallery](https://kuko53348.github.io/flet-box-widgets-exemples/)** gives every widget its own page, renders each example in the browser it was written for, and prints the exact call underneath it. The theme toggle in the corner shows the same screen in light and dark, which is the honest way to judge a default color.
 
 - [Your first app](docs/guides/first-app.md) — build a working todo app in 20 minutes
 - [The widget book](docs/widget/README.md) — every widget with property tables and examples

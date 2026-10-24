@@ -13,6 +13,8 @@ If you have never used FletBox, begin with [Start here](START_HERE.md), then fol
 
 Related guides: [Build your first FletBox app](../guides/app-templates.md) · [Routing with FletBox](../guides/router.md) · [FletBox CLI](../cli/README.md).
 
+Every page here has a live twin: **[the widget gallery](https://kuko53348.github.io/flet-box-widgets-exemples/)** renders each example in the browser and prints the call that made it under the result, so you can read a property table and see the same prop move something.
+
 ## The reading path
 
 ### Chapter 1 · First steps: the core mental model

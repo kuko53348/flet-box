@@ -4,6 +4,8 @@ FletBox is a tiny UI framework: you describe your screen with plain JavaScript *
 
 This documentation is one continuous book. Start at **Chapter 0** and follow the "Continue reading" links at the bottom of every page; each page teaches you something real and links to the next.
 
+> **Want to see before you read?** The [live widget gallery](https://kuko53348.github.io/flet-box-widgets-exemples/) runs in the browser: one page per widget, every example rendered, with the exact call printed under it and a light/dark toggle. It is the same code the chapters describe, so it doubles as the answer to "what does this look like when it is real?".
+
 ## The reading path
 
 | # | Chapter | What you learn | Level |
