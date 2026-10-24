@@ -19,6 +19,8 @@
  * @module animations/animate
  */
 
+import { toREM } from "../utils/units.js";
+import { isColor, mixColor } from "./color.js";
 import { motionDuration } from "./motion.js";
 import { resolveEasing, spring as springCurve } from "./easings.js";
 
@@ -26,10 +28,19 @@ import { resolveEasing, spring as springCurve } from "./easings.js";
 
 /**
  * Interpolates between two values at a given progress point.
- * Handles three value types:
+ * Handles four value shapes:
  * - `number → number`: straight numeric lerp.
- * - `"#rrggbb" → string`: delegates to {@link interpolateColor}.
- * - `"16px" → string`: parses the numeric part, lerps it, re-attaches the unit.
+ * - `#rrggbb` / `rgb()` / `rgba()`: the shared mixer in `color.js`.
+ * - `"16px" → anything numeric`: parses the numeric part, lerps it, re-attaches
+ *   the starting value's unit.
+ * - anything else (a named color, `hidden`/`visible`, a font stack): a cut at the
+ *   end of the loop.
+ *
+ * The last case is the one worth naming: the unit branch used to run `parseFloat`
+ * on values with no number in them and write `"NaNpx"` on every frame. The browser
+ * drops a declaration it cannot parse, so the animation looked like it ran and
+ * changed nothing at all — the same silent failure the transform registry fixed
+ * for `translateY`.
  *
  * @param {number|string} from     - Starting value.
  * @param {number|string} to       - Ending value.
@@ -41,57 +52,22 @@ const interpolate = (from, to, progress) => {
   if (typeof from === "number" && typeof to === "number") {
     return from + (to - from) * progress;
   }
-  // Color to color (hex → rgb)
-  if (typeof from === "string" && from.startsWith("#")) {
-    return interpolateColor(from, to, progress);
+  // Color to color — hex, rgb() and rgba() all blend
+  if (isColor(from) && isColor(to)) {
+    return mixColor(from, to, progress);
   }
   // String with units (e.g., "16px", "2rem")
   if (typeof from === "string") {
     const fromNum = parseFloat(from);
     const toNum = parseFloat(to);
-    const unit = from.replace(fromNum.toString(), "");
-    return fromNum + (toNum - fromNum) * progress + unit;
+    if (Number.isFinite(fromNum) && Number.isFinite(toNum)) {
+      const unit = from.replace(fromNum.toString(), "");
+      return fromNum + (toNum - fromNum) * progress + unit;
+    }
   }
-  return to;
-};
-
-/**
- * Linearly interpolates between two hex color values, returning an `rgb()` string.
- *
- * @param {string} color1   - Starting color as a hex string (e.g. `"#ff0000"`).
- * @param {string} color2   - Ending color as a hex string.
- * @param {number} progress - Interpolation factor in [0, 1].
- * @returns {string} Interpolated color as `"rgb(r, g, b)"`.
- */
-const interpolateColor = (color1, color2, progress) => {
-  const rgb1 = hexToRgb(color1);
-  const rgb2 = hexToRgb(color2);
-  // Overshoot curves run past 1, and an `rgb()` value outside 0–255 makes the
-  // browser drop the whole declaration — the color would blink, not overshoot.
-  const channel = (a, b) =>
-    Math.min(255, Math.max(0, Math.round(a + (b - a) * progress)));
-  return `rgb(${channel(rgb1.r, rgb2.r)}, ${channel(rgb1.g, rgb2.g)}, ${channel(
-    rgb1.b,
-    rgb2.b,
-  )})`;
-};
-
-/**
- * Parses a hex color string into its red, green, and blue components.
- *
- * @param {string} hex - Hex color string (with or without leading `#`).
- * @returns {{ r: number, g: number, b: number }} RGB components in [0, 255].
- *   Returns `{ r: 0, g: 0, b: 0 }` if the string cannot be parsed.
- */
-const hexToRgb = (hex) => {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result
-    ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16),
-      }
-    : { r: 0, g: 0, b: 0 };
+  // Not a number, not a length, not a color: arrive at the end, don't pretend.
+  if (from === to) return from;
+  return progress >= 1 ? to : from;
 };
 
 // ========== EASING FUNCTIONS ==========
@@ -110,9 +86,9 @@ const hexToRgb = (hex) => {
 const getEasing = (type, t) => resolveEasing(type)(t);
 
 /**
- * Transform functions the engine can animate, with the unit a bare number gets
- * and the value that means "no effect" — the value an animation with no explicit
- * `from` starts from.
+ * Transform functions the engine can animate, with the kind of value each one
+ * takes and the value that means "no effect" — the value an animation with no
+ * explicit `from` starts from.
  *
  * `translateX`/`rotate`/`skewY` are not properties of `CSSStyleDeclaration`, so
  * the generic write path used to land them on the widget object as a harmless JS
@@ -120,21 +96,26 @@ const getEasing = (type, t) => resolveEasing(type)(t);
  * nothing, which is why the skill had to tell you to reach for `scale` even for a
  * slide. They are now composed into one `transform` string.
  *
- * @type {Object<string, { unit: string, neutral: number }>}
+ * A `length` function takes framework units, not pixels: the bare `24` a caller
+ * writes becomes `1.5rem`, the same way every routed prop does, so a slide grows
+ * with the reader's font instead of staying a pixel while the row it belongs to
+ * got taller. `angle` functions take degrees and `number` functions are scalars.
+ *
+ * @type {Object<string, { kind: "length"|"angle"|"number", neutral: number }>}
  */
 const TRANSFORM_FUNCTIONS = {
-  translateX: { unit: "px", neutral: 0 },
-  translateY: { unit: "px", neutral: 0 },
-  translateZ: { unit: "px", neutral: 0 },
-  rotate: { unit: "deg", neutral: 0 },
-  rotateX: { unit: "deg", neutral: 0 },
-  rotateY: { unit: "deg", neutral: 0 },
-  rotateZ: { unit: "deg", neutral: 0 },
-  skewX: { unit: "deg", neutral: 0 },
-  skewY: { unit: "deg", neutral: 0 },
-  scale: { unit: "", neutral: 1 },
-  scaleX: { unit: "", neutral: 1 },
-  scaleY: { unit: "", neutral: 1 },
+  translateX: { kind: "length", neutral: 0 },
+  translateY: { kind: "length", neutral: 0 },
+  translateZ: { kind: "length", neutral: 0 },
+  rotate: { kind: "angle", neutral: 0 },
+  rotateX: { kind: "angle", neutral: 0 },
+  rotateY: { kind: "angle", neutral: 0 },
+  rotateZ: { kind: "angle", neutral: 0 },
+  skewX: { kind: "angle", neutral: 0 },
+  skewY: { kind: "angle", neutral: 0 },
+  scale: { kind: "number", neutral: 1 },
+  scaleX: { kind: "number", neutral: 1 },
+  scaleY: { kind: "number", neutral: 1 },
 };
 
 /**
@@ -157,23 +138,38 @@ const transformParts = new WeakMap();
  *
  * @param {HTMLElement} widget   - The element to write on.
  * @param {string}      property - A key of {@link TRANSFORM_FUNCTIONS}.
- * @param {number|string} value  - A bare number gets the function's unit.
+ * @param {number|string} value  - A bare number gets the unit that function needs.
  * @returns {void}
  */
 const writeTransformPart = (widget, property, value) => {
-  const spec = TRANSFORM_FUNCTIONS[property];
   let parts = transformParts.get(widget);
   if (!parts) {
     parts = new Map();
     transformParts.set(widget, parts);
   }
-  parts.set(
-    property,
-    typeof value === "number" ? `${value}${spec.unit}` : String(value),
-  );
+  parts.set(property, formatTransformValue(property, value));
   widget.style.transform = TRANSFORM_ORDER.filter((name) => parts.has(name))
     .map((name) => `${name}(${parts.get(name)})`)
     .join(" ");
+};
+
+/**
+ * The CSS value of one transform function.
+ *
+ * A string already carries its unit and is passed through; a bare number is a
+ * framework unit for a `length`, degrees for an `angle`, and a plain scalar for a
+ * `number`.
+ *
+ * @param {string}             property - A key of {@link TRANSFORM_FUNCTIONS}.
+ * @param {number|string}      value
+ * @returns {string}
+ */
+const formatTransformValue = (property, value) => {
+  if (typeof value !== "number") return String(value);
+  const { kind } = TRANSFORM_FUNCTIONS[property];
+  if (kind === "length") return toREM(value);
+  if (kind === "angle") return `${value}deg`;
+  return String(value);
 };
 
 /**
@@ -197,18 +193,61 @@ const readAnimatedValue = (widget, property) => {
     // An inline-unset property reads as "" and `interpolate` turns that into the
     // string "NaN", which the browser silently drops — so `animate(el, "opacity",
     // undefined, 1, 300)` (the documented API) wrote "NaN" every frame and never
-    // animated anything. Fall back to the property's neutral value.
+    // animated anything. What the element actually looks like is the next place to
+    // ask, because a widget styled through a class or a stylesheet has an empty
+    // inline value and a real one: `fadeOut` of a card the theme set to 0.8 must
+    // start at 0.8, not at the neutral guess below.
     if (inline !== "" && inline !== null && inline !== undefined) return inline;
+    const computed = readComputedStyle(widget, property);
+    if (computed !== undefined) return computed;
     return property === "opacity" ? 1 : 0;
   }
   return widget?.[property];
 };
 
 /**
+ * The value a real element shows right now, from its computed style.
+ *
+ * Read once when a loop starts, never per frame. A plain object passed by a caller
+ * (a widget-shaped mock) has no computed style, and asking is what a `null` answer
+ * means here.
+ *
+ * @param {HTMLElement|object} widget
+ * @param {string} property
+ * @returns {string|undefined}
+ */
+const readComputedStyle = (widget, property) => {
+  if (typeof getComputedStyle !== "function") return undefined;
+  if (!(widget instanceof Element)) return undefined;
+  const value = getComputedStyle(widget)[property];
+  return value === "" || value === undefined ? undefined : value;
+};
+
+/**
+ * Style properties a bare number must NOT get a length unit on.
+ *
+ * The same exemptions the factory's `toCSSValue` keeps, listed here because the
+ * animation engine writes styles directly and cannot ask the prop registry.
+ * @type {Set<string>}
+ */
+const UNITLESS_STYLE_PROPS = new Set([
+  "opacity",
+  "zIndex",
+  "order",
+  "flex",
+  "flexGrow",
+  "flexShrink",
+  "fontWeight",
+  "lineHeight",
+  "aspectRatio",
+]);
+
+/**
  * Writes an animated value to a widget property.
  * - Transform functions merge into `transform` (see {@link writeTransformPart}).
- * - Numeric values for style properties that require a unit get `"px"` appended
- *   (unitless properties such as `opacity`, `zIndex`, etc. are exempt).
+ * - A bare number on any other length is a framework unit and becomes rem, the way
+ *   a routed prop does — `animate(el, "width", 100, 300)` grows with the reader's
+ *   font instead of staying a pixel while the card around it got taller.
  * - Falls back to setting the property directly on the widget object for
  *   non-style properties.
  *
@@ -225,17 +264,9 @@ const writeAnimatedValue = (widget, property, value) => {
     return;
   }
   if (widget.style && property in widget.style) {
-    const unitlessProperties = new Set([
-      "opacity",
-      "zIndex",
-      "fontWeight",
-      "lineHeight",
-      "flexGrow",
-      "flexShrink",
-    ]);
     widget.style[property] =
-      typeof value === "number" && !unitlessProperties.has(property)
-        ? `${value}px`
+      typeof value === "number" && !UNITLESS_STYLE_PROPS.has(property)
+        ? toREM(value)
         : value;
     return;
   }
@@ -486,19 +517,35 @@ export const animateSpringAsync = (widget, property, from, to, options = {}) => 
 // ========== HELPER FUNCTIONS (Fire and Forget) ==========
 
 /**
- * Fades a widget out by animating its `opacity` from `1` to `0`.
- * Fire-and-forget — does not return a Promise.
+ * The scale a pulse is at, given eased progress.
+ *
+ * Up for the first half of the gesture and back down for the second, inside one
+ * loop: a pulse is one cancelable movement, not an animation plus a timer that
+ * starts the second half on a widget someone already unmounted.
+ *
+ * @param {number} progress - Progress through the pulse in `[0, 1]`.
+ * @returns {number} The scale to write.
+ */
+const pulseScale = (progress) =>
+  interpolate(1, 1.1, progress < 0.5 ? progress * 2 : 2 - progress * 2);
+
+/**
+ * Fades a widget out by animating its `opacity` to `0`.
+ *
+ * It starts from wherever the widget actually is — the element's own value, then
+ * its computed style — so a card the theme set to `0.8` fades from `0.8` instead
+ * of first jumping to fully opaque.
  *
  * @param {HTMLElement|object} widget        - The target widget.
  * @param {number}             [duration=300] - Fade duration in milliseconds.
  * @returns {() => boolean} Cancel function (see {@link animate}).
  */
 export const fadeOut = (widget, duration = 300) => {
-  return animate(widget, "opacity", 1, 0, duration);
+  return animate(widget, "opacity", undefined, 0, duration);
 };
 
 /**
- * Fades a widget in by animating its `opacity` from `0` to `1`.
+ * Fades a widget in by animating its `opacity` to `1`.
  * Fire-and-forget — does not return a Promise.
  *
  * @param {HTMLElement|object} widget        - The target widget.
@@ -506,7 +553,7 @@ export const fadeOut = (widget, duration = 300) => {
  * @returns {() => boolean} Cancel function (see {@link animate}).
  */
 export const fadeIn = (widget, duration = 300) => {
-  return animate(widget, "opacity", 0, 1, duration);
+  return animate(widget, "opacity", undefined, 1, duration);
 };
 
 /**
@@ -520,23 +567,12 @@ export const fadeIn = (widget, duration = 300) => {
  * @returns {() => boolean} Cancel function (see {@link animate}).
  */
 export const pulse = (widget, duration = 300) =>
-  runAnimation(
-    widget,
-    "scale",
-    1,
-    1,
-    duration,
-    "linear",
-    // One loop with a triangular curve instead of an animation plus a
-    // `setTimeout`: the timer used to start phase two on a widget that had
-    // already been removed from the DOM, and nothing could cancel it.
-    (progress) => interpolate(1, 1.1, progress < 0.5 ? progress * 2 : 2 - progress * 2),
-  );
+  runAnimation(widget, "scale", 1, 1, duration, "linear", pulseScale);
 
 // ========== ASYNC HELPER FUNCTIONS (Returns Promise) ==========
 
 /**
- * Fades a widget out by animating its `opacity` from `1` to `0`.
+ * Fades a widget out by animating its `opacity` to `0`.
  * Returns a Promise that resolves when the fade completes.
  *
  * @param {HTMLElement|object} widget        - The target widget.
@@ -544,11 +580,11 @@ export const pulse = (widget, duration = 300) =>
  * @returns {Promise<HTMLElement|object>} Resolves with `widget` on completion.
  */
 export const fadeOutAsync = (widget, duration = 300) => {
-  return animateAsync(widget, "opacity", 1, 0, duration);
+  return animateAsync(widget, "opacity", undefined, 0, duration);
 };
 
 /**
- * Fades a widget in by animating its `opacity` from `0` to `1`.
+ * Fades a widget in by animating its `opacity` to `1`.
  * Returns a Promise that resolves when the fade completes.
  *
  * @param {HTMLElement|object} widget        - The target widget.
@@ -556,19 +592,33 @@ export const fadeOutAsync = (widget, duration = 300) => {
  * @returns {Promise<HTMLElement|object>} Resolves with `widget` on completion.
  */
 export const fadeInAsync = (widget, duration = 300) => {
-  return animateAsync(widget, "opacity", 0, 1, duration);
+  return animateAsync(widget, "opacity", undefined, 1, duration);
 };
 
 /**
- * Scales a widget up then back to its original size, awaiting each phase.
- * Use this when subsequent code must run only after the full pulse finishes.
+ * The awaitable form of {@link pulse}.
+ *
+ * The same single loop, not an up-animation chained to a down-animation: the two
+ * halves were twice the frames of the gesture they described, stopped on the
+ * `setTimeout` that separated them, and resolved with nothing while every other
+ * `Async` helper resolves with the widget it just moved.
  *
  * @param {HTMLElement|object} widget        - The target widget.
  * @param {number}             [duration=300] - Total pulse duration in milliseconds
  *   (split evenly between scale-up and scale-down).
- * @returns {Promise<void>} Resolves when both phases of the pulse have completed.
+ * @returns {Promise<HTMLElement|object>} Resolves with `widget` when the pulse
+ *   finishes — or as soon as it is cancelled or replaced.
  */
-export const pulseAsync = async (widget, duration = 300) => {
-  await animateAsync(widget, "scale", 1, 1.1, duration / 2);
-  await animateAsync(widget, "scale", 1.1, 1, duration / 2);
-};
+export const pulseAsync = (widget, duration = 300) =>
+  new Promise((resolve) => {
+    runAnimation(
+      widget,
+      "scale",
+      1,
+      1,
+      duration,
+      "linear",
+      pulseScale,
+      resolve,
+    );
+  });

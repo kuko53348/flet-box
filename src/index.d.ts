@@ -1139,16 +1139,20 @@ declare module 'flet-box' {
     effect: string;
     from: any;
     to: any;
-    duration?: number;
+    /** Milliseconds as a number (`400`) or a CSS time as a string (`"0.4s"`). Defaults to 500. */
+    duration?: number | string;
     reverse?: boolean;
+    /** Repeats this step forever; a loop and a one-shot generate separate `@keyframes`. */
     loop?: boolean;
-    delay?: string;
+    /** Milliseconds as a number (`120`) or a CSS time as a string (`"0.12s"`). Defaults to the widget's `delay`. */
+    delay?: number | string;
   }
   export interface AnimatedBoxProps extends CommonProps {
     animations: AnimationStep[];
     child: Widget;
     timing?: string;
-    delay?: string;
+    /** Default delay for the steps that do not name one: milliseconds or a CSS time. */
+    delay?: number | string;
     fillMode?: string;
     top?: number | string;
     right?: number | string;
@@ -1161,6 +1165,7 @@ declare module 'flet-box' {
     child: Widget;
     animations: AnimationStep[];
     sameTime?: boolean;
+    /** Seconds between consecutive characters (`0.05` is a 50 ms stagger). */
     delayBetween?: number;
     orientation?: 'row' | 'column';
   }

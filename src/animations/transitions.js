@@ -4,19 +4,36 @@
  * Between an app that animates and one that looks animated there are three
  * movements: something arriving, something leaving, and something saying "that
  * was wrong". Writing them per screen is how a codebase ends up with eleven
- * slightly different entrances, and each one is a hand-rolled loop that no
- * longer obeys the reduced-motion preference because the engine never saw it.
+ * slightly different entrances, and each one is a hand-rolled loop that no longer
+ * obeys the reduced-motion preference because the engine never saw it.
  *
  * These are the three that carry a product, built on the same `runAnimation()`
- * loop everything else uses, so they inherit its guarantees for free:
- * one registered loop per widget and property, the end value always lands, a
- * cancel function that also resolves an `await`, and duration collapsing to zero
- * when the user asked for reduced motion.
+ * loop everything else uses, so they inherit its guarantees for free: one
+ * registered loop per widget and property, the end value always lands, a cancel
+ * function that also resolves an `await`, and duration collapsing to zero when the
+ * user asked for reduced motion.
+ *
+ * Every preset is described once, as the list of loops the gesture is made of, and
+ * the two forms — the one that hands back a cancel function and the one you `await`
+ * — are that same list run two ways. A preset that grows an option cannot end up
+ * meaning one thing to `slideIn` and another to `slideInAsync`.
  *
  * @module animations/transitions
  */
 
 import { runAnimation } from "./animate.js";
+
+/**
+ * One loop of a gesture, as the arguments `runAnimation` takes.
+ *
+ * @typedef {object} GestureStep
+ * @property {string} property - The CSS property or transform function.
+ * @property {number|string} from - Starting value.
+ * @property {number|string} to - Ending value.
+ * @property {number} duration - Milliseconds.
+ * @property {string|((t: number) => number)} easing - Curve name or curve.
+ * @property {((progress: number) => number|string)} [valueAt] - Custom value curve.
+ */
 
 /**
  * Stops every loop a preset started on a widget.
@@ -26,6 +43,47 @@ import { runAnimation } from "./animate.js";
  */
 const combine = (cancels) => () =>
   cancels.map((cancel) => cancel()).some(Boolean);
+
+/**
+ * Runs a gesture and hands back one cancel for the whole of it.
+ *
+ * @param {HTMLElement|object} widget - The target widget or DOM element.
+ * @param {GestureStep[]} steps
+ * @returns {() => boolean}
+ */
+const play = (widget, steps) =>
+  combine(
+    steps.map(({ property, from, to, duration, easing, valueAt }) =>
+      runAnimation(widget, property, from, to, duration, easing, valueAt ?? null),
+    ),
+  );
+
+/**
+ * Runs a gesture and resolves when every loop of it has landed.
+ *
+ * @param {HTMLElement|object} widget - The target widget or DOM element.
+ * @param {GestureStep[]} steps
+ * @returns {Promise<HTMLElement|object>} Resolves with `widget` — or as soon as any
+ *   loop is cancelled or replaced, so `await` never hangs.
+ */
+const playAsync = (widget, steps) =>
+  Promise.all(
+    steps.map(
+      ({ property, from, to, duration, easing, valueAt }) =>
+        new Promise((resolve) =>
+          runAnimation(
+            widget,
+            property,
+            from,
+            to,
+            duration,
+            easing,
+            valueAt ?? null,
+            resolve,
+          ),
+        ),
+    ),
+  ).then(() => widget);
 
 /**
  * Resolves the axis a `direction` names.
@@ -52,6 +110,78 @@ const axisFor = (direction) => {
 };
 
 /**
+ * The travel of a `slide`, as one framework-unit offset on the axis the direction
+ * names, plus the fade that carries it.
+ *
+ * @param {object} options - See {@link slideIn}.
+ * @param {"up"|"down"|"left"|"right"} [options.direction="up"]
+ * @param {number} [options.distance=16]
+ * @param {number} [options.duration=240]
+ * @param {string|((t: number) => number)} [options.easing="easeOut"]
+ * @param {boolean} [options.fade=true]
+ * @param {boolean} [options.leaving=false] - The exit mirrors the entrance.
+ * @returns {GestureStep[]}
+ */
+const slideSteps = ({
+  direction = "up",
+  distance = 16,
+  duration = 240,
+  easing = "easeOut",
+  fade = true,
+  leaving = false,
+}) => {
+  const { property, sign } = axisFor(direction);
+  const offset = Math.abs(Number(distance) || 0) * sign;
+  const steps = leaving
+    ? [{ property, from: 0, to: -offset, duration, easing }]
+    : [{ property, from: offset, to: 0, duration, easing }];
+  if (fade) {
+    steps.push({
+      property: "opacity",
+      from: leaving ? 1 : 0,
+      to: leaving ? 0 : 1,
+      duration,
+      easing,
+    });
+  }
+  return steps;
+};
+
+/**
+ * The decaying side-to-side (or up-and-down) movement of a `shake`.
+ *
+ * @param {object} options - See {@link shake}.
+ * @param {"x"|"y"} [options.axis="x"]
+ * @param {number} [options.distance=6]
+ * @param {number} [options.cycles=3]
+ * @param {number} [options.duration=320]
+ * @returns {GestureStep[]}
+ */
+const shakeSteps = ({
+  axis = "x",
+  distance = 6,
+  cycles = 3,
+  duration = 320,
+}) => {
+  const property = axis === "y" ? "translateY" : "translateX";
+  const amplitude = Math.abs(Number(distance) || 0);
+  const swings = Math.max(1, Number(cycles) || 3);
+  return [
+    {
+      property,
+      from: 0,
+      to: 0,
+      duration,
+      easing: "linear",
+      // (1 - t) makes each swing smaller than the last, so the gesture ends at rest
+      // instead of stopping mid-swing and leaving the row off its own column.
+      valueAt: (progress) =>
+        amplitude * Math.sin(progress * Math.PI * 2 * swings) * (1 - progress),
+    },
+  ];
+};
+
+/**
  * Brings a widget onto the screen: a short travel plus a fade, as one gesture.
  *
  * This is the entrance the design rules describe (opacity + a small `translate`,
@@ -62,30 +192,17 @@ const axisFor = (direction) => {
  * @param {object}  [options]
  * @param {"up"|"down"|"left"|"right"} [options.direction="up"] - The way the
  *   element travels as it arrives. `up` starts below its resting place.
- * @param {number}  [options.distance=16] - How far it travels, in framework units
- *   (px through the engine, so it lands as a rem-independent offset).
+ * @param {number}  [options.distance=16] - How far it travels, in framework units:
+ *   a bare `16` is a `rem` offset through the engine, so it grows with the
+ *   reader's font exactly like the widget it belongs to.
  * @param {number}  [options.duration=240] - Milliseconds; stay under 500.
  * @param {string|((t: number) => number)} [options.easing="easeOut"] - Curve name
  *   or curve. An entrance decelerates — `easeIn` reads as a screen that is late.
  * @param {boolean} [options.fade=true] - Also animate `opacity` from 0.
  * @returns {() => boolean} Cancel function for both loops.
  */
-export const slideIn = (widget, options = {}) => {
-  const {
-    direction = "up",
-    distance = 16,
-    duration = 240,
-    easing = "easeOut",
-    fade = true,
-  } = options;
-  const { property, sign } = axisFor(direction);
-  const from = Math.abs(Number(distance) || 0) * sign;
-  const cancels = [
-    runAnimation(widget, property, from, 0, duration, easing, null),
-  ];
-  if (fade) cancels.push(runAnimation(widget, "opacity", 0, 1, duration, easing, null));
-  return combine(cancels);
-};
+export const slideIn = (widget, options = {}) =>
+  play(widget, slideSteps(options));
 
 /**
  * The awaitable form of {@link slideIn}.
@@ -95,29 +212,25 @@ export const slideIn = (widget, options = {}) => {
  * @returns {Promise<HTMLElement|object>} Resolves with `widget` when the element
  *   has arrived, or as soon as either loop is cancelled or replaced.
  */
-export const slideInAsync = (widget, options = {}) => {
-  const {
-    direction = "up",
-    distance = 16,
-    duration = 240,
-    easing = "easeOut",
-    fade = true,
-  } = options;
-  const { property, sign } = axisFor(direction);
-  const from = Math.abs(Number(distance) || 0) * sign;
-  const loops = [
-    new Promise((resolve) =>
-      runAnimation(widget, property, from, 0, duration, easing, null, resolve),
-    ),
-  ];
-  if (fade) {
-    loops.push(
-      new Promise((resolve) =>
-        runAnimation(widget, "opacity", 0, 1, duration, easing, null, resolve),
-      ),
-    );
-  }
-  return Promise.all(loops).then(() => widget);
+export const slideInAsync = (widget, options = {}) =>
+  playAsync(widget, slideSteps(options));
+
+/**
+ * The scale a `popIn` travels through, plus the optional fade.
+ *
+ * @param {object} options - See {@link popIn}.
+ * @returns {GestureStep[]}
+ */
+const popSteps = ({
+  from = 0.94,
+  to = 1,
+  duration = 180,
+  easing = "easeOutBack",
+  fade = false,
+}) => {
+  const steps = [{ property: "scale", from, to, duration, easing }];
+  if (fade) steps.push({ property: "opacity", from: 0, to: 1, duration, easing });
+  return steps;
 };
 
 /**
@@ -137,20 +250,8 @@ export const slideInAsync = (widget, options = {}) => {
  * @param {boolean} [options.fade=false] - Also animate `opacity` from 0.
  * @returns {() => boolean} Cancel function.
  */
-export const popIn = (widget, options = {}) => {
-  const {
-    from = 0.94,
-    to = 1,
-    duration = 180,
-    easing = "easeOutBack",
-    fade = false,
-  } = options;
-  const cancels = [runAnimation(widget, "scale", from, to, duration, easing, null)];
-  if (fade) {
-    cancels.push(runAnimation(widget, "opacity", 0, 1, duration, easing, null));
-  }
-  return combine(cancels);
-};
+export const popIn = (widget, options = {}) =>
+  play(widget, popSteps(options));
 
 /**
  * The awaitable form of {@link popIn}.
@@ -159,28 +260,8 @@ export const popIn = (widget, options = {}) => {
  * @param {object} [options] - See {@link popIn}.
  * @returns {Promise<HTMLElement|object>} Resolves with `widget` when it settles.
  */
-export const popInAsync = (widget, options = {}) => {
-  const {
-    from = 0.94,
-    to = 1,
-    duration = 180,
-    easing = "easeOutBack",
-    fade = false,
-  } = options;
-  const loops = [
-    new Promise((resolve) =>
-      runAnimation(widget, "scale", from, to, duration, easing, null, resolve),
-    ),
-  ];
-  if (fade) {
-    loops.push(
-      new Promise((resolve) =>
-        runAnimation(widget, "opacity", 0, 1, duration, easing, null, resolve),
-      ),
-    );
-  }
-  return Promise.all(loops).then(() => widget);
-};
+export const popInAsync = (widget, options = {}) =>
+  playAsync(widget, popSteps(options));
 
 /**
  * Says "that was wrong" without a word: a short, decaying side-to-side move.
@@ -193,30 +274,15 @@ export const popInAsync = (widget, options = {}) => {
  * @param {HTMLElement|object} widget - The target widget or DOM element.
  * @param {object}  [options]
  * @param {"x"|"y"} [options.axis="x"] - Which way it shakes; `y` for a vertical list.
- * @param {number}  [options.distance=6] - Amplitude of the first swing.
+ * @param {number}  [options.distance=6] - Amplitude of the first swing, in framework
+ *   units (a bare `6` is `0.375rem`).
  * @param {number}  [options.cycles=3]   - Number of swings; more reads as a glitch.
  * @param {number}  [options.duration=320] - Milliseconds.
  * @returns {() => boolean} Cancel function; cancelling leaves the element at the
  *   offset it held at that moment, so call it from `onUnmount` rather than mid-error.
  */
-export const shake = (widget, options = {}) => {
-  const { axis = "x", distance = 6, cycles = 3, duration = 320 } = options;
-  const property = axis === "y" ? "translateY" : "translateX";
-  const amplitude = Math.abs(Number(distance) || 0);
-  const swings = Math.max(1, Number(cycles) || 3);
-  return runAnimation(
-    widget,
-    property,
-    0,
-    0,
-    duration,
-    "linear",
-    // (1 - t) makes each swing smaller than the last, so the gesture ends at rest
-    // instead of stopping mid-swing and leaving the row off its own column.
-    (progress) =>
-      amplitude * Math.sin(progress * Math.PI * 2 * swings) * (1 - progress),
-  );
-};
+export const shake = (widget, options = {}) =>
+  play(widget, shakeSteps(options));
 
 /**
  * The awaitable form of {@link shake}.
@@ -225,25 +291,8 @@ export const shake = (widget, options = {}) => {
  * @param {object} [options] - See {@link shake}.
  * @returns {Promise<HTMLElement|object>} Resolves with `widget` when the shake ends.
  */
-export const shakeAsync = (widget, options = {}) => {
-  const { axis = "x", distance = 6, cycles = 3, duration = 320 } = options;
-  const property = axis === "y" ? "translateY" : "translateX";
-  const amplitude = Math.abs(Number(distance) || 0);
-  const swings = Math.max(1, Number(cycles) || 3);
-  return new Promise((resolve) =>
-    runAnimation(
-      widget,
-      property,
-      0,
-      0,
-      duration,
-      "linear",
-      (progress) =>
-        amplitude * Math.sin(progress * Math.PI * 2 * swings) * (1 - progress),
-      resolve,
-    ),
-  );
-};
+export const shakeAsync = (widget, options = {}) =>
+  playAsync(widget, shakeSteps(options));
 
 /**
  * Moves a widget out of the screen and leaves it invisible.
@@ -256,27 +305,15 @@ export const shakeAsync = (widget, options = {}) => {
  * @param {HTMLElement|object} widget - The target widget or DOM element.
  * @param {object}  [options]
  * @param {"up"|"down"|"left"|"right"} [options.direction="down"] - The way it leaves.
- * @param {number}  [options.distance=12] - How far it travels.
+ * @param {number}  [options.distance=12] - How far it travels, in framework units.
  * @param {number}  [options.duration=180] - Milliseconds.
  * @param {string|((t: number) => number)} [options.easing="easeIn"] - Curve; an
  *   element leaving the screen at speed is the one place `easeIn` is right.
  * @param {boolean} [options.fade=true]  - Also animate `opacity` to 0.
  * @returns {() => boolean} Cancel function.
  */
-export const slideOut = (widget, options = {}) => {
-  const {
-    direction = "down",
-    distance = 12,
-    duration = 180,
-    easing = "easeIn",
-    fade = true,
-  } = options;
-  const { property, sign } = axisFor(direction);
-  const to = Math.abs(Number(distance) || 0) * -sign;
-  const cancels = [runAnimation(widget, property, 0, to, duration, easing, null)];
-  if (fade) cancels.push(runAnimation(widget, "opacity", 1, 0, duration, easing, null));
-  return combine(cancels);
-};
+export const slideOut = (widget, options = {}) =>
+  play(widget, slideSteps({ direction: "down", ...options, leaving: true }));
 
 /**
  * The awaitable form of {@link slideOut} — the usual one, since what follows an
@@ -286,27 +323,5 @@ export const slideOut = (widget, options = {}) => {
  * @param {object} [options] - See {@link slideOut}.
  * @returns {Promise<HTMLElement|object>} Resolves with `widget` when it has left.
  */
-export const slideOutAsync = (widget, options = {}) => {
-  const {
-    direction = "down",
-    distance = 12,
-    duration = 180,
-    easing = "easeIn",
-    fade = true,
-  } = options;
-  const { property, sign } = axisFor(direction);
-  const to = Math.abs(Number(distance) || 0) * -sign;
-  const loops = [
-    new Promise((resolve) =>
-      runAnimation(widget, property, 0, to, duration, easing, null, resolve),
-    ),
-  ];
-  if (fade) {
-    loops.push(
-      new Promise((resolve) =>
-        runAnimation(widget, "opacity", 1, 0, duration, easing, null, resolve),
-      ),
-    );
-  }
-  return Promise.all(loops).then(() => widget);
-};
+export const slideOutAsync = (widget, options = {}) =>
+  playAsync(widget, slideSteps({ direction: "down", ...options, leaving: true }));

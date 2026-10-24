@@ -12,27 +12,19 @@
  * - boxShadow (offsetX, offsetY, blur, spread, color)
  * - background (gradients: linear, radial, conic)
  *
+ * Each entry is `{ effect, from, to }` plus the optional `duration`, `delay`,
+ * `loop` and `reverse`, and each one is honoured: a step's own duration is how
+ * long *that* step takes, not the duration of whichever step came first.
+ *
  * ⭐ Numbers in length properties (width, height, translate, etc.)
  *   are automatically converted to rem (consistent with widget-factory behavior)
  */
 
+import { toREM } from "../utils/units.js";
+import { mixColor } from "./color.js";
 import { prefersReducedMotion, markMotionLoop } from "./motion.js";
 
-let animationCounter = 0;
 const injectedKeyframes = new Set();
-
-/**
- * Converts a numeric pixel value to a rem string.
- * Passes through non-numeric values unchanged.
- *
- * @param {number|string|undefined|null} value - The value to convert.
- * @returns {string|undefined} The value expressed in rem, or undefined if input was nullish.
- */
-const toREM = (value) => {
-  if (value === undefined || value === null) return undefined;
-  if (typeof value === "number") return `${value / 16}rem`;
-  return value;
-};
 
 /**
  * Effect names whose values represent CSS lengths and must be expressed in rem.
@@ -43,6 +35,7 @@ const lengthEffects = new Set([
   "height",
   "translateX",
   "translateY",
+  "translateZ",
   "marginTop",
   "marginRight",
   "marginBottom",
@@ -61,15 +54,45 @@ const lengthEffects = new Set([
  */
 const noUnitEffects = new Set([
   "scale",
+  "scaleX",
+  "scaleY",
   "rotate",
   "rotateX",
   "rotateY",
+  "rotateZ",
+  "skewX",
+  "skewY",
   "opacity",
 ]);
 
 /**
+ * The effects that land inside the single `transform` declaration.
+ *
+ * Two CSS animations that both write `transform` do not compose: the one listed
+ * last wins and the other's movement disappears. So these are always generated
+ * into one rule, and the rule is the reason a group exists at all.
+ * @type {Set<string>}
+ */
+const transformEffects = new Set([
+  "scale",
+  "scaleX",
+  "scaleY",
+  "rotate",
+  "rotateX",
+  "rotateY",
+  "rotateZ",
+  "skewX",
+  "skewY",
+  "translateX",
+  "translateY",
+  "translateZ",
+]);
+
+/**
  * Maps shorthand effect keys (used in the animations API) to their canonical
- * CSS property names used during keyframe generation.
+ * CSS property names used during keyframe generation. The right-hand names are
+ * what the property is written as; the left-hand ones are the spellings the
+ * examples and the snippet library use.
  * @type {Object.<string, string>}
  */
 const effectMap = {
@@ -79,11 +102,17 @@ const effectMap = {
   rounded: "borderRadius",
   // Transform
   scale: "scale",
+  scaleX: "scaleX",
+  scaleY: "scaleY",
   rotate: "rotate",
   rotateY: "rotateY",
   rotateX: "rotateX",
+  rotateZ: "rotateZ",
+  skewX: "skewX",
+  skewY: "skewY",
   translateX: "translateX",
   translateY: "translateY",
+  translateZ: "translateZ",
   opacity: "opacity",
   // Dimensions and spacing
   width: "width",
@@ -108,79 +137,23 @@ const effectMap = {
 };
 
 /**
- * Linearly interpolates between two CSS color values (hex, rgb, or rgba).
- *
- * @param {string} color1 - Starting color (hex, rgb, or rgba string).
- * @param {string} color2 - Ending color (hex, rgb, or rgba string).
- * @param {number} t - Interpolation factor in [0, 1].
- * @returns {string} Interpolated color as an rgba() string.
- */
-const interpolateColor = (color1, color2, t) => {
-  if (color1 === color2) return color1;
-
-  const parseRgb = (color) => {
-    if (color.startsWith("#")) {
-      const r = parseInt(color.slice(1, 3), 16);
-      const g = parseInt(color.slice(3, 5), 16);
-      const b = parseInt(color.slice(5, 7), 16);
-      return [r, g, b, 1];
-    }
-    const match = color.match(
-      /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/,
-    );
-    if (match) {
-      const a = match[4] !== undefined ? parseFloat(match[4]) : 1;
-      return [parseInt(match[1]), parseInt(match[2]), parseInt(match[3]), a];
-    }
-    return [0, 0, 0, 1];
-  };
-
-  const rgbToRgba = (r, g, b, a = 1) => `rgba(${r}, ${g}, ${b}, ${a})`;
-
-  const [r1, g1, b1, a1] = parseRgb(color1);
-  const [r2, g2, b2, a2] = parseRgb(color2);
-
-  const r = Math.round(r1 + (r2 - r1) * t);
-  const g = Math.round(g1 + (g2 - g1) * t);
-  const b = Math.round(b1 + (b2 - b1) * t);
-  const a = a1 + (a2 - a1) * t;
-
-  return rgbToRgba(r, g, b, a);
-};
-
-/**
  * Interpolates between two numeric values that may carry CSS unit suffixes.
- * When `useREM` is true the raw interpolated number is converted to rem.
+ * A length that needs rem is converted by its own branch in
+ * {@link generateRule}, through the framework's shared `toREM`.
  *
  * @param {number|string} from - Starting value (number or string with optional unit).
  * @param {number|string} to   - Ending value (number or string with optional unit).
  * @param {number}        t    - Interpolation factor in [0, 1].
- * @param {boolean}       [useREM=false] - When true, result is expressed in rem (÷16).
- * @returns {string|number} Interpolated value, with unit appended when applicable.
+ * @returns {string} Interpolated value with the starting value's unit re-attached.
  */
-const interpolateNumber = (from, to, t, useREM = false) => {
-  let fromNum, toNum, fromUnit, toUnit;
-
-  if (typeof from === "number" && typeof to === "number") {
-    fromNum = from;
-    toNum = to;
-    fromUnit = "";
-    toUnit = "";
-  } else {
-    fromNum = parseFloat(from);
-    toNum = parseFloat(to);
-    fromUnit = from.toString().replace(fromNum.toString(), "");
-    toUnit = to.toString().replace(toNum.toString(), "");
-  }
-
+const interpolateNumber = (from, to, t) => {
+  const fromNum = parseFloat(from);
+  const toNum = parseFloat(to);
+  const fromUnit = from.toString().replace(fromNum.toString(), "");
+  const toUnit = to.toString().replace(toNum.toString(), "");
   const value = fromNum + (toNum - fromNum) * t;
-  if (useREM) {
-    // Express the interpolated pixel value in rem
-    return `${value / 16}rem`;
-  } else {
-    const unit = fromUnit || toUnit || "px";
-    return `${value}${unit}`;
-  }
+  const unit = fromUnit || toUnit || "px";
+  return `${value}${unit}`;
 };
 
 /**
@@ -210,13 +183,12 @@ const interpolateBoxShadow = (shadow1, shadow2, t) => {
   const s1 = parseShadow(shadow1);
   const s2 = parseShadow(shadow2);
   // box-shadow lengths keep their original units (not converted to rem)
-  const interpolateLength = (len1, len2, t) =>
-    interpolateNumber(len1, len2, t, false);
+  const interpolateLength = (len1, len2, t) => interpolateNumber(len1, len2, t);
   const newOffsetX = interpolateLength(s1.offsetX, s2.offsetX, t);
   const newOffsetY = interpolateLength(s1.offsetY, s2.offsetY, t);
   const newBlur = interpolateLength(s1.blur, s2.blur, t);
   const newSpread = interpolateLength(s1.spread, s2.spread, t);
-  const newColor = interpolateColor(s1.color, s2.color, t);
+  const newColor = mixColor(s1.color, s2.color, t);
   return `${newOffsetX} ${newOffsetY} ${newBlur} ${newSpread} ${newColor}`;
 };
 
@@ -301,7 +273,7 @@ const interpolateGradient = (gradient1, gradient2, t) => {
   for (let i = 0; i < maxStops; i++) {
     const stop1 = p1.stops[i] || p1.stops[p1.stops.length - 1];
     const stop2 = p2.stops[i] || p2.stops[p2.stops.length - 1];
-    const color = interpolateColor(stop1.color, stop2.color, t);
+    const color = mixColor(stop1.color, stop2.color, t);
     let position = "";
     if (stop1.position && stop2.position) {
       const pos1 = parseFloat(stop1.position);
@@ -362,40 +334,164 @@ const injectKeyframes = (name, keyframes) => {
   injectedKeyframes.add(name);
 };
 
+/** The duration a step that does not name one gets. */
+const DEFAULT_DURATION = 500;
+
 /**
- * Generates a CSS `@keyframes` body string from an array of animation descriptors.
- * Each animation describes an effect, a `from` value, a `to` value, and an optional
- * `reverse` flag that controls whether the animation cycles back (sine wave) or plays
- * straight through (linear interpolation).
+ * Reads a step's time as milliseconds.
  *
- * @param {Array<{effect: string, from: *, to: *, reverse?: boolean}>} animations
- *   Array of animation descriptors to combine into a single keyframe sequence.
+ * A bare number is milliseconds and a unit string is parsed, because that is what
+ * the docs promise (`delay` is "in milliseconds") and what `AnimatedText` writes
+ * (`"0.1s"`). Handing the `animation` shorthand an unqualified number — `delay:
+ * 200` — makes the whole declaration invalid, and the element does not animate at
+ * all, which reads as the widget being broken rather than as a missing unit.
+ *
+ * @param {number|string|undefined|null} value
+ * @param {number} fallback - Milliseconds to use when the value is absent or nonsense.
+ * @returns {number} A finite, non-negative number of milliseconds.
+ */
+const cssMs = (value, fallback) => {
+  const num = (text) => {
+    const parsed = parseFloat(text);
+    if (!Number.isFinite(parsed) || parsed < 0) return null;
+    // "0.5s" is seconds, "500ms" and a bare "500" are milliseconds. The unit is
+    // read from the END of the string: a `\bs\b` test never matches "0.1s", because
+    // the digit and the `s` are both word characters, and the delay would be
+    // one thousandth of what the caller wrote.
+    if (/(?:^|[^a-z])ms\s*$/i.test(text)) return parsed;
+    if (/(?:^|[^a-z])s\s*$/i.test(text)) return parsed * 1000;
+    return parsed;
+  };
+  if (typeof value === "number")
+    return Number.isFinite(value) && value >= 0 ? value : fallback;
+  if (typeof value !== "string" || value.trim() === "") return fallback;
+  return num(value.trim()) ?? fallback;
+};
+
+/**
+ * Formats one transform function's value the way the keyframes do.
+ *
+ * @param {string} effect - A canonical transform name.
+ * @param {number|string} value - A bare number is a framework unit, not a pixel.
+ * @returns {string} The value with the unit that function needs.
+ */
+const transformValue = (effect, value) => {
+  if (typeof value === "string") return value;
+  if (effect.startsWith("rotate") || effect.startsWith("skew")) return `${value}deg`;
+  if (effect.startsWith("translate")) return toREM(value);
+  return String(value);
+};
+
+/**
+ * The order the parts are written in, so the start state and the keyframes agree
+ * with each other and with `animate()` — CSS applies transforms left to right, and
+ * translating first is what keeps a rotation about the element's own centre.
+ * @type {string[]}
+ */
+const TRANSFORM_ORDER = [
+  "translateX",
+  "translateY",
+  "translateZ",
+  "rotate",
+  "rotateX",
+  "rotateY",
+  "rotateZ",
+  "skewX",
+  "skewY",
+  "scale",
+  "scaleX",
+  "scaleY",
+];
+
+/**
+ * Writes each step's `from` on the element before its rule starts playing.
+ *
+ * @param {HTMLElement} child - The element about to be animated.
+ * @param {Array<object>} steps - The resolved descriptors.
+ * @returns {void}
+ */
+const writeStartValues = (child, steps) => {
+  const transforms = new Map();
+  steps.forEach((anim) => {
+    const effect = effectMap[anim.effect] || anim.effect;
+    const { from } = anim;
+    if (transformEffects.has(effect)) {
+      transforms.set(effect, from);
+      return;
+    }
+    if (effect === "backgroundColor") {
+      child.style.backgroundColor = from;
+    } else if (effect === "color") {
+      child.style.color = from;
+    } else if (effect === "borderColor") {
+      child.style.borderColor = from;
+    } else if (effect === "boxShadow") {
+      child.style.boxShadow = from;
+    } else if (effect === "background") {
+      child.style.background = from;
+    } else if (effect === "opacity") {
+      child.style.opacity = from;
+    } else if (typeof from === "number" && lengthEffects.has(effect)) {
+      // A length written as a plain number is a framework unit
+      child.style[effect] = toREM(from);
+    } else {
+      child.style[effect] = from;
+    }
+  });
+  if (transforms.size === 0) return;
+  child.style.transform = TRANSFORM_ORDER.filter((name) => transforms.has(name))
+    .map((name) => `${name}(${transformValue(name, transforms.get(name))})`)
+    .join(" ");
+};
+
+/**
+ * True when a timing group writes the `transform` declaration.
+ *
+ * @param {{members: Array<object>}} group
+ * @returns {boolean}
+ */
+const groupHasTransform = (group) =>
+  group.members.some((anim) =>
+    transformEffects.has(effectMap[anim.effect] || anim.effect),
+  );
+
+/**
+ * Generates a CSS `@keyframes` body for one timing group.
+ *
+ * Every step of a group is written into the same rule — that is what lets a
+ * `translateY` and a `scale` share one `transform` declaration instead of
+ * overwriting each other — but each step runs on its own clock: it waits its
+ * `offset`, takes its own `duration`, and holds `to` for the rest of the rule.
+ * A group spans the longest of its steps, so a 400 ms fade inside a 600 ms
+ * entrance is finished and holding when the last frame is written.
+ *
+ * @param {Array<{effect: string, from: *, to: *, reverse?: boolean, offset?: number, duration?: number}>} entries
+ *   The steps of the group, already resolved to millisecond `offset`/`duration`.
+ * @param {number} span - The group's total length in ms; the rule's duration.
  * @returns {string} CSS keyframe body string (100 steps, 0%–100%).
  */
-const generateKeyframes = (animations) => {
+const generateRule = (entries, span) => {
   const steps = 100;
   let frames = [];
 
   for (let i = 0; i <= steps; i++) {
-    const t = i / steps;
+    // Where the group's clock is, in ms, at this frame.
+    const clock = (i / steps) * span;
     let transformParts = [];
     let styleParts = [];
 
-    animations.forEach((anim) => {
+    entries.forEach((anim) => {
       const effect = effectMap[anim.effect] || anim.effect;
       // Straight `from → to` is the default: a one-shot entry animation must hold
       // `to`. Cycling back is opt-in, or every documented `opacity 0 → 1` faded
       // to invisible again at 100%.
-      const { from, to, reverse = false } = anim;
+      const { from, to, reverse = false, offset = 0, duration = span } = anim;
 
-      // A descriptor without `from`/`to` is malformed. Skip it with a warning
-      // rather than throwing a TypeError out of the caller's entire render.
-      if (from === undefined || to === undefined) {
-        console.warn(
-          `⚠️ [AnimatedBox] Skipping animation "${anim.effect}": "from" and "to" are required.`,
-        );
-        return;
-      }
+      // The step's own progress through its own duration.
+      const t =
+        duration <= 0
+          ? 1
+          : Math.min(1, Math.max(0, (clock - offset) / duration));
 
       let value;
       let color;
@@ -413,7 +509,7 @@ const generateKeyframes = (animations) => {
           effect === "color" ||
           effect === "borderColor"
         ) {
-          color = interpolateColor(from, to, cycleColor);
+          color = mixColor(from, to, cycleColor);
         } else if (effect === "boxShadow") {
           value = interpolateBoxShadow(from, to, cycleColor);
         } else if (effect === "background") {
@@ -442,7 +538,7 @@ const generateKeyframes = (animations) => {
           effect === "color" ||
           effect === "borderColor"
         ) {
-          color = interpolateColor(from, to, t);
+          color = mixColor(from, to, t);
         } else if (effect === "boxShadow") {
           value = interpolateBoxShadow(from, to, t);
         } else if (effect === "background") {
@@ -459,21 +555,30 @@ const generateKeyframes = (animations) => {
             const rawValue = fromNum + (toNum - fromNum) * t;
             value = toREM(rawValue);
           } else {
-            value = interpolateNumber(from, to, t, false);
+            value = interpolateNumber(from, to, t);
           }
         }
       }
 
-      // Build transform() calls
-      if (effect === "scale") {
-        transformParts.push(`scale(${value})`);
-      } else if (effect === "rotate") {
-        transformParts.push(`rotate(${value}deg)`);
-      } else if (effect === "rotateY") {
-        transformParts.push(`rotateY(${value}deg)`);
-      } else if (effect === "rotateX") {
-        transformParts.push(`rotateX(${value}deg)`);
-      } else if (effect === "translateX" || effect === "translateY") {
+      // Build transform() calls. They all land in one `transform` declaration, in
+      // the CSS order — travel, then turn, then size — so a rotation spins about
+      // the element's own centre instead of the page's.
+      if (effect === "scale" || effect === "scaleX" || effect === "scaleY") {
+        transformParts.push(`${effect}(${value})`);
+      } else if (
+        effect === "rotate" ||
+        effect === "rotateX" ||
+        effect === "rotateY" ||
+        effect === "rotateZ" ||
+        effect === "skewX" ||
+        effect === "skewY"
+      ) {
+        transformParts.push(`${effect}(${value}deg)`);
+      } else if (
+        effect === "translateX" ||
+        effect === "translateY" ||
+        effect === "translateZ"
+      ) {
         // Value is already in rem when it originated from a plain number
         transformParts.push(`${effect}(${value})`);
       }
@@ -519,16 +624,18 @@ const generateKeyframes = (animations) => {
 /**
  * Wraps an existing DOM element with a generated CSS keyframe animation.
  *
- * Accepts an array of animation descriptors, generates a unique `@keyframes`
- * rule, injects it into the document, then applies it to the child element via
- * `element.style.animation`. Positional overrides (`top`, `right`, `bottom`,
- * `left`) are forwarded to the child's `dataset` for layout use.
+ * Accepts an array of animation descriptors, generates one `@keyframes` rule per
+ * timing group, injects it into the document, then applies the rules to the child
+ * element through `element.style.animation`. Positional overrides (`top`, `right`,
+ * `bottom`, `left`) are forwarded to the child's `dataset` for layout use.
  *
  * @param {object}             props
  * @param {Array<object>}      [props.animations]  - Array of animation descriptors. Each entry
- *   has at minimum `{ effect, from, to }` and may include `duration`, `delay`, `loop`, `reverse`.
+ *   has at minimum `{ effect, from, to }` and may carry its own `duration` (ms), `delay`
+ *   (ms or a CSS time), `loop` and `reverse` — all four are read off that entry.
  * @param {string}             [props.timing="ease"]      - CSS `animation-timing-function`.
- * @param {string}             [props.delay="0s"]         - Default animation delay (CSS time string).
+ * @param {number|string}      [props.delay="0s"]         - Default delay for the steps that
+ *   do not name one: a number is milliseconds, a string is handed to CSS.
  * @param {string}             [props.fillMode="forwards"] - CSS `animation-fill-mode`.
  * @param {HTMLElement|null}   [props.child]              - The DOM element to animate.
  * @param {number|string}      [props.top]                - CSS top offset forwarded to child dataset.
@@ -551,105 +658,113 @@ export const AnimatedBox = ({
 }) => {
   if (!child) return null;
 
-  // Forward position values to child dataset for use by layout systems
-  if (top) child.dataset.top = typeof top === "number" ? `${top}px` : top;
-  if (right)
-    child.dataset.right = typeof right === "number" ? `${right}px` : right;
-  if (bottom)
-    child.dataset.bottom = typeof bottom === "number" ? `${bottom}px` : bottom;
-  if (left) child.dataset.left = typeof left === "number" ? `${left}px` : left;
+  // Forward position values to child dataset for use by layout systems. A bare
+  // number is a framework unit, so it is written the way every other length in
+  // the framework is written: as rem.
+  const offset = (value) => (typeof value === "number" ? toREM(value) : value);
+  if (top) child.dataset.top = offset(top);
+  if (right) child.dataset.right = offset(right);
+  if (bottom) child.dataset.bottom = offset(bottom);
+  if (left) child.dataset.left = offset(left);
 
-  if (animations && animations.length > 0) {
-    const firstAnim = animations[0];
-    const effect = effectMap[firstAnim.effect] || firstAnim.effect;
+  if (!animations || animations.length === 0) return child;
 
-    if (firstAnim.effect === "textGradient") {
-      // Apply gradient-clip styles to the child (typically a Text widget)
-      child.style.color = "transparent";
-      child.style.backgroundClip = "text";
-      child.style.webkitBackgroundClip = "text";
-      child.style.backgroundColor = "transparent";
-
-      // Apply the starting gradient immediately so there is no flash on first render
-      const gradientValue = firstAnim.from;
-      if (gradientValue) {
-        child.style.background = gradientValue;
-      }
+  // Each step's own `duration` and `delay`, read off that step. Taking whichever
+  // descriptor came first is what made the documented
+  // `{ scale, duration: 600 } + { opacity, duration: 400 }` entrance run both
+  // steps for 600 ms, and what made `AnimatedText`'s per-letter delay the only
+  // delay anyone could set.
+  const defaultDelay = cssMs(delay, 0);
+  const steps = [];
+  for (const anim of animations) {
+    if (!anim || anim.from === undefined || anim.to === undefined) {
+      // Malformed descriptor: skip it with a warning — one, not one per keyframe
+      // step — rather than throwing a TypeError out of the caller's whole render.
+      console.warn(
+        `⚠️ [AnimatedBox] Skipping animation "${anim?.effect}": "from" and "to" are required.`,
+      );
+      continue;
     }
+    steps.push({
+      ...anim,
+      duration: cssMs(anim.duration, DEFAULT_DURATION),
+      delayMs: cssMs(anim.delay, defaultDelay),
+      loop: Boolean(anim.loop),
+    });
+  }
+  if (steps.length === 0) return child;
 
-    /**
-     * Applies an initial inline style to the child, converting numeric length
-     * values to rem before assignment.
-     *
-     * @param {string}         prop  - camelCase CSS property name.
-     * @param {number|string}  value - Value to set (numbers are rem-converted for length effects).
-     * @returns {void}
-     */
-    const setInitialStyle = (prop, value) => {
-      if (value === undefined) return;
-      let finalValue = value;
-      if (typeof value === "number" && lengthEffects.has(effect)) {
-        finalValue = toREM(value);
-      }
-      child.style[prop] = finalValue;
-    };
+  const gradient = steps.find((anim) => anim.effect === "textGradient");
+  if (gradient) {
+    // Apply gradient-clip styles to the child (typically a Text widget). The
+    // starting gradient arrives below, with every other step's `from`.
+    child.style.color = "transparent";
+    child.style.backgroundClip = "text";
+    child.style.webkitBackgroundClip = "text";
+    child.style.backgroundColor = "transparent";
+  }
 
-    // Set the starting (from) value on the child so there is no layout jump
-    if (effect === "backgroundColor") {
-      child.style.backgroundColor = firstAnim.from;
-    } else if (effect === "borderRadius") {
-      setInitialStyle("borderRadius", firstAnim.from);
-    } else if (effect === "color") {
-      child.style.color = firstAnim.from;
-    } else if (effect === "width") {
-      setInitialStyle("width", firstAnim.from);
-    } else if (effect === "height") {
-      setInitialStyle("height", firstAnim.from);
-    } else if (effect.startsWith("margin")) {
-      const prop = effect.replace(/([A-Z])/g, "-$1").toLowerCase();
-      setInitialStyle(prop, firstAnim.from);
-    } else if (effect.startsWith("padding")) {
-      const prop = effect.replace(/([A-Z])/g, "-$1").toLowerCase();
-      setInitialStyle(prop, firstAnim.from);
-    } else if (effect === "borderWidth") {
-      setInitialStyle("borderWidth", firstAnim.from);
-    } else if (effect === "borderColor") {
-      child.style.borderColor = firstAnim.from;
-    } else if (effect === "boxShadow") {
-      child.style.boxShadow = firstAnim.from;
-    } else if (effect === "background") {
-      child.style.background = firstAnim.from;
-    }
+  // Every step starts where it is going to leave from, written inline, so the
+  // frame before the animation begins is the frame it begins with. Doing this
+  // only for the first step left a delayed or shorter step showing its ending
+  // state — a fade that flashed visible before it faded in.
+  writeStartValues(child, steps);
 
-    const keyframes = generateKeyframes(animations);
+  // A looping step and a one-shot step cannot live in the same rule: repeating
+  // the rule would repeat the one-shot too, so an entrance meant to play once
+  // would flicker forever. Each timing group generates its own `@keyframes`.
+  const groups = [];
+  for (const loop of [false, true]) {
+    const members = steps.filter((anim) => anim.loop === loop);
+    if (members.length) groups.push({ loop, members });
+  }
+  if (groups.length > 1 && groups.every(groupHasTransform)) {
+    console.warn(
+      '⚠️ [AnimatedBox] transform steps split between a loop and a one-shot: two rules cannot write one `transform`, so only the last rule\'s transform is applied. Keep the transform steps in one group.',
+    );
+  }
+
+  const rules = groups.map(({ loop, members }) => {
+    // The group starts when its earliest step does; a later step waits inside
+    // the rule instead of buying a second `animation-delay`.
+    const startsAt = Math.min(...members.map((anim) => anim.delayMs));
+    const entries = members.map((anim) => ({
+      ...anim,
+      offset: anim.delayMs - startsAt,
+    }));
+    const span = entries.reduce(
+      (longest, anim) => Math.max(longest, anim.offset + anim.duration),
+      0,
+    );
+    const keyframes = generateRule(entries, span);
     // The name is derived from the keyframe body so identical animations reuse a
     // single <style>. A per-call unique name (`Date.now()`) made the dedupe check
     // in `injectKeyframes` dead code: every call appended a permanent <style> to
     // document.head, and AnimatedText calls this once per letter.
     const name = `anim-${hashKeyframes(keyframes)}`;
     injectKeyframes(name, keyframes);
-    // The hook the OS preference rule matches. The JS values below cover the app's
-    // own mode; this is what stops a loop already running when the system setting
-    // flips, with nothing to rebuild and no listener to leak.
-    markMotionLoop(child);
+    return { name, span, startsAt, loop };
+  });
+  // The hook the OS preference rule matches. The JS values below cover the app's
+  // own mode; this is what stops a loop already running when the system setting
+  // flips, with nothing to rebuild and no listener to leak.
+  markMotionLoop(child);
 
-    // Reduced motion is the accessibility recipe, not a switch-off: a near-zero
-    // duration lands the element on its `to` values through `fillMode: forwards`,
-    // so the state the animation was carrying still arrives — only the movement
-    // disappears. A loop becomes a single frame, and the delay goes with it:
-    // content held invisible for two seconds is worse than content that moved.
-    const reduced = prefersReducedMotion();
-    const duration = reduced ? "0.01ms" : animations[0]?.duration || 500;
-    const iteration = reduced ? "1" : animations[0]?.loop ? "infinite" : "1";
-    // Per-animation delay takes precedence over the prop-level default
-    const animationDelay = reduced
-      ? "0s"
-      : animations[0]?.delay || delay;
-
-    child.style.animation = `${name} ${duration}${
-      typeof duration === "number" ? "ms" : ""
-    } ${timing} ${animationDelay} ${iteration} normal ${fillMode}`;
-  }
+  // Reduced motion is the accessibility recipe, not a switch-off: a near-zero
+  // duration lands the element on its `to` values through `fillMode: forwards`,
+  // so the state the animation was carrying still arrives — only the movement
+  // disappears. A loop becomes a single frame, and the delay goes with it:
+  // content held invisible for two seconds is worse than content that moved.
+  const reduced = prefersReducedMotion();
+  child.style.animation = rules
+    .map((rule) =>
+      reduced
+        ? `${rule.name} 0.01ms ${timing} 0s 1 normal ${fillMode}`
+        : `${rule.name} ${rule.span}ms ${timing} ${rule.startsAt}ms ${
+            rule.loop ? "infinite" : "1"
+          } normal ${fillMode}`,
+    )
+    .join(", ");
 
   return child;
 };

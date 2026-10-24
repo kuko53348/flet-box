@@ -1,13 +1,26 @@
 // tests/motion.test.js
 // Contract for the motion engine: the named transitions, the curve table, the
-// transform that several loops share, and the reduced-motion preference.
+// transform that several loops share, the reduced-motion preference, and the two
+// rules the animation API is built on — a step's own timing, and a bare number
+// being a framework unit.
 //
 // Every assertion below FAILED before its fix:
 //   - `animate(el, 'translateY', …)` wrote a JS field, not a CSS transform, so the
 //     element never moved and the loop still reported success;
 //   - two loops on one element overwrote each other's whole `transform` string;
 //   - the imperative engine knew four curves;
-//   - `prefers-reduced-motion` changed nothing anywhere in the framework.
+//   - `prefers-reduced-motion` changed nothing anywhere in the framework;
+//   - `AnimatedBox` read `duration`/`delay`/`loop` off whichever descriptor came
+//     first, and a numeric `delay` made the whole `animation` shorthand invalid,
+//     so the element simply did not animate;
+//   - `animate()` turned `rgb()`/`rgba()` into `"NaNpx"`, which the browser drops.
+// Eleven of these were proven red against the previous source tree. Four more do
+// not fail there and are named for what they are: the guard marked "drift" keeps
+// the sync and the awaitable form of a preset meaning the same gesture, the
+// `AnimatedText` and CSS-time guards pass today and are here because they each
+// caught a bug in the rewrite itself (a stagger written as `"0.1s"` was read as
+// `0.1ms`), and the `pulse()` parity guard documents the swell the async form now
+// shares.
 //
 // It publishes `window.__MOTION = { pass, fail, results }`.
 import {
@@ -16,6 +29,9 @@ import {
   animateSpring,
   animateSpringAsync,
   stopAnimation,
+  fadeOut,
+  pulse,
+  pulseAsync,
   slideIn,
   slideInAsync,
   slideOutAsync,
@@ -35,7 +51,9 @@ import {
 } from "../src/animations/index.js";
 import { EASINGS, resolveEasing } from "../src/animations/easings.js";
 import { AnimatedBox } from "../src/animations/AnimatedBox.js";
+import { AnimatedText } from "../src/animations/AnimatedText.js";
 import { ParallaxBox } from "../src/animations/ParallaxBox.js";
+import { setBaseFontSize } from "../src/utils/units.js";
 
 const results = [];
 let pass = 0;
@@ -84,6 +102,41 @@ const scaleOf = (el) => {
   if (!value || value === "none") return 1;
   return new DOMMatrixReadOnly(value).a;
 };
+
+/**
+ * The rule a widget is actually running: its name and the `@keyframes` text the
+ * engine injected for it. Chrome serializes the `animation` shorthand with the
+ * name last, so that is where it is read from.
+ */
+const ruleOf = (child) => {
+  const parts = (child.style.animation || "").trim().split(/\s+/);
+  const name = parts[parts.length - 1];
+  const sheet = [...document.head.querySelectorAll("style")].find((style) =>
+    style.textContent.includes(`@keyframes ${name} {`),
+  );
+  return { name, body: sheet ? sheet.textContent : "", sheet };
+};
+
+/** One frame of a generated rule, exactly as the engine wrote it. */
+const frameOf = (body, percent) => {
+  const match = body.match(new RegExp(`(?:^|[\\n{])\\s*${percent}% \\{([^}]*)\\}`));
+  return match ? match[1] : "";
+};
+
+/** The number inside the first `function(value)` of a frame, or `null`. */
+const numberIn = (text, name) => {
+  const match = text.match(new RegExp(`${name}\\((-?[\\d.]+)`));
+  return match ? Number(match[1]) : null;
+};
+
+/** The time values (ms) a serialized `animation` shorthand carries. */
+const timesOf = (child) =>
+  (child.style.animation.match(
+    /(?:^|[\s,])(\d+(?:\.\d+)?(?:ms|s))(?=[\s,]|$)/g,
+  ) || []).map((token) => {
+    const value = Number(token.trim().replace(/m?s$/, ""));
+    return token.trim().endsWith("ms") ? value : value * 1000;
+  });
 
 /** Removes the element and stops anything still animating it. */
 const unmount = (el) => {
@@ -465,6 +518,275 @@ await t("a widget loop carries the hook too", async () => {
   skeleton.remove();
   bar.remove();
   quiet.remove();
+});
+
+// ========== ONE RULE PER STEP, AND ITS OWN CLOCK ==========
+
+// The documented descriptor carries its own `duration`, `delay` and `loop`. When
+// those were read off whichever step came first, an entrance ran two steps for
+// the length of one, and a numeric delay made the whole shorthand invalid.
+
+await t("a step's duration is its own", () => {
+  const el = mount();
+  AnimatedBox({
+    animations: [
+      { effect: "scale", from: 0.5, to: 1, duration: 600 },
+      { effect: "opacity", from: 0, to: 1, duration: 400 },
+    ],
+    child: el,
+  });
+  assert(el.style.animation.includes("600ms"), `the rule is not the longest step: ${el.style.animation}`);
+  const at400ms = frameOf(ruleOf(el).body, 67);
+  assert(at400ms.includes("opacity: 1;"), `the 400ms fade was still running: ${at400ms}`);
+  const scale = numberIn(at400ms, "scale");
+  assert(scale !== null && scale < 0.95, `the 600ms scale finished with the fade: ${scale}`);
+  el.remove();
+});
+
+await t("a numeric delay still animates", () => {
+  const el = mount();
+  AnimatedBox({
+    animations: [{ effect: "opacity", from: 0, to: 1, duration: 300, delay: 120 }],
+    child: el,
+  });
+  assert(
+    el.style.animation !== "",
+    `a bare-number delay made the whole shorthand invalid: "${el.style.animation}"`,
+  );
+  assert(el.style.animation.includes("120ms"), `the delay was lost: ${el.style.animation}`);
+  el.remove();
+});
+
+await t("a CSS time string means the time it says", () => {
+  const el = mount();
+  AnimatedBox({
+    animations: [{ effect: "opacity", from: 0, to: 1, duration: "0.5s", delay: "200ms" }],
+    child: el,
+  });
+  const list = timesOf(el);
+  assert(list.includes(500), `"0.5s" is five hundred milliseconds, not half: ${el.style.animation}`);
+  assert(list.includes(200), `"200ms" lost its unit: ${el.style.animation}`);
+  el.remove();
+});
+
+await t("every step starts where it says", () => {
+  const el = mount();
+  AnimatedBox({
+    animations: [
+      { effect: "scale", from: 0.5, to: 1, duration: 200 },
+      { effect: "opacity", from: 0, to: 1, duration: 200, delay: 400 },
+    ],
+    child: el,
+  });
+  assert(
+    el.style.opacity === "0",
+    `a later step showed its END value before it began: opacity=${el.style.opacity}`,
+  );
+  assert(el.style.transform.includes("scale(0.5)"), `the transform start is missing: ${el.style.transform}`);
+  el.remove();
+});
+
+await t("a loop and an entrance get one rule each", () => {
+  const warn = console.warn;
+  let warned = 0;
+  console.warn = () => {
+    warned++;
+  };
+  const el = mount();
+  AnimatedBox({
+    animations: [
+      { effect: "rotate", from: 0, to: 360, duration: 500, loop: true },
+      { effect: "opacity", from: 0, to: 1, duration: 500 },
+    ],
+    child: el,
+  });
+  console.warn = warn;
+  const parts = el.style.animation.split(", ");
+  assert(parts.length === 2, `one rule carries both timings, so the entrance repeats: ${el.style.animation}`);
+  assert(
+    parts.filter((part) => part.includes("infinite")).length === 1,
+    `the loop leaked onto the one-shot: ${el.style.animation}`,
+  );
+  assert(warned === 0, `a clean split warned ${warned} times`);
+  el.remove();
+});
+
+await t("splitting a transform across two rules is named", () => {
+  const warn = console.warn;
+  let message = "";
+  console.warn = (text) => {
+    message = String(text);
+  };
+  const el = mount();
+  AnimatedBox({
+    animations: [
+      { effect: "rotate", from: 0, to: 360, duration: 500, loop: true },
+      { effect: "translateY", from: 20, to: 0, duration: 500 },
+    ],
+    child: el,
+  });
+  console.warn = warn;
+  assert(message.includes("transform"), `two rules both wrote transform and nothing was said: "${message}"`);
+  el.remove();
+});
+
+// One word, several letters: each letter's delay must be its own, and the letters
+// must still share a single generated rule — a name per call blew the <head> up
+// to one <style> per character.
+await t("AnimatedText staggers on one shared rule", async () => {
+  const { Text } = await import("../src/widgets/Text.js");
+  const box = AnimatedText({
+    child: Text({ text: "abcd" }),
+    animations: [{ effect: "opacity", from: 0, to: 1, duration: 200 }],
+    delayBetween: 0.1,
+  });
+  document.body.appendChild(box);
+  const letters = [...box.children].filter((child) => child.style.animation);
+  assert(letters.length === 4, `the word did not survive into letters: ${letters.length}`);
+  const names = new Set(letters.map((child) => ruleOf(child).name));
+  assert(names.size === 1, `each letter generated its own rule: ${[...names].join(", ")}`);
+  const { name } = ruleOf(letters[0]);
+  const sheets = [...document.head.querySelectorAll("style")].filter((style) =>
+    style.textContent.includes(`@keyframes ${name} {`),
+  );
+  assert(sheets.length === 1, `the shared rule was injected ${sheets.length} times`);
+  const delays = letters.map((child, i) => {
+    const list = timesOf(child);
+    assert(
+      list.includes(200),
+      `letter ${i} does not run its own 200ms step: ${child.style.animation}`,
+    );
+    assert(
+      list.includes(i * 100),
+      `letter ${i} does not wait ${i * 100}ms: ${child.style.animation}`,
+    );
+    return i * 100;
+  });
+  assert(delays.length === 4, `the stagger collapsed: ${delays.join(", ")}`);
+  box.remove();
+});
+
+// ========== THE UNIT AND COLOR CONTRACT ==========
+
+// The framework rule is that a bare number is a framework unit, resolved against
+// the reader's live base font. The animation engine had its own `/16`, so the same
+// `20` travelled 20px through a widget and 25px through an animation.
+
+await t("a keyframe length follows the reader's font", () => {
+  setBaseFontSize(20);
+  const el = mount();
+  AnimatedBox({
+    animations: [{ effect: "translateY", from: 20, to: 0, duration: 200 }],
+    child: el,
+  });
+  const first = frameOf(ruleOf(el).body, 0);
+  assert(
+    first.includes("translateY(1rem)"),
+    `a bare 20 was divided by a literal 16, not the live base: ${first}`,
+  );
+  el.remove();
+  setBaseFontSize(16);
+});
+
+await t("the imperative engine writes framework units too", async () => {
+  setBaseFontSize(20);
+  const el = mount();
+  animate(el, "translateY", 20, 0, 60, "linear");
+  await frames(2);
+  assert(
+    el.style.transform.includes("rem"),
+    `a bare 20 painted pixels through animate(): ${el.style.transform}`,
+  );
+  const away = translation(el).y;
+  assert(away > 8 && away < 21, `the unit is off: ${away}px of a 20-unit travel`);
+  await frames(10);
+  assert(Math.abs(translation(el).y) < 1.5, `did not settle at 0: ${translation(el).y}`);
+  unmount(el);
+  setBaseFontSize(16);
+});
+
+await t("animate() blends rgb() and rgba()", async () => {
+  const start = "rgba(255, 0, 0, 0.4)";
+  const el = mount({ backgroundColor: start });
+  animate(el, "backgroundColor", start, "rgb(0, 0, 255)", 120, "linear");
+  await frames(2);
+  const written = el.style.backgroundColor;
+  assert(written.startsWith("rgb"), `the blend was dropped by CSS: "${written}"`);
+  assert(written !== start, `it never left the start color: ${written}`);
+  await frames(14);
+  const value = getComputedStyle(el).backgroundColor;
+  assert(/^rgb\(0,\s*0,\s*255\)$/.test(value), `did not reach the end color: ${value}`);
+  unmount(el);
+});
+
+await t("an unblendable value stops at the end instead of NaN", async () => {
+  const el = mount();
+  animate(el, "color", "red", "blue", 60, "linear");
+  await frames(2);
+  assert(!el.style.color.includes("NaN"), `mid-flight wrote "${el.style.color}"`);
+  await frames(12);
+  assert(
+    getComputedStyle(el).color === "rgb(0, 0, 255)",
+    `did not land on the end color: ${getComputedStyle(el).color}`,
+  );
+  unmount(el);
+});
+
+// ========== THE SHORTCUT PRESETS ==========
+
+await t("pulseAsync() resolves with the widget it pulsed", async () => {
+  const el = mount();
+  const settled = await pulseAsync(el, 120);
+  assert(settled === el, `a preset that chains promises should hand back the widget: ${settled}`);
+  assert(Math.abs(scaleOf(el) - 1) < 0.02, `the pulse left it scaled: ${scaleOf(el)}`);
+  unmount(el);
+});
+
+await t("pulse() and pulseAsync() are the same swell", async () => {
+  const el = mount();
+  pulse(el, 200);
+  await frames(3);
+  const mid = scaleOf(el);
+  assert(mid > 1, `a pulse that never overshoots is not a pulse: ${mid}`);
+  await frames(14);
+  assert(Math.abs(scaleOf(el) - 1) < 0.02, `the pulse did not return: ${scaleOf(el)}`);
+  unmount(el);
+});
+
+await t("fadeOut() starts where the element is", async () => {
+  const el = mount({ opacity: "0.6" });
+  fadeOut(el, 200);
+  await frames(3);
+  const value = Number(getComputedStyle(el).opacity);
+  assert(value <= 0.61, `it flashed to full opacity first: ${value}`);
+  assert(value < 0.6, `it never left 0.6: ${value}`);
+  await frames(14);
+  assert(Number(getComputedStyle(el).opacity) < 0.05, `did not fade out: ${getComputedStyle(el).opacity}`);
+  unmount(el);
+});
+
+// ========== THE SYNC AND AWAITABLE FORMS AGREE ==========
+
+// Both forms build their gesture from one step plan, so these assertions cannot
+// fail today. They are here for the day the two paths are edited separately.
+
+await t("a preset's sync and awaitable forms are the same gesture", async () => {
+  const options = { direction: "up", distance: 24, duration: 120 };
+  const sync = mount({ opacity: "0" });
+  const awaited = mount({ opacity: "0" });
+  slideIn(sync, options);
+  await slideInAsync(awaited, options);
+  await frames(14);
+  assert(
+    sync.style.transform === awaited.style.transform,
+    `the two forms travel differently: "${sync.style.transform}" vs "${awaited.style.transform}"`,
+  );
+  assert(
+    sync.style.opacity === awaited.style.opacity && awaited.style.opacity === "1",
+    `the fade disagreed: ${sync.style.opacity} vs ${awaited.style.opacity}`,
+  );
+  unmount(sync);
+  unmount(awaited);
 });
 
 window.__MOTION = { pass, fail, results };
