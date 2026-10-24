@@ -24,9 +24,9 @@ const title = AnimatedText({
 | Prop | Type | Description |
 | --- | --- | --- |
 | `child` | `Widget` | A single child widget. Alias: `children` for a list. |
-| `animations` | `AnimationStep[]` | Animations to apply, as a name or an array of names. |
+| `animations` | `AnimationStep[]` | The steps to play, each `{ effect, from, to }` plus its own `duration`, `delay`, `loop` and `reverse`. |
 | `sameTime` | `boolean` | Runs child animations at the same time. |
-| `delayBetween` | `number` | Stagger delay between each child animation. |
+| `delayBetween` | `number` | Stagger between each child animation, in seconds (`0.05` is 50 ms). |
 | `orientation` | `'row' \| 'column'` | Orientation of the widget or control. |
 
 ### Common props
@@ -92,11 +92,17 @@ const title = AnimatedText({
 
 ## Tips
 
-- child must be a Text widget, because its text is split into single-character
-- widgets that inherit the original props.
-- Set sameTime: false and control delayBetween to create a wave; use sameTime: true
-- for a synchronized pop.
-- orientation: "column" stacks the letters vertically for vertical-word effects.
+- `child` must be a Text widget, because its text is split into single-character
+  widgets that inherit the original props.
+- Set `sameTime: false` and control `delayBetween` to create a wave; use
+  `sameTime: true` for a synchronized pop. `delayBetween` is in **seconds** —
+  `0.05` staggers the letters 50 ms apart, while `5` is a five-second wait per
+  character.
+- The letters share one generated `@keyframes` rule and each carries its own delay,
+  so a staggered headline costs one rule, not one per character.
+- `orientation: "column"` stacks the letters vertically for vertical-word effects.
+- Each step is [AnimatedBox's](AnimatedBox.md) step, so a per-letter `duration`
+  belongs to the step, not to the widget.
 
 ## Accessibility
 

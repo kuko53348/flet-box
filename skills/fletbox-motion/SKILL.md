@@ -42,8 +42,17 @@ animation.
   movement should settle like an object instead of stopping like a timer.
 - **`AnimatedBox`** — declarative keyframes on one child:
   `AnimatedBox({ child, animations: [{ effect, from, to, duration, reverse, loop, delay }], timing, delay, fillMode })`.
+  Each step carries its own `duration`, `delay` and `loop` and each one is read off
+  that step: a 600 ms `scale` and a 400 ms `opacity` in the same entrance are one
+  rule that ends at 600 ms with the fade holding from 400 ms on. Times are
+  milliseconds as a number (`duration: 400`) or a CSS time as a string
+  (`delay: "0.4s"`); the widget-level `delay` is the default for the steps that do
+  not name one. A step that loops and a step that plays once cannot share a rule —
+  repeating the rule repeats the entrance too — so they become two `@keyframes`, and
+  two rules cannot compose one `transform`: keep the transform steps in one group.
 - **`AnimatedText`** — the same steps across the characters of a text, with
-  `delayBetween` (a stagger in ms) and `sameTime: true` to fire it at once.
+  `delayBetween` in **seconds** (`0.05` is a 50 ms stagger; `40` is forty seconds)
+  and `sameTime: true` to fire it at once.
 - **`ParallaxBox`** — offset driven by input: `type: 'scroll' | 'mouse' | 'hover'`,
   `speed`, `direction: 'vertical' | 'horizontal' | 'both'`, `maxOffset`, `reverse`,
   `disabled`, `onParallaxMove`.
@@ -53,16 +62,22 @@ loop in a widget — is a second animation system, and this app already has one.
 hand-rolled loop is also the one way to ship motion that ignores reduced motion,
 because the engine is what reads the preference.
 
-**Effects `AnimatedBox` knows:** `scale`, `rotate`, `rotateX`, `rotateY`,
-`translateX`, `translateY`, `opacity`, `color`, `backgroundColor`, `borderColor`,
-`borderWidth`, `borderRadius`, `width`, `height`, `boxShadow`, `background`,
-`textGradient`. Anything outside that list does nothing, silently.
+**Effects `AnimatedBox` knows:** `scale`, `scaleX`, `scaleY`, `rotate`, `rotateX`,
+`rotateY`, `rotateZ`, `skewX`, `skewY`, `translateX`, `translateY`, `translateZ`,
+`opacity`, `color`, `backgroundColor`, `borderColor`, `borderWidth`, `borderRadius`,
+`width`, `height`, `boxShadow`, `background`, `textGradient`. Anything outside that list
+does nothing, silently. The spacing effects (margin and padding, per side) work as
+well — they are routed by prefix, so the gate cannot see them by name.
 
 **Properties `animate()` moves:** the same names, plus any real CSS property
-(`width`, `opacity`, `borderRadius`, `color`…). A number becomes `rem`-scaled
-length pixels, `"#rrggbb"` interpolates as a color, and `"16px"` keeps its unit.
-`translateX`, `translateY` and `scale` are separate loops whose outputs are merged
-into one `transform` string, so an element can slide and grow at the same time.
+(`width`, `opacity`, `borderRadius`, `color`…). A bare number is a **framework unit**,
+exactly as it is in a widget: `translateY: 20` is `20 / base-font-size` rem, so the
+movement scales with the reader's font instead of freezing at 20 pixels. A unit
+string keeps its unit (`"16px"`), a color blends whether you write `#rrggbb`,
+`rgb(…)` or `rgba(…)`, and a pair the framework cannot blend (`"red"` → `"blue"`)
+holds the start and lands on the end rather than writing `NaN`. `translateX`,
+`translateY` and `scale` are separate loops whose outputs are merged into one
+`transform` string, so an element can slide and grow at the same time.
 
 ## M2 Duration follows the distance, and the interaction
 
@@ -163,7 +178,9 @@ if (!result.ok) {
 Motion on first paint is the one place a longer budget is fair, with two limits:
 
 - Stagger **30–80ms** between siblings, and cap the total. `AnimatedText` gives this
-  for free with `delayBetween: 40`; a hand-built list uses `stagger(index)` —
+  for free with `delayBetween: 0.05` — that prop is in **seconds**, the unit the
+  framework writes into its `animation-delay`, so `40` would not be a fast stagger
+  but forty seconds. A hand-built list uses `stagger(index)` —
   `stagger(3, { step: 60, max: 8 })` stops growing after 8 items, which is the
   difference between a screen arriving and a screen loading: a list of 20 rows at
   60ms each is a 1.2s wait before the content is readable.

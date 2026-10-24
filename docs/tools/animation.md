@@ -26,15 +26,15 @@ import {
 
 | Function | Signature | Returns | Description |
 | --- | --- | --- | --- |
-| `animate` | `animate(widget, property, from, to, duration?, easing?)` | cancel `() => boolean` | Animate one `property` of a widget from `from` to `to` (numbers, unit strings such as `"16px"`, or hex colors). `duration` is ms, `easing` defaults to `"linear"` — a name from [`EASING_NAMES`](#easings), a `cubicBezier()` or a `spring().easing`. Calling the returned function stops the loop and returns `true` if it was still running. |
+| `animate` | `animate(widget, property, from, to, duration?, easing?)` | cancel `() => boolean` | Animate one `property` of a widget from `from` to `to`. A number is a **framework unit** — the same unit every widget prop takes — so `translateY: 20` is `20 / base-font-size` rem and grows with the reader's font; a unit string keeps its unit (`"16px"`); and a color blends whichever way you write it (`#rrggbb`, `rgb(…)`, `rgba(…)`). `duration` is ms, `easing` defaults to `"linear"` — a name from [`EASING_NAMES`](#easings), a `cubicBezier()` or a `spring().easing`. Calling the returned function stops the loop and returns `true` if it was still running. |
 | `animateAsync` | `animateAsync(widget, property, from, to, duration?, easing?)` | `Promise` | Same, resolves with the widget when the animation finishes — or as soon as it is cancelled or replaced, so `await` never hangs. |
 | `animateSpring` | `animateSpring(widget, property, from, to, options?)` | cancel `() => boolean` | The same loop driven by a damped spring: there is no duration to pick, the animation runs until it settles. `options` are `stiffness`, `damping`, `mass`, `initialVelocity`. |
 | `animateSpringAsync` | same, `Async` suffix | `Promise` | Promise variant of `animateSpring`. |
 | `stopAnimation` | `stopAnimation(widget, property?)` | `boolean` | Stop what is animating `widget` — one `property`, or every animated property when it is omitted. Use it in `onUnmount` when you did not keep the cancel function. |
-| `fadeIn` | `fadeIn(widget, duration?)` | cancel `() => boolean` | Fade the widget in (default 300 ms). |
-| `fadeOut` | `fadeOut(widget, duration?)` | cancel `() => boolean` | Fade it out. |
-| `pulse` | `pulse(widget, duration?)` | cancel `() => boolean` | A quick scale pulse: up for the first half, back down for the second. |
-| `fadeInAsync` / `fadeOutAsync` / `pulseAsync` | same, `Async` suffix | `Promise` | Promise variants that resolve on completion. |
+| `fadeIn` | `fadeIn(widget, duration?)` | cancel `() => boolean` | Fade the widget in to full opacity (default 300 ms). |
+| `fadeOut` | `fadeOut(widget, duration?)` | cancel `() => boolean` | Fade it out — from wherever the element actually is, so a card the theme set to `0.8` does not first jump to fully opaque. |
+| `pulse` | `pulse(widget, duration?)` | cancel `() => boolean` | A quick scale pulse: one loop that swells to `1.1` at the halfway mark and is back at `1` when it ends. |
+| `fadeInAsync` / `fadeOutAsync` / `pulseAsync` | same, `Async` suffix | `Promise` | The same single loop, awaitable, resolving with the widget — the sync and awaitable forms of a preset are one gesture, not two implementations. |
 
 Starting a second animation on the same widget and property **replaces** the first one; two loops writing
 one style would otherwise fight, and the older animation would resume after the newer had finished.
@@ -46,14 +46,15 @@ grow at the same time.
 
 The three gestures every product repeats, with the durations and the distances already chosen, so an
 app does not hand-roll eleven slightly different entrances. Each returns a cancel function and has an
-`Async` form that resolves with the widget.
+`Async` form that resolves with the widget. `distance` is a framework unit like every other length in
+the framework — `16` is `1 rem` at the default base, not sixteen fixed pixels.
 
 | Function | Signature | What it says |
 | --- | --- | --- |
 | `slideIn` | `slideIn(widget, { direction, distance, duration, easing, fade })` | "this appeared" — a short travel plus a fade. `direction` is the way the element travels (`"up"` starts below its resting place), `distance` defaults to `16`, `duration` to `240`, `easing` to `"easeOut"`. |
 | `slideOut` | `slideOut(widget, { direction, distance, duration, easing, fade })` | "this is gone" — the mirror, one notch shorter (180 ms). What follows is your unmount: `await slideOutAsync(dialog).then(() => dialog.remove())`. |
 | `popIn` | `popIn(widget, { from, to, duration, easing, fade })` | "this belongs here" — scale from `0.94` with a small overshoot (`"easeOutBack"`). Nothing enters from `scale: 0`. |
-| `shake` | `shake(widget, { axis, distance, cycles, duration })` | "that was wrong" — one decaying sine on `translateX` (or `translateY`), 6 px, 3 swings, 320 ms, ending at rest. |
+| `shake` | `shake(widget, { axis, distance, cycles, duration })` | "that was wrong" — one decaying sine on `translateX` (or `translateY`), 6 units, 3 swings, 320 ms, ending at rest. |
 
 ```javascript
 // A sheet that arrives, and the error that refuses it.
@@ -138,8 +139,21 @@ Switch({
 
 ## Widgets
 
-- `AnimatedBox({ animations, timing, delay, fillMode, child, top, right, bottom, left })` — animates a child widget. `animations` is an array of `{ effect, from, to, duration }` entries; each plays once and holds `to` at the end (add `reverse: true` to cycle back, and `loop: true` to repeat); effects are `backgroundColor`, `color`, `borderColor`, `borderWidth`, `borderRadius`, `opacity`, `scale`, `rotate`, `rotateX`, `rotateY`, `translateX`, `translateY`, `width`, `height`, `boxShadow`, `background` and `textGradient`. `timing` is a **CSS** string (`"ease-out"`, `"cubic-bezier(…)"`).
-- `AnimatedText({ child, animations, sameTime, delayBetween, orientation })` — animates a `Text` widget (letters split per animation).
+- `AnimatedBox({ animations, timing, delay, fillMode, child, top, right, bottom, left })` — animates a child widget.
+  `animations` is an array of `{ effect, from, to }` steps, and each step may carry its own `duration`, `delay`,
+  `loop` and `reverse` — every one of them is read off **that step**, so a 600 ms `scale` and a 400 ms `opacity`
+  run on two clocks inside one rule. Times are milliseconds as a number (`duration: 400`) or a CSS time as a
+  string (`delay: "0.4s"`); the widget-level `delay` is the default for the steps that do not name one. A step
+  plays once and holds `to` at the end (`reverse: true` swings it back to `from`, `loop: true` repeats it).
+  Effects are `opacity`, `scale`, `scaleX`, `scaleY`, `rotate`, `rotateX`, `rotateY`, `rotateZ`, `skewX`,
+  `skewY`, `translateX`, `translateY`, `translateZ`, `backgroundColor`, `color`, `borderColor`, `borderWidth`,
+  `borderRadius`, `width`, `height`, `boxShadow`, `background`, `textGradient` and the per-side margin/padding
+  steps. A looping step and a one-shot step generate two `@keyframes` rules — one rule per timing group — and
+  since two rules cannot compose one `transform`, keep the transform steps in one group. `timing` is a **CSS**
+  string (`"ease-out"`, `"cubic-bezier(…)"`).
+- `AnimatedText({ child, animations, sameTime, delayBetween, orientation })` — animates a `Text` widget, one step
+  per character. `delayBetween` is in **seconds** (`0.05` is a 50 ms stagger); the letters share one generated
+  rule and each carries its own delay.
 - `MatrixRain({ chars, fontSize, speed, fadeAmount, resetProbability, useDynamicColor, position, zIndex })` — the falling-characters canvas effect (returns a `canvas`).
 - `ParallaxBox({ type, speed, direction, maxOffset, reverse, child })` — content that moves; `type` is `"scroll"`, `"mouse"`, or `"hover"`, `direction` is `"vertical"`, `"horizontal"`, or `"both"`.
 
@@ -174,7 +188,9 @@ AnimatedBox({
 
 ## Notes
 
-- Animation timing follows CSS `animation-duration` speeds (seconds/ms values depending on context — pass a number for ms in the widget props).
+- Two vocabularies of time, and each is honest about itself: `duration`/`delay` on a step or a preset are
+  milliseconds (a number, or a CSS time string the engine parses), `stagger()` returns milliseconds for
+  `animationDelay`, and `AnimatedText`'s `delayBetween` is seconds.
 - The `Async` variants are handy for sequences: `await fadeInAsync(el); await fadeOutAsync(el);`
 - For CSS-string animations use the `animation()` styling helper from [Styling helpers](styling.md).
 

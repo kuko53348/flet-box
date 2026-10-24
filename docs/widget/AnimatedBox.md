@@ -9,9 +9,9 @@ Use it to animate a widget's position, transform, color, or size without hand-wr
 ## Quick start
 
 ```javascript
-import { AnimatedBox, Text, pulse } from "flet-box";
+import { AnimatedBox, Text } from "flet-box";
 
-const pulse = AnimatedBox({
+const badge = AnimatedBox({
   child: Text({ text: "Hello" }),
   animations: [{ effect: "scale", from: 1, to: 1.2 }],
 });
@@ -23,10 +23,10 @@ const pulse = AnimatedBox({
 
 | Prop | Type | Description |
 | --- | --- | --- |
-| `animations` | `AnimationStep[]` | Animations to apply, as a name or an array of names. |
+| `animations` | `AnimationStep[]` | The steps to play, each `{ effect, from, to }` plus its own `duration`, `delay`, `loop` and `reverse`. |
 | `child` | `Widget` | A single child widget. Alias: `children` for a list. |
-| `timing` | `string` | Timing function for the animation. |
-| `delay` | `string` | Delay before the animation starts, in milliseconds. |
+| `timing` | `string` | Timing function for the animation, passed straight to CSS. |
+| `delay` | `number \| string` | Default delay for the steps that do not name one: milliseconds as a number, or a CSS time as a string (`"0.2s"`). |
 | `fillMode` | `string` | How styles persist before and after the animation (CSS `fill-mode`). |
 | `top` | `number \| string` | The `top` value for the widget. |
 | `right` | `number \| string` | The `right` value for the widget. |
@@ -87,9 +87,14 @@ import { AnimatedBox, Text } from "flet-box";
 
 const toast = AnimatedBox({
   child: Text({ text: "Saved" }),
-  animations: [{ effect: "opacity", from: 0, to: 1 }],
-  timing: "ease-in-out",
-  delay: "200ms",
+  // Each step keeps its own clock: the fade is over while the lift is still moving.
+  animations: [
+    { effect: "opacity", from: 0, to: 1, duration: 200 },
+    { effect: "translateY", from: 16, to: 0, duration: 400, delay: 120 },
+    { effect: "backgroundColor", from: "#fef3c7", to: "#ffffff", duration: 600 },
+  ],
+  timing: "ease-out",
+  delay: 200,
   fillMode: "forwards",
   top: 16,
   right: 16,
@@ -98,24 +103,45 @@ const toast = AnimatedBox({
 
 ## Tips
 
-- Each animation is { effect, from, to } where effect is a CSS property like opacity,
-- scale, translateY, or backgroundColor. It runs once and holds `to` at the end.
-- Set timing (ease, ease-out, linear) and delay at the widget level; add reverse: true
-- to cycle back to `from`, together with loop: true for a breathing pulse.
-- top, right, bottom, and left are forwarded to the child as positioning hints for
-- layout systems.
+- A step is `{ effect, from, to }`, where the effect is one of `scale`, `scaleX`,
+  `scaleY`, `rotate`, `rotateX`, `rotateY`, `rotateZ`, `skewX`, `skewY`, `translateX`,
+  `translateY`, `translateZ`, `opacity`, `color`, `backgroundColor`, `borderColor`,
+  `borderWidth`, `borderRadius`, `width`, `height`, `boxShadow`, `background` or
+  `textGradient` (the margin and padding steps work as well). A name outside that list
+  does nothing, silently.
+- Each step's `duration`, `delay` and `loop` are read off **that step**:
+  a 600 ms `scale` and a 400 ms `opacity` in one entrance run together for 600 ms,
+  with the fade holding from 400 ms on. Times are milliseconds as a number
+  (`duration: 400`) or a CSS time as a string (`delay: "0.4s"`); a bare number as a
+  `delay` used to make the whole `animation` shorthand invalid, which read as the
+  widget not animating at all.
+- `reverse: true` makes a step swing back to `from` instead of holding `to`; with
+  `loop: true` it breathes.
+- A looping step and a one-shot step cannot share one `@keyframes` rule — repeating
+  the rule repeats the entrance — so they are generated as two rules. Two rules
+  cannot compose one `transform`, so keep every transform step in one group: mixing
+  a looping `rotate` with a one-shot `translateY` moves only one of them, and the
+  widget warns about it.
+- A length is a framework unit, not a pixel: `translateY: 20` is `20 / base-font-size`
+  rem, so the movement grows with the reader's font like the rest of the UI.
+- `top`, `right`, `bottom` and `left` are forwarded to the child's dataset as
+  positioning hints for layout systems.
 
 ## Accessibility
 
-- Honor prefers-reduced-motion by keeping animations subtle or giving users a way to
-- disable them.
+- Nothing to do here: the engine reads `prefers-reduced-motion` and the
+  [motion mode](../tools/animation.md#reduced-motion), and a looping or entering
+  step collapses to one frame that lands on its `to` values, so content is never
+  held invisible behind an animation the reader refused.
 
 ## Behavior
 
-- The first animation step is applied as an inline style immediately, so there is no
-- flash of the final state before the keyframes run.
-- Generated @keyframes are injected once per sequence and reused, so repeated
-- animations stay cheap.
+- Every step's `from` is written on the element before its rule starts, including
+  the ones that begin later — so there is no flash of the final state before the
+  keyframes run, and no flash of the *first* step's end while a delayed step waits.
+- Generated `@keyframes` are named by their content and injected once, so a sequence
+  repeated — or one word staggered across `AnimatedText` letters — reuses one rule
+  instead of adding a `<style>` per call.
 
 ## Related widgets
 
