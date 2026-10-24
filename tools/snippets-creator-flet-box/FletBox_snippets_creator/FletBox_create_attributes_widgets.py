@@ -369,6 +369,8 @@ attrs_all_placeholders_complete = {
 
     # ---------- Flexbox / alineación ----------
     'alignItems': 'alignItems: "center",',
+    'alignSelf': 'alignSelf: "flex-end",',
+    'selfAlign': 'selfAlign: "center",',
     'justifyContent': 'justifyContent: "center",',
     'flexDirection': 'flexDirection: "row",',
     'flexWrap': 'flexWrap: "wrap",',

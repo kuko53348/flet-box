@@ -402,6 +402,39 @@ export const sampleUser = () => ({
     color: random.hexColor()
 });''',
 
+    'createModule.responsive': '''import {
+    BREAKPOINTS, BREAKPOINT_NAMES, breakpointForWidth, currentBreakpoint,
+    atLeast, pick, onBreakpointChange, loadFont, fontsReady,
+    Column, Text, useState
+} from 'flet-box';
+
+// La tabla es única: md = 768 es la misma línea que cruza AdaptiveScaffold.
+export const gutter = () => pick({ xs: 16, md: 24, lg: 32 });
+export const twoColumns = () => atLeast('md');
+export const stepOf = (px) => breakpointForWidth(px);
+export const table = `${Object.keys(BREAKPOINTS).join(' ')} / ${BREAKPOINT_NAMES.length}`;
+
+// Se re-renderiza al cruzar un paso, no en cada píxel del resize.
+// onBreakpointChange devuelve la función de baja; el widget es el que vive y
+// muere con la suscripción, así que se la entrega a él.
+export const ResponsiveTitle = () => {
+    const [name, setName] = useState('bp', currentBreakpoint());
+    const header = Column({
+        padding: gutter(),
+        children: [Text({ text: `Layout: ${name}`, size: pick({ xs: 18, md: 24 }) })]
+    });
+    header.onUnmount(onBreakpointChange((next) => setName(next)));
+    return header;
+};
+
+// Una tipografía de red es una petición: se pide, se espera, y entonces se usa.
+export const useInter = async (node) => {
+    const ok = await loadFont('Inter', { weights: [400, 600] });
+    if (ok) node.style.fontFamily = 'Inter, system-ui, sans-serif';
+    await fontsReady();
+    return ok;
+};''',
+
     'createModule.markdown': '''import { Markdown, CodeViewer, markdownToWidgets, tokenize, generateHighlightedHtml, highlightColors, escapeHtml, colors } from 'flet-box';
 
 export const Article = ({ source }) => Markdown({

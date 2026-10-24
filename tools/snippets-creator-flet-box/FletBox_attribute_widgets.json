@@ -1826,6 +1826,20 @@
       "alignItems: \"center\","
     ]
   },
+  "FletBox widgets alignSelf": {
+    "prefix": "alignSelf",
+    "description": "Make a FletBox widgets alignSelf widget",
+    "body": [
+      "alignSelf: \"flex-end\","
+    ]
+  },
+  "FletBox widgets selfAlign": {
+    "prefix": "selfAlign",
+    "description": "Make a FletBox widgets selfAlign widget",
+    "body": [
+      "selfAlign: \"center\","
+    ]
+  },
   "FletBox widgets justifyContent": {
     "prefix": "justifyContent",
     "description": "Make a FletBox widgets justifyContent widget",
