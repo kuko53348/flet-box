@@ -2625,7 +2625,7 @@ export const agentsMd = (appName, template, version) =>
     '         40  ·  the smallest tap target, a roomy control',
     '         48  ·  hero spacing',
     '         64 / 96  ·  a full-bleed section, a landing hero',
-    'radius     4 / 8 / 12 / 16 / 999 (pill)',
+    'radius     4 / 8 / 12 / 16 / 20 / 24 / 999 (pill)',
     'type      12 caption · 14 body-small · 16 body · 18 subtitle · 24 title',
     '          32 headline · 40 / 48 display (a hero, a big number)',
     'weight    400 body · 500 label · 600 title · 700 headline',

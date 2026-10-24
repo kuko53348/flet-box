@@ -55,7 +55,7 @@ components it uses do not follow. The defaults and the checker read one table.
 | Dimension | Allowed values |
 | --- | --- |
 | Spacing | `0 · 4 · 8 · 12 · 16 · 18 · 24 · 32 · 40 · 48 · 64 · 96` |
-| Radius | `0 · 4 · 8 · 12 · 16 · 999` — `999` is a pill, `0` a flush edge; both are decisions |
+| Radius | `0 · 4 · 8 · 12 · 16 · 20 · 24 · 999` — `999` is a pill, `0` a flush edge; both are decisions. 20 and 24 are on the scale because the nesting rule (`outer = inner + padding`) lands there and `Drawer`, `DrawerItem` and the `Tabs` indicator default there |
 | Type | `12 · 14 · 16 · 18 · 24 · 32 · 40 · 48` |
 | Tap minimum | `40` — Fitts: the smallest pressable box a finger reliably hits |
 | Label text | `14` — the reading size a control's own label may not fall under |

@@ -863,7 +863,7 @@ const checkFile = (file, ctx) => {
             valueLine,
             "OFF_SCALE_RADIUS",
             `${call.name}.${key} = ${n.number} is not a scale radius.`,
-            "Use 4 · 8 · 12 · 16 · 999 (a pill). A radius between them is a shape no other card in this app has.",
+            "Use 4 · 8 · 12 · 16 · 20 · 24 · 999 (a pill). A radius between them is a shape no other card in this app has.",
           );
         }
       } else if (kind === "type" && (key === "fontSize" || call.name === "Text")) {

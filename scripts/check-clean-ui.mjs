@@ -180,6 +180,31 @@ await bites("a token mixed by hand", "HAND_MIXED_COLOR", [
 await bites("padding off the scale", "OFF_SCALE_SPACING", [["padding: 24,", "padding: 26,"]]);
 await bites("a gap off the scale", "OFF_SCALE_SPACING", [["gap: 12,", "gap: 14,"]]);
 await bites("a radius off the scale", "OFF_SCALE_RADIUS", [["borderRadius: 12,", "borderRadius: 10,"]]);
+
+// The radius scale reaches 24 for two reasons that are not taste: the nesting rule
+// is arithmetic (`outer = inner + padding`, so a 16 tile inside 8 of padding needs a
+// 24 card), and `Drawer`, `DrawerItem` and the `Tabs` slider indicator already
+// default there. A screen that matches its own widgets cannot be off-scale — and a
+// step in the middle of the scale is still policed.
+await check("20 and 24 are steps, and 22 between them is not", async () => {
+  const nested = (radius) =>
+    `import { Card, Image } from "flet-box";\n` +
+    `const screen = () => Card({\n` +
+    `  borderRadius: ${radius},\n` +
+    `  padding: 8,\n` +
+    `  children: [Image({ src: "/assets/cover.webp", alt: "", borderRadius: 16, width: 96, height: 96 })],\n` +
+    `});\n`;
+  const legal = (await scan(nested(24))).filter((item) => item.code === "OFF_SCALE_RADIUS");
+  assert.deepEqual(
+    legal.map((item) => item.message),
+    [],
+    "the gate rejects the radius the nesting rule requires",
+  );
+  const roomy = (await scan(nested(20))).filter((item) => item.code === "OFF_SCALE_RADIUS");
+  assert.deepEqual(roomy.map((item) => item.message), [], "20 is a step and the gate says otherwise");
+  const drift = (await scan(nested(22))).filter((item) => item.code === "OFF_SCALE_RADIUS");
+  assert.equal(drift.length, 1, "a corner between two steps slipped past the scale");
+});
 await bites("a type size off the scale", "OFF_SCALE_TYPE", [["size: 32,", "size: 30,"]]);
 await bites("a tap target below 40", "SMALL_TAP_TARGET", [
   ["onPress: save, height: 40", "onPress: save, height: 28"],

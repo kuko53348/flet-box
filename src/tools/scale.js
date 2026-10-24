@@ -28,8 +28,15 @@ export const PILL = 999;
 /** The 8-based rhythm, with the two steps a real layout needs (18 for field text, 96 for hero gutters). */
 export const SPACING_SCALE = new Set([0, 4, 8, 12, 16, 18, 24, 32, 40, 48, 64, 96]);
 
-/** Corner radii. `999` is a pill, `0` a flush edge — both are decisions, not omissions. */
-export const RADIUS_SCALE = new Set([0, 4, 8, 12, 16, PILL]);
+/**
+ * Corner radii. `999` is a pill, `0` a flush edge — both are decisions, not omissions.
+ *
+ * The scale reaches 24 on purpose. The nesting rule (`outer = inner + padding`) is
+ * arithmetic, not taste: a 16-radius tile inside 8 of padding *needs* a 24 card, so a
+ * scale that stops at 16 makes the correct radius illegal and pushes the screen to a
+ * pill it did not ask for.
+ */
+export const RADIUS_SCALE = new Set([0, 4, 8, 12, 16, 20, 24, PILL]);
 
 /** Type sizes. Two steps per jump: a 15 next to a 16 reads as a mistake, not as hierarchy. */
 export const TYPE_SCALE = new Set([12, 14, 16, 18, 24, 32, 40, 48]);
