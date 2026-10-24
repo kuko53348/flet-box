@@ -19,6 +19,7 @@ import {
   DrawerItem,
   BottomNavigation,
   CollapsibleSideBar,
+  AdaptiveScaffold,
 } from "../src/navigations/index.js";
 import { goTo, getCurrentPath, initRouter, clearRouter } from "../src/navigations/Router.js";
 import { WidgetFactory } from "../src/widget-factory/index.js";
@@ -31,6 +32,15 @@ import { useState, saveState, getState } from "../src/tools/useState.js";
 import { colors, palettes, setTheme, applySystemTheme } from "../src/utils/themes.js";
 import { color } from "../src/tools/color.js";
 import { TAP_MINIMUM } from "../src/tools/scale.js";
+import {
+  BREAKPOINTS,
+  BREAKPOINT_NAMES,
+  breakpointForWidth,
+  atLeast,
+  pick,
+  onBreakpointChange,
+} from "../src/tools/breakpoints.js";
+import { loadFont, fontsReady } from "../src/tools/fonts.js";
 
 const results = [];
 let pass = 0;
@@ -52,6 +62,23 @@ const ok = (cond, msg) => {
 };
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// `innerWidth` is a read-only accessor on Window, so a responsive test has to
+// shadow it with its own configurable property and hand the descriptor back.
+// Nothing else in the harness may read a viewport it did not ask for.
+const withWidth = (px, fn) => {
+  const original = Object.getOwnPropertyDescriptor(window, "innerWidth");
+  Object.defineProperty(window, "innerWidth", {
+    configurable: true,
+    get: () => px,
+  });
+  try {
+    return fn();
+  } finally {
+    if (original) Object.defineProperty(window, "innerWidth", original);
+    else delete window.innerWidth;
+  }
+};
 
 const host = document.createElement("div");
 host.style.cssText = "position:absolute;left:-9999px;top:0;width:600px;";
@@ -2101,6 +2128,32 @@ async function run() {
     ok(getComputedStyle(mount(W.Stack({ width: 40, height: 40 }))).display === "block", "a plain Stack stopped being a block");
   });
 
+  await t("alignSelf: one child can answer the parent's cross axis alone", () => {
+    // The engine had `alignItems` but no `alignSelf`, so a control inside a
+    // stretched Row could only accept the parent's answer or wrap itself in
+    // another box to dodge it. Routing is what `tests/propscan.html` proves (an
+    // unregistered name there warns as an unknown prop); what this guard holds is
+    // the geometry and the reactivity, and the alias, which has no CSS name to
+    // fall back on.
+    const row = mount(
+      W.Row({
+        alignItems: "stretch",
+        height: 80,
+        children: [W.Text({ text: "fills" }), W.Button({ text: "sits", alignSelf: "flex-end" })],
+      }),
+    );
+    const kids = [...row.children];
+    ok(getComputedStyle(kids[0]).alignSelf === "auto", "the untouched child stopped inheriting");
+    ok(getComputedStyle(kids[1]).alignSelf === "flex-end", `alignSelf did not route: ${getComputedStyle(kids[1]).alignSelf}`);
+    ok(kids[1].getBoundingClientRect().bottom <= row.getBoundingClientRect().bottom + 1, "the self-aligned child is not at the bottom of the row");
+    // the short alias routes the same style, and update() keeps it reactive
+    const alias = mount(W.Container({ child: W.Text({ text: "x", selfAlign: "center" }) }));
+    ok(getComputedStyle(alias.querySelector("*")).alignSelf === "center", "selfAlign is not an alias of alignSelf");
+    const live = mount(W.Text({ text: "a", alignSelf: "flex-start" }));
+    live.update({ alignSelf: "center" });
+    ok(getComputedStyle(live).alignSelf === "center", "alignSelf stopped being reactive on update()");
+  });
+
   await t("BottomNavigation: a navigating onTabChange does not recurse", async () => {
     // updateColorsFromRouter() fired onTabChange on every router event, so the
     // documented usage (go to the tab's route from the callback) looped
@@ -3157,6 +3210,107 @@ async function run() {
     await node.hide();
     ok(calls.includes("removeBanner"), "hide() did not remove the banner");
     node.remove();
+  });
+
+  // ---------------------------------------------------------- breakpoints
+  // The responsive vocabulary is one table, and the guard is that the table is
+  // the ONLY answer: the same widths must drive `pick`, `atLeast` and the
+  // `AdaptiveScaffold` drawer, or an app gets two layouts at the same width.
+  await t("breakpointForWidth: the table is the widths, not the names", () => {
+    const edges = [
+      [0, "xs"], [559, "xs"], [560, "sm"], [767, "sm"],
+      [768, "md"], [1023, "md"], [1024, "lg"], [1279, "lg"],
+      [1280, "xl"], [4096, "xl"], [-100, "xs"],
+    ];
+    for (const [px, name] of edges) {
+      ok(
+        breakpointForWidth(px) === name,
+        `breakpointForWidth(${px}) is "${breakpointForWidth(px)}", expected "${name}"`,
+      );
+    }
+    ok(BREAKPOINT_NAMES.join() === "xs,sm,md,lg,xl", "the names are out of width order");
+    ok(BREAKPOINTS.md === 768, "`md` moved off the 768 line AdaptiveScaffold has always used");
+  });
+
+  await t("pick: an unnamed step inherits the nearest smaller one", () => {
+    const values = { xs: 8, md: 16 };
+    const cases = [[0, 8], [560, 8], [768, 16], [1024, 16], [1280, 16]];
+    for (const [px, want] of cases) {
+      withWidth(px, () => {
+        const got = pick(values, "fallback");
+        ok(got === want, `at ${px}px pick gave ${got}, expected ${want}`);
+      });
+    }
+    // Nothing named below the viewport answers with the fallback, not `undefined`
+    // by accident of a missing key.
+    withWidth(0, () => ok(pick({}, "fallback") === "fallback", "empty table ignored the fallback"));
+  });
+
+  await t("atLeast: a step asks for its own width, and an unknown name is free", () => {
+    withWidth(767, () => {
+      ok(atLeast("sm") === true, "767 is not at least sm");
+      ok(atLeast("md") === false, "767 answered md as reached");
+    });
+    withWidth(768, () => ok(atLeast("md") === true, "768 did not reach md"));
+    withWidth(100, () => ok(atLeast("huge") === true, "an unknown name must not block a layout"));
+  });
+
+  await t("onBreakpointChange: one call per crossing, none per pixel", async () => {
+    const seen = [];
+    let unsubscribe;
+    withWidth(700, () => {
+      // The remembered baseline is built inside the first subscription, so the
+      // crossing below is measured from a known step.
+      unsubscribe = onBreakpointChange((name) => seen.push(name));
+      window.dispatchEvent(new Event("resize"));
+      ok(seen.length === 0, "a resize that stayed in the step fired a listener");
+      withWidth(800, () => window.dispatchEvent(new Event("resize")));
+      ok(seen.length === 1, `one crossing fired ${seen.length} times (expected 1)`);
+      ok(seen[0] === "md", `the crossing reported "${seen[0]}", expected "md"`);
+      withWidth(1300, () => window.dispatchEvent(new Event("resize")));
+      ok(seen.length === 2, `the second crossing fired ${seen.length - 1} times`);
+      unsubscribe();
+      withWidth(800, () => window.dispatchEvent(new Event("resize")));
+      ok(seen.length === 2, "an unsubscribed listener still heard the crossing");
+    });
+  });
+
+  await t("AdaptiveScaffold: its drawer line IS BREAKPOINTS.md", () => {
+    // `CollapsibleSideBar` declares no `widgetName`, so the sidebar is found by
+    // the one style nothing else in the shell writes: the width transition the
+    // collapse animates through.
+    const hasSidebar = (el) =>
+      [...el.querySelectorAll("*")].some((n) => (n.style.transition || "").includes("width"));
+    // A mobile shell appends its Drawer to `document.body`, so anything the two
+    // builds add has to go back off when the assertion is done.
+    const before = new Set(document.body.children);
+    const nav = () => [W.Text({ text: "Home" })];
+    try {
+      withWidth(767, () => {
+        const shell = AdaptiveScaffold({ body: W.Text({ text: "b" }), leftNavBar: nav() });
+        ok(
+          !hasSidebar(shell),
+          "a 767px viewport got the desktop sidebar instead of the drawer",
+        );
+      });
+      withWidth(768, () => {
+        const shell = AdaptiveScaffold({ body: W.Text({ text: "b" }), leftNavBar: nav() });
+        ok(hasSidebar(shell), "a 768px viewport still got the mobile drawer");
+      });
+    } finally {
+      for (const node of [...document.body.children]) {
+        if (!before.has(node)) node.remove();
+      }
+    }
+  });
+
+  await t("loadFont: a face that cannot be had resolves false, never hangs", async () => {
+    const settled = await Promise.race([
+      loadFont("FbMissingFamily", { url: "/tests/fixtures/no-such-stylesheet.css" }),
+      wait(4000).then(() => "hung"),
+    ]);
+    ok(settled === false, `a dead stylesheet resolved ${settled}, expected false`);
+    ok(await fontsReady() === true, "fontsReady() did not settle in the browser");
   });
 
   // ------------------------------------------------------------------ report

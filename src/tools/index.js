@@ -4,6 +4,16 @@ export { shuffle, reverse, sort, unique, chunk } from "./array.js";
 export { border } from "./border.js";
 export { clipboard } from "./clipboard.js";
 export { color } from "./color.js";
+export {
+  BREAKPOINTS,
+  BREAKPOINT_NAMES,
+  breakpointForWidth,
+  currentBreakpoint,
+  atLeast,
+  pick,
+  onBreakpointChange,
+} from "./breakpoints.js";
+export { loadFont, fontsReady } from "./fonts.js";
 export { createList } from "./createList.js";
 export { delay, withMinDelay, retry } from "./delay.js";
 export { device } from "./device.js";

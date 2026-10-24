@@ -2,6 +2,7 @@ import { Scaffold } from "./Scaffold.js";
 import { Drawer } from "./Drawer.js";
 import { CollapsibleSideBar } from "./CollapsibleSideBar.js";
 import { device } from "../tools/device.js";
+import { BREAKPOINTS } from "../tools/breakpoints.js";
 import { colors } from "../utils/themes.js";
 
 /**
@@ -27,7 +28,8 @@ import { colors } from "../utils/themes.js";
  * switches navigation patterns based on screen width and device type.
  *
  * Layout rules:
- * - **Mobile** (`window.innerWidth < 768` or `device.isMobile()` or `forceMobile`):
+ * - **Mobile** (`window.innerWidth < BREAKPOINTS.md`, i.e. under 768, or
+ *   `device.isMobile()` or `forceMobile`):
  *   - `leftNavBar` is placed inside a slide-over Drawer (hidden by default).
  *   - `rightNavBar` is hidden entirely.
  * - **Desktop** (all other cases):
@@ -61,9 +63,11 @@ export const AdaptiveScaffold = (props) => {
   // Determine the layout mode. forceMobile/forceDesktop props override the
   // automatic detection, which uses both the device API and the window width
   // so that resizing a desktop browser to a small width triggers mobile layout.
+  // The width is the framework's own `md` step rather than a private 768, so the
+  // scaffold and every `atLeast("md")` in the app answer to the same line.
   const isMobile =
     forceMobile ||
-    (!forceDesktop && (device.isMobile() || window.innerWidth < 768));
+    (!forceDesktop && (device.isMobile() || window.innerWidth < BREAKPOINTS.md));
 
   let finalLeftNavBar = null;
   let drawerInstance = null;

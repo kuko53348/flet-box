@@ -23,6 +23,8 @@ const widgetConfigs = {
     gap: 8,
     justifyContent: "center",
     alignItems: "center",
+    alignSelf: "flex-end",
+    selfAlign: "center",
     wrap: true,
     expand: false,
     flex: 1,

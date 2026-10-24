@@ -2244,7 +2244,7 @@ runApp(App, 'root');
 `;
 
 export const basicAppJs = () => `// app.js - Basic template (AppBar + Drawer)
-import { runApp, Scaffold, colors, useState, dimensions } from 'flet-box';
+import { runApp, Scaffold, colors, useState, atLeast, onBreakpointChange } from 'flet-box';
 // Registers this app's design tokens. Without it every screen paints
 // with the framework's own palette, and the file that looks like the design
 // system is decoration.
@@ -2264,13 +2264,14 @@ const routes = {
 };
 
 // The drawer is only reachable through the AppBar's menu button, so the shell has
-// to know whether it is on a phone. Key-based state keeps the width across
-// re-renders; the resize listener is registered once, at module scope.
-const [viewportWidth, setViewportWidth] = useState('viewportWidth', dimensions.getWidth());
-dimensions.addListener(({ width }) => setViewportWidth(width));
+// to know whether it is on a phone. Key-based state keeps the answer across
+// re-renders; the subscription is registered once, at module scope, and only
+// fires when the viewport crosses a breakpoint, not on every pixel of a resize.
+const [isWide, setIsWide] = useState('isWide', atLeast('md'));
+onBreakpointChange(() => setIsWide(atLeast('md')));
 
 const MyApp = () => {
-    const isMobile = viewportWidth.valueOf() < 768;
+    const isMobile = !isWide.valueOf();
     return Scaffold({
         routes,
         appBar: AppBarComponent({ title: 'FletBox', isMobile }),
@@ -2284,7 +2285,7 @@ runApp(MyApp, 'root');
 
 export const fullAppJs =
   () => `// app.js - Full template (AppBar + Drawer + BottomNav)
-import { runApp, Scaffold, colors, useState, dimensions } from 'flet-box';
+import { runApp, Scaffold, colors, useState, atLeast, onBreakpointChange } from 'flet-box';
 // Registers this app's design tokens. Without it every screen paints
 // with the framework's own palette, and the file that looks like the design
 // system is decoration.
@@ -2304,15 +2305,15 @@ const routes = {
     '/about': AboutScreen
 };
 
-// State is key-based, so the viewport width survives re-renders. One resize
+// State is key-based, so the layout answer survives re-renders. One breakpoint
 // subscription feeds it from module scope: registering it inside the component
-// would add a listener on every render.
-const [viewportWidth, setViewportWidth] = useState('viewportWidth', dimensions.getWidth());
-dimensions.addListener(({ width }) => setViewportWidth(width));
+// would add a listener on every render, and it only fires when a step is crossed.
+const [isWide, setIsWide] = useState('isWide', atLeast('md'));
+onBreakpointChange(() => setIsWide(atLeast('md')));
 
 const MyApp = () => {
     // Structural read of the key, so crossing the breakpoint re-renders the shell.
-    const isMobile = viewportWidth.valueOf() < 768;
+    const isMobile = !isWide.valueOf();
     return Scaffold({
         routes,
         appBar: AppBarComponent({ title: 'FletBox', isMobile }),
@@ -2357,7 +2358,7 @@ runApp(MyApp, 'root');
 
 export const adaptiveAppJs =
   () => `// app.js - Adaptive template (mobile + desktop)
-import { runApp, Scaffold, colors, useState, dimensions } from 'flet-box';
+import { runApp, Scaffold, colors, useState, atLeast, onBreakpointChange } from 'flet-box';
 // Registers this app's design tokens. Without it every screen paints
 // with the framework's own palette, and the file that looks like the design
 // system is decoration.
@@ -2380,11 +2381,11 @@ const routes = {
     '/profile': ProfileScreen
 };
 
-// State is key-based, so the viewport width survives re-renders. The resize
+// State is key-based, so the layout answer survives re-renders. The breakpoint
 // subscription is registered once at module scope; doing it inside the component
 // would add another listener on every render.
-const [viewportWidth, setViewportWidth] = useState('viewportWidth', dimensions.getWidth());
-dimensions.addListener(({ width }) => setViewportWidth(width));
+const [isWide, setIsWide] = useState('isWide', atLeast('md'));
+onBreakpointChange(() => setIsWide(atLeast('md')));
 
 // One menu, three surfaces: the drawer and the bottom bar on a phone, the
 // sidebar on a desktop. The labels stay short because the bottom bar has to fit
@@ -2397,9 +2398,9 @@ const menu = [
 ];
 
 const MyApp = () => {
-    // Structural read of the keyed viewport state, so crossing the breakpoint
+    // Structural read of the keyed layout state, so crossing the breakpoint
     // re-renders the shell (drawer + bottom bar <-> sidebar).
-    const isMobile = viewportWidth.valueOf() < 768;
+    const isMobile = !isWide.valueOf();
     return Scaffold({
         routes,
         appBar: AppBarComponent({ title: 'FletBox', isMobile }),
@@ -2547,9 +2548,13 @@ export const agentsMd = (appName, template, version) =>
     'Real `Scaffold` props: `appBar body bottomBar fab drawer leftNavBar',
     'leftNavBarWidth rightNavBar rightNavBarWidth routes basePath backgroundColor',
     'closeDrawerOnNavigate`. (`--props Scaffold` is authoritative.)',
-    'For a responsive app, branch in JS on the keyed viewport state — `useState`',
-    'seeded from `dimensions.getWidth()` plus one `dimensions.addListener()` at',
-    'module scope — not on CSS alone. See `src/app.js` in this project.',
+    'For a responsive app, branch in JS on the breakpoint table, not on CSS alone:',
+    '`useState` seeded from `atLeast("md")` plus one `onBreakpointChange()` at',
+    'module scope — it fires when the viewport crosses a step, not on every pixel',
+    'of a resize. `md` is 768, the same line `AdaptiveScaffold` crosses, so a',
+    'screen and its shell cannot disagree. A number that really wants to be',
+    'different at 400px and 1400px comes from `pick({ xs: 16, md: 24 })`.',
+    'See `src/app.js` in this project.',
     '',
     'Custom widgets follow the same shape every framework widget uses',
     '(`QRCode.js` is the reference):',

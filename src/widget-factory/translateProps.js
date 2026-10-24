@@ -137,6 +137,11 @@ export const ALL_PROPS = [
   { prop: "justify", domProp: "justifyContent", type: "style", unit: "none", reactive: true },
   { prop: "justifyContent", domProp: "justifyContent", type: "style", unit: "none", reactive: true },
   { prop: "alignItems", domProp: "alignItems", type: "style", unit: "none", reactive: true },
+  // The child's own answer to the parent's `alignItems`: a control that stays where
+  // it wants inside a row that stretches everything else. Routed by the engine, so
+  // it belongs to every widget that can be a flex child, not only to the layouts.
+  { prop: "alignSelf", domProp: "alignSelf", type: "style", unit: "none", reactive: true },
+  { prop: "selfAlign", domProp: "alignSelf", type: "style", unit: "none", reactive: true },
   { prop: "wrap", domProp: "flexWrap", type: "style", unit: "none", reactive: true, boolValues: { true: "wrap", false: "nowrap" } },
   { prop: "flexWrap", domProp: "flexWrap", type: "style", unit: "none", reactive: true, boolValues: { true: "wrap", false: "nowrap" } },
   { prop: "flex", domProp: "flex", type: "style", unit: "none", reactive: true },

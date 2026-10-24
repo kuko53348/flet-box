@@ -10,6 +10,8 @@ declare module 'flet-box' {
   export type Size = number | string;
   export type Padding = number | string;
   export type Margin = number | string;
+  /** How a single flex child answers its parent's cross-axis `alignItems`. */
+  export type AlignSelf = 'auto' | 'flex-start' | 'center' | 'flex-end' | 'baseline' | 'stretch';
 
   /**
    * The element returned by `WidgetFactory()`. It is a real `HTMLElement` with
@@ -98,6 +100,12 @@ declare module 'flet-box' {
     disabled?: boolean;
     onPress?: (widget: Widget) => void;
     onClick?: (widget: Widget) => void;
+    // A child's own cross-axis answer to its parent's `alignItems`. It belongs on
+    // `CommonProps` rather than on the layouts because the widget that needs it is
+    // the *child* — a chip centred inside a row whose other children stretch.
+    alignSelf?: AlignSelf;
+    // Alias of `alignSelf`, matching the `justify` / `alignItems` shorthand style.
+    selfAlign?: AlignSelf;
     id?: string;
     className?: string;
     ref?: (widget: Widget) => void;
@@ -2133,9 +2141,57 @@ declare module 'flet-box' {
     orientation(): 'portrait' | 'landscape';
     isTouch(): boolean;
     hasGesture(): boolean;
-    onOrientationChange(callback: (orientation: string) => void): void;
-    onResize(callback: (size: { width: number; height: number; orientation: string }) => void): void;
+    // Both return the unsubscribe; the runtime always did, the type hid it.
+    onOrientationChange(callback: (orientation: string) => void): () => void;
+    onResize(callback: (size: { width: number; height: number; orientation: string }) => void): () => void;
   };
+
+  /** The five viewport widths a screen answers to, in CSS pixels. */
+  export type Breakpoint = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+
+  /** `md` is 768 — the same switch `AdaptiveScaffold` uses for its drawer. */
+  export const BREAKPOINTS: Record<Breakpoint, number>;
+  export const BREAKPOINT_NAMES: Breakpoint[];
+
+  /** Which breakpoint a given width answers to (pure, no DOM). */
+  export function breakpointForWidth(px: number): Breakpoint;
+  /** The breakpoint the live viewport is in; `xs` where there is no window. */
+  export function currentBreakpoint(): Breakpoint;
+  /** Whether the viewport has reached `name`. */
+  export function atLeast(name: Breakpoint): boolean;
+
+  /**
+   * Value for the current breakpoint. Keys are breakpoint names and an unnamed
+   * step inherits the nearest smaller one: `pick({ xs: 8, md: 16 })` is 8, 8, 16,
+   * 16, 16.
+   */
+  export function pick<T>(values: Partial<Record<Breakpoint, T>>, fallback?: T): T;
+
+  /**
+   * Subscribe to breakpoint crossings — not to every pixel of a resize.
+   * @returns The unsubscribe. Call it from `onUnmount`.
+   */
+  export function onBreakpointChange(listener: (breakpoint: Breakpoint) => void): () => void;
+
+  export interface LoadFontOptions {
+    /** Weights to fetch, e.g. `[400, 600]`. Google needs them or you get 400 only. */
+    weights?: number[];
+    /** A stylesheet to load instead of the provider URL — a self-hosted `@font-face`. */
+    url?: string;
+    /** CSS `font-display`, provider URLs only. Defaults to `"swap"`. */
+    display?: 'auto' | 'block' | 'swap' | 'fallback' | 'optional';
+  }
+
+  /**
+   * Load a webfont family so a `fontFamily` prop has the bytes behind it. One
+   * request per family, whoever asks first. Resolves `false` when the face could
+   * not be had — a webfont is a network request, and the screen keeps its
+   * fallback instead of failing.
+   */
+  export function loadFont(family: string, options?: LoadFontOptions): Promise<boolean>;
+
+  /** Wait for the faces the document has already started, before a canvas paint. */
+  export function fontsReady(): Promise<boolean>;
 
   export const os: {
     name(): string;
