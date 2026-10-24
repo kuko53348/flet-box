@@ -94,6 +94,8 @@ DESC = {
     "gap": "Space between children along the layout axis.",
     "justifyContent": "Aligns children along the main axis (CSS `justify-content`).",
     "alignItems": "Aligns children across the cross axis (CSS `align-items`).",
+    "alignSelf": "Overrides the parent's `alignItems` for this child alone (CSS `align-self`). Alias: `selfAlign`.",
+    "selfAlign": "Alias of `alignSelf`.",
     "wrap": "Lets children wrap onto multiple lines.",
     "expand": "Lets a flex child grow to fill available space.",
     "flex": "Flex grow/shrink/basis shorthand for a flex child.",

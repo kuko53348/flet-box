@@ -139,6 +139,62 @@ const removeListener = dimensions.addListener(({ width, height }) => {
 removeListener();
 ```
 
+`device` reads a user agent; the width is the fact a layout can trust. The full
+reference — the breakpoint table, the subscription and font loading — is
+[Device & environment](../tools/device.md).
+
+## Breakpoints
+
+One table, five steps, in CSS pixels: `xs` 0, `sm` 560, `md` 768, `lg` 1024,
+`xl` 1280. `md` is the same line `AdaptiveScaffold` draws between a drawer and a
+permanent sidebar, so a screen and its shell cannot disagree.
+
+```javascript
+import { atLeast, pick, currentBreakpoint } from "flet-box";
+
+const twoColumns = atLeast("md");
+const gutter = pick({ xs: 16, md: 24, lg: 32 });
+const step = currentBreakpoint(); // "sm" at 600px, "md" at 800px
+
+// A step that is not named inherits the nearest smaller one:
+// pick({ xs: 8, md: 16 }) answers 8, 8, 16, 16, 16.
+```
+
+Rebuild only when the viewport *crosses* a step, not on every pixel of a resize.
+`onBreakpointChange` returns the unsubscribe — hand it to the widget that owns the
+subscription:
+
+```javascript
+const [isWide, setIsWide] = useState("isWide", atLeast("md"));
+
+const screen = Column({
+  padding: gutter,
+  children: [Text({ text: String(isWide) })],
+});
+
+screen.onUnmount(onBreakpointChange(() => setIsWide(atLeast("md"))));
+```
+
+## Fonts
+
+`fontFamily` is a name. If the bytes of that face are not on the machine, the
+browser paints its own fallback and the app ships a typeface nobody chose.
+
+```javascript
+import { loadFont, fontsReady } from "flet-box";
+
+// A webfont is a network request: ask, wait, then name it.
+const loaded = await loadFont("Inter", { weights: [400, 600] });
+if (loaded) Text({ text: "Hello", fontFamily: "Inter" });
+
+// Before a canvas paint or an export, where reflowing text is a visible bug.
+await fontsReady();
+```
+
+`loadFont` resolves `false` when the face could not be had — it never fails a
+screen. Pass `url` to load your own same-origin stylesheet instead of a
+provider's, which is the answer an offline launch keeps.
+
 ## Themes and colors
 
 ```javascript
@@ -231,6 +287,10 @@ formatMediaProgress(30, 120);
 - Need URL changes? Read [Routing](router.md).
 - Need colors that follow the app theme? Use `colors` and `getColor`.
 - Need browser information? Use `device`, `os`, and `dimensions`.
+- Need a layout that changes with the window? Use `atLeast` and `pick`, and
+  subscribe with `onBreakpointChange` — never a user-agent guess.
+- Need a typeface that is not on the machine? Load it with `loadFont` before you
+  name it in `fontFamily`.
 
 ---
 

@@ -47,6 +47,7 @@ natural. Each group below maps to the same underlying style or behavior:
 | `flexDirection` | `direction` | CSS `flex-direction` |
 | `justifyContent` | `justify` | CSS `justify-content` |
 | `alignItems` | `align` | CSS `align-items` |
+| `alignSelf` | `selfAlign` | CSS `align-self` (one child's own answer to `alignItems`) |
 | `flexWrap` | `wrap` | CSS `flex-wrap` |
 | `lineHeight` | `lineH` | CSS `line-height` |
 | `letterSpacing` | `letterSpace` | CSS `letter-spacing` |
@@ -70,9 +71,31 @@ These expand to two sides at once (numeric values are pixels):
 ## Layout and display
 
 `display`, `flexDirection` (`direction`), `justifyContent` (`justify`),
-`alignItems` (`align`), `flexWrap` (`wrap`), `flex`, `flexGrow`, `flexShrink`,
-`flexBasis`, `gap`, `boxSizing`, `overflow`, `overflowX`, `overflowY`,
-`position` (`pos`), `top`, `right`, `bottom`, `left`, `inset`, `zIndex` (`z`).
+`alignItems` (`align`), `alignSelf` (`selfAlign`), `flexWrap` (`wrap`), `flex`,
+`flexGrow`, `flexShrink`, `flexBasis`, `gap`, `boxSizing`, `overflow`,
+`overflowX`, `overflowY`, `position` (`pos`), `top`, `right`, `bottom`, `left`,
+`inset`, `zIndex` (`z`).
+
+### One child, its own alignment
+
+`alignItems` is the parent's answer for every child; `alignSelf` is one child's
+answer for itself. The values are CSS's: `'auto'` (inherit the parent),
+`'flex-start'`, `'center'`, `'flex-end'`, `'baseline'`, `'stretch'`. It goes on
+the child, on any widget — `alignSelf` is a `CommonProps` entry, not a layout
+prop — and it is what keeps a short label from being stretched to the full height
+of a row of inputs:
+
+```js
+Row({
+  alignItems: 'stretch',
+  gap: 8,
+  children: [
+    Input({ label: 'Coupon', value: '', onChange: () => {} }),
+    // The row stretches its children; this one refuses.
+    Button({ text: 'Apply', onPress: () => {}, alignSelf: 'flex-end' }),
+  ],
+});
+```
 
 ### Stack positioning
 
