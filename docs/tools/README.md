@@ -30,7 +30,7 @@ Each category is the next chapter of the reading path:
 | [Visual effects](visual-effects.md) | `applyShimmer`, `applyGlow`, `applyPulse`, `injectKeyframes` |
 | [Widget introspection](introspection.md) | `getWidgetProps`, `getWidgetProp`, `stringifyWidgetProps` |
 | [Input validation](validation.md) | `TextInputValidator` rules |
-| [Animation helpers](animation.md) | `animate`, `fadeIn`, `pulse` + `AnimatedBox` and friends |
+| [Animation helpers](animation.md) | `slideIn`, `popIn`, `shake`, `animate`, `fadeIn`, `pulse`, springs and `EASING_NAMES`, `setMotionMode` + `AnimatedBox` and friends |
 
 ## Styling helpers (CSS in JS)
 

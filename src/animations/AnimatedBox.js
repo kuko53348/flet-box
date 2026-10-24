@@ -16,6 +16,8 @@
  *   are automatically converted to rem (consistent with widget-factory behavior)
  */
 
+import { prefersReducedMotion, markMotionLoop } from "./motion.js";
+
 let animationCounter = 0;
 const injectedKeyframes = new Set();
 
@@ -626,13 +628,27 @@ export const AnimatedBox = ({
     // document.head, and AnimatedText calls this once per letter.
     const name = `anim-${hashKeyframes(keyframes)}`;
     injectKeyframes(name, keyframes);
+    // The hook the OS preference rule matches. The JS values below cover the app's
+    // own mode; this is what stops a loop already running when the system setting
+    // flips, with nothing to rebuild and no listener to leak.
+    markMotionLoop(child);
 
-    const duration = animations[0]?.duration || 500;
-    const iteration = animations[0]?.loop ? "infinite" : "1";
+    // Reduced motion is the accessibility recipe, not a switch-off: a near-zero
+    // duration lands the element on its `to` values through `fillMode: forwards`,
+    // so the state the animation was carrying still arrives — only the movement
+    // disappears. A loop becomes a single frame, and the delay goes with it:
+    // content held invisible for two seconds is worse than content that moved.
+    const reduced = prefersReducedMotion();
+    const duration = reduced ? "0.01ms" : animations[0]?.duration || 500;
+    const iteration = reduced ? "1" : animations[0]?.loop ? "infinite" : "1";
     // Per-animation delay takes precedence over the prop-level default
-    const animationDelay = animations[0]?.delay || delay;
+    const animationDelay = reduced
+      ? "0s"
+      : animations[0]?.delay || delay;
 
-    child.style.animation = `${name} ${duration}ms ${timing} ${animationDelay} ${iteration} normal ${fillMode}`;
+    child.style.animation = `${name} ${duration}${
+      typeof duration === "number" ? "ms" : ""
+    } ${timing} ${animationDelay} ${iteration} normal ${fillMode}`;
   }
 
   return child;

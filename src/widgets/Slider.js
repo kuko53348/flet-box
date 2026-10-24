@@ -7,6 +7,7 @@ import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 import { composeUpdate } from "../utils/composeUpdate.js";
 import { injectKeyframes } from "../utils/styleInjector.js";
+import { markMotionLoop } from "../animations/motion.js";
 
 /**
  * Props owned by the Slider's closure state. Routed to the widget's `update`
@@ -189,10 +190,15 @@ export const Slider = (props) => {
   if (striped) {
     fill.style.backgroundImage = `repeating-linear-gradient(45deg, ${stripeColor} 0px, ${stripeColor} 8px, transparent 8px, transparent 16px)`;
     fill.style.backgroundSize = "16px 16px";
-    if (animatedStripes)
+    if (animatedStripes) {
       fill.style.animation = "slider-stripes 0.5s linear infinite";
+      markMotionLoop(fill);
+    }
   }
-  if (glow) fill.style.animation = "slider-glow 1.5s ease-in-out infinite";
+  if (glow) {
+    fill.style.animation = "slider-glow 1.5s ease-in-out infinite";
+    markMotionLoop(fill);
+  }
   track.appendChild(fill);
 
   // ---------- Thumb (knob) ----------

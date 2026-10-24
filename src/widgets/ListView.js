@@ -4,6 +4,7 @@
  */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { injectKeyframes } from "../utils/styleInjector.js";
+import { markMotionLoop } from "../animations/motion.js";
 import { toREM, getBaseFontSize } from "../utils/units.js";
 
 /**
@@ -391,6 +392,7 @@ export const ListView = (props) => {
     spinner.style.borderTop = "2px solid #007aff";
     spinner.style.borderRadius = "50%";
     spinner.style.animation = "flet-spin 0.8s linear infinite";
+    markMotionLoop(spinner);
     refreshIndicator.appendChild(spinner);
     scrollContainer.insertBefore(refreshIndicator, scrollContainer.firstChild);
 

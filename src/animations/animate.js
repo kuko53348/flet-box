@@ -19,6 +19,9 @@
  * @module animations/animate
  */
 
+import { motionDuration } from "./motion.js";
+import { resolveEasing, spring as springCurve } from "./easings.js";
+
 // ========== INTERPOLATION HELPERS ==========
 
 /**
@@ -63,10 +66,14 @@ const interpolate = (from, to, progress) => {
 const interpolateColor = (color1, color2, progress) => {
   const rgb1 = hexToRgb(color1);
   const rgb2 = hexToRgb(color2);
-  const r = Math.round(rgb1.r + (rgb2.r - rgb1.r) * progress);
-  const g = Math.round(rgb1.g + (rgb2.g - rgb1.g) * progress);
-  const b = Math.round(rgb1.b + (rgb2.b - rgb1.b) * progress);
-  return `rgb(${r}, ${g}, ${b})`;
+  // Overshoot curves run past 1, and an `rgb()` value outside 0–255 makes the
+  // browser drop the whole declaration — the color would blink, not overshoot.
+  const channel = (a, b) =>
+    Math.min(255, Math.max(0, Math.round(a + (b - a) * progress)));
+  return `rgb(${channel(rgb1.r, rgb2.r)}, ${channel(rgb1.g, rgb2.g)}, ${channel(
+    rgb1.b,
+    rgb2.b,
+  )})`;
 };
 
 /**
@@ -91,33 +98,100 @@ const hexToRgb = (hex) => {
 
 /**
  * Applies a named easing curve to a linear progress value.
- * Falls back to linear if `type` is not recognized.
  *
- * @param {"linear"|"easeIn"|"easeOut"|"easeInOut"} type - Easing curve name.
+ * The curves live in `easings.js` so the imperative engine, the presets and a
+ * `spring()` all read the same table. A function is accepted as the curve, which
+ * is how a caller passes one that is not in the vocabulary.
+ *
+ * @param {string|((t: number) => number)} type - Easing name or curve.
  * @param {number} t - Raw linear progress in [0, 1].
- * @returns {number} Eased progress value in [0, 1].
+ * @returns {number} Eased progress; outside `[0, 1]` for the overshoot curves.
  */
-const getEasing = (type, t) => {
-  const easings = {
-    linear: (t) => t,
-    easeIn: (t) => t * t,
-    easeOut: (t) => t * (2 - t),
-    easeInOut: (t) => (t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t),
-  };
-  return easings[type]?.(t) ?? t;
+const getEasing = (type, t) => resolveEasing(type)(t);
+
+/**
+ * Transform functions the engine can animate, with the unit a bare number gets
+ * and the value that means "no effect" — the value an animation with no explicit
+ * `from` starts from.
+ *
+ * `translateX`/`rotate`/`skewY` are not properties of `CSSStyleDeclaration`, so
+ * the generic write path used to land them on the widget object as a harmless JS
+ * field: `animate(row, "translateY", 24, 0)` ran a full animation loop and moved
+ * nothing, which is why the skill had to tell you to reach for `scale` even for a
+ * slide. They are now composed into one `transform` string.
+ *
+ * @type {Object<string, { unit: string, neutral: number }>}
+ */
+const TRANSFORM_FUNCTIONS = {
+  translateX: { unit: "px", neutral: 0 },
+  translateY: { unit: "px", neutral: 0 },
+  translateZ: { unit: "px", neutral: 0 },
+  rotate: { unit: "deg", neutral: 0 },
+  rotateX: { unit: "deg", neutral: 0 },
+  rotateY: { unit: "deg", neutral: 0 },
+  rotateZ: { unit: "deg", neutral: 0 },
+  skewX: { unit: "deg", neutral: 0 },
+  skewY: { unit: "deg", neutral: 0 },
+  scale: { unit: "", neutral: 1 },
+  scaleX: { unit: "", neutral: 1 },
+  scaleY: { unit: "", neutral: 1 },
+};
+
+/**
+ * The order the parts are written in. CSS transforms apply left to right, so
+ * translate first, then rotate, then scale keeps a rotation spinning about the
+ * element's own centre instead of the page's.
+ * @type {string[]}
+ */
+const TRANSFORM_ORDER = Object.keys(TRANSFORM_FUNCTIONS);
+
+/**
+ * Live transform parts per widget, so two loops on one element (a slide and a
+ * scale) each own a function rather than overwriting the whole string.
+ * @type {WeakMap<object, Map<string, number|string>>}
+ */
+const transformParts = new WeakMap();
+
+/**
+ * Merges one transform function into the widget's `transform` string.
+ *
+ * @param {HTMLElement} widget   - The element to write on.
+ * @param {string}      property - A key of {@link TRANSFORM_FUNCTIONS}.
+ * @param {number|string} value  - A bare number gets the function's unit.
+ * @returns {void}
+ */
+const writeTransformPart = (widget, property, value) => {
+  const spec = TRANSFORM_FUNCTIONS[property];
+  let parts = transformParts.get(widget);
+  if (!parts) {
+    parts = new Map();
+    transformParts.set(widget, parts);
+  }
+  parts.set(
+    property,
+    typeof value === "number" ? `${value}${spec.unit}` : String(value),
+  );
+  widget.style.transform = TRANSFORM_ORDER.filter((name) => parts.has(name))
+    .map((name) => `${name}(${parts.get(name)})`)
+    .join(" ");
 };
 
 /**
  * Reads the current animated value of a property from a widget.
- * For `"scale"`, returns `1` as a safe default since scale is stored
- * inside a `transform` string rather than as a standalone property.
+ * Transform functions live inside a `transform` string rather than as
+ * standalone properties, so a transform with no part stored yet reads neutral
+ * (`1` for `scale`, `0` for the rest).
  *
  * @param {HTMLElement|object} widget   - The target widget or DOM element.
  * @param {string}             property - The property to read.
- * @returns {number|string} The current value, or `1` for `"scale"`.
+ * @returns {number|string} The current value, or the property's neutral value.
  */
 const readAnimatedValue = (widget, property) => {
-  if (property === "scale") return 1;
+  if (TRANSFORM_FUNCTIONS[property]) {
+    const stored = transformParts.get(widget)?.get(property);
+    if (stored !== undefined) return stored;
+    return TRANSFORM_FUNCTIONS[property].neutral;
+  }
   if (widget?.style && property in widget.style) {
     const inline = widget.style[property];
     // An inline-unset property reads as "" and `interpolate` turns that into the
@@ -132,7 +206,7 @@ const readAnimatedValue = (widget, property) => {
 
 /**
  * Writes an animated value to a widget property.
- * - `"scale"` is written as `transform: scale(value)`.
+ * - Transform functions merge into `transform` (see {@link writeTransformPart}).
  * - Numeric values for style properties that require a unit get `"px"` appended
  *   (unitless properties such as `opacity`, `zIndex`, etc. are exempt).
  * - Falls back to setting the property directly on the widget object for
@@ -145,8 +219,9 @@ const readAnimatedValue = (widget, property) => {
  */
 const writeAnimatedValue = (widget, property, value) => {
   if (!widget) return;
-  if (property === "scale") {
-    widget.style.transform = `scale(${value})`;
+  if (TRANSFORM_FUNCTIONS[property]) {
+    if (!widget.style) return;
+    writeTransformPart(widget, property, value);
     return;
   }
   if (widget.style && property in widget.style) {
@@ -240,16 +315,13 @@ export const stopAnimation = (widget, property) => {
  * @param {number} duration
  * @param {string} easing
  * @param {(progress: number) => number|string} [valueAt] - Custom value curve,
- *   receiving eased progress in `[0, 1]`. Used by `pulse` to keep the whole
- *   up-and-down gesture inside a single cancelable loop.
- * @param {(progress: number) => number|string} [valueAt] - Custom value curve,
- *   receiving eased progress in `[0, 1]`. Used by `pulse` to keep the whole
- *   up-and-down gesture inside a single cancelable loop.
+ *   receiving eased progress in `[0, 1]`. Used by `pulse` and the named
+ *   transitions to keep a multi-phase gesture inside a single cancelable loop.
  * @param {(widget: HTMLElement|object) => void} [onDone] - Called when the loop
  *   ends — also when it is cancelled or replaced, so awaiting code never hangs.
  * @returns {() => boolean} Cancel function; true when it stopped a live loop.
  */
-const runAnimation = (
+export const runAnimation = (
   widget,
   property,
   from,
@@ -263,7 +335,9 @@ const runAnimation = (
   // never reaches 1 and the loop re-arms forever (and `animateAsync` never
   // resolves). Clamping the progress is not enough — it just sits at 0 and
   // `0 < 1` stays true — so sanitise the duration itself. `0` collapses to one frame.
-  const safeDuration = Math.max(0, Number(duration) || 0);
+  // Reduced motion goes through the same door: one frame that writes the end
+  // value, so the state still lands and an `await` still resolves.
+  const safeDuration = motionDuration(duration);
   const startValue = from !== undefined ? from : readAnimatedValue(widget, property);
 
   // Replace the loop already animating this property instead of racing it.
@@ -325,7 +399,8 @@ const runAnimation = (
  *   value is read from the widget via {@link readAnimatedValue}.
  * @param {number|string}      to            - Ending value.
  * @param {number}             [duration=300] - Animation duration in milliseconds.
- * @param {string}             [easing="linear"] - Easing curve name (see {@link getEasing}).
+ * @param {string|((t: number) => number)} [easing="linear"] - Easing curve name
+ *   from `EASING_NAMES`, or a curve (`spring().easing`, `cubicBezier(…)`).
  * @returns {() => boolean} Cancel function — true if it stopped a loop still running.
  *   The animation also stops on its own when a new animation takes the same property,
  *   or via {@link stopAnimation}.
@@ -352,7 +427,8 @@ export const animate = (
  *   value is read from the widget via {@link readAnimatedValue}.
  * @param {number|string}      to            - Ending value.
  * @param {number}             [duration=300] - Animation duration in milliseconds.
- * @param {string}             [easing="linear"] - Easing curve name (see {@link getEasing}).
+ * @param {string|((t: number) => number)} [easing="linear"] - Easing curve name
+ *   from `EASING_NAMES`, or a curve (`spring().easing`, `cubicBezier(…)`).
  * @returns {Promise<HTMLElement|object>} Resolves with `widget` when the animation
  *   finishes — or as soon as it is cancelled or replaced, so `await` never hangs.
  */
@@ -369,6 +445,43 @@ export const animateAsync = (
     // an `await` chain cannot hang on an animation that never got to finish.
     runAnimation(widget, property, from, to, duration, easing, null, resolve);
   });
+
+/**
+ * Animates a property the way a physical object settles: overshoot, then stop.
+ *
+ * There is no duration to choose — a spring runs until its envelope has decayed
+ * inside `epsilon`, and `spring()` works that number out. Which is why this is a
+ * separate call instead of another easing name: passing `spring().duration` by
+ * hand is the same result, this only saves the arithmetic.
+ *
+ * @param {HTMLElement|object} widget   - The target widget or DOM element.
+ * @param {string}             property - The CSS property (or `"scale"`) to animate.
+ * @param {number|string}      from     - Starting value; reads the widget when `undefined`.
+ * @param {number|string}      to       - Ending value.
+ * @param {object}             [options] - Spring parameters (`stiffness`,
+ *   `damping`, `mass`, `initialVelocity`, `epsilon`, `maxDuration`); see {@link spring}.
+ * @returns {() => boolean} Cancel function (see {@link animate}).
+ */
+export const animateSpring = (widget, property, from, to, options = {}) => {
+  const { duration, easing } = springCurve(options);
+  return animate(widget, property, from, to, duration, easing ?? "linear");
+};
+
+/**
+ * The awaitable form of {@link animateSpring}.
+ *
+ * @param {HTMLElement|object} widget   - The target widget or DOM element.
+ * @param {string}             property - The CSS property (or `"scale"`) to animate.
+ * @param {number|string}      from     - Starting value.
+ * @param {number|string}      to       - Ending value.
+ * @param {object}             [options] - Spring parameters (see {@link animateSpring}).
+ * @returns {Promise<HTMLElement|object>} Resolves with `widget` when the spring
+ *   settles — or as soon as it is cancelled or replaced.
+ */
+export const animateSpringAsync = (widget, property, from, to, options = {}) => {
+  const { duration, easing } = springCurve(options);
+  return animateAsync(widget, property, from, to, duration, easing ?? "linear");
+};
 
 // ========== HELPER FUNCTIONS (Fire and Forget) ==========
 

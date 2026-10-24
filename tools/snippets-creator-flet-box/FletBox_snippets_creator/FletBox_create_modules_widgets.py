@@ -339,19 +339,32 @@ export const search = (q) => httpRequest('GET', `${API}/search`, { params: { q }
 
 export const fetchWithRetry = () => retry(() => withMinDelay(httpGet(`${API}/users`), 300), 3, 200);''',
 
-    'createModule.animations': '''import { animate, animateAsync, fadeIn, fadeOut, pulse, stopAnimation, injectKeyframes, AnimatedBox, Container, Text, colors } from 'flet-box';
+    'createModule.animations': '''import { animate, animateAsync, fadeIn, fadeOut, pulse, stopAnimation, injectKeyframes, slideIn, slideOutAsync, shake, popIn, animateSpring, stagger, prefersReducedMotion, AnimatedBox, Container, Text, colors } from 'flet-box';
 
 const box = Container({ width: 120, height: 120, bgColor: colors.primary });
 
-animate(box, 'opacity', 1, 0.2, 400, 'ease-out');
+animate(box, 'opacity', 1, 0.2, 400, 'easeOut');
 fadeIn(box, 300);
 fadeOut(box, 300);
 pulse(box, 600);
 
 export const grow = async () => {
-    await animateAsync(box, 'width', 120, 240, 500, 'ease-in');
+    await animateAsync(box, 'width', 120, 240, 500, 'easeInOut');
     stopAnimation(box, 'opacity');
 };
+
+// Las entradas con nombre ya traen el fade y el desplazamiento en un solo gesto.
+export const enter = () => slideIn(box, { direction: 'up', distance: 16, duration: 240 });
+export const leave = async () => { await slideOutAsync(box); box.remove(); };
+export const reportWrongPassword = () => shake(box, { axis: 'x', distance: 6, cycles: 3 });
+export const pop = () => popIn(box, { from: 0.94, duration: 180 });
+export const settle = () => animateSpring(box, 'scale', 0.94, 1, { stiffness: 260, damping: 20 });
+
+// Un stagger de lista: capped, para que 20 filas no sean 1.2 s de espera.
+export const delayFor = (index) => stagger(index, { step: 60, max: 8 });
+
+// La decisión de moverse o no la toma el usuario, no la pantalla.
+export const mayMove = () => prefersReducedMotion() === false;
 
 // El keyframe se inyecta una vez y después se referencia por nombre.
 injectKeyframes('float', '0% { transform: translateY(0); } 100% { transform: translateY(-8px); }');

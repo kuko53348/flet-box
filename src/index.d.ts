@@ -1203,7 +1203,7 @@ declare module 'flet-box' {
     from: any,
     to: any,
     duration?: number,
-    easing?: string
+    easing?: Easing
   ): () => boolean;
   export function stopAnimation(widget: Widget, property?: string): boolean;
   export function animateAsync(
@@ -1212,7 +1212,7 @@ declare module 'flet-box' {
     from: any,
     to: any,
     duration?: number,
-    easing?: string
+    easing?: Easing
   ): Promise<Widget>;
   export function fadeOut(widget: Widget, duration?: number): () => boolean;
   export function fadeIn(widget: Widget, duration?: number): () => boolean;
@@ -1220,6 +1220,123 @@ declare module 'flet-box' {
   export function fadeOutAsync(widget: Widget, duration?: number): Promise<Widget>;
   export function fadeInAsync(widget: Widget, duration?: number): Promise<Widget>;
   export function pulseAsync(widget: Widget, duration?: number): Promise<Widget>;
+
+  // ----- Easings, springs and the motion preference -----
+  /** A curve name the imperative engine knows. */
+  export type EasingName =
+    | 'linear'
+    | 'easeIn'
+    | 'easeOut'
+    | 'easeInOut'
+    | 'easeInCubic'
+    | 'easeOutCubic'
+    | 'easeInOutCubic'
+    | 'easeInQuart'
+    | 'easeOutQuart'
+    | 'easeInOutQuart'
+    | 'easeInExpo'
+    | 'easeOutExpo'
+    | 'easeInOutExpo'
+    | 'easeInCirc'
+    | 'easeOutCirc'
+    | 'easeInOutCirc'
+    | 'easeInBack'
+    | 'easeOutBack'
+    | 'easeInOutBack'
+    | 'easeInElastic'
+    | 'easeOutElastic'
+    | 'easeOutBounce'
+    | 'standard'
+    | 'emphasized'
+    | 'emphasizedDecelerate'
+    | 'emphasizedAccelerate';
+  /** A curve name, or a curve built by `cubicBezier()` / returned by `spring()`. */
+  export type Easing = EasingName | ((progress: number) => number);
+  /** Every `EasingName`, in the order they are documented. */
+  export const EASING_NAMES: EasingName[];
+  export interface SpringOptions {
+    stiffness?: number;
+    damping?: number;
+    mass?: number;
+    initialVelocity?: number;
+    epsilon?: number;
+    maxDuration?: number;
+  }
+  export interface SpringCurve {
+    easing: (progress: number) => number;
+    duration: number;
+    overshoot: boolean;
+  }
+  /** The cubic-bezier timing function as a curve, for imperative animation. */
+  export function cubicBezier(
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number
+  ): (progress: number) => number;
+  /** A damped spring: the curve plus the duration it needs to settle. */
+  export function spring(options?: SpringOptions): SpringCurve;
+  export function animateSpring(
+    widget: Widget,
+    property: string,
+    from: any,
+    to: any,
+    options?: SpringOptions
+  ): () => boolean;
+  export function animateSpringAsync(
+    widget: Widget,
+    property: string,
+    from: any,
+    to: any,
+    options?: SpringOptions
+  ): Promise<Widget>;
+
+  export interface SlideInOptions {
+    direction?: 'up' | 'down' | 'left' | 'right';
+    distance?: number;
+    duration?: number;
+    easing?: Easing;
+    fade?: boolean;
+  }
+  export interface PopInOptions {
+    from?: number;
+    to?: number;
+    duration?: number;
+    easing?: Easing;
+    fade?: boolean;
+  }
+  export interface ShakeOptions {
+    axis?: 'x' | 'y';
+    distance?: number;
+    cycles?: number;
+    duration?: number;
+  }
+  export function slideIn(widget: Widget, options?: SlideInOptions): () => boolean;
+  export function slideInAsync(widget: Widget, options?: SlideInOptions): Promise<Widget>;
+  export function slideOut(widget: Widget, options?: SlideInOptions): () => boolean;
+  export function slideOutAsync(widget: Widget, options?: SlideInOptions): Promise<Widget>;
+  export function popIn(widget: Widget, options?: PopInOptions): () => boolean;
+  export function popInAsync(widget: Widget, options?: PopInOptions): Promise<Widget>;
+  export function shake(widget: Widget, options?: ShakeOptions): () => boolean;
+  export function shakeAsync(widget: Widget, options?: ShakeOptions): Promise<Widget>;
+
+  export type MotionMode = 'auto' | 'reduce' | 'full';
+  export interface StaggerOptions {
+    start?: number;
+    step?: number;
+    max?: number;
+  }
+  /** True when the app or the operating system asked for no movement. */
+  export function prefersReducedMotion(): boolean;
+  export function getMotionMode(): MotionMode;
+  export function setMotionMode(mode: MotionMode): MotionMode;
+  export function onMotionModeChange(
+    listener: (reduced: boolean) => void
+  ): () => void;
+  /** The duration to actually run: 0 when motion is reduced. */
+  export function motionDuration(duration: number): number;
+  /** The capped delay of item `index` in an entrance. */
+  export function stagger(index: number, options?: StaggerOptions): number;
 
   // =========================================================================
   // Widgets adicionales (Data, Media, Utils)

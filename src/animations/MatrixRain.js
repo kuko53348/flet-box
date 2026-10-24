@@ -12,6 +12,8 @@
  * @module animations/MatrixRain
  */
 
+import { prefersReducedMotion } from "./motion.js";
+
 /**
  * Creates and starts a Matrix-rain animation on a `<canvas>` element.
  *
@@ -203,7 +205,11 @@ export const MatrixRain = (props = {}) => {
       drops[i] += speed + Math.random() * speed;
     }
 
-    animationId = requestAnimationFrame(draw);
+    // Reduced motion stops the rain rather than slowing it: the field is painted
+    // once and left, because a decorative texture that scrolls forever is the
+    // exact pattern the preference was invented for. The check sits on the
+    // re-arm, so the OS setting flipping mid-session stops it within a frame.
+    animationId = prefersReducedMotion() ? null : requestAnimationFrame(draw);
   };
 
   // Initialize canvas and start animation

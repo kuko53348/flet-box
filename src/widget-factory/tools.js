@@ -1,3 +1,9 @@
+// The engine owns the reduced-motion contract: a widget that writes an
+// `infinite` CSS animation through these helpers is marked so the injected
+// `@media (prefers-reduced-motion: reduce)` rule can reach it, even when the
+// reader flips the OS setting long after the element was built.
+import { markMotionLoop } from "../animations/motion.js";
+
 // ============================================================
 // 📋 READ: Get styles
 // ============================================================
@@ -82,6 +88,23 @@ const toCSSValue = (key, value) => {
 };
 
 /**
+ * Whether a style assignment puts an endless animation on the element.
+ *
+ * Only a loop is marked: a one-shot entrance finishes on its own, and the
+ * reduced-motion rule would then only be noise.
+ *
+ * @param {string} prop - The CSS property being written.
+ * @param {*} value - The value being written.
+ * @returns {boolean} True when this write starts an `infinite` animation.
+ */
+const isLoopingAnimation = (prop, value) => {
+  if (typeof value !== "string") return false;
+  if (prop === "animation") return value.includes("infinite");
+  if (prop === "animationIterationCount") return value.trim() === "infinite";
+  return false;
+};
+
+/**
  * Applies one or more styles to a DOM element.
  *
  * Supports two call signatures:
@@ -110,12 +133,14 @@ export function setStyles(el, prop, value) {
       } catch (e) {
         // Silently ignore errors
       }
+      if (isLoopingAnimation(prop, cssValue)) markMotionLoop(el);
     }
     return el;
   }
 
   // Case 2: styles object
   if (typeof prop === "object" && prop !== null) {
+    let loops = false;
     for (const [key, val] of Object.entries(prop)) {
       const cssValue = toCSSValue(key, val);
       if (cssValue !== null) {
@@ -124,8 +149,10 @@ export function setStyles(el, prop, value) {
         } catch (e) {
           // Silently ignore errors
         }
+        if (isLoopingAnimation(key, cssValue)) loops = true;
       }
     }
+    if (loops) markMotionLoop(el);
   }
 
   return el;

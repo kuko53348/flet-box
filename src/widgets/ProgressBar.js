@@ -5,6 +5,7 @@
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 import { injectKeyframes } from "../utils/styleInjector.js";
+import { markMotionLoop } from "../animations/motion.js";
 
 import { toREM } from "../utils/units.js";
 
@@ -54,6 +55,7 @@ export const ProgressBar = (props) => {
   // Animated stripes
   if (animatedStripes || indeterminate) {
     fill.style.animation = `progress-stripes ${indeterminate ? "1.5s" : "0.5s"} linear infinite`;
+    markMotionLoop(fill);
     injectKeyframes(
       "progress-stripes",
       "0% { background-position: 0 0; } 100% { background-position: 28px 0; }",
@@ -65,6 +67,7 @@ export const ProgressBar = (props) => {
     fill.style.width = "50%";
     fill.style.transform = "translateX(-100%)";
     fill.style.animation = "indeterminate-progress 1.5s ease-in-out infinite";
+    markMotionLoop(fill);
     injectKeyframes(
       "indeterminate-progress",
       "0% { transform: translateX(-100%); } 50% { transform: translateX(0%); } 100% { transform: translateX(100%); }",

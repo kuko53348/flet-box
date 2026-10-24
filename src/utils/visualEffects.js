@@ -4,6 +4,8 @@
  * @module utils/visualEffects
  */
 
+import { prefersReducedMotion, markMotionLoop } from "../animations/motion.js";
+
 // Cache for injected keyframes
 const injectedKeyframes = new Set();
 
@@ -47,6 +49,10 @@ export const applyStripes = (element, options = {}) => {
 
   if (animated) {
     element.style.animation = `progress-stripes ${duration} linear infinite`;
+    // A `infinite` CSS loop is stopped by the media rule, not by a JS check: the
+    // check reads the preference when the effect is applied, so a loop already
+    // running when the reader flips the OS setting would keep running.
+    markMotionLoop(element);
 
     injectKeyframes(
       "progress-stripes",
@@ -86,6 +92,7 @@ export const applyShimmer = (element, options = {}) => {
     )`;
   element.style.backgroundSize = "200% 100%";
   element.style.animation = `shimmer ${duration} ease-in-out infinite`;
+  markMotionLoop(element);
 
   injectKeyframes(
     "shimmer",
@@ -108,6 +115,7 @@ export const applyGlow = (element, options = {}) => {
 
   element.style.transition = "box-shadow 0.2s ease";
   element.style.animation = `glow-pulse ${duration} ease-in-out infinite`;
+  markMotionLoop(element);
 
   injectKeyframes(
     "glow-pulse",
@@ -128,6 +136,7 @@ export const applyIndeterminate = (element, options = {}) => {
   element.style.position = "relative";
   element.style.width = width;
   element.style.animation = `indeterminate-progress ${duration} ease-in-out infinite`;
+  markMotionLoop(element);
 
   injectKeyframes(
     "indeterminate-progress",
@@ -144,6 +153,10 @@ export const applyIndeterminate = (element, options = {}) => {
  */
 export const applyPulse = (element, options = {}) => {
   const { scale = 1.05, duration = "0.3s" } = options;
+
+  // A pulse is decoration saying "look here", so reduced motion removes it rather
+  // than shortening it — the element is left exactly as it was.
+  if (prefersReducedMotion()) return;
 
   element.style.transition = `transform ${duration} ease`;
   element.style.animation = `pulse ${duration} ease-in-out`;

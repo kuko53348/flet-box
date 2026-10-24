@@ -16,6 +16,8 @@ export { MatrixRain } from "./MatrixRain.js";
 export {
 	animate,
 	animateAsync,
+	animateSpring,
+	animateSpringAsync,
 	stopAnimation,
 	fadeOut,
 	fadeIn,
@@ -24,3 +26,22 @@ export {
 	fadeInAsync,
 	pulseAsync,
 } from "./animate.js";
+export {
+	slideIn,
+	slideInAsync,
+	slideOut,
+	slideOutAsync,
+	popIn,
+	popInAsync,
+	shake,
+	shakeAsync,
+} from "./transitions.js";
+export {
+	prefersReducedMotion,
+	getMotionMode,
+	setMotionMode,
+	onMotionModeChange,
+	motionDuration,
+	stagger,
+} from "./motion.js";
+export { EASING_NAMES, cubicBezier, spring } from "./easings.js";

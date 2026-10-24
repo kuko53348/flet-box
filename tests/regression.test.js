@@ -289,7 +289,10 @@ async function run() {
 
   // ------------------------------------------------------------- AnimatedBox
   await t("AnimatedBox: identical keyframes are injected only once", () => {
-    const count = () => document.head.querySelectorAll("style").length;
+    // Only the keyframe sheets count: the engine also owns one stylesheet for the
+    // reduced-motion recipe, and that is injected once per page by design.
+    const count = () =>
+      [...document.head.querySelectorAll("style")].filter((s) => s.textContent.includes("@keyframes")).length;
     const before = count();
     const box = (to) =>
       AnimatedBox({

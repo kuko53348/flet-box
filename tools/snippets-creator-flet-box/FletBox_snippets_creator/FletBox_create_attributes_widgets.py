@@ -277,6 +277,31 @@ attrs_all_placeholders_complete = {
     'fadeInAsync': 'await fadeInAsync(widget, 300)',
     'pulseAsync': 'await pulseAsync(widget, 300)',
 
+    # ---------- easings.js (curves and springs) ----------
+    'EASING_NAMES': 'EASING_NAMES.join(", ")',
+    'cubicBezier': 'animate(widget, "translateY", 24, 0, 240, cubicBezier(0.2, 0, 0, 1))',
+    'spring': 'const { duration, easing } = spring({ stiffness: 260, damping: 20 })',
+    'animateSpring': 'animateSpring(widget, "scale", 0.94, 1, { stiffness: 260, damping: 20 })',
+    'animateSpringAsync': 'await animateSpringAsync(widget, "translateY", 24, 0, { damping: 20 })',
+
+    # ---------- transitions.js (the named entrances and feedback) ----------
+    'slideIn': 'slideIn(card, { direction: "up", distance: 16, duration: 240 })',
+    'slideInAsync': 'await slideInAsync(panel, { direction: "left", distance: 24 })',
+    'slideOut': 'slideOut(card, { direction: "down", distance: 12 })',
+    'slideOutAsync': 'await slideOutAsync(dialog)',
+    'popIn': 'popIn(badge, { from: 0.94, duration: 180 })',
+    'popInAsync': 'await popInAsync(toast, { fade: true })',
+    'shake': 'shake(loginForm, { axis: "x", distance: 6, cycles: 3 })',
+    'shakeAsync': 'await shakeAsync(field, { axis: "x" })',
+
+    # ---------- motion.js (the app-wide motion preference) ----------
+    'prefersReducedMotion': 'if (!prefersReducedMotion()) slideIn(card, { distance: 16 })',
+    'setMotionMode': 'setMotionMode("reduce")',
+    'getMotionMode': 'getMotionMode()',
+    'onMotionModeChange': 'const stopListening = onMotionModeChange((reduced) => console.log(reduced))',
+    'motionDuration': 'const ms = motionDuration(240)',
+    'stagger': 'const delay = stagger(3, { start: 0, step: 60, max: 8 })',
+
     # =========================================================================
     # 2. PROPS GENÉRICAS (válidas para casi cualquier widget)
     # =========================================================================

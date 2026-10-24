@@ -1,6 +1,6 @@
 ---
 name: fletbox-motion
-description: When a FletBox screen may move and with which API - AnimatedBox, AnimatedText, ParallaxBox, animate/fadeIn/pulse, the frequency gate, durations that match the interaction, the two easing vocabularies the framework actually has, and what must never animate. Use when adding any transition, entrance, loading pulse, hover lift, parallax or hero motion.
+description: When a FletBox screen may move and with which API - the named transitions (slideIn, slideOut, popIn, shake), AnimatedBox, AnimatedText, ParallaxBox, animate/fadeIn/pulse, springs and the easing vocabulary, reduced motion with setMotionMode, the frequency gate, and what must never animate. Use when adding any transition, entrance, error feedback, loading pulse, hover lift, parallax or hero motion.
 ---
 
 # Motion — the only animation contract this app has
@@ -23,8 +23,23 @@ A screen the user works in all day gets *less* motion than a page they visit onc
 If you cannot say which row of this table the interaction is in, it gets no
 animation.
 
-## M1 The API is four things
+## M1 Pick the shortest API that says it
 
+- **The named transitions** — the three gestures a product repeats, with the
+  distance and the duration already chosen:
+  `slideIn(widget, { direction, distance, duration, easing, fade })`,
+  `slideOut(…)` (the mirror, and the unmount follows it),
+  `popIn(widget, { from, to, duration, easing })`,
+  `shake(widget, { axis, distance, cycles, duration })`. Each returns a cancel
+  function; each has an `…Async` form that resolves with the widget. Use these
+  before reaching for `animate`: they are one call instead of three, and they
+  already obey M7.
+- **The imperative helpers** — `animate(widget, property, from, to, duration, easing)`
+  for one property, `animateAsync` when the next step has to wait, `fadeIn` /
+  `fadeOut` / `pulse` (+ the `…Async` forms), `applyPulse`, and
+  `stopAnimation(widget, property)` for the cleanup you did not keep a handle for.
+  `animateSpring(widget, property, from, to, { stiffness, damping })` when the
+  movement should settle like an object instead of stopping like a timer.
 - **`AnimatedBox`** — declarative keyframes on one child:
   `AnimatedBox({ child, animations: [{ effect, from, to, duration, reverse, loop, delay }], timing, delay, fillMode })`.
 - **`AnimatedText`** — the same steps across the characters of a text, with
@@ -32,18 +47,22 @@ animation.
 - **`ParallaxBox`** — offset driven by input: `type: 'scroll' | 'mouse' | 'hover'`,
   `speed`, `direction: 'vertical' | 'horizontal' | 'both'`, `maxOffset`, `reverse`,
   `disabled`, `onParallaxMove`.
-- **The imperative helpers** — `animate(widget, property, from, to, duration, easing)`
-  which returns a cancel function, `animateAsync` which returns a Promise,
-  `fadeIn` / `fadeOut` / `pulse` (+ the `…Async` forms), `applyPulse`,
-  `stopAnimation(widget, property)`.
 
 Anything else — a hand-written `transition: all`, a CSS library, a `requestAnimationFrame`
-loop in a widget — is a second animation system, and this app already has one.
+loop in a widget — is a second animation system, and this app already has one. A
+hand-rolled loop is also the one way to ship motion that ignores reduced motion,
+because the engine is what reads the preference.
 
 **Effects `AnimatedBox` knows:** `scale`, `rotate`, `rotateX`, `rotateY`,
 `translateX`, `translateY`, `opacity`, `color`, `backgroundColor`, `borderColor`,
 `borderWidth`, `borderRadius`, `width`, `height`, `boxShadow`, `background`,
 `textGradient`. Anything outside that list does nothing, silently.
+
+**Properties `animate()` moves:** the same names, plus any real CSS property
+(`width`, `opacity`, `borderRadius`, `color`…). A number becomes `rem`-scaled
+length pixels, `"#rrggbb"` interpolates as a color, and `"16px"` keeps its unit.
+`translateX`, `translateY` and `scale` are separate loops whose outputs are merged
+into one `transform` string, so an element can slide and grow at the same time.
 
 ## M2 Duration follows the distance, and the interaction
 
@@ -58,31 +77,38 @@ what slow feels like after the third repetition:
 | Menu, dropdown, sheet | 150–250 | `opacity` + `translateY` 8 → 0 |
 | Modal, drawer | 200–400 | `translateX`/`translateY`, never scale |
 | Screen entrance, hero | 300–500 | `opacity` + `translateY` 16 → 0 |
+| Rejected input | 300–360 | `shake`, never a color flash alone |
 | Loading | loop | `Skeleton({ animation: 'wave' })` |
 
 Nothing in the UI exceeds 500ms. A 300ms number on every element is not a design
 decision — it is the default.
 
 ```js
-// A sheet entering: 220ms, distance 24, nothing else.
-AnimatedBox({
-  child: panel,
-  animations: [
-    { effect: 'opacity', from: 0, to: 1, duration: 220 },
-    { effect: 'translateY', from: 24, to: 0, duration: 220 },
-  ],
-});
+// A sheet entering: the whole gesture is one call.
+slideIn(panel, { direction: 'up', distance: 24, duration: 220 });
+
+// …and leaving is the same sentence in the other direction, then the unmount.
+await slideOutAsync(panel, { direction: 'down' });
+panel.remove();
 ```
 
 ## M3 Two easing vocabularies — do not mix them
 
 This is a real trap, and it fails silently:
 
-- **`animate(..., easing)`** takes a *framework name*: `'linear' | 'easeIn' | 'easeOut' |
-  'easeInOut'`. An unrecognized string falls back to `linear`.
+- **`animate(..., easing)`** takes a *framework name* — one of `EASING_NAMES` — or
+  a curve (`cubicBezier(0.2, 0, 0, 1)`, `spring().easing`). An unrecognized string
+  warns and falls back to `linear`.
 - **`AnimatedBox({ timing })` and `ParallaxBox({ easing })`** are passed straight to
   CSS: `'ease' | 'ease-out' | 'ease-in' | 'linear' | 'cubic-bezier(…)'`. `easeIn` in
-  a `timing` string is not a curve CSS knows, and the step runs linear.
+  a `timing` string is not a curve CSS knows, and the step runs linear. `ease-out`
+  in `animate()` is not a framework name, and it runs linear too.
+
+The names the engine knows: `linear`, `easeIn`, `easeOut`, `easeInOut`, the powers
+(`easeOutCubic`, `easeInOutQuart`, `easeOutExpo`, `easeOutCirc` and their `In` /
+`InOut` siblings), the overshoot family (`easeOutBack`, `easeInOutBack`,
+`easeOutElastic`, `easeOutBounce`), and the Material shapes (`standard`,
+`emphasized`, `emphasizedDecelerate`, `emphasizedAccelerate`).
 
 Rules that hold for both:
 
@@ -91,13 +117,23 @@ Rules that hold for both:
 - **Never** `easeIn` on an interface element: it starts slow, so the first 100ms of
   a press feels broken. Save it for something leaving the screen at speed.
 - A loop that has to feel like a machine uses `linear`.
+- Use the overshoot family for one thing per screen at most. `easeOutElastic` on a
+  modal is a toy; on a badge that just arrived it is a highlight.
 - Never `transition: all`, and never animate `width`, `height`, `top`, `left` or
   `boxShadow` for something the user presses repeatedly: they reflow or repaint the
   page. `AnimatedBox` *can* animate them, which is exactly why this rule needs to be
   written down. Transform and opacity are the two properties that cost nothing:
   `scale`, `translateX/Y`, `rotate`, `opacity`.
 - Nothing enters from `scale: 0`, and nothing from full scale on a big element: use
-  **0.9–0.97**. From zero, the element is a dot that pops.
+  **0.9–0.97**. From zero, the element is a dot that pops. That is `popIn`'s default.
+
+```js
+// The curve a stylesheet would use, on the imperative side of the same screen.
+animate(card, 'translateY', 24, 0, 240, cubicBezier(0.2, 0, 0, 1));
+
+// Something the pointer just flicked finishes like an object, not like a timer.
+animateSpring(button, 'scale', 0.96, 1, { stiffness: 260, damping: 20 });
+```
 
 ## M4 Press feedback, done right
 
@@ -112,16 +148,27 @@ onPress: (widget) => animate(widget, 'scale', 1, 0.97, 140, 'easeOut');
 of that is three simultaneous answers to one question. Pick one — and if the color
 change is enough, which it usually is, ship it and move on.
 
+`shake` is not press feedback. It is the answer to "the server said no": 320ms,
+three decaying swings, and it ends at rest so the field does not stay off its
+column. Call it once per rejection, not on every keystroke.
+
+```js
+if (!result.ok) {
+  shake(loginForm, { axis: 'x', distance: 6, cycles: 3 });
+}
+```
+
 ## M5 Entrance and stagger
 
 Motion on first paint is the one place a longer budget is fair, with two limits:
 
 - Stagger **30–80ms** between siblings, and cap the total. `AnimatedText` gives this
-  for free with `delayBetween: 40`; a hand-built list needs `delay` per step, and a
-  list of 20 rows at 60ms each is a 1.2s wait before the content is readable.
-  Animate the first 5–8 items and let the rest appear.
+  for free with `delayBetween: 40`; a hand-built list uses `stagger(index)` —
+  `stagger(3, { step: 60, max: 8 })` stops growing after 8 items, which is the
+  difference between a screen arriving and a screen loading: a list of 20 rows at
+  60ms each is a 1.2s wait before the content is readable.
 - One direction per screen. Elements arriving from the left *and* the bottom *and*
-  scaled is three ideas. A short `translateY` (8–24) plus `opacity` reads as one.
+  scaled is three ideas. `slideIn` is one direction plus opacity, on purpose.
 
 ## M6 Loops, ambient motion and `ParallaxBox`
 
@@ -134,28 +181,59 @@ Motion on first paint is the one place a longer budget is fair, with two limits:
   small (8–24). A background that moves 120px is not depth, it is a screensaver.
 - Ambient motion gets its own budget: one per screen, at most.
 
-## M7 What must never move
+## M7 Reduced motion is decided once, in the engine
 
-- Text the user is reading at length; body copy that animates is copy they re-read.
-- Anything under a pointer or a finger while they aim at it — a control that shifts
-  while being targeted is a control you cannot hit (this is why press feedback scales
-  the element instead of moving it).
-- A field while typing, a list while scrolling, a number while it is being compared.
-- Two things at once in the same region: the last animation started is the one that
-  should win, and `stopAnimation(widget, property)` exists for exactly that.
+The user can ask for no movement, and FletBox listens:
 
-FletBox has no reduced-motion switch. That is not an excuse: build the screen so it
-reads with zero animation, then add motion as a decision you can point at. If the
-motion is only decoration, the honest answer to "respect reduced motion" is to not
-add it.
+- `prefersReducedMotion()` — `true` when they have.
+- `setMotionMode('auto' | 'reduce' | 'full')` — the app's own switch, wired to a
+  settings control; `'auto'` (the default) follows the operating system.
+- `getMotionMode()`, and `onMotionModeChange(reduced => …)` for a widget holding a
+  live loop — it returns the unsubscribe, so release it in `onUnmount`.
+
+What it does to each surface, and why none of it needs a per-screen `if`:
+
+- `animate()` and the named transitions run one frame that **writes the end value**,
+  so the state still lands and an `await` still resolves. Only the movement goes.
+- `AnimatedBox` plays its keyframes once at `0.01ms` with no delay, and `fillMode:
+  'forwards'` leaves the element on its `to` values — content never stays hidden
+  waiting for an animation that was not allowed to run. A `loop` stops looping.
+  The reader can flip the OS setting *while the app is open*: the engine injects one
+  `@media (prefers-reduced-motion: reduce)` rule that overrides every element it
+  animates, so a loop already running stops without a rebuild and without a listener
+  to leak. The factory marks any element it gives an `infinite` animation — a
+  `Skeleton`, a striped `ProgressBar`, a `ListView` spinner — so a loop you write
+  yourself through the `animation` prop is covered too. Nothing in the app has to do
+  anything about it.
+- `ParallaxBox` parks its layer at the origin. `MatrixRain` paints one static field
+  and releases its `requestAnimationFrame`. `applyPulse` does nothing.
+
+```js
+const chooseMotion = (on) => {
+  if (on) return setMotionMode('reduce');
+  return setMotionMode('auto');
+};
+
+// A settings screen hands the decision to the reader, and the engine applies it.
+Switch({ label: 'Reduce motion', value: getMotionMode() === 'reduce', onToggle: chooseMotion });
+```
+
+Build the screen so it reads with zero animation anyway. Motion is a decision you
+can point at, and if it is only decoration the honest answer is to not add it —
+reduced motion is not a second design to maintain, it is the same design with the
+movable parts still.
 
 ## M8 Clean up
 
-An animation is a resource. `animate()` returns a cancel function — hold it and call
-it when the widget unmounts, or call `stopAnimation(widget, property)`. A loop that
-outlives its widget keeps a `requestAnimationFrame` alive and animates a detached
-node forever. A widget that registers timers, listeners or observers releases them in
-its `onUnmount` disposer.
+An animation is a resource. `animate()` and the presets return a cancel function —
+hold it and call it when the widget unmounts, or call `stopAnimation(widget, property)`.
+A loop that outlives its widget keeps a `requestAnimationFrame` alive and animates a
+detached node forever. A widget that registers timers, listeners or observers releases
+them in its `onUnmount` disposer.
+
+Starting a second animation on the same widget and property replaces the first — that
+is the engine, not a bug to work around. Two gestures on one element (`translateY` plus
+`scale`) are two loops and are merged into one `transform`, so they do not fight.
 
 ## M9 The check
 
@@ -166,3 +244,6 @@ its `onUnmount` disposer.
    animation, not to tune it.
 4. Check the frame, not the curve: press a control while something else moves. If
    the press feels delayed, the motion is the cause.
+5. Turn the mode to `'reduce'` and walk the screen. Everything must still arrive,
+   still be readable, still be operable — with nothing moving. That is the test
+   reduced motion asks for, and it is five minutes.

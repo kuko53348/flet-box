@@ -15,6 +15,7 @@
  */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { AnimatedBox } from "../animations/AnimatedBox.js";
+import { prefersReducedMotion } from "./motion.js";
 
 /**
  * Creates a parallax-effect container.
@@ -99,6 +100,20 @@ export const ParallaxBox = (props = {}) => {
    */
   const applyTransform = (x, y, animate = true) => {
     if (disabled) return;
+
+    // A layer that shifts under the reader's own scroll is the motion
+    // `prefers-reduced-motion` exists to stop, and the check belongs here rather
+    // than in the handlers: the OS setting can flip while the screen is open, and
+    // the next scroll frame is the moment that has to notice.
+    if (prefersReducedMotion()) {
+      targetX = 0;
+      targetY = 0;
+      if (animatedContent && animatedContent.style.transform) {
+        animatedContent.style.transform = "translateX(0) translateY(0)";
+        animatedContent.style.transition = "none";
+      }
+      return;
+    }
 
     let moveX = x;
     let moveY = y;

@@ -1364,6 +1364,139 @@
       "await pulseAsync(widget, 300)"
     ]
   },
+  "FletBox widgets EASING_NAMES": {
+    "prefix": "EASING_NAMES",
+    "description": "Make a FletBox widgets EASING_NAMES widget",
+    "body": [
+      "EASING_NAMES.join(\", \")"
+    ]
+  },
+  "FletBox widgets cubicBezier": {
+    "prefix": "cubicBezier",
+    "description": "Make a FletBox widgets cubicBezier widget",
+    "body": [
+      "animate(widget, \"translateY\", 24, 0, 240, cubicBezier(0.2, 0, 0, 1))"
+    ]
+  },
+  "FletBox widgets spring": {
+    "prefix": "spring",
+    "description": "Make a FletBox widgets spring widget",
+    "body": [
+      "const { duration, easing } = spring({ stiffness: 260, damping: 20 })"
+    ]
+  },
+  "FletBox widgets animateSpring": {
+    "prefix": "animateSpring",
+    "description": "Make a FletBox widgets animateSpring widget",
+    "body": [
+      "animateSpring(widget, \"scale\", 0.94, 1, { stiffness: 260, damping: 20 })"
+    ]
+  },
+  "FletBox widgets animateSpringAsync": {
+    "prefix": "animateSpringAsync",
+    "description": "Make a FletBox widgets animateSpringAsync widget",
+    "body": [
+      "await animateSpringAsync(widget, \"translateY\", 24, 0, { damping: 20 })"
+    ]
+  },
+  "FletBox widgets slideIn": {
+    "prefix": "slideIn",
+    "description": "Make a FletBox widgets slideIn widget",
+    "body": [
+      "slideIn(card, { direction: \"up\", distance: 16, duration: 240 })"
+    ]
+  },
+  "FletBox widgets slideInAsync": {
+    "prefix": "slideInAsync",
+    "description": "Make a FletBox widgets slideInAsync widget",
+    "body": [
+      "await slideInAsync(panel, { direction: \"left\", distance: 24 })"
+    ]
+  },
+  "FletBox widgets slideOut": {
+    "prefix": "slideOut",
+    "description": "Make a FletBox widgets slideOut widget",
+    "body": [
+      "slideOut(card, { direction: \"down\", distance: 12 })"
+    ]
+  },
+  "FletBox widgets slideOutAsync": {
+    "prefix": "slideOutAsync",
+    "description": "Make a FletBox widgets slideOutAsync widget",
+    "body": [
+      "await slideOutAsync(dialog)"
+    ]
+  },
+  "FletBox widgets popIn": {
+    "prefix": "popIn",
+    "description": "Make a FletBox widgets popIn widget",
+    "body": [
+      "popIn(badge, { from: 0.94, duration: 180 })"
+    ]
+  },
+  "FletBox widgets popInAsync": {
+    "prefix": "popInAsync",
+    "description": "Make a FletBox widgets popInAsync widget",
+    "body": [
+      "await popInAsync(toast, { fade: true })"
+    ]
+  },
+  "FletBox widgets shake": {
+    "prefix": "shake",
+    "description": "Make a FletBox widgets shake widget",
+    "body": [
+      "shake(loginForm, { axis: \"x\", distance: 6, cycles: 3 })"
+    ]
+  },
+  "FletBox widgets shakeAsync": {
+    "prefix": "shakeAsync",
+    "description": "Make a FletBox widgets shakeAsync widget",
+    "body": [
+      "await shakeAsync(field, { axis: \"x\" })"
+    ]
+  },
+  "FletBox widgets prefersReducedMotion": {
+    "prefix": "prefersReducedMotion",
+    "description": "Make a FletBox widgets prefersReducedMotion widget",
+    "body": [
+      "if (!prefersReducedMotion()) slideIn(card, { distance: 16 })"
+    ]
+  },
+  "FletBox widgets setMotionMode": {
+    "prefix": "setMotionMode",
+    "description": "Make a FletBox widgets setMotionMode widget",
+    "body": [
+      "setMotionMode(\"reduce\")"
+    ]
+  },
+  "FletBox widgets getMotionMode": {
+    "prefix": "getMotionMode",
+    "description": "Make a FletBox widgets getMotionMode widget",
+    "body": [
+      "getMotionMode()"
+    ]
+  },
+  "FletBox widgets onMotionModeChange": {
+    "prefix": "onMotionModeChange",
+    "description": "Make a FletBox widgets onMotionModeChange widget",
+    "body": [
+      "const stopListening = onMotionModeChange((reduced) => console.log(reduced))"
+    ]
+  },
+  "FletBox widgets motionDuration": {
+    "prefix": "motionDuration",
+    "description": "Make a FletBox widgets motionDuration widget",
+    "body": [
+      "const ms = motionDuration(240)"
+    ]
+  },
+  "FletBox widgets stagger": {
+    "prefix": "stagger",
+    "description": "Make a FletBox widgets stagger widget",
+    "body": [
+      "const delay = stagger(3, { start: 0, step: 60, max: 8 })"
+    ]
+  },
   "FletBox widgets id": {
     "prefix": "id",
     "description": "Make a FletBox widgets id widget",
