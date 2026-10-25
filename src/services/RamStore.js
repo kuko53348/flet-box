@@ -37,9 +37,8 @@ const notifySubscribers = (key, newValue, oldValue) => {
 export const saveRam = (key, value) => {
   try {
     const oldValue = ramStore.get(key);
-    const result = ramStore.set(key, value);
+    ramStore.set(key, value);
     notifySubscribers(key, value, oldValue);
-    // console.log(`[RamStore] saved: ${key} =`, value);
     return true;
   } catch (error) {
     console.error("Error saving to RAM:", error);

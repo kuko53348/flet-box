@@ -78,7 +78,6 @@ export const Drawer = (props = {}) => {
     closeOnEsc = true,
     borderRadius = 24,
     margin = 0,
-    ...rest
   } = props;
 
   const element = document.createElement("div");

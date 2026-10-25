@@ -1,7 +1,5 @@
 // src/components/flet-box/tools/createList.js
 
-import { random } from "./random.js";
-
 /**
  * Creates a list of items with generated data
  * @module tools/createList

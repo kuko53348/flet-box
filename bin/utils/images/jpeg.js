@@ -338,7 +338,7 @@ export const decodeJpeg = (buf) => {
 const decodeScan = (scan, ctx) => {
   const { buf, components, width, height, maxH, maxV, block, scratch } = ctx;
   const { restartInterval, tables: { quant, dc, ac } } = scan;
-  const specs = readScanHeader(scan.payload, components.length);
+  const specs = readScanHeader(scan.payload);
   if (specs.length !== components.length && specs.length !== 1) {
     throw new Error(`JPEG scan covers ${specs.length} of ${components.length} components, which is neither interleaved nor single-component`);
   }
@@ -558,11 +558,10 @@ const readDht = (payload, dc, ac) => {
  * scan.
  *
  * @param {Buffer} payload
- * @param {number} componentCount
  * @returns {{ id: number, tables: number }[]} Component specifiers, in scan order.
  * @throws {UnsupportedImage} For a progressive or refined scan.
  */
-const readScanHeader = (payload, componentCount) => {
+const readScanHeader = (payload) => {
   const count = payload[0];
   if (payload.length < 4 + count * 2) throw new Error("JPEG scan header is truncated");
   const specs = [];

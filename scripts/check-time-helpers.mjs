@@ -46,7 +46,7 @@ const ZONES = [
 const TIME_NAMES = "seconds minutes hours days weeks months years now today yesterday tomorrow dayOfWeek monthName isToday isYesterday isTomorrow isWeekend isLeapYear formatDate formatDateLong formatDateShort formatTime formatTimeAmPm parseDate dateDiff addDays addHours addMinutes addSeconds subtractDays subtractHours subtractMinutes subtractSeconds timeAgo relativeTime timeAgoLocale waitFor wait sleep waitUntil waitForElement timer every everySecond everyMinute everyHour everyDay".split(" ");
 const STRING_NAMES = "startsWith endsWith includes split join trim capitalize capitalizeWords lowerCase upperCase reverseString truncate".split(" ");
 
-const run = async (zone, out) => {
+const run = async (out) => {
   const F = await import(path.join(repoRoot, "src/index.js"));
   const time = await import(path.join(repoRoot, "src/tools/time.js"));
   const string = await import(path.join(repoRoot, "src/tools/string.js"));
@@ -194,7 +194,7 @@ const main = async () => {
   // name that crashed.
   const out = [];
   try {
-    await run(zone, out);
+    await run(out);
   } catch (err) {
     out.push(`threw in ${zone}: ${String(err.message).split("\n")[0]}`);
   }

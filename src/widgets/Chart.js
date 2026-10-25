@@ -364,7 +364,6 @@ export const Chart = (props) => {
    * Draws a candlestick chart onto the canvas context.
    *
    * @param {CanvasRenderingContext2D} ctx
-   * @param {number} canvasWidth
    * @param {number} chartHeight
    * @param {number} maxValue
    * @param {number} minValue
@@ -373,7 +372,6 @@ export const Chart = (props) => {
    */
   const drawCandle = (
     ctx,
-    canvasWidth,
     chartHeight,
     maxValue,
     minValue,
@@ -534,7 +532,6 @@ export const Chart = (props) => {
     } else if (type === "candle") {
       drawCandle(
         context,
-        canvasWidth,
         chartHeight,
         maxValue,
         minValue,

@@ -40,8 +40,6 @@ export const Tooltip = (props) => {
     borderColor = "transparent",
     borderWidth = 0,
     shadow = "0 2px 8px rgba(0,0,0,0.15)",
-
-    ...rest
   } = props;
 
   if (!child) return null;

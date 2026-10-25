@@ -1,5 +1,4 @@
 // core/runApp.js
-import { stopWebRefresh } from "../utils/stopWebRefresh.js";
 import { initRouter } from "../navigations/Router.js"; // ← IMPORTANT: add this line
 import {
   applySystemTheme,
@@ -37,11 +36,6 @@ export const runApp = (
 ) => {
   const root = document.getElementById(rootId);
   if (!root) return;
-
-  // If preventRefresh is true (default), we disable refreshes
-  // if (preventRefresh) {
-  //     stopWebRefresh();
-  // }
 
   let currentMainContainer = null;
   let unsubscribeTheme = null;

@@ -3,7 +3,6 @@
  * @description PWA install prompt button; hidden unless install is available.
  */
 import { Button } from "./Button.js";
-import { colors } from "../utils/themes.js";
 
 export const InstallButton = (props) => {
   const {

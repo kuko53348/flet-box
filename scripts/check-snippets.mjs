@@ -64,6 +64,21 @@ const SNIPPET_FILES = [
   "FletBox_modules_widgets.json",
 ];
 
+/**
+ * Reads one snippet file once. A malformed file is a finding, not a crash: the
+ * checker has to survive being the thing that tells you the file is malformed.
+ * The later aggregate-drift pass re-reads these files, so it uses this map
+ * instead of parsing them a second time outside a try block.
+ */
+const readJson = (file) => {
+  try {
+    return { data: JSON.parse(readFileSync(join(snippetDir, file), "utf8")), error: null };
+  } catch (err) {
+    return { data: null, error: err.message };
+  }
+};
+const parsedFiles = new Map(SNIPPET_FILES.map((file) => [file, readJson(file)]));
+
 // ---------------------------------------------------------------------------
 // 1. The published API: exports + prop registry
 // ---------------------------------------------------------------------------
@@ -347,7 +362,6 @@ const findings = {
   uncoveredExport: [],
   uncoveredProp: [],
 };
-const prefixOwner = new Map();
 const allPrefixes = new Map(); // prefix -> Set<file>
 const allBodies = []; // every snippet body, used for the coverage tiers below
 const writtenKeys = new Set(); // prop keys written somewhere in the library
@@ -362,11 +376,9 @@ const headlineOf = (masked, prefix) => {
 };
 
 for (const file of SNIPPET_FILES) {
-  let data;
-  try {
-    data = JSON.parse(readFileSync(join(snippetDir, file), "utf8"));
-  } catch (err) {
-    findings.unparsable.push({ file, detail: err.message });
+  const { data, error } = parsedFiles.get(file);
+  if (error) {
+    findings.unparsable.push({ file, detail: error });
     continue;
   }
 
@@ -436,28 +448,36 @@ for (const file of SNIPPET_FILES) {
 // The aggregate file is what the editor actually loads: it must contain exactly
 // the union of the category files, or a fix applied to a category file silently
 // stops reaching users.
-const categoryPrefixes = new Set(
-  SNIPPET_FILES.filter((f) => f !== aggregate).flatMap((f) =>
-    Object.keys(JSON.parse(readFileSync(join(snippetDir, f), "utf8"))),
-  ),
-);
-const aggregateKeys = new Set(Object.keys(JSON.parse(readFileSync(join(snippetDir, aggregate), "utf8"))));
-for (const k of categoryPrefixes) if (!aggregateKeys.has(k)) findings.aggregateDrift.push({ file: aggregate, key: k, issue: "missing from aggregate" });
-for (const k of aggregateKeys) if (!categoryPrefixes.has(k)) findings.aggregateDrift.push({ file: aggregate, key: k, issue: "only in aggregate" });
-
-// Same key with a different body means the aggregate the editor loads was built
-// from another revision of the category file.
 const bodyOf = (data, key) => {
   const b = data[key]?.body;
   return (Array.isArray(b) ? b.join("\n") : String(b || "")).trim();
 };
-const aggregateData = JSON.parse(readFileSync(join(snippetDir, aggregate), "utf8"));
-for (const file of SNIPPET_FILES.filter((f) => f !== aggregate)) {
-  const data = JSON.parse(readFileSync(join(snippetDir, file), "utf8"));
-  for (const key of Object.keys(data)) {
-    if (!aggregateKeys.has(key)) continue;
-    if (bodyOf(data, key) !== bodyOf(aggregateData, key)) {
-      findings.aggregateDrift.push({ file: aggregate, key, issue: `body differs from ${file}` });
+const categoryFiles = SNIPPET_FILES.filter((f) => f !== aggregate);
+const aggregateEntry = parsedFiles.get(aggregate);
+const unreadableCategory = categoryFiles.find((f) => parsedFiles.get(f).error);
+
+// A drift verdict needs every file. With one unreadable, its keys would look
+// "missing from the category union" when the truth is that the file was never
+// read, so the report would name the wrong problem. UNPARSABLE already names
+// the file; skip the comparison instead of inventing drift on top of it.
+if (!aggregateEntry.error && !unreadableCategory) {
+  const aggregateData = aggregateEntry.data;
+  const categoryPrefixes = new Set(
+    categoryFiles.flatMap((f) => Object.keys(parsedFiles.get(f).data)),
+  );
+  const aggregateKeys = new Set(Object.keys(aggregateData));
+  for (const k of categoryPrefixes) if (!aggregateKeys.has(k)) findings.aggregateDrift.push({ file: aggregate, key: k, issue: "missing from aggregate" });
+  for (const k of aggregateKeys) if (!categoryPrefixes.has(k)) findings.aggregateDrift.push({ file: aggregate, key: k, issue: "only in aggregate" });
+
+  // Same key with a different body means the aggregate the editor loads was built
+  // from another revision of the category file.
+  for (const file of categoryFiles) {
+    const data = parsedFiles.get(file).data;
+    for (const key of Object.keys(data)) {
+      if (!aggregateKeys.has(key)) continue;
+      if (bodyOf(data, key) !== bodyOf(aggregateData, key)) {
+        findings.aggregateDrift.push({ file: aggregate, key, issue: `body differs from ${file}` });
+      }
     }
   }
 }
@@ -600,6 +620,6 @@ for (const [name, rows] of Object.entries(groups)) {
 }
 
 console.log(
-  `\nSummary: SYNTAX=${groups.SYNTAX.length} BROKEN_IMPORT=${groups.BROKEN_IMPORT.length} DEAD_SNIPPET=${groups.DEAD_SNIPPET.length} UNKNOWN_PROP=${groups.UNKNOWN_PROP.length} POSITIONAL_ARG=${groups.POSITIONAL_ARG.length} BROKEN_CALL=${groups.BROKEN_CALL.length} DUPLICATE_PREFIX=${groups.DUPLICATE_PREFIX.length} AGGREGATE_DRIFT=${groups.AGGREGATE_DRIFT.length} UNCOVERED_EXPORT=${groups.UNCOVERED_EXPORT.length} UNCOVERED_PROP=${groups.UNCOVERED_PROP.length}`,
+  `\nSummary: SYNTAX=${groups.SYNTAX.length} BROKEN_IMPORT=${groups.BROKEN_IMPORT.length} DEAD_SNIPPET=${groups.DEAD_SNIPPET.length} UNKNOWN_PROP=${groups.UNKNOWN_PROP.length} POSITIONAL_ARG=${groups.POSITIONAL_ARG.length} BROKEN_CALL=${groups.BROKEN_CALL.length} DUPLICATE_PREFIX=${groups.DUPLICATE_PREFIX.length} AGGREGATE_DRIFT=${groups.AGGREGATE_DRIFT.length} UNPARSABLE=${groups.UNPARSABLE.length} UNCOVERED_EXPORT=${groups.UNCOVERED_EXPORT.length} UNCOVERED_PROP=${groups.UNCOVERED_PROP.length}`,
 );
 process.exit(blockingCount() ? 1 : 0);

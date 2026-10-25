@@ -358,7 +358,6 @@ export const goTo = (path, params = {}) => {
     console.error(`Route "${cleanPathStr}" does not exist`);
     // Graceful fallback to a wildcard or 404 route when defined.
     if (routes["*"] || routes["/404"]) {
-      const notFoundRoute = routes["*"] || routes["/404"];
       currentPath = "*";
       currentParams = {};
       currentQuery = {};

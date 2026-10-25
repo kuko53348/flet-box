@@ -194,7 +194,6 @@ function implPath(name) {
  * `ListView`, so a prop GridView spreads is not dead just because the word never
  * appears in `GridView.js`.
  */
-const reachableCache = new Map();
 function reachableText(name, seen = new Set()) {
   if (seen.has(name)) return "";
   seen.add(name);

@@ -173,9 +173,6 @@ export const panel = (title, subtitle = "", { minW = 62 } = {}) => {
 export const banner = (title, subtitle = "", opts = {}) =>
   panel(title, subtitle, opts);
 
-export const badge = (icon, text, color = "brightCyan") =>
-  `  ${c(color, icon + " " + text)}`;
-
 // Status dot (green by default, red/amber for failures/warnings)
 export const dot = (color = "#34d399") => hex("●", color);
 
@@ -207,9 +204,4 @@ export const setupCtrlC = () => {
     console.log(`\n\n${rainbow("👋 Bye!")}\n`);
     process.exit(0);
   });
-};
-
-// Show help message for Ctrl+C
-export const showExitHint = () => {
-  console.log(`${c("gray", "Press Ctrl+C to exit")}`);
 };

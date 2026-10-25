@@ -73,8 +73,3 @@ export const execCmd = (cmd) => {
     return false;
   }
 };
-
-// Fixed: Now returns actual package path
-export const getPackagePath = () => {
-  return path.join(process.cwd(), "node_modules", "flet-box");
-};

@@ -57,8 +57,6 @@ export const BottomSheet = (props) => {
     // Callbacks
     onOpen,
     onClose,
-
-    ...rest
   } = props;
 
   let isOpen = false;

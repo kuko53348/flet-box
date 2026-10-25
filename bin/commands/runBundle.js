@@ -10,7 +10,7 @@
 
 import { createBundle } from "./createBundle.js";
 import { runDevServer } from "./runServer.js";
-import { c, banner, gradient, dot } from "../utils/colors.js";
+import { c, banner, dot } from "../utils/colors.js";
 
 /**
  * Builds the project bundle and serves it with a static dev server.

@@ -21,13 +21,11 @@ export const Skeleton = (props) => {
     // Color props for consistency
     bgColor = colors.gray200,
     highlightColor = colors.gray100,
-    shimmerColor = colors.gray300,
+    shimmerColor,
 
     // Animation timing
     pulseDuration = "1.5s",
     waveDuration = "1.5s",
-
-    ...rest
   } = props;
 
   // Default dimensions based on variant
@@ -70,11 +68,14 @@ export const Skeleton = (props) => {
       };
     }
     if (animation === "wave") {
+      // `shimmerColor` names the band the wave carries; `highlightColor` is the
+      // token it falls back to, so either prop alone paints the shimmer.
+      const band = shimmerColor ?? highlightColor;
       return {
         // `gradient` and `bgSize` are the registered names for `background` and
         // `background-size`. A raw CSS name still paints — the factory falls back
         // to writing it as an inline style — but warns on every placeholder built.
-        gradient: `linear-gradient(90deg, ${bgColor} 25%, ${highlightColor} 50%, ${bgColor} 75%)`,
+        gradient: `linear-gradient(90deg, ${bgColor} 25%, ${band} 50%, ${bgColor} 75%)`,
         bgSize: "200% 100%",
         animation: `skeleton-wave ${waveDuration} ease-in-out infinite`,
       };

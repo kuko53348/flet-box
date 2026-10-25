@@ -76,12 +76,6 @@ export const endRenderPass = () => {
  */
 export const isStructuralRead = (key) => structuralKeys.has(key);
 
-/** Forgets every observed key. Used by hot-reload teardown. */
-export const resetStructuralReads = () => {
-  structuralKeys = new Set();
-  passKeys = renderPassDepth > 0 ? new Set() : null;
-};
-
 /**
  * True when `val` is a reactive value (live or snapshot).
  *
@@ -166,7 +160,6 @@ export default {
   resolveReactive,
   createReactiveValue,
   isStructuralRead,
-  resetStructuralReads,
   beginRenderPass,
   endRenderPass,
 };

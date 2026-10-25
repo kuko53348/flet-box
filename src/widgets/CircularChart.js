@@ -390,7 +390,7 @@ export const CircularChart = (props) => {
     if (animationId) cancelAnimationFrame(animationId);
     if (!ctx || !canvas) return;
     if (data && data.length > 0) {
-      currentData = data.map((d) => 0);
+      currentData = data.map(() => 0);
     } else {
       currentData = [];
     }

@@ -144,8 +144,6 @@ export const Scaffold = (props) => {
   let rightNavBarContainer = null;
   let mainContentContainer = null;
 
-  let currentAppBar = null;
-
   /**
    * Removes all direct children from a container, calling their `_cleanup`
    * hook first to release subscriptions and event listeners.
@@ -201,7 +199,6 @@ export const Scaffold = (props) => {
         : toElement(cfg);
     if (widget) {
       appBarContainer.appendChild(widget);
-      currentAppBar = widget;
       // Auto-wire the first Material Icons "menu" icon to open the drawer,
       // so callers don't need to pass an explicit onPress handler.
       if (drawer && drawerInstance) {

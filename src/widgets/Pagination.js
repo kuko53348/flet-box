@@ -2,7 +2,6 @@
  * @file Pagination.js
  * @description Page-number control built from Buttons inside a Row.
  */
-import { WidgetFactory } from "../widget-factory/index.js";
 import { Row } from "./Row.js";
 import { Button } from "./Button.js";
 import { Text } from "./Text.js";

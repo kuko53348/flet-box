@@ -322,8 +322,6 @@ export const Modal = (props = {}) => {
     // Callbacks
     onOpen,
     onClose,
-
-    ...rest
   } = props;
 
   let isOpen = false;

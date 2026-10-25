@@ -58,12 +58,4 @@ export const print = (message, type = "log", options = {}) => {
   console[config.method](finalMessage);
 };
 
-// Shorthand aliases (uncomment to enable individual exports):
-// export const log = (msg) => print(msg, "log");
-// export const warn = (msg) => print(msg, "warn");
-// export const error = (msg) => print(msg, "error");
-// export const info = (msg) => print(msg, "info");
-// export const success = (msg) => print(msg, "success");
-// export const debug = (msg) => print(msg, "debug");
-
 export default print;

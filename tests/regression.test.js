@@ -7,7 +7,8 @@
 //   - ListView.updateData() recursed until the stack overflowed;
 //   - DataTable.updateData() threw on the second call and updateColumns() wiped rows;
 //   - SnackBar.close() fired onClose once per call instead of exactly once;
-//   - AnimatedBox appended a permanent <style> on every call.
+//   - AnimatedBox appended a permanent <style> on every call;
+//   - Skeleton documented a `shimmerColor` it never read.
 //
 // It publishes `window.__REGRESSION = { pass, fail, results }`.
 import * as W from "../src/widgets/index.js";
@@ -3311,6 +3312,28 @@ async function run() {
     ]);
     ok(settled === false, `a dead stylesheet resolved ${settled}, expected false`);
     ok(await fontsReady() === true, "fontsReady() did not settle in the browser");
+  });
+
+  await t("Skeleton: a documented shimmerColor paints the wave band", async () => {
+    const band = (props) => {
+      const root = mount(W.Skeleton({ animation: "wave", ...props }));
+      const painted = getComputedStyle(root.firstElementChild).backgroundImage;
+      root.remove();
+      return painted;
+    };
+    ok(
+      band({ shimmerColor: "#ff0000" }).includes("rgb(255, 0, 0)"),
+      "shimmerColor never reached the gradient",
+    );
+    ok(
+      band({ highlightColor: "#00ff00" }).includes("rgb(0, 255, 0)"),
+      "highlightColor stopped painting the band",
+    );
+    const both = band({ highlightColor: "#00ff00", shimmerColor: "#0000ff" });
+    ok(
+      both.includes("rgb(0, 0, 255)") && !both.includes("rgb(0, 255, 0)"),
+      "shimmerColor did not win over highlightColor",
+    );
   });
 
   // ------------------------------------------------------------------ report

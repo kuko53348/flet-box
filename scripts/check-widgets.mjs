@@ -116,7 +116,6 @@ const baseline = existsSync(baselinePath)
 
 const newViolations = [];
 const staleBaseline = [];
-const errors = [];
 
 for (const [file, failing] of Object.entries(violations)) {
   const allowed = new Set(baseline[file] || []);

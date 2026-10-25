@@ -709,54 +709,6 @@ echo "Press Ctrl+C to stop"
 python3 -m http.server $PORT --bind $BIND
 `;
 
-export const createBundleSh = (target = "www") => `#!/bin/bash
-# createBundle.sh — Bundle UNIFICADO a \${TARGET}/ (un solo app.js + PWA)
-# Uso: bash createBundle.sh [target]
-set -euo pipefail
-cd "\$(dirname "\$0")"
-TARGET="\${1:-${target}}"
-
-if ! npx --no-install esbuild --version >/dev/null 2>&1; then
-    echo "📦 Instalando esbuild (devDependency)…"
-    npm install --save-dev esbuild >/dev/null
-fi
-
-rm -rf "\$TARGET"
-mkdir -p "\$TARGET/src" "\$TARGET/assets"
-
-# Root static files (PWA + preview)
-for f in index.html manifest.json run.sh service-worker.js; do
-    [ -f "\$f" ] && cp "\$f" "\$TARGET/"
-done
-[ -f "\$TARGET/run.sh" ] && chmod +x "\$TARGET/run.sh"
-
-# Assets: iconos PWA + fuentes de iconos
-if [ -d "src/assets" ]; then
-    cp -R src/assets/. "\$TARGET/src/assets/"
-    cp -R src/assets/. "\$TARGET/assets/"
-fi
-
-# CSS global (lo carga index.html)
-if [ -f "src/styles/global.css" ]; then
-    mkdir -p "\$TARGET/src/styles"
-    cp src/styles/global.css "\$TARGET/src/styles/"
-fi
-
-# BUNDLE UNIFICADO: flet-box + widgets en UN solo app.js
-echo "📦 Bundling (esbuild + tree-shaking)…"
-npx esbuild src/app.js \\
-    --bundle --outfile="\$TARGET/src/app.js" --format=esm --minify \\
-    --tree-shaking=true --target=es2020 --define:FLETBOX_DEV=false \\
-    --external:*.css --external:*.woff2 --resolve-extensions=.js,.json
-
-# App source code (required by the "View code" button)
-for d in modules screens database components; do
-    [ -d "src/\$d" ] && cp -R "src/\$d" "\$TARGET/src/"
-done
-
-echo "✅ Bundle listo: \$TARGET/   Prueba: cd \$TARGET && bash run.sh"
-`;
-
 export const serviceWorkerJs = () => `// service-worker.js - PWA offline support
 const CACHE_NAME = 'fletbox-v2';
 // Deployment prefix: a worker's own URL always sits at the app root, so this

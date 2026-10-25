@@ -1,7 +1,6 @@
 // navigations/CollapsibleSideBar.js
 import { WidgetFactory } from "../widget-factory/index.js";
 import { Container } from "../widgets/Container.js";
-import { Column } from "../widgets/Column.js";
 import { Icon } from "../widgets/Icon.js";
 import { useState } from "../tools/useState.js";
 import { colors } from "../utils/themes.js";

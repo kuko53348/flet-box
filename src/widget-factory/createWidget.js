@@ -16,10 +16,9 @@ import { ensureFocusRing } from "../utils/focusRing.js";
  *
  * @param {string} tag - HTML tag name for the widget.
  *   Defaults to `'div'` when the value is not a string.
- * @param {Object} props - Reserved for future use; currently unused.
  * @returns {HTMLElement} The newly created DOM element with `_events` initialised.
  */
-export const createWidget = (tag, props) => {
+export const createWidget = (tag) => {
   ensureFocusRing();
 
   // Validateste that tag is a string; fall back to 'div' when it is not.

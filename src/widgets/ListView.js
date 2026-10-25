@@ -78,12 +78,6 @@ export const ListView = (props) => {
     ...rest
   } = props;
 
-  // When expand is true the widget fills its flex parent, ignoring the fixed height prop
-  let finalHeight = height;
-  if (expand) {
-    finalHeight = "100%";
-  }
-
   // Outer element — owns the overall dimensions
   const element = WidgetFactory({
     tag: "div",

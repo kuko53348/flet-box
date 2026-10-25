@@ -282,7 +282,7 @@ export const Rating = (props) => {
         }
         touchActive = false;
       });
-      wrapper.addEventListener("touchcancel", (e) => {
+      wrapper.addEventListener("touchcancel", () => {
         wrapper.style.transform = "scale(1)";
         restoreFromPreview();
         touchActive = false;

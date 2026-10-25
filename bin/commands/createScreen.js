@@ -10,7 +10,7 @@
 
 import fs from "fs";
 import path from "path";
-import { c, banner, gradient, rainbow, section } from "../utils/colors.js";
+import { c, gradient, rainbow, section } from "../utils/colors.js";
 
 /**
  * Returns the source code for a new FletBox screen module.

@@ -98,19 +98,6 @@ const SH = {
 };
 
 /**
- * Wraps `text` in a `<span>` with the given color, HTML-escaping the content.
- * Returns plain escaped text when `color` is falsy.
- *
- * @param {string} text
- * @param {string} [color]
- * @returns {string}
- */
-const shSpan = (text, color) => {
-  const safe = escapeHtml(text);
-  return color ? `<span style="color:${color}">${safe}</span>` : safe;
-};
-
-/**
  * Applies a sequence of `[regex, color]` replacement rules to `line`, escaping
  * every character that is NOT inside a match so raw `<`/`>` cannot break the
  * surrounding `<code>` element.
@@ -195,8 +182,6 @@ const RULES_JSON = [
   [/(-?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?)/, SH.number],
   [/([{}[\]:,])/, SH.punctuation],
 ];
-
-const RULES_TS = RULES_PYTHON; // TypeScript re-uses the applyRules path below via JS highlighter override
 
 /**
  * Highlights one source line using the appropriate language highlighter.

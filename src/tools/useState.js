@@ -3,7 +3,6 @@ import { saveRam, getRam, subscribeRam } from "../services/RamStore.js";
 import {
   createReactiveValue,
   isStructuralRead,
-  resetStructuralReads,
 } from "../widget-factory/reactiveValue.js";
 
 // Store callbacks for each state key
@@ -57,7 +56,7 @@ const ensureRamDispatcher = () => {
   if (ramDispatcherReady) return;
   ramDispatcherReady = true;
 
-  const unsubscribe = subscribeRam((changedKey, newValue, oldValue) => {
+  subscribeRam((changedKey, newValue, oldValue) => {
     const callbacks = subscribers.get(changedKey);
     // A key nobody ever passed to `useState` has no listeners: ignore it.
     if (!callbacks) return;
@@ -83,11 +82,6 @@ const ensureRamDispatcher = () => {
     // list): the surgical patch above cannot change what the component computes.
     if (handled === 0 || isStructuralRead(changedKey)) triggerRender();
   });
-
-  if (typeof window !== "undefined") {
-    if (!window._useStateCleanups) window._useStateCleanups = [];
-    window._useStateCleanups.push(unsubscribe);
-  }
 };
 
 /**
@@ -248,53 +242,6 @@ export const useWatchState = (key, callback) => {
   subscribers.get(key).add(callback);
   return () => {
     subscribers.get(key)?.delete(callback);
-  };
-};
-
-/**
- * Cleans up all state subscriptions, widget registrations, and pending render
- * timers. Should be called during hot-reload to reset the module to a clean state.
- *
- * @returns {void}
- */
-export const cleanupUseState = () => {
-  if (window._useStateCleanups) {
-    window._useStateCleanups.forEach((cleanup) => {
-      if (typeof cleanup === "function") cleanup();
-    });
-    window._useStateCleanups = [];
-  }
-  subscribers.clear();
-  widgetsByKey.clear();
-  resetStructuralReads();
-  // The dispatcher was unsubscribed above, so a later call must reinstall it.
-  ramDispatcherReady = false;
-  globalRender = null;
-  if (renderTimeout) clearTimeout(renderTimeout);
-};
-
-/**
- * Returns diagnostic statistics about the current state of the useState module.
- * Useful for debugging subscription leaks or widget registration issues.
- *
- * @returns {{ stateKeys: number, boundWidgets: number, watchers: number, globalRender: boolean }}
- */
-export const getUseStateStats = () => {
-  // `widgetsByKey` maps key -> widget -> prop names, so its size is the number of
-  // watched *keys*, not of widgets. Count one per widget.
-  let boundWidgets = 0;
-  let watchers = 0;
-  widgetsByKey.forEach((perWidget) => {
-    boundWidgets += perWidget.size;
-  });
-  subscribers.forEach((callbacks) => {
-    watchers += callbacks.size;
-  });
-  return {
-    stateKeys: subscribers.size,
-    boundWidgets,
-    watchers,
-    globalRender: !!globalRender,
   };
 };
 

@@ -104,7 +104,7 @@ export function WidgetFactory(tag, customProps = {}) {
   // ============================================================
   // 3. CREATE BASE WIDGET
   // ============================================================
-  const widget = createWidget(finalTag, {});
+  const widget = createWidget(finalTag);
   widget._widgetName = widgetName;
   widget._updating = false;
   widget._events = [];

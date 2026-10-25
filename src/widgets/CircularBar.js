@@ -78,7 +78,6 @@ export const CircularBar = (props) => {
   let resizeObserver = null;
   let container = null;
   let currentWidth = 0;
-  let isHovering = false;
 
   const isFixedSize = size !== null && size !== undefined;
   const fixedSize = isFixedSize ? size : 200;
@@ -297,7 +296,7 @@ export const CircularBar = (props) => {
   const setupEvents = () => {
     if (!canvas) return;
     if (onClick)
-      canvas.addEventListener("click", (e) =>
+      canvas.addEventListener("click", () =>
         onClick({
           value: currentValue,
           max,
@@ -306,11 +305,9 @@ export const CircularBar = (props) => {
       );
     if (onHover) {
       canvas.addEventListener("mouseenter", () => {
-        isHovering = true;
         onHover(true, { value: currentValue, max });
       });
       canvas.addEventListener("mouseleave", () => {
-        isHovering = false;
         onHover(false);
       });
     }

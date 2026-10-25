@@ -14,7 +14,6 @@
  * @module animations/ParallaxBox
  */
 import { WidgetFactory } from "../widget-factory/index.js";
-import { AnimatedBox } from "../animations/AnimatedBox.js";
 import { prefersReducedMotion } from "./motion.js";
 
 /**
@@ -66,10 +65,6 @@ export const ParallaxBox = (props = {}) => {
 
   let containerRef = null;
   let animationFrame = null;
-  let currentX = 0;
-  let currentY = 0;
-  let targetX = 0;
-  let targetY = 0;
   let animatedContent = null;
   let initialTimer = null;
   const transitionTimers = new Set();
@@ -106,8 +101,6 @@ export const ParallaxBox = (props = {}) => {
     // than in the handlers: the OS setting can flip while the screen is open, and
     // the next scroll frame is the moment that has to notice.
     if (prefersReducedMotion()) {
-      targetX = 0;
-      targetY = 0;
       if (animatedContent && animatedContent.style.transform) {
         animatedContent.style.transform = "translateX(0) translateY(0)";
         animatedContent.style.transition = "none";
@@ -128,9 +121,6 @@ export const ParallaxBox = (props = {}) => {
 
     moveX = Math.max(-maxOffset, Math.min(maxOffset, moveX));
     moveY = Math.max(-maxOffset, Math.min(maxOffset, moveY));
-
-    targetX = moveX;
-    targetY = moveY;
 
     if (onParallaxMove) onParallaxMove({ x: moveX, y: moveY });
 
@@ -159,8 +149,6 @@ export const ParallaxBox = (props = {}) => {
    * @returns {void}
    */
   const resetTransform = (animate = true) => {
-    targetX = 0;
-    targetY = 0;
     if (animatedContent) {
       animatedContent.style.transform = "translateX(0) translateY(0)";
       if (animate) {

@@ -88,11 +88,11 @@ const SOURCES = [
 const STYLE_WRITE =
   /(?:^|[^\w$.])([\w$.]+)\.style\.([A-Za-z][\w-]*)\s*=\s*([^;\n]+)|\.style\.setProperty\(\s*["']([\w-]+)["']\s*,\s*([^;\n)]+)/g;
 
-const hitsFor = (src, file) => {
+const hitsFor = (src) => {
   const hits = [];
   const clean = withoutComments(src);
   const lines = clean.split("\n");
-  lines.forEach((line, i) => {
+  lines.forEach((line) => {
     STYLE_WRITE.lastIndex = 0;
     let m;
     while ((m = STYLE_WRITE.exec(line))) {
@@ -119,7 +119,7 @@ const listAll = args.includes("--list");
 const files = SOURCES.flatMap(collectFiles).sort();
 const found = {};
 for (const file of files) {
-  const hits = hitsFor(readFileSync(file, "utf8"), file);
+  const hits = hitsFor(readFileSync(file, "utf8"));
   if (hits.length) found[relative(root, file).split("\\").join("/")] = hits;
 }
 

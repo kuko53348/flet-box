@@ -61,7 +61,7 @@ const say = (ok, label) => {
 
 try {
   const lines = [];
-  const { findings } = await checkApi(["--root", dir, "--json"], {
+  await checkApi(["--root", dir, "--json"], {
     print: (line) => lines.push(line),
   });
   const json = JSON.parse(lines.join("\n"));
