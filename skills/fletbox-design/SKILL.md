@@ -1,6 +1,6 @@
 ---
 name: fletbox-design
-description: The design contract for a FletBox app - tokens only, one scale, three-tier hierarchy, a state for every interaction, measured contrast, composition that starts as a sentence, the dated visual tells that give away a template, destructive actions designed last, and Part II, the visual atlas: six style archetypes with their surface ramps, accent budget, number-as-hero typography, nested radii, photo-and-sheet composition, control shapes and per-genre recipes, distilled from 969 reference screens. Use when creating, editing or reviewing any screen, form, list, dialog, hero or action control, or when choosing how a screen should look.
+description: The design contract for a FletBox app - tokens only, one scale, three-tier hierarchy, a state for every interaction, measured contrast, composition that starts as a sentence, the dated visual tells that give away a template, destructive actions designed last, and Part II, the visual atlas: six style archetypes with their surface ramps, accent budget, number-as-hero typography, nested radii, photo-and-sheet composition, control shapes, data widgets and per-genre recipes. Use when creating, editing or reviewing any screen, form, list, dialog, hero or action control, or when choosing how a screen should look.
 ---
 
 # Design — the system rules for a FletBox screen
@@ -82,7 +82,7 @@ No arbitrary values, no hex, no `px` strings. Every value comes from the scale.
 
 ```
 space    4 · 8 · 12 · 16 · 18 · 24 · 32 · 40 · 48 · 64 · 96
-radius   4 · 8 · 12 · 16 · 999 (pill)
+radius   4 · 8 · 12 · 16 · 20 · 24 · 999 (pill)
 type     12 caption · 14 body-small · 16 body · 18 subtitle · 24 title
          32 headline · 40 display-sm · 48 display
 weight   400 body · 500 label · 600 title · 700 headline
@@ -92,9 +92,11 @@ depth    elevation 0 · 1 · 2 · 3 · 4 · 5
 
 - The base unit is 4 and everything is a multiple of it (Playbook p.028). A value
   like 13, 19, 21 or 31 is not a design decision, it is drift. A radius between
-  two steps — the 20 beside the 16 — is the same drift on the corner
-  (`OFF_SCALE_RADIUS`), and it is what makes a rounded picture sit next to a
-  square button like two products.
+  two steps — the 15 beside the 16, the 18 beside a 24 — is the same drift on the
+  corner (`OFF_SCALE_RADIUS`), and it is what makes a rounded picture sit next to a
+  square button like two products. The scale reaches 24 because `Drawer`,
+  `DrawerItem` and the `Tabs` slider already default there: an app matching its own
+  widgets cannot be off-scale.
 - Never type a hex or `rgb()` outside `src/database/themes.js`
   (`RAW_COLOR`). If a token is missing, add it there.
 - Never build a color by appending alpha to a token — `colors.primary + "15"` is
@@ -205,7 +207,10 @@ unrelated things, and that difference is the whole message (Playbook p.013, p.02
 - Measure: 45-75 characters per line on desktop, 30-40 on mobile. A paragraph
   that runs the full width is unreadable at 1440 (p.076-078).
 - One typeface; two at the absolute maximum, and then headings against body
-  (p.075-076). Declare it once in the theme, never per `Text`.
+  (p.075-076). Declare it once — `loadFont("Inter", { weights: [400, 600] })` and
+  one `fontFamily` on the screen's root — never per `Text`. There is no font on
+  the theme: `fontFamily` is a routed prop, and the loader is what puts the bytes
+  behind the name.
 - `align: "left"` for every run of text and every list. `right` for numbers and
   prices, so magnitudes compare. `center` only for a short title or a lone CTA,
   never for a paragraph (p.018, p.094) — a centered paragraph is reported as
@@ -291,8 +296,9 @@ When accessibility and aesthetics conflict, accessibility wins. Every time.
   (p.022).
 - Every field has a visible `label`; a placeholder is a format hint, never a
   substitute (p.115). Every switch and checkbox has one too (`UNLABELED_TOGGLE`).
-- Every control that is only an icon gets a name: wrap it in
-  `Tooltip({ text, child })` or give it a visible label (`ICON_ONLY_CONTROL`).
+- Every control that is only an icon gets a name: `aria-label` on the control
+  itself, or a visible label beside it (`ICON_ONLY_CONTROL`). A `Tooltip` is a
+  description — it explains the control, it does not name it.
 - Every `Image` that carries information has `alt`; `alt: ""` is the correct
   answer for a decoration (`IMAGE_NO_ALT`).
 - Focus must be visible, keyboard must reach everything, and `Esc` must close
@@ -311,7 +317,13 @@ all four, in the same component, before the screen counts as done.
 Column({ gap: 16, children: [
   loading ? Skeleton({ width: "100%", height: 48, count: 3 }) : null,
   !loading && rows.length === 0
-    ? EmptyState()                       // headline + illustration + tip + CTA
+    ? Column({ gap: 16, alignItems: "center", children: [
+        Icon({ name: "inbox", size: 48, color: colors.textSecondary }),
+        Text({ text: "No projects yet", size: 18, weight: "bold" }),
+        Text({ text: "Create one to see it here.", size: 14,
+               color: colors.textSecondary, align: "center" }),
+        Button({ text: "New project", onPress: create }),
+      ]})                                  // headline + illustration + tip + CTA
     : null,
   failed
     ? SnackBar({ message: "Could not load the list.", action: "Retry", onAction: retry })
@@ -441,10 +453,18 @@ broken" report, and none of them is something `npm run ui` can see:
 - **`alignItems: "center"` centers the block, not the text.** A paragraph that
   wraps inside a centered column becomes a ragged stripe: center the heading,
   left-align the copy (rule 08).
-- **There is no breakpoint prop, and none is needed.** Responsiveness is
-  `flex`, `wrap: true` and `maxWidth` — plus the rem contract: a number is a
-  fraction of the reader's font, so one build fits a phone and a desktop. A
-  screen built from two hard-coded layouts is two screens to maintain.
+- **Fluid first, breakpoint second.** `flex`, `wrap: true`, `maxWidth` and the rem
+  contract carry one screen from phone to desktop with no decision at all, and
+  that is the default. There is no breakpoint *prop* — when a shape genuinely
+  changes (one column into two, a rail into a drawer), the change is made in the
+  code that builds the tree, with the one table: `atLeast("md")` for the boolean,
+  `currentBreakpoint()` for the name, a per-step value function for a number that
+  really wants to be different at 400px and 1400px. `md` is 768, the same line
+  `AdaptiveScaffold` crosses, so a screen and its shell cannot disagree. Read the
+  width, never the user agent: `device.isMobile()` answers a platform question
+  (long-press, a native back gesture), not a layout one. A screen built from two
+  hard-coded layouts is two screens to maintain; a screen with one per-step value
+  where the shape truly changes is one.
 - Overlays go in a `Stack` with `stackPosition`, not in absolute coordinates on
   `Container({ pos: "absolute", top, left })`. The first survives a content
   change; the second is a pixel bomb in any language longer than English.
@@ -579,32 +599,26 @@ for this screen, it is a rule for every screen, and it belongs in this file.
 # PART II — THE VISUAL ATLAS
 
 Rules 01-24 say what is legal. They do not say what to choose, and a screen that
-is merely legal looks like nothing. Part II is the menu: the looks that recur in
-a corpus of real reference screens, each reduced to the calls that produce it in
-this framework. It is read after the rules, never instead of them — every recipe
-below still has to pass `npm run check`, `npm run ui` and rules 01-24.
+is merely legal looks like nothing. Part II is the menu: the looks that hold up
+for their own reasons, each reduced to the calls that produce it in this
+framework. It is read after the rules, never instead of them — every recipe below
+still has to pass `npm run check`, `npm run ui` and rules 01-24.
 
-Cited as `Corpus`. The source is `~/Desktop/uixº-folder`: 969 images — `Photo UIX`
-551, `UIX_Phone` 88, `UIX_FAVORITES` 85, `UIX_Web` 80, `UIX_Colors` 78,
-`UIX_Config` 57, `UIX_TMP` 26, and 4 loose ones. They were flattened into 49
-contact sheets and read in 10 passes. Two facts about that corpus before any
-number in this part is used:
+Nothing here cites a trend, a screenshot or a mood board. Each rule states its
+mechanism — what the eye is actually doing, or what the CSS engine will and will
+not accept — so an edge case can be judged from the reason instead of from the
+precedent. Where a number appears it is either arithmetic (30), a measured ratio
+from this palette (03, 11, 35), or a size the framework ships.
 
-- About 14% of it is not screens at all — it is palette posters and Do/Don't
-  teaching cards (`UIX_Colors`, `UIX_Config`). They carry no layout, but they are
-  where the radius, shadow and ramp rules below are stated outright.
-- Every share in 26 is an approximate count of thumbnails by one of ten readers,
-  and the archetypes overlap. A share is a hint about which look is common, not a
-  measurement of what is good. Where a pattern held in all ten passes it is
-  called a law; that is the only number here worth arguing about.
+## 25 Three laws
 
-## 25 Three laws, ten passes out of ten
-
-These three held in every pass, across mobile, web, dark, light and every genre.
-They are the shortest description of what a screen in this corpus looks like.
+One accent, one surface family, one hero. These three hold across mobile and web,
+dark and light, and every genre; a screen that breaks any of them is not
+stylistically bold, it is unreadable in a new way.
 
 1. **One accent.** A neutral base plus exactly one saturated hue, spent on the
-   action and the selected state and nowhere else (26, 28).
+   action and the selected state and nowhere else (26, 28). Two accents force the
+   eye to rank them, and it has no basis to rank them with.
 2. **One surface family.** Either a tinted dark ramp or a tinted paper; never a
    black page with white cards, never a grey page with white cards (27).
 3. **One hero.** The screen has one element that is 3-5× the rest — usually a
@@ -618,48 +632,53 @@ how many colored things there are, the screen obeys them.
 Name the archetype in the commit or in `.fletbox/memory/` before the first
 widget. A screen that mixes two of them is what rule 02 calls an exception.
 
-| Archetype | Share | Use it when | The tell you must get right |
-| --- | --- | --- | --- |
-| Acid-on-black | ~30% | finance, media, fitness, tools, anything glanceable | the accent is on one element only (28) |
-| Tinted paper | ~25% | commerce, food, wellness, content | the page is a wash of the accent, not grey (27) |
-| Photo-bleed + sheet | ~15% | travel, product detail, real estate, recipes | the sheet overlaps the photo, it does not sit under it (31) |
-| Bento dashboard | ~10% | dashboards, smart-home, admin | one tile is double-size and it is the hero (33) |
-| Editorial luxury | ~8% | watches, perfume, hotel, long-read | one serif, used for the name of the thing only (29) |
-| Single-hue field | ~7% | a brand moment: splash, campaign, empty state | the whole page is one hue, the text is its darker plate (27) |
+| Archetype | Use it when | The tell you must get right |
+| --- | --- | --- |
+| Acid-on-black | finance, media, fitness, tools, anything glanceable | the accent is on one element only (28) |
+| Tinted paper | commerce, food, wellness, content | the page is a wash of the accent, not grey (27) |
+| Photo-bleed + sheet | travel, product detail, real estate, recipes | the sheet overlaps the photo, it does not sit under it (31) |
+| Bento dashboard | dashboards, smart-home, admin | one tile is double-size and it is the hero (33) |
+| Editorial luxury | watches, perfume, hotel, long-read | one serif, used for the name of the thing only (29) |
+| Single-hue field | a brand moment: splash, campaign, empty state | the whole page is one hue, the text is its darker plate (27) |
 
-The seventh look in the corpus — violet mesh gradient, glass everywhere, 3D blob
-behind the phone — is ~12% of the images and is in 36 as a dated tell. It is the
-most-copied and the most-obsolete look here at the same time.
+The six are exhaustive of what survives review here. The look they are usually
+reached for instead — violet mesh gradient, glass on every card, a 3D blob behind
+the phone — is not a seventh archetype; it is in 36 as a dated tell, and it is the
+one most often mistaken for a style.
 
 ## 27 Surfaces are never the extremes
 
-The teaching cards say it outright: white text on `#000000` is wrong, on
-`#121212` is right; pure black "looks unnatural" and a large bright surface
-glows (Corpus). The shipped dark palette already obeys this — `background`
-`#09090b`, `card` and `surface` `#18181b`, `border` `#27272a` — which is a three
-step ramp, the same move as the `#0F0F0F → #121212 → #171717 → #1A1A1A` ladder in
-the corpus. Use the steps, do not invent a fourth.
+Pure black under pure white is the one pair that always loses: `#000000` against
+`#ffffff` measures 21:1, and an eye moving across a list at that ratio keeps
+catching on the edges of every glyph. A large bright surface glows for the same
+reason. So the extremes get replaced by steps, and the steps are where the
+hierarchy lives. The shipped dark palette already obeys this — `background`
+`#09090b`, `card` and `surface` `#18181b`, `border` `#27272a` — a three-step ramp
+of one near-black hue. Use the steps, do not invent a fourth.
 
-- **Dark.** Depth is a lighter plate, not a shadow. Two steps maximum between the
+- **Dark.** Depth is a lighter plate, not a shadow: a shadow on a dark page is
+  invisible, so the only signal available is value. Two steps maximum between the
   page and the topmost card; a third step is a bug, because nobody can tell step
   three from step two. A hairline `colors.border` rim replaces the shadow on an
   elevated card (rule 10: `Container` ignores `elevation` — pass `shadow` or
   `borderColor` there, never a bare number).
 - **Paper.** The page is a low-chroma wash of the accent (`colors.primaryBg`
   exists for exactly this), the card is `colors.card`, and the tile inside the
-  card is one step back. Grey page under white card is the 2019 version of this
-  look and reads as a wireframe.
+  card is one step back. Grey page under white card is the wrong version of this
+  look and reads as a wireframe: grey is a neutral, so it separates the card from
+  nothing.
 - **Single-hue field.** One hue carries the screen and the text is a darker or
-  lighter plate of the same hue — never a second hue for contrast. In this
-  framework that means a new token in `src/database/themes.js` per theme, not an
-  inline mix: `colors.primary + "22"` is `HAND_MIXED_COLOR` (rule 03).
-- **Never** a pure-`#fff` page under pure-`#000` text with nothing between: the
-  corpus's own failure examples are exactly that pair, and the shipped light page
+  lighter plate of the same hue — never a second hue for contrast, because a
+  second hue is a second accent and 25 allows one. In this framework that means a
+  new token in `src/database/themes.js` per theme, not an inline mix:
+  `colors.primary + "22"` is `HAND_MIXED_COLOR` (rule 03).
+- **Never** a pure-`#fff` page under pure-`#000` text with nothing between: that
+  pair is the failure this section exists to prevent, and the shipped light page
   is `#ffffff` only because `surface` is `#f8fafc` and does the separating.
 
 ## 28 The accent budget
 
-The accent is a budget, not a color. In the corpus it appears on, and only on:
+The accent is a budget, not a color. It may appear on, and only on:
 
 1. the one primary action;
 2. the selected state of whatever chose it (chip, tab, nav icon, swatch);
@@ -668,22 +687,28 @@ The accent is a budget, not a color. In the corpus it appears on, and only on:
 Everything else — headers, labels, icons, dividers, decorative plates — stays
 neutral. This is rule 09's "reserve the brand for things you can click" with the
 count added: three placements, and a fourth means one of them is not an accent.
+The mechanism is learning: a color that appears on non-clickable things stops
+being a cue, and the user stops reading it — so the CTA loses the very property
+that made it findable.
 
 - Secondary is the same ink, hollow: `variant: "outlined"` naming its own
   `color:`, or `variant: "text"`. Never a second hue for the second button.
-- A gradient on the primary is legal only as **two shades of one hue** — the
-  corpus spec for this is a violet button reading `#9D70F6 → #5520FF`. Cap any
-  gradient at two hues (Corpus accepts cyan→green, rejects cyan→blue→violet);
-  three hues is the mesh look of 36.
-- Glow is the accent's only other permitted spend, and only on dark:
+- A gradient on the primary is legal only as **two shades of one hue** — a violet
+  button running `#9D70F6 → #5520FF`, both declared as tokens, is still one
+  accent. Cap any gradient at two hues: three is no longer a surface, it is an
+  event, and it competes with the CTA for the same attention (36).
+- Glow is the accent's only other permitted spend, and only on dark, because a
+  bloom over a light page is indistinguishable from a smudge:
   `CircularBar({ glow: true, glowColor: colors.primary })`, or a tinted `shadow`
   string on the CTA. One glowing element per screen.
 
 ## 29 The number is the hero
 
-The single most repeated composition in the corpus, in every genre that shows a
-quantity: one oversized tabular numeral, its label above it in muted text, and
-nothing else on the screen competing (Corpus, ~10 screens in the first pass alone).
+The composition every genre that shows a quantity should reach for: one oversized
+tabular numeral, its label above it in muted text, and nothing else on the screen
+competing. A magnitude read as a shape is understood faster than the same
+magnitude read digit by digit, which is why the number gets the size and not the
+heading.
 
 ```js
 Column({ gap: 4, children: [
@@ -705,24 +730,30 @@ Column({ gap: 4, children: [
   tokens (rule 09: `colors.success` is 2.54:1 with white on it and is a dot).
 - Serif is a brand voice, not a font choice: one serif for the name of the thing
   (product, hotel, edition), sans for everything readable, and never a serif
-  paragraph. Declare it in the theme, not per `Text` (rule 08).
+  paragraph. Declare it once with `loadFont` and one `fontFamily` on the root,
+  not per `Text` (rule 08).
 - Uppercase with wide tracking is for a two-word label, never for a sentence,
-  and never for the body (Corpus rejects multi-word all-caps; rule 19's eyebrow
-  ban still applies to the label above a heading).
+  and never for the body: tracking destroys the word shape that a reader
+  recognizes, so it costs speed everywhere it is not a single glance (rule 19's
+  eyebrow ban still applies to the label above a heading).
 
 ## 30 Radius, nesting and the pill
 
 - Controls are pills: `borderRadius` = half the height. Cards are 16-24. Inner
   thumbnails and tiles are 12-16, one step below their card.
-- **The nesting rule**, stated as arithmetic in the corpus: `outer = inner +
-  padding`. A 16-radius tile inside 8 of padding needs a 24-radius card. Equal
-  radii at both levels is the Do/Don't example — it reads as two boxes, not one.
-- A radius between two steps is `OFF_SCALE_RADIUS` (rule 03) and the corpus
-  agrees for a different reason: the corner is what people match by eye, so a 20
-  beside a 16 looks like a mistake even when nobody can say why.
+- **The nesting rule**, as arithmetic: `outer = inner + padding`. A 16-radius
+  tile inside 8 of padding needs a 24-radius card. Equal radii at both levels is
+  the failure — the inner corner and the outer corner curve on the same radius,
+  so the gap between them reads as a second box rather than as one plate.
+- A radius between two steps is `OFF_SCALE_RADIUS` (rule 03), and the reason is
+  perceptual, not bookkeeping: the corner is what people match by eye, so a 15
+  beside a 16 looks like a mistake even when nobody can say why. 20 and 24 are
+  steps, not neighbours — they are where the nesting rule lands, and where the
+  framework's own drawers and tab indicators sit.
 - One radius language per screen (rule 02). A pill button inside a 16-radius card
   on a 24-radius sheet is three languages; pick the card radius and let the
-  controls be pills, which is the one mix the corpus always allows.
+  controls be pills, since a pill is the one shape that reads as a control at any
+  card radius.
 
 ```js
 Card({ borderRadius: 24, padding: 16, children:
@@ -739,8 +770,8 @@ Card({ borderRadius: 24, padding: 16, children:
 
 ## 31 Photo, scrim, sheet
 
-The composition of the ~15% photo-led screens, and the one place a `Stack`
-earns its keep:
+The composition of every photo-led genre — travel, product detail, real estate,
+recipes — and the one place a `Stack` earns its keep:
 
 ```js
 Stack({ alignment: "bottom-left", height: 420, children: [
@@ -752,20 +783,23 @@ Stack({ alignment: "bottom-left", height: 420, children: [
 ```
 
 - The sheet **overlaps** the photograph's bottom edge; a card placed under a
-  photo is a caption, and the corpus never does that.
+  photo is a caption, and a caption says the photo is the subject of the screen.
 - Words over a photograph need a scrim, and the scrim belongs on the image
   (`maskImage`) or as its own plate (`colors.overlay`) — light text over one
   unscrimmed photo is the finding rule 11 already names.
-- **Color harvest**: the page tint comes from the photograph's dominant hue. This
-  is the corpus's most-cited cohesion trick and it is a token decision, so it
-  goes into `src/database/themes.js` as a named tint, not an inline hex.
+- **Color harvest**: the page tint comes from the photograph's dominant hue, so
+  the image and the interface are the same color event instead of two arguments.
+  It is a token decision, so it goes into `src/database/themes.js` as a named
+  tint, not an inline hex.
 - **Glass is for the layer that floats over scrolling content** — the nav over a
   feed, the sheet over a photo. `colors.glass` with `colors.glassBorder` and
-  `backdropFilter` on a solid page is a texture, not a hierarchy (rules 10, 19).
-  In the corpus every surviving glass panel sits on a photograph; every dated one
-  sits on a gradient.
+  `backdropFilter` on a solid page is a texture, not a hierarchy (rules 10, 19):
+  translucency only means anything when there is something moving behind it.
+  Translucency only means something when there is something moving behind it: a
+  glass panel over a photograph reads as a layer, the same panel over a gradient
+  reads as a smudge.
 
-## 32 The controls the corpus agrees on
+## 32 The shape of each control
 
 | Job | The shape | The call |
 | --- | --- | --- |
@@ -778,29 +812,32 @@ Stack({ alignment: "bottom-left", height: 420, children: [
 | a badge on an icon | dot, never a word | `Badge({ value, size, offset, borderColor: colors.background })` |
 
 - Selected state is **inverted**, not tinted: on dark, the selected chip goes
-  white-with-black-text among hollow dark chips. That is legible in one glance
-  and survives a color-blind user; a slightly lighter grey is not.
-- Disabled is a desaturated gray token, not the same color at 40% opacity —
-  the corpus states it, and `colors.textDisabled` is already a different hue
-  rather than a fade for exactly that reason.
+  white-with-black-text among hollow dark chips. An inversion is seen before it
+  is read, and it survives a color-blind user; a slightly lighter grey is the
+  same hue at a value nobody can compare across a row.
+- Disabled is a desaturated gray token, not the same color at 40% opacity,
+  because opacity fades the text into whatever is behind it and changes its
+  contrast per surface. `colors.textDisabled` is already a different hue rather
+  than a fade for exactly that reason (rule 03).
 - Quantity, variant and price live in the same row as the action that spends them
-  (rule 15, Fitts). The corpus's "price inside the CTA" move is the same rule
-  written as a label: `Button({ text: "Add to cart · $34.21" })`.
+  (rule 15, Fitts). The same rule written as a label is cheaper still:
+  `Button({ text: "Add to cart · $34.21" })` — the decision and its cost are one
+  read instead of two.
 
 ## 33 Data: the dial, the bento, the axis-less chart
 
 - **Dial as hero.** One KPI gets a ring, not a chart:
   `CircularBar({ value, max, size: 180, strokeWidth: 14, lineCap: "round", label, subtitle, valueSize: 32, showValue: true })`.
-  The number sits inside the ring, so the gauge and the hero are one object.
-  One per screen; a second ring is a decoration.
+  The number sits inside the ring, so the gauge and the hero are one object and
+  one read. One per screen; a second ring is a decoration.
 - **Bento.** Two columns, mixed heights, uniform radius, one tile double-size and
   that tile is the hero: `GridView({ columns: 2, spacing: 12 })` with tiles of
   different `height`, or a `Row` + `Column` pair when the spans get awkward.
   Gaps stay on the 4-scale (rule 03); dense is not the same as tight.
 - **Zero-label charts.** A sparkline with one number beats an axis:
   `Chart({ type: "area", data, smooth: true, areaGradient: true, showGrid: false, showLabels: false, lineColor: colors.primary })`.
-  The corpus's financial screens carry no gridlines at all; the delta text does
-  the explaining.
+  Gridlines ask the reader to measure; the delta text tells them the answer, and
+  the shape of the line carries the trend.
 - A chart's series color is the accent; its second series is a neutral, not a
   second hue (rule 09). `Chart({ barColor })` and `lineColor` take tokens.
 - Skeletons, not spinners, and the shape of the skeleton is the shape of the
@@ -809,8 +846,8 @@ Stack({ alignment: "bottom-left", height: 420, children: [
 
 ## 34 Genre recipes
 
-The moves that recur per genre in the corpus. Each is a starting composition,
-not a permission slip: rules 01-24 still decide what ships.
+The moves each genre is made of. Each is a starting composition, not a
+permission slip: rules 01-24 still decide what ships.
 
 | Genre | The five moves |
 | --- | --- |
@@ -826,10 +863,9 @@ not a permission slip: rules 01-24 still decide what ships.
 | Settings | grouped rows, `ListTile` · leading icon in a tinted plate · trailing chevron or `Switch` · one section cap per group, no hairline between rows |
 | Web landing | transparent `AppBar` · display headline with one word in the accent · pill CTA + ghost pair · a three-number stat strip · card row below |
 
-## 35 Deriving a palette, the way the corpus documents them
+## 35 Deriving a palette
 
-The palette posters in this corpus are the most explicit part of it, and they
-converge on one contract. A theme is five roles, not five colors:
+A theme is five roles, not five colors:
 
 ```
 anchor   the darkest surface, never #000
@@ -839,18 +875,20 @@ wash     the tinted paper the page sits on
 ink      white or near-white, and its opacity tiers
 ```
 
-- **Ramp, not swatch.** Each poster shows 5-7 stops of one family
-  (base → tint → accent → shadow). Build a theme as a ramp so a card, a tile and
-  a plate can be three steps of one hue instead of three hues.
+- **Ramp, not swatch.** A family is 5-7 stops (base → tint → accent → shadow).
+  Build it as a ramp so a card, a tile and a plate can be three steps of one hue
+  instead of three hues — which is the only way 27's surface discipline is
+  possible without breaking 25's one-accent law.
 - **The light/dark pair rule**: for the same hue in both palettes, lift the
   lightness and drop the saturation going dark. That is why this framework's dark
   `dangerStrong` is `#fca5a5` where the light one is `#b91c1c` — the readable red
   is the one that measures 4.5:1 *on that page*, which is rule 09's whole point.
-- **Shadows are tinted, never grey.** The corpus spec sheet writes the ambient
-  shadow as a large blur at low alpha in the page's own hue
-  (`0 5 50 rgba(0,67,101,.08)`). In FletBox that is a `shadow: "0 20px 50px rgba(…)"`
-  string on a `Container`/`Card` — `colors.shadow` is the neutral default and is
-  the flat version of the same idea (rule 10).
+- **Shadows are tinted, never grey.** A real shadow is the page's own hue darkened
+  and made translucent, so the ambient shadow is a large blur at low alpha in that
+  hue (`0 5px 50px rgba(0,67,101,0.08)`). In FletBox that is a
+  `shadow: "0 20px 50px rgba(…)"` string on a `Container`/`Card` —
+  `colors.shadow` is the neutral default and is the flat version of the same idea
+  (rule 10).
 - Add the tokens to `src/database/themes.js` in **both** palettes. The gate that
   checks the two palettes expose the same token names exists because a light-only
   tint once deleted `colors.errorBg` out from under a running app; a token added
@@ -858,30 +896,35 @@ ink      white or near-white, and its opacity tiers
 - Contrast is still the veto: `npm run ui -- --tokens` measures every pair. A
   palette that looks right and measures 3.2:1 is a palette with a bug in it.
 
-## 36 The dated tells of the corpus
+## 36 The dated visual tells
 
 Rule 19 bans the template tells of copy and hierarchy. These are the *visual*
-ones, and they are what makes a screen read as 2018 rather than as this system.
-Each is present in the corpus in quantity, which is the argument for naming it.
+ones, and each is named with the mechanism that dates it, so an edge case can be
+judged rather than obeyed.
 
 - **Violet mesh gradient behind the phone**, and the blurred 3D blob or sphere
-  floating in front of it. The single most common decoration in the corpus and
-  the fastest way to date a screen. There is no gradient page surface in this
-  framework anyway — `gradient` exists on `Button` and `AppBar`, which is the
+  floating in front of it. A decoration that carries no information reads as
+  stock the moment the eye finishes with it. There is no gradient page surface in
+  this framework anyway — `gradient` exists on `Button` and `AppBar`, which is the
   system saying it is one element's surface (rule 19).
-- **Neumorphism**: extruded dials and pressed-in tiles. Gone from every recent
-  screen in the corpus.
-- **Glass over a solid page**, or glass on every card. See 31: glass survives
-  only over imagery.
-- **Gradient-filled headline text.** `Text` has no gradient; the corpus's own
-  tip cards flag it. Emphasis comes from weight and ink (rule 17).
+- **Neumorphism**: extruded dials and pressed-in tiles. Its shadows are the only
+  depth cue, so the moment the surface changes the affordance disappears —
+  a control whose visibility depends on a light source is not a control.
+- **Glass over a solid page**, or glass on every card. See 31: translucency needs
+  something moving behind it, and a page of glass has no layer left to signal.
+- **Gradient-filled headline text.** `Text` has no gradient, and color running
+  across a word destroys the letter edges the reader is using. Emphasis comes
+  from weight and ink (rule 17).
 - **Hairline border + 6-8px radius + drop shadow on every card**, and a
-  `Divider` under every row: the three-piece 2019 card (rules 10, 19).
+  `Divider` under every row: the three-piece card that separates everything and
+  therefore organizes nothing (rules 10, 19).
 - **Skeuomorphic props** — a rendered credit card as the hero of a wallet, a
-  photoreal watch bezel, isometric people, emoji as feature icons.
+  photoreal watch bezel, isometric people, emoji as feature icons. They depict an
+  object instead of the user's own data, which is the one thing the screen has
+  that no stock art can supply.
 - **Default-blue SaaS**: a blue→indigo button, a grey page, white cards, no
-  accent discipline. It is the corpus's most numerous failure and it is not a
-  color problem, it is a missing archetype decision (26).
+  accent discipline. It is not a color problem, it is a missing archetype
+  decision (26) — the palette was never tied to anything this product does.
 - **Three CTAs in a hero row**, and the floating-phone-on-a-plinth presentation:
   both are portfolio staging, not interface.
 
