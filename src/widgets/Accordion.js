@@ -63,6 +63,8 @@ const ACCORDION_PROP_KEYS = [
  * @param {number} [props.elevation=0] - Box-shadow depth level (0–4).
  * @returns {HTMLElement} The accordion container element, augmented with public methods.
  */
+let accordionIdSeed = 0;
+
 export const Accordion = (props) => {
   const {
     title,
@@ -128,6 +130,16 @@ export const Accordion = (props) => {
   let currentElevation = elevation;
   let currentAnimationDuration = animationDuration;
 
+  // The header and its panel reference each other (`aria-controls` one way,
+  // `aria-labelledby` back), so both need ids. Derived from the caller's `id`
+  // when there is one, the way `Input` does it, so a re-render keeps the pairing.
+  const baseId =
+    typeof rest.id === "string" && rest.id
+      ? rest.id
+      : `fletbox-accordion-${++accordionIdSeed}`;
+  const headerId = `${baseId}-header`;
+  const panelId = `${baseId}-panel`;
+
   // DOM references populated during widget construction
   let contentWrapper = null;
   let contentInner = null;
@@ -171,6 +183,13 @@ export const Accordion = (props) => {
     titleBar.style.cursor = currentDisabled ? "not-allowed" : "pointer";
     titleBar.style.opacity = currentDisabled ? "0.5" : "1";
     titleBar.style.padding = toREM(currentTitlePadding);
+
+    // `update()` cannot re-run the factory for the header, so the state the
+    // header announces lives here: a `disabled: true` update has to take the
+    // hinge off the Tab path, and an `expanded` change has to be answered.
+    titleBar.setAttribute("aria-expanded", String(isExpanded));
+    titleBar.setAttribute("aria-disabled", String(Boolean(currentDisabled)));
+    titleBar.tabIndex = currentDisabled ? -1 : 0;
 
     // Tint the title bar background slightly when expanded (contained only)
     if (currentVariant === "contained") {
@@ -271,6 +290,10 @@ export const Accordion = (props) => {
 
     isAnimating = true;
     isExpanded = true;
+    // The disclosure state is answered at the press, not when the height
+    // animation lands: `updateUI` runs at the end of the transition, and a reader
+    // told "collapsed" while the panel is already opening is told a lie.
+    titleBar.setAttribute("aria-expanded", "true");
 
     // Make the content visible before measuring it
     contentWrapper.style.display = "block";
@@ -307,6 +330,10 @@ export const Accordion = (props) => {
     if (!isExpanded) return;
 
     isAnimating = true;
+    isExpanded = false;
+    // Same as `expand`: the disclosure answers for the state the press caused,
+    // not for the height the transition has not finished animating.
+    titleBar.setAttribute("aria-expanded", "false");
 
     // Pin the height to a pixel value first — "auto" cannot be animated
     const currentHeight = contentInner.scrollHeight + "px";
@@ -395,6 +422,21 @@ export const Accordion = (props) => {
 
   // Clickable title bar that contains the text and icon
   titleBar = Row({
+    // The press is a prop, not an assignment made after `Row()` has returned:
+    // the engine reads `widget.onclick` while the widget is built, and a header
+    // wired afterwards is a hinge only a mouse can operate.
+    onPress: () => toggle(),
+    role: "button",
+    id: headerId,
+    // A disclosure has to say which way it opens. Without `aria-expanded` a reader
+    // hears the same words for a closed section and an open one.
+    "aria-expanded": String(isExpanded),
+    "aria-controls": panelId,
+    "aria-disabled": String(Boolean(currentDisabled)),
+    tabIndex: currentDisabled ? -1 : 0,
+    // A header spans the whole card; the 2% press scale would move the title and
+    // the chevron with it.
+    disableTransform: true,
     alignItems: "center",
     justifyContent: "space-between",
     gap: 8,
@@ -411,6 +453,11 @@ export const Accordion = (props) => {
   // Outer wrapper whose height is animated — starts hidden when collapsed
   contentWrapper = WidgetFactory({
     tag: "div",
+    id: panelId,
+    // The panel is a landmark a reader can jump to from the header; `aria-labelledby`
+    // is what names it, since the title lives in the button rather than in a heading.
+    role: "region",
+    "aria-labelledby": headerId,
     overflow: "hidden",
     transition: animate
       ? `height ${currentAnimationDuration}ms cubic-bezier(0.4, 0, 0.2, 1)`
@@ -435,9 +482,6 @@ export const Accordion = (props) => {
 
   // Sync all styles with current state
   updateUI();
-
-  // Wire up the click handler on the title bar
-  titleBar.onclick = () => toggle();
 
   // Start watching for content size changes
   setupResizeObserver();
@@ -491,7 +535,10 @@ export const Accordion = (props) => {
         }
       }
     }
-    if (newProps.disabled !== undefined) currentDisabled = newProps.disabled;
+    if (newProps.disabled !== undefined && newProps.disabled !== currentDisabled) {
+      currentDisabled = newProps.disabled;
+      needsUIUpdate = true;
+    }
     if (newProps.variant !== undefined) currentVariant = newProps.variant;
     if (newProps.bgColor !== undefined) currentBgColor = newProps.bgColor;
     if (newProps.expandedColor !== undefined)

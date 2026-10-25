@@ -321,6 +321,14 @@ export const CircularBar = (props) => {
     container = WidgetFactory({
       tag: "div",
       widgetName: "CircularBar",
+      // The arc is painted into a canvas, which is one anonymous rectangle to a
+      // reader. The role and the three numbers are the whole of what the ring
+      // means, and they are cheap to keep true.
+      role: "progressbar",
+      "aria-valuemin": "0",
+      "aria-valuemax": String(max),
+      "aria-valuenow": String(Math.min(value, max)),
+      ...(label ? { "aria-label": label } : null),
       display: isFixedSize ? "inline-block" : "block",
       width: isFixedSize ? `${fixedSize}px` : "100%",
       height: isFixedSize ? `${fixedSize}px` : "auto",
@@ -352,8 +360,15 @@ export const CircularBar = (props) => {
   });
 
   container.updateValue = (newValue, newMax = null) => {
-    if (newMax !== null) max = newMax;
+    if (newMax !== null) {
+      max = newMax;
+      container.setAttribute("aria-valuemax", String(max));
+    }
     value = Math.min(newValue, max);
+    // The announced value is the target of the animation, not the frame it is
+    // drawing: a reader who hears the sweep would hear a different number every
+    // time they asked.
+    container.setAttribute("aria-valuenow", String(value));
     startAnimation();
   };
 

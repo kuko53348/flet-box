@@ -35,6 +35,7 @@ export const Radio = (props) => {
   const offColor = disabled ? colors.border : colors.gray500;
 
   const updateUI = (newSelected) => {
+    if (radio) radio.setAttribute("aria-checked", String(Boolean(newSelected)));
     if (radioRef) {
       radioRef.style.backgroundColor = newSelected ? activeColor : "transparent";
       radioRef.style.border = `2px solid ${newSelected ? activeColor : offColor}`;
@@ -89,6 +90,11 @@ export const Radio = (props) => {
 
   const rootProps = {
     widgetName: "Radio",
+    // A ring and a dot are drawing instructions, not a control. The role names it
+    // and `aria-checked` is the state; both are set before the factory runs so the
+    // engine does not settle for `button`.
+    role: "radio",
+    "aria-checked": String(Boolean(internalSelected)),
     display: "inline-flex",
     alignItems: "center",
     justifyContent: isLabelled ? "flex-start" : "center",
@@ -121,6 +127,7 @@ export const Radio = (props) => {
   // Inline usage (a radio dropped mid-paragraph) would otherwise baseline-align
   // the box's bottom edge and lift the ring above the text.
   radio.style.verticalAlign = "middle";
+  if (disabled) radio.setAttribute("aria-disabled", "true");
 
   // Handle click
   if (!disabled) {

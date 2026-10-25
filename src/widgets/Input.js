@@ -119,6 +119,12 @@ export const Input = (props) => {
       ? `${rest.id}-input`
       : `fletbox-input-${++inputIdSeed}`;
 
+  // The message under the field is what `aria-describedby` points at while the
+  // field is invalid. A described-by that names a `display: none` node is a
+  // control that claims a description it does not have, so the reference and the
+  // message appear and disappear together.
+  const errorId = `${fieldId}-error`;
+
   // DOM element references — populated during the build phase below
   let inputElement = null;
   let validationIcon = null;
@@ -126,11 +132,6 @@ export const Input = (props) => {
   let inputWrapper = null;
   let container = null;
   let clearButton = null;
-
-  // Whether the native input currently holds focus. Used to keep the focus
-  // ring (a box-shadow) in sync with validation colors without ever changing
-  // the border width — changing the width would resize the box and shift layout.
-  const isFocused = () => document.activeElement === inputElement;
 
   // ========== SIZES ==========
   /**
@@ -257,19 +258,14 @@ export const Input = (props) => {
       borderColorValue = colors.success;
     }
 
-    // The border keeps a fixed 1px width in every state; focus thickness is
-    // drawn as a 1px box-shadow ring instead. This changes the look on focus
-    // without altering the element's box size, so nothing gets pushed around.
+    // The border is the validation signal and nothing else: 1px in every state,
+    // recoloured by the verdict. Focusing the field does not touch it — the ring
+    // a focused control wears is the engine's (`src/utils/focusRing.js`), and a
+    // second hand-painted ring beside it reads as a doubled, thicker box.
     if (variant === "outlined") {
       inputWrapper.style.borderColor = borderColorValue;
-      inputWrapper.style.boxShadow = isFocused()
-        ? `0 0 0 1px ${borderColorValue}`
-        : "none";
     } else if (variant === "underlined") {
       inputWrapper.style.borderBottomColor = borderColorValue;
-      inputWrapper.style.boxShadow = isFocused()
-        ? `inset 0 -1px 0 0 ${borderColorValue}`
-        : "none";
     }
 
     if (showValidationIcon && validationIcon) {
@@ -282,18 +278,33 @@ export const Input = (props) => {
       }
     }
 
+    let messageToShow = "";
+    if (validationMessage && showValidationMessage && !isValid && !error) {
+      messageToShow = validationMessage;
+    } else if (error) {
+      messageToShow = error === true ? "Invalid value" : error;
+    }
+
     if (errorMessageElement) {
-      if (validationMessage && showValidationMessage && !isValid && !error) {
-        errorMessageElement.textContent = validationMessage;
-        errorMessageElement.style.color = colors.danger;
-        errorMessageElement.style.display = "block";
-      } else if (error) {
-        errorMessageElement.textContent =
-          error === true ? "Invalid value" : error;
+      if (messageToShow) {
+        errorMessageElement.textContent = messageToShow;
         errorMessageElement.style.color = colors.danger;
         errorMessageElement.style.display = "block";
       } else {
         errorMessageElement.style.display = "none";
+      }
+    }
+
+    // A red rim says "wrong" to an eye and nothing to anyone else. `aria-invalid`
+    // is the state, and the description is the reason, so they toggle together:
+    // a field that is invalid with no message attached reads as a broken control.
+    if (inputElement) {
+      if (messageToShow) {
+        inputElement.setAttribute("aria-invalid", "true");
+        inputElement.setAttribute("aria-describedby", errorId);
+      } else {
+        inputElement.removeAttribute("aria-invalid");
+        inputElement.removeAttribute("aria-describedby");
       }
     }
   };
@@ -411,11 +422,18 @@ export const Input = (props) => {
   inputWrapper = WidgetFactory({
     tag: "div",
     disableTransform: true,
+    // Tells the engine's focus rule which box is the field: the ring belongs
+    // around this element, not around the text box inside it.
+    "data-fb-field": "true",
     ...wrapperStyles,
   });
 
   // --- Optional left icon ---
   if (iconLeft) {
+    // With `onIconPress` the icon is a control, so it is built as one: the click
+    // goes in as a prop — which is what lets the engine give it a role, a Tab
+    // stop and Enter — and it takes the glyph's own name, because an icon-only
+    // control with no name reads as "button".
     const iconEl = Icon({
       name: iconLeft,
       size: iconSize || sz.iconSize,
@@ -423,8 +441,9 @@ export const Input = (props) => {
       marginLeft: 12,
       flexShrink: 0,
       pointerEvents: "auto",
+      "aria-label": onIconPress ? iconLeft : undefined,
+      onclick: onIconPress,
     });
-    if (onIconPress) iconEl.onclick = onIconPress;
     inputWrapper.appendChild(iconEl);
   }
 
@@ -446,7 +465,11 @@ export const Input = (props) => {
   inputElement.style.fontSize = toREM(sz.fontSize);
   inputElement.style.minHeight = toREM(sz.minHeight);
   inputElement.style.border = "none";
-  inputElement.style.outline = "none";
+  // Deliberately no `outline` here. An inline declaration outranks every
+  // stylesheet rule, so the `outline: none` this widget used to write is what
+  // left a focused field with no ring — and the `filled` variant, which has no
+  // border to highlight, no focus signal at all. `src/utils/focusRing.js` paints
+  // the ring around the wrapper, where the whole control is.
   inputElement.style.backgroundColor = "transparent";
   inputElement.style.fontFamily = "inherit";
   inputElement.style.width = "100%";
@@ -465,16 +488,8 @@ export const Input = (props) => {
   });
 
   inputElement.addEventListener("focus", (e) => {
-    // Highlight the border on focus to signal the active field.
-    // The border width stays at 1px; the thicker focus look comes from a
-    // 1px box-shadow ring so focusing never resizes the box or shifts layout.
-    if (variant === "outlined") {
-      inputWrapper.style.borderColor = colors.primary;
-      inputWrapper.style.boxShadow = `0 0 0 1px ${colors.primary}`;
-    } else if (variant === "underlined") {
-      inputWrapper.style.borderBottomColor = colors.primary;
-      inputWrapper.style.boxShadow = `inset 0 -1px 0 0 ${colors.primary}`;
-    }
+    // No paint here. The engine's `:focus-visible` rule draws the ring, and it
+    // reaches this field only because nothing hides it with an inline `outline`.
     if (onFocus) onFocus(e);
   });
 
@@ -482,12 +497,8 @@ export const Input = (props) => {
     // Restore normal border and run final validation when the user leaves the field
     if (variant === "outlined") {
       inputWrapper.style.borderColor = error ? colors.danger : colors.border;
-      inputWrapper.style.boxShadow = "none";
     } else if (variant === "underlined") {
-      inputWrapper.style.borderBottomColor = error
-        ? colors.danger
-        : colors.border;
-      inputWrapper.style.boxShadow = "none";
+      inputWrapper.style.borderBottomColor = error ? colors.danger : colors.border;
     }
     const result = validateValue(currentValue);
     isValid = result.valid;
@@ -590,8 +601,9 @@ export const Input = (props) => {
       marginRight: 12,
       flexShrink: 0,
       pointerEvents: "auto",
+      "aria-label": onIconPress ? iconRight : undefined,
+      onclick: onIconPress,
     });
-    if (onIconPress) iconEl.onclick = onIconPress;
     inputWrapper.appendChild(iconEl);
   }
 
@@ -599,6 +611,11 @@ export const Input = (props) => {
 
   // --- Error message element rendered below the input ---
   errorMessageElement = document.createElement("span");
+  errorMessageElement.id = errorId;
+  // `polite`, not `assertive`: the message is the field's answer when the reader
+  // leaves it, not an interruption. An assertive one would talk over whatever the
+  // person was in the middle of hearing.
+  errorMessageElement.setAttribute("aria-live", "polite");
   errorMessageElement.textContent = "";
   errorMessageElement.style.fontSize = toREM(12);
   errorMessageElement.style.color = colors.danger;

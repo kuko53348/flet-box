@@ -36,6 +36,11 @@ const BINDABLE_KEYS = [
   "clearable",
 ];
 
+/** The menu is mounted into a portal on `document.body`, so the combobox has to
+ *  point at it by id (`aria-controls`, then `aria-activedescendant` for the
+ *  highlighted row). Same seed pattern as `Input`. */
+let dropdownIdSeed = 0;
+
 export const Dropdown = (inputProps = {}) => {
   // The factory never receives these keys, so it can neither resolve a `useState`
   // value for them (a live reactive is a *function*, and `findSelected()` would
@@ -98,6 +103,20 @@ export const Dropdown = (inputProps = {}) => {
   let outsideClickListener = null;
   let resizeListener = null;
   let scrollListener = null;
+
+  // A keyboard user never moves focus into the menu: the combobox keeps it and
+  // points at the highlighted row through `aria-activedescendant`. So the open
+  // menu needs its option nodes in build order, and one index into them.
+  let optionNodes = [];
+  let activeIndex = -1;
+
+  const baseId =
+    typeof rest.id === "string" && rest.id
+      ? rest.id
+      : `fletbox-dropdown-${++dropdownIdSeed}`;
+  const listboxId = `${baseId}-listbox`;
+  const labelId = `${baseId}-label`;
+  const optionId = (index) => `${listboxId}-option-${index}`;
 
   /** [vertical, horizontal] in framework units — see `Input`: a `"8px 14px"`
    *  string is raw CSS and stops the field growing with the reader's font. */
@@ -197,7 +216,37 @@ export const Dropdown = (inputProps = {}) => {
   });
   rightContent.push(arrowIcon);
 
+  // The engine decides whether a control is keyboard-operable by reading
+  // `widget.onclick` while the factory runs, so the press path belongs in these
+  // props and not in an assignment made after `Row()` has returned — assigned
+  // late, the selector stayed a plain `div` no keyboard could ever reach.
+  //
+  // `disableTransform` because this row is the full width of the field: it must
+  // not shrink or lift on press, and the arrow already rotates for that.
+  const pressSelector = (event) => {
+    if (event) event.stopPropagation();
+    if (currentDisabled) return;
+    if (!isOpen) {
+      openMenu();
+      return;
+    }
+    // Open: Enter and Space take the highlighted row, the way a native select
+    // does. With nothing highlighted they only close it.
+    if (activeIndex >= 0) chooseOption(activeIndex);
+    else closeMenu();
+  };
+
   const selector = Row({
+    role: "combobox",
+    "aria-haspopup": "listbox",
+    "aria-expanded": "false",
+    // The label is a sibling `<label>` that describes nothing of its own; naming
+    // the combobox from it is what makes the field read as "Country, collapsed"
+    // instead of an unnamed box.
+    "aria-labelledby": currentLabel ? labelId : undefined,
+    tabIndex: currentDisabled ? -1 : 0,
+    onclick: pressSelector,
+    disableTransform: true,
     alignItems: "center",
     justifyContent: "space-between",
     width: "100%",
@@ -257,6 +306,7 @@ export const Dropdown = (inputProps = {}) => {
   if (currentLabel) {
     const labelEl = WidgetFactory({
       tag: "label",
+      id: labelId,
       textContent: currentLabel,
       fontSize: 12,
       color: currentError ? colors.danger : colors.textSecondary,
@@ -267,6 +317,19 @@ export const Dropdown = (inputProps = {}) => {
   }
   container.appendChild(selector);
 
+  // The states that follow these props are set here instead of in the props
+  // object, because `update()` patches this child directly and the factory never
+  // re-runs for it — a prop could only be read once, at build.
+  const syncControlState = () => {
+    selector.setAttribute("aria-disabled", String(Boolean(currentDisabled)));
+    selector.tabIndex = currentDisabled ? -1 : 0;
+    if (currentError) selector.setAttribute("aria-invalid", "true");
+    else selector.removeAttribute("aria-invalid");
+    if (currentLabel) selector.setAttribute("aria-labelledby", labelId);
+    else selector.removeAttribute("aria-labelledby");
+  };
+  syncControlState();
+
   // Menu functions (portal)
   const closeMenu = () => {
     if (!isOpen) return;
@@ -274,8 +337,16 @@ export const Dropdown = (inputProps = {}) => {
       menuElement.parentNode.removeChild(menuElement);
     }
     menuElement = null;
+    optionNodes = [];
+    activeIndex = -1;
     arrowIcon.style.transform = "rotate(0deg)";
     isOpen = false;
+    // The listbox is gone from the DOM: leaving `aria-controls` or
+    // `aria-activedescendant` pointing at it is a broken reference a screen
+    // reader reads as an announcement that never arrives.
+    selector.setAttribute("aria-expanded", "false");
+    selector.removeAttribute("aria-controls");
+    selector.removeAttribute("aria-activedescendant");
 
     if (outsideClickListener)
       document.removeEventListener("click", outsideClickListener);
@@ -319,12 +390,57 @@ export const Dropdown = (inputProps = {}) => {
     }
   };
 
+  /** A row's background comes from its state, not from the last pointer event:
+   *  one question — highlighted, selected, or neither — so the keyboard and the
+   *  mouse cannot paint two different answers. */
+  const optionBackground = (index) => {
+    if (index === activeIndex) return currentOptionHoverColor;
+    const opt = currentOptions[index];
+    return opt !== undefined && getValue(opt) === selectedValue
+      ? currentColor + "15"
+      : "transparent";
+  };
+
+  const paintOption = (index) => {
+    const node = optionNodes[index];
+    if (node) node.style.backgroundColor = optionBackground(index);
+  };
+
+  /** Focus never moves into the menu: the combobox keeps it and points at the
+   *  highlighted row, which is what lets a 200-item list stay one tab stop. */
+  const setActive = (next) => {
+    if (!optionNodes.length) return;
+    const clamped = Math.max(0, Math.min(next, optionNodes.length - 1));
+    if (clamped === activeIndex) return;
+    const previous = activeIndex;
+    activeIndex = clamped;
+    paintOption(previous);
+    const node = optionNodes[activeIndex];
+    paintOption(activeIndex);
+    node.scrollIntoView({ block: "nearest" });
+    selector.setAttribute("aria-activedescendant", node.id);
+  };
+
+  /** The single path that commits a value — the click on a row and Enter on the
+   *  highlighted row both come through here, so `onPress` fires exactly once. */
+  const chooseOption = (index) => {
+    const opt = currentOptions[index];
+    if (opt === undefined) return;
+    const optValue = getValue(opt);
+    selectedValue = optValue;
+    if (effectiveOnChange) effectiveOnChange(optValue);
+    updateDisplay();
+    closeMenu();
+  };
+
   const openMenu = () => {
     if (currentDisabled || isOpen) return;
     closeMenu();
     isOpen = true;
 
     menuElement = Column({
+      id: listboxId,
+      role: "listbox",
       zIndex: 10000,
       border: `1px solid ${colors.border}`,
       backgroundColor: currentBgColor,
@@ -337,7 +453,7 @@ export const Dropdown = (inputProps = {}) => {
       color: currentTextColor, // inherit textColor
     });
 
-    currentOptions.forEach((opt) => {
+    currentOptions.forEach((opt, index) => {
       const optValue = getValue(opt);
       const optLabel = getLabel(opt);
       const optIcon = getIcon(opt);
@@ -358,6 +474,15 @@ export const Dropdown = (inputProps = {}) => {
       );
 
       const optionItem = Row({
+        id: optionId(index),
+        // `option`, not `button`: a screen reader in listbox mode reads the rows
+        // as choices and stays in browse mode, so the arrow keys keep meaning
+        // "next choice" instead of "next focus stop". `tabIndex -1` for the same
+        // reason — a long list must not become a hundred tab stops; the highlight
+        // moves instead of the focus.
+        role: "option",
+        "aria-selected": String(isSelected),
+        tabIndex: -1,
         paddingVertical: 8,
         paddingHorizontal: 12,
         minHeight: TAP_MINIMUM,
@@ -379,25 +504,18 @@ export const Dropdown = (inputProps = {}) => {
         ].filter(Boolean),
       });
 
-      optionItem.onmouseenter = () => {
-        if (!isSelected)
-          optionItem.style.backgroundColor = currentOptionHoverColor;
-      };
-      optionItem.onmouseleave = () => {
-        optionItem.style.backgroundColor = isSelected
-          ? currentColor + "15"
-          : "transparent";
-      };
+      // Hover moves the highlight, so the row under the pointer is the row Enter
+      // would take. Leaving repaints from state instead of wiping to
+      // "transparent": that is what dropped the keyboard highlight as soon as the
+      // mouse crossed an option on its way past it.
+      optionItem.onmouseenter = () => setActive(index);
+      optionItem.onmouseleave = () => paintOption(index);
       optionItem.onclick = (e) => {
         e.stopPropagation();
-        if (!currentDisabled) {
-          selectedValue = optValue;
-          if (effectiveOnChange) effectiveOnChange(optValue);
-          updateDisplay();
-          closeMenu();
-        }
+        if (!currentDisabled) chooseOption(index);
       };
       menuElement.appendChild(optionItem);
+      optionNodes.push(optionItem);
     });
 
     if (portal) {
@@ -415,6 +533,15 @@ export const Dropdown = (inputProps = {}) => {
       menuElement.style.width = "100%";
     }
 
+    // Only once the listbox is in the DOM: while it is detached these are
+    // references to nothing.
+    selector.setAttribute("aria-expanded", "true");
+    selector.setAttribute("aria-controls", listboxId);
+    const selectedIndex = currentOptions.findIndex(
+      (entry) => getValue(entry) === selectedValue,
+    );
+    if (selectedIndex >= 0) setActive(selectedIndex);
+
     arrowIcon.style.transform = "rotate(180deg)";
 
     outsideClickListener = (e) => {
@@ -428,11 +555,78 @@ export const Dropdown = (inputProps = {}) => {
     document.addEventListener("click", outsideClickListener);
   };
 
-  selector.onclick = (e) => {
-    e.stopPropagation();
-    if (currentDisabled) return;
-    isOpen ? closeMenu() : openMenu();
+  // Enter and Space are deliberately absent: the engine's own key handler calls
+  // `onclick` for those, and `pressSelector` already opens while closed and takes
+  // the highlighted row while open. Handling them again here would run the press
+  // twice — open, then immediately choose.
+  //
+  // `event.target !== selector` leaves a keystroke to whatever control inside the
+  // field actually holds it.
+  const onSelectorKeyDown = (e) => {
+    if (e.target !== selector || currentDisabled) return;
+    const total = optionNodes.length;
+
+    if (!isOpen) {
+      // Opening with an arrow lands on the current value, or the first choice
+      // when nothing is selected yet — the same place a native select puts it.
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        e.preventDefault();
+        openMenu();
+        const start = currentOptions.findIndex(
+          (entry) => getValue(entry) === selectedValue,
+        );
+        setActive(start >= 0 ? start : 0);
+      }
+      return;
+    }
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        setActive(activeIndex + 1);
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setActive(activeIndex <= 0 ? total - 1 : activeIndex - 1);
+        break;
+      case "Home":
+        e.preventDefault();
+        setActive(0);
+        break;
+      case "End":
+        e.preventDefault();
+        setActive(total - 1);
+        break;
+      case "Escape":
+        // Discard, the way a native select does: closing on Escape must not
+        // commit the row the arrows happened to rest on.
+        e.preventDefault();
+        e.stopPropagation();
+        closeMenu();
+        break;
+      case "Tab":
+        // Leaving the control closes the menu; a detached listbox behind the tab
+        // order is a region of the page no key can reach again.
+        closeMenu();
+        break;
+      default:
+        if (e.key.length === 1) {
+          const typed = e.key.toLowerCase();
+          const found = currentOptions.findIndex((entry) =>
+            getLabel(entry).toLowerCase().startsWith(typed),
+          );
+          if (found >= 0) {
+            e.preventDefault();
+            setActive(found);
+          }
+        }
+    }
   };
+
+  selector.addEventListener("keydown", onSelectorKeyDown);
+  container.onUnmount(() =>
+    selector.removeEventListener("keydown", onSelectorKeyDown),
+  );
 
   // Public API and reactivity
   const update = (newProps) => {
@@ -470,6 +664,7 @@ export const Dropdown = (inputProps = {}) => {
       else if (currentLabel) {
         const labelEl = WidgetFactory({
           tag: "label",
+          id: labelId,
           textContent: currentLabel,
           fontSize: "12px",
           color: currentError ? colors.danger : colors.textSecondary,
@@ -507,6 +702,7 @@ export const Dropdown = (inputProps = {}) => {
       needsDisplayUpdate = true;
     }
     if (needsDisplayUpdate) {
+      syncControlState();
       updateDisplay();
       selector.style.padding = `${toREM(currentSize.padding[0])} ${toREM(currentSize.padding[1])}`;
       selector.style.minHeight = toREM(currentSize.minHeight);

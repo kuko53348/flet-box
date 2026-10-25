@@ -104,6 +104,9 @@ export const Chip = (props) => {
   if (onDelete) {
     const closeIcon = Icon({
       name: "close",
+      // The glyph is decoration and the ligature is not a name: "close" is what a
+      // reader would say, on a control whose whole job is to take this label away.
+      "aria-label": label ? `Remove ${label}` : "Remove",
       size: Math.max(12, size - 2),
       color: txtColor,
       cursor: "pointer",

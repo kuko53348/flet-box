@@ -48,8 +48,11 @@ import { toREM } from "../utils/units.js";
  * - `pills` — rounded pill-shaped tab buttons.
  * - `slider` — an animated filled thumb that slides under the active tab.
  *
- * The active tab tracks a `currentIndex` state internally. Keyboard
- * navigation (Enter/Space) and ARIA attributes are included for accessibility.
+ * The active tab tracks a `currentIndex` state internally. The bar is a
+ * `tablist` of `tab`s that control a `tabpanel`: the bar is one stop on the Tab
+ * path (roving `tabIndex`) and the arrow keys, Home and End move between the
+ * tabs and activate what they land on. Enter and Space press the tab through
+ * the engine's own keyboard handler.
  *
  * A ResizeObserver and a window resize listener keep the slider thumb
  * position correct when the tab bar dimensions change.
@@ -59,6 +62,8 @@ import { toREM } from "../utils/units.js";
  *   - `activeIndex` (getter/setter) — read or set the active tab index.
  *   - `setActiveTab(index: number)` — alias for the setter.
  */
+let tabsIdSeed = 0;
+
 export const Tabs = (props) => {
   const {
     tabs = [],
@@ -93,6 +98,16 @@ export const Tabs = (props) => {
   let activeIndicator = null;
   let tabsWrapperRef = null;
   let tabButtonsRef = [];
+
+  // A tab and its panel point at each other (`aria-controls` one way,
+  // `aria-labelledby` back), so both need ids. Derived from the caller's `id`
+  // when there is one, so a re-render keeps the pairing instead of moving it.
+  const baseId =
+    typeof rest.id === "string" && rest.id
+      ? rest.id
+      : `fletbox-tabs-${++tabsIdSeed}`;
+  const panelId = `${baseId}-panel`;
+  const tabId = (idx) => `${baseId}-tab-${idx}`;
 
   // Size preset lookup — controls padding, font size, icon size, content
   // padding, and minimum height in a single prop for consistent scaling.
@@ -151,6 +166,10 @@ export const Tabs = (props) => {
   });
 
   const tabsWrapper = Row({
+    // The bar is a set of tabs, not a row of buttons: without the `tablist`
+    // parent, a reader hears five unrelated controls and a panel belonging to
+    // none of them.
+    role: "tablist",
     alignItems: "center",
     justifyContent: fullWidth ? "space-between" : "flex-start",
     gap: variant === "pills" ? 4 : 0,
@@ -164,6 +183,27 @@ export const Tabs = (props) => {
   tabsWrapperRef = tabsWrapper;
 
   const tabButtons = [];
+
+  /**
+   * Activate a tab and, when asked, hand it the keyboard.
+   *
+   * One helper because three doors lead here: the click, the arrow keys and the
+   * public `activeIndex` setter. Each used to repeat the same three statements,
+   * and only the click and the setter carried the panel with them.
+   */
+  const selectTab = (idx, moveFocus = false) => {
+    if (idx < 0 || idx >= tabs.length || currentIndex === idx) return;
+    currentIndex = idx;
+    updateActiveTab(idx);
+    onChange?.(idx);
+    if (moveFocus) tabButtonsRef[idx]?.focus();
+  };
+
+  /** The tab `delta` places along the bar, wrapping at both ends. */
+  const stepTab = (from, delta) => {
+    if (!tabs.length) return 0;
+    return (((from + delta) % tabs.length) + tabs.length) % tabs.length;
+  };
 
   tabs.forEach((tab, idx) => {
     const label = getLabel(tab);
@@ -241,30 +281,52 @@ export const Tabs = (props) => {
       // Subtract the slider's internal padding so buttons don't overflow it.
       minHeight: sz.h - (variant === "slider" ? 8 : 0),
       zIndex: 2,
-      // Accessibility: expose as a tab role with aria-selected.
+      // Accessibility: a tab, selected or not, that owns the panel below it.
+      // `aria-controls` is what tells a reader that pressing here has a place
+      // they will land, not only a colour change.
       role: "tab",
-      tabIndex: 0,
+      id: tabId(idx),
+      "aria-controls": panelId,
       "aria-selected": isActive.toString(),
+      // Roving tabindex: the whole bar is one stop on the Tab path and the
+      // arrows move inside it. Every tab left at 0 would make a reader Tab
+      // through the entire bar before reaching the content it is on about.
+      tabIndex: isActive ? 0 : -1,
+      // The press is a prop, not an assignment made after `Container()` has
+      // returned: the engine reads `widget.onclick` while the widget is built,
+      // and a handler wired afterwards is a tab only a mouse can press. That
+      // is also why Enter and Space are absent below — the engine's own key
+      // handler turns them into this click, and repeating them here would run
+      // the press twice.
+      onclick: () => selectTab(idx),
+      // The indicator is placed from `getBoundingClientRect()`, so a press that
+      // scaled the tab would report a narrower button than the one it is
+      // measuring and the underline would land off-centre mid-press.
+      disableTransform: true,
       onKeyDown: (e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          if (currentIndex !== idx) {
-            currentIndex = idx;
-            updateActiveTab(idx);
-            onChange?.(idx);
-          }
+        switch (e.key) {
+          case "ArrowRight":
+          case "ArrowDown":
+            e.preventDefault();
+            selectTab(stepTab(currentIndex, 1), true);
+            break;
+          case "ArrowLeft":
+          case "ArrowUp":
+            e.preventDefault();
+            selectTab(stepTab(currentIndex, -1), true);
+            break;
+          case "Home":
+            e.preventDefault();
+            selectTab(0, true);
+            break;
+          case "End":
+            e.preventDefault();
+            selectTab(tabs.length - 1, true);
+            break;
         }
       },
       child: content,
     });
-
-    btn.onclick = () => {
-      if (currentIndex !== idx) {
-        currentIndex = idx;
-        updateActiveTab(idx);
-        onChange?.(idx);
-      }
-    };
 
     tabButtons.push(btn);
     tabsWrapper.appendChild(btn);
@@ -306,6 +368,13 @@ export const Tabs = (props) => {
   container.appendChild(tabBar);
 
   const contentContainer = Container({
+    // The pane is the thing a tab `aria-controls`: named by the tab that opened
+    // it, and a stop itself, so a reader who presses Tab from the bar lands
+    // inside the content instead of jumping past it.
+    role: "tabpanel",
+    id: panelId,
+    "aria-labelledby": tabs.length ? tabId(currentIndex) : undefined,
+    tabIndex: 0,
     display: "flex",
     padding: `${toREM(sz.cp)} 0`,
     width: "100%",
@@ -347,8 +416,12 @@ export const Tabs = (props) => {
     tabButtonsRef.forEach((btn, i) => {
       const isActive = i === idx;
 
-      // Keep aria-selected in sync with the visual state.
+      // Keep the announced state, the Tab path and the panel's name in sync with
+      // the visual state. All three are the same fact seen from the keyboard: a
+      // tab that looks active but is not `aria-selected`, or a bar where every
+      // tab is still a stop, is a control that answers differently to two senses.
       btn.setAttribute("aria-selected", isActive.toString());
+      btn.tabIndex = isActive ? 0 : -1;
 
       const textSpan = btn.querySelector("span:not(.material-icons)");
       if (textSpan) {
@@ -365,6 +438,8 @@ export const Tabs = (props) => {
 
     updateSliderPosition();
     updateContent();
+    // The pane changed hands, so the tab it is named by changes too.
+    contentContainer.setAttribute("aria-labelledby", tabId(idx));
   };
 
   // Mount the initially active pane during construction. Without this the pane
@@ -436,13 +511,7 @@ export const Tabs = (props) => {
   // ========== PUBLIC API ==========
   Object.defineProperty(container, "activeIndex", {
     get: () => currentIndex,
-    set: (idx) => {
-      if (idx >= 0 && idx < tabs.length && currentIndex !== idx) {
-        currentIndex = idx;
-        updateActiveTab(idx);
-        onChange?.(idx);
-      }
-    },
+    set: (idx) => selectTab(idx),
   });
 
   /**

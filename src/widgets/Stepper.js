@@ -133,6 +133,14 @@ export const Stepper = (props) => {
         flex: needsWrap ? "auto" : 1,
         minWidth: needsWrap ? "80px" : "0",
         cursor: "pointer",
+        // The number, the check and the accent carry the stage, and all three are
+        // drawn: the check is a decorative glyph and the label alone does not say
+        // whether the step is behind, ahead or where you are. The state goes in
+        // the name, and `aria-current` marks the step you are on.
+        "aria-label": `${step.label || `Step ${idx + 1}`} (${
+          isCompleted ? "completed" : isActive ? "current" : "upcoming"
+        })`,
+        "aria-current": isActive ? "step" : undefined,
         onclick: () => goToStep(idx),
         children: [indicator, label].filter(Boolean),
       });

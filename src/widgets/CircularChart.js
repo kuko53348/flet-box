@@ -471,6 +471,20 @@ export const CircularChart = (props) => {
     }
   };
 
+  /**
+   * The slices as a sentence. To a reader a canvas is one empty rectangle, so
+   * the numbers painted inside it have to be said beside it.
+   */
+  const chartSummary = () =>
+    data.length === 0
+      ? "Chart with no data"
+      : `Chart: ${data
+          .map(
+            (slice, i) =>
+              `${slice?.label || `Slice ${i + 1}`} ${slice?.value ?? 0}`,
+          )
+          .join(", ")}`;
+
   const initWidget = () => {
     container = WidgetFactory({
       tag: "div",
@@ -497,6 +511,8 @@ export const CircularChart = (props) => {
     canvas.style.display = "block";
     canvas.style.width = "100%";
     canvas.style.height = "100%";
+    canvas.setAttribute("role", "img");
+    canvas.setAttribute("aria-label", chartSummary());
     canvas.addEventListener("click", handleCanvasClick);
     canvas.addEventListener("mousemove", handleCanvasMousemove);
     canvas.addEventListener("mouseleave", () => {
@@ -527,6 +543,8 @@ export const CircularChart = (props) => {
   const updateData = (newData, animateUpdate = true) => {
     if (!Array.isArray(newData)) return;
     data = newData;
+    // New numbers on the drawing, and new numbers in the sentence that says them.
+    if (canvas) canvas.setAttribute("aria-label", chartSummary());
     animate = animateUpdate;
     startAnimation();
   };

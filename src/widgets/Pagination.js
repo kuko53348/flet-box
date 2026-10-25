@@ -84,6 +84,10 @@ export const Pagination = (props) => {
 
     return Button({
       text: String(page),
+      // The plate is the only thing that says "this is the page you are on", and a
+      // colour is not something a reader hears. `aria-current` is the same fact in
+      // the accessibility tree.
+      ...(isActive ? { "aria-current": "page" } : null),
       variant: buttonVariant,
       bgColor: isActive ? color : "transparent",
       color: buttonColor,
@@ -95,7 +99,18 @@ export const Pagination = (props) => {
   };
 
   const createIconButton = (iconName, onClick, isDisabled = false) => {
+    // A glyph button has no text to read. The `Icon` inside is decoration — the
+    // ligature would be spoken as `chevron_left` — so the name belongs to the
+    // button, and these five glyphs are the whole vocabulary this strip uses.
+    const glyphNames = {
+      first_page: "First page",
+      last_page: "Last page",
+      chevron_left: "Previous page",
+      chevron_right: "Next page",
+    };
+
     return Button({
+      "aria-label": glyphNames[iconName] || "Page",
       child: Icon({
         name: iconName,
         size: sz.iconSize,
@@ -113,6 +128,10 @@ export const Pagination = (props) => {
   // Main container using Row (already a widget)
   const container = Row({
     widgetName: "Pagination",
+    // A row of bare numbers is not a landmark. Named, it is something a reader can
+    // jump to, jump past, and understand the buttons inside.
+    role: "navigation",
+    "aria-label": "Pagination",
     alignItems: "center",
     gap: sz.gap,
     justifyContent: "center",
@@ -143,7 +162,14 @@ export const Pagination = (props) => {
     container.appendChild(createPageButton(1));
     if (pageNumbers[0] > 2) {
       container.appendChild(
-        Text({ text: "...", size: sz.fontSize, color: colors.textSecondary }),
+        Text({
+          text: "...",
+          // The skipped pages are a visual ellipsis: spoken as "dot dot dot" it is
+          // noise, and the jump is already implied by the numbers around it.
+          "aria-hidden": "true",
+          size: sz.fontSize,
+          color: colors.textSecondary,
+        }),
       );
     }
   }
@@ -155,7 +181,14 @@ export const Pagination = (props) => {
   if (pageNumbers[pageNumbers.length - 1] < totalPages) {
     if (pageNumbers[pageNumbers.length - 1] < totalPages - 1) {
       container.appendChild(
-        Text({ text: "...", size: sz.fontSize, color: colors.textSecondary }),
+        Text({
+          text: "...",
+          // The skipped pages are a visual ellipsis: spoken as "dot dot dot" it is
+          // noise, and the jump is already implied by the numbers around it.
+          "aria-hidden": "true",
+          size: sz.fontSize,
+          color: colors.textSecondary,
+        }),
       );
     }
     container.appendChild(createPageButton(totalPages));

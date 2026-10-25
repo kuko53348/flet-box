@@ -46,6 +46,7 @@ const filters = args.filter((a) => !a.startsWith("--"));
 const HARNESSES = [
   { page: "tests/smoke.html", global: "__SMOKE", label: "smoke (every widget instantiates)" },
   { page: "tests/regression.html", global: "__REGRESSION", label: "regression guards (audit fixes)" },
+  { page: "tests/a11y.html", global: "__A11Y", label: "accessibility contract (ring, roles, trap)" },
   { page: "tests/motion.html", global: "__MOTION", label: "motion contract (transitions, curves, reduced motion)" },
   { page: "tests/index.html", global: "__TESTS", label: "widget-factory contract" },
   { page: "tests/widget-contract.html", global: "__CONTRACT", label: "widget runtime contract" },

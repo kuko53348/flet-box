@@ -10,6 +10,7 @@ import { Text } from "./Text.js";
 import { Icon } from "./Icon.js";
 import { Container } from "./Container.js";
 import { toREM } from "../utils/units.js";
+import { trapFocus } from "../utils/focusScope.js";
 
 export const BottomSheet = (props) => {
   const {
@@ -64,6 +65,17 @@ export const BottomSheet = (props) => {
   // Pending "hide after the close animation" timer, so it can be cancelled.
   let closeTimer = null;
   let sheetContainer = null;
+  // What `trapFocus` hands back while the sheet is open (see Modal.js for the
+  // whole argument): Tab stays inside the panel and focus goes home on close.
+  let releaseFocusScope = null;
+
+  /** Releases the Tab trap exactly once, whoever asks for it first. */
+  const leaveFocusScope = () => {
+    if (!releaseFocusScope) return;
+    releaseFocusScope();
+    releaseFocusScope = null;
+  };
+
   let startY = 0;
   let currentY = 0;
 
@@ -76,6 +88,10 @@ export const BottomSheet = (props) => {
     height: "100%",
     backgroundColor: overlayColor,
     zIndex: overlayZIndex,
+    // The scrim closes the sheet for a pointer and is nothing for a keyboard —
+    // left to the engine, its `click` would become a full-viewport tab stop.
+    role: "presentation",
+    tabIndex: -1,
     opacity: 0,
     visibility: "hidden",
     transition: `opacity ${animationDuration}ms ease, visibility ${animationDuration}ms ease`,
@@ -116,13 +132,19 @@ onclick: (e) => e.stopPropagation(), // ✅ Prevents the click from reaching the
     );
   }
   if (showCloseButton) {
+    // Both the name and the handler are props, not post-hoc assignments: `Icon`
+    // decides whether it is decoration from the props it is handed, and the engine
+    // only makes a control keyboard-operable when it can see the press while the
+    // widget is built. Set after the fact, this close button was a mouse-only "×"
+    // that a reader could not even find.
     const closeBtn = Icon({
       name: "close",
       size: 22,
       color: colors.textSecondary,
       cursor: "pointer",
+      onclick: () => close(),
+      "aria-label": "Close sheet",
     });
-    closeBtn.onclick = () => close();
     headerChildren.push(closeBtn);
   }
 
@@ -189,6 +211,12 @@ onclick: (e) => e.stopPropagation(), // ✅ Prevents the click from reaching the
     ),
   });
 
+  sheetContainer.setAttribute("role", "dialog");
+  sheetContainer.setAttribute("aria-modal", "true");
+  if (typeof title === "string" && title) {
+    sheetContainer.setAttribute("aria-label", title);
+  }
+
   sheetContainer.appendChild(sheetBody);
   overlay.appendChild(sheetContainer);
   document.body.appendChild(overlay);
@@ -203,6 +231,7 @@ onclick: (e) => e.stopPropagation(), // ✅ Prevents the click from reaching the
       closeTimer = null;
     }
     document.removeEventListener("keydown", handleKeyDown);
+    leaveFocusScope();
   });
 
   // Drag handlers
@@ -254,6 +283,7 @@ onclick: (e) => e.stopPropagation(), // ✅ Prevents the click from reaching the
     sheetContainer.style.transform = "translateY(0)";
     if (onOpen) onOpen();
     document.addEventListener("keydown", handleKeyDown);
+    releaseFocusScope = trapFocus(sheetContainer);
 
     if (closeOnDragDown && dragHandle) {
       dragHandle.addEventListener("mousedown", onTouchStart);
@@ -277,6 +307,7 @@ onclick: (e) => e.stopPropagation(), // ✅ Prevents the click from reaching the
       closeTimer = null;
       overlay.style.visibility = "hidden";
     }, animationDuration);
+    leaveFocusScope();
     if (onClose) onClose();
     document.removeEventListener("keydown", handleKeyDown);
 
@@ -297,6 +328,7 @@ onclick: (e) => e.stopPropagation(), // ✅ Prevents the click from reaching the
 
   const destroy = () => {
     if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    leaveFocusScope();
     document.removeEventListener("keydown", handleKeyDown);
   };
 

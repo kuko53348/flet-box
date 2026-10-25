@@ -34,6 +34,10 @@ export const Checkbox = (props) => {
   const offColor = disabled ? colors.border : colors.gray500;
 
   const updateUI = (newChecked) => {
+    // The state an assistive technology reads is this attribute, not the tick it
+    // cannot see. `updateUI` is the one place the visual state is painted, so the
+    // attribute and the box cannot disagree.
+    if (checkbox) checkbox.setAttribute("aria-checked", String(Boolean(newChecked)));
     if (checkboxRef) {
       checkboxRef.style.border = `2px solid ${newChecked ? activeColor : offColor}`;
     }
@@ -89,6 +93,12 @@ export const Checkbox = (props) => {
 
   const rootProps = {
     widgetName: "Checkbox",
+    // The drawn box is a `span` and the root is a row, so nothing here is a
+    // checkbox to an assistive technology unless the widget says so. `role`
+    // reaches the factory before `applyEffects`, which is what keeps the engine
+    // from labelling the control `button`.
+    role: "checkbox",
+    "aria-checked": String(Boolean(internalChecked)),
     display: "inline-flex",
     alignItems: "center",
     justifyContent: isLabelled ? "flex-start" : "center",
@@ -121,6 +131,7 @@ export const Checkbox = (props) => {
   // Inline usage (a checkbox dropped mid-paragraph) would otherwise
   // baseline-align the box's bottom edge and lift the square above the text.
   checkbox.style.verticalAlign = "middle";
+  if (disabled) checkbox.setAttribute("aria-disabled", "true");
 
   // Handle click
   if (!disabled) {

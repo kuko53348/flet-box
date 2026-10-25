@@ -103,6 +103,16 @@ export const Slider = (props) => {
   const container = WidgetFactory({
     tag: "div",
     widgetName: "Slider",
+    // The root is the control: what a reader meets, what Tab stops on and what
+    // answers the arrow keys. The thumb is the picture of the value, not a second
+    // stop — and one element is where `updateUI` can keep `aria-valuenow` honest.
+    role: "slider",
+    tabIndex: disabled ? -1 : 0,
+    "aria-valuemin": String(currentMin),
+    "aria-valuemax": String(currentMax),
+    "aria-valuenow": String(currentValue),
+    "aria-orientation": isHorizontal ? "horizontal" : "vertical",
+    "aria-disabled": String(Boolean(disabled)),
     width: isHorizontal ? width : "auto",
     height: !isHorizontal ? width : "auto",
     opacity: disabled ? 0.5 : 1,
@@ -335,6 +345,13 @@ export const Slider = (props) => {
     rawPercent = (currentValue - currentMin) / (currentMax - currentMin);
     displayPercent = inverted ? 1 - rawPercent : rawPercent;
 
+    // The number a reader hears is the one the thumb is drawn at, so both are
+    // written from the same function: a state that only the drag path updates is a
+    // state that goes stale the first time `setValue` or `update({ min })` runs.
+    container.setAttribute("aria-valuenow", String(currentValue));
+    container.setAttribute("aria-valuemin", String(currentMin));
+    container.setAttribute("aria-valuemax", String(currentMax));
+
     if (isHorizontal) {
       fill.style.width = `${displayPercent * 100}%`;
     } else {
@@ -477,6 +494,50 @@ export const Slider = (props) => {
   thumb.addEventListener("mousedown", onStart);
   thumb.addEventListener("touchstart", onStart);
 
+  // ---------- Keyboard ----------
+  // `role="slider"` is a promise of arrow keys: a handle you can drag but not nudge
+  // is announced to a keyboard user as something they cannot move. One step for an
+  // arrow, a coarse one for Page keys, the ends for Home and End — the same set a
+  // native range input answers.
+  const bigStep = () =>
+    Math.max(currentStep, (currentMax - currentMin) / 10);
+
+  const onKeyDown = (e) => {
+    if (disabled) return;
+    let next = null;
+    switch (e.key) {
+      case "ArrowRight":
+      case "ArrowUp":
+        next = currentValue + currentStep;
+        break;
+      case "ArrowLeft":
+      case "ArrowDown":
+        next = currentValue - currentStep;
+        break;
+      case "PageUp":
+        next = currentValue + bigStep();
+        break;
+      case "PageDown":
+        next = currentValue - bigStep();
+        break;
+      case "Home":
+        next = currentMin;
+        break;
+      case "End":
+        next = currentMax;
+        break;
+      default:
+        return;
+    }
+    // Without this, the arrows on a vertical slider scroll the page instead of
+    // moving the value.
+    e.preventDefault();
+    // `triggerEnd` — the same sentence a released drag says, so an app that
+    // commits on `onChangeEnd` commits on a key too.
+    setValue(next, true, true);
+  };
+  container.addEventListener("keydown", onKeyDown);
+
   // ---------- ResizeObserver to reposition thumb ----------
   let resizeObserver = null;
   if (typeof ResizeObserver !== "undefined") {
@@ -548,6 +609,7 @@ export const Slider = (props) => {
     track.removeEventListener("touchstart", onStart);
     thumb.removeEventListener("mousedown", onStart);
     thumb.removeEventListener("touchstart", onStart);
+    container.removeEventListener("keydown", onKeyDown);
     document.removeEventListener("mousemove", onMove);
     document.removeEventListener("mouseup", onEnd);
     document.removeEventListener("touchmove", onMove);

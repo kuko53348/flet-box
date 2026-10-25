@@ -129,9 +129,15 @@ export function SnackBar(options) {
   const show = () => {
     if (closed) return;
     if (rafId !== null) cancelAnimationFrame(rafId);
+    // Empty it here, fill it on the frame after: that gap is the whole reason the
+    // toast is heard. A live region that arrives with its words already inside is
+    // a new landmark, not a change, and a reader who is already on the page is
+    // told nothing. Clearing first also makes a second `show()` speak again.
+    announcer.textContent = "";
     rafId = requestAnimationFrame(() => {
       rafId = null;
       if (closed) return;
+      announcer.textContent = message;
       snackbar.style.opacity = "1";
       snackbar.style.transform = "translateY(0)";
     });
@@ -156,6 +162,7 @@ export function SnackBar(options) {
         : `translateY(calc(-100% - ${toREM(margin)}))`;
     setTimeout(() => {
       if (snackbar.parentNode) snackbar.parentNode.removeChild(snackbar);
+      if (announcer.parentNode) announcer.parentNode.removeChild(announcer);
       if (onClose) onClose();
     }, animationDuration);
   };
@@ -164,10 +171,28 @@ export function SnackBar(options) {
   const messageEl = WidgetFactory({
     tag: "span",
     flex: 1,
-    text: message,
     wordBreak: "break-word",
+    text: message,
   });
   snackbar.appendChild(messageEl);
+
+  // The thing that speaks is not the bar. An error or a warning interrupts the
+  // sentence a reader is in the middle of; a confirmation waits for it to end.
+  // `opacity: 0` and one unit of size, because a `display: none` region is not
+  // read at all, and the bar's own animation is what the eye follows.
+  const announcer = WidgetFactory({
+    tag: "div",
+    role: type === "error" || type === "warning" ? "alert" : "status",
+    "aria-live": type === "error" || type === "warning" ? "assertive" : "polite",
+    position: "fixed",
+    bottom: 0,
+    left: 0,
+    width: 1,
+    height: 1,
+    opacity: 0,
+    overflow: "hidden",
+    pointerEvents: "none",
+  });
 
   // Action button
   let actionBtn = null;
@@ -214,6 +239,9 @@ export function SnackBar(options) {
       opacity: 0.7,
       transition: "opacity 0.2s ease",
       textContent: "✕",
+      // The glyph is not a name. A reader hears "multiplication sign" and has to
+      // guess that this is the thing that dismisses the message.
+      "aria-label": "Dismiss notification",
       onclick: close,
     });
     closeBtn.addEventListener("mouseenter", () => {
@@ -227,6 +255,7 @@ export function SnackBar(options) {
 
   // Add to DOM
   document.body.appendChild(snackbar);
+  document.body.appendChild(announcer);
   // Force reflow
   snackbar.offsetHeight;
 

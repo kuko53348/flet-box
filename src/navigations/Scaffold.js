@@ -1,5 +1,6 @@
 // navigations/Scaffold.js
 import { WidgetFactory } from "../widget-factory/index.js";
+import { applyEffects } from "../widget-factory/effects.js";
 import { colors } from "../utils/themes.js";
 import { initRouter, getCurrentRoute, subscribe } from "./Router.js";
 
@@ -219,6 +220,14 @@ export const Scaffold = (props) => {
               drawerInstance.toggle();
             }
           };
+          // An unnamed `Icon` is `aria-hidden` decoration, and a control you can
+          // tab to that a reader is told to ignore is worse than either. Then run
+          // the engine's own pass over it: role, Tab stop, Enter and Space — and
+          // the release of the handler it adds, which a hand-written
+          // `addEventListener` would leak.
+          menuIcon.removeAttribute("aria-hidden");
+          menuIcon.setAttribute("aria-label", "Open menu");
+          applyEffects(menuIcon);
         }
       }
     }

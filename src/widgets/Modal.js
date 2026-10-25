@@ -6,6 +6,7 @@ import { WidgetFactory } from "../widget-factory/index.js";
 import { transition } from "../tools/index.js";
 import { colors } from "../utils/themes.js";
 import { injectKeyframes } from "../utils/styleInjector.js";
+import { trapFocus } from "../utils/focusScope.js";
 import { Container } from "./Container.js";
 import { Column } from "./Column.js";
 import { Row } from "./Row.js";
@@ -25,6 +26,12 @@ const ModalOverlay = ({
   // main modal transparent
   return WidgetFactory({
     tag: "div",
+    // The scrim closes the dialog for a pointer, and is nothing at all for a
+    // keyboard: the close button and the actions are the controls. Without these
+    // two the engine would read its `click` as a control and put a full-viewport
+    // "button" on the Tab path, inside the trap, ahead of the dialog's own.
+    role: "presentation",
+    tabIndex: -1,
     position: "fixed",
     top: "0",
     left: "0",
@@ -81,6 +88,9 @@ const ModalHeader = ({
       color: headerTextColor || colors.textSecondary,
       cursor: "pointer",
       onclick: onClose,
+      // A glyph is not a name. The engine makes this pressable reachable; this is
+      // what a screen reader then reads.
+      "aria-label": "Close dialog",
       transition: transition({
         property: "opacity",
         duration: 0.2,
@@ -318,6 +328,17 @@ export const Modal = (props = {}) => {
   // Pending "hide after the close animation" timer, so it can be cancelled.
   let closeTimer = null;
   let modalBody = null;
+  // What `trapFocus` hands back while the dialog is open: a keyboard user must
+  // not be able to Tab out behind the scrim, and focus must return to the button
+  // that opened the dialog when it closes.
+  let releaseFocusScope = null;
+
+  /** Releases the Tab trap exactly once, whoever asks for it first. */
+  const leaveFocusScope = () => {
+    if (!releaseFocusScope) return;
+    releaseFocusScope();
+    releaseFocusScope = null;
+  };
 
   // Handlers
   const handleClose = () => {
@@ -336,6 +357,7 @@ export const Modal = (props = {}) => {
       if (overlay) overlay.style.visibility = "hidden";
     }, 300);
     if (closeOnEsc) document.removeEventListener("keydown", handleKeyDown);
+    leaveFocusScope();
     if (onClose) onClose();
   };
 
@@ -357,6 +379,7 @@ export const Modal = (props = {}) => {
     }
     if (onOpen) onOpen();
     if (closeOnEsc) document.addEventListener("keydown", handleKeyDown);
+    releaseFocusScope = trapFocus(modalBody);
   };
 
   const handleKeyDown = (e) => {
@@ -416,6 +439,15 @@ export const Modal = (props = {}) => {
     zIndex,
     overlayColor,
   });
+  // What the panel is to an assistive technology: a dialog, modal while it is
+  // open, and named by its title. `aria-modal` is not decoration — without it a
+  // screen reader keeps reading the page behind the scrim as if it were live.
+  modalBody.setAttribute("role", "dialog");
+  modalBody.setAttribute("aria-modal", "true");
+  if (typeof title === "string" && title) {
+    modalBody.setAttribute("aria-label", title);
+  }
+
   overlay.appendChild(modalBody);
   document.body.appendChild(overlay);
 
@@ -429,6 +461,7 @@ export const Modal = (props = {}) => {
       closeTimer = null;
     }
     if (closeOnEsc) document.removeEventListener("keydown", handleKeyDown);
+    leaveFocusScope();
   });
 
   // Public API
@@ -440,6 +473,7 @@ export const Modal = (props = {}) => {
       if (overlay && overlay.parentNode)
         overlay.parentNode.removeChild(overlay);
       if (closeOnEsc) document.removeEventListener("keydown", handleKeyDown);
+      leaveFocusScope();
     },
     get isOpen() {
       return isOpen;

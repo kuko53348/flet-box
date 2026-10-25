@@ -131,18 +131,23 @@ export const AppBar = (props) => {
   // Auto-create a back button if requested and no custom leading was supplied.
   let finalLeading = leading;
   if (showBackButton && !finalLeading) {
-    const backButton = Icon({
+    // `onclick` as a prop, not an assignment: the engine reads it while the
+    // widget is being built, and that is what gives the icon a role, a Tab stop
+    // and Enter. Assigned afterwards it is a mouse-only glyph. A named icon is
+    // also the only way it is not `aria-hidden`, and an aria-hidden control you
+    // can tab to is worse than no control.
+    finalLeading = Icon({
       name: "arrow_back",
       size: 24,
       color: iconColor,
       cursor: "pointer",
+      "aria-label": "Go back",
+      onclick: () => {
+        if (onBackPress) onBackPress();
+        else if (backButtonRoute) goTo(backButtonRoute);
+        else goBack();
+      },
     });
-    backButton.onclick = () => {
-      if (onBackPress) onBackPress();
-      else if (backButtonRoute) goTo(backButtonRoute);
-      else goBack();
-    };
-    finalLeading = backButton;
   }
 
   // ========== BACKGROUND ==========

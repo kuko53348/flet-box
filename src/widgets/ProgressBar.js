@@ -149,6 +149,18 @@ export const ProgressBar = (props) => {
   // Main container
   const container = WidgetFactory({
     widgetName: "ProgressBar",
+    // A bar is a picture of a number, and a picture says nothing. The role is what
+    // lets a reader hear the number instead: `aria-valuenow` is the same value the
+    // fill width is drawn from.
+    role: "progressbar",
+    "aria-valuemin": "0",
+    "aria-valuemax": String(max),
+    // An indeterminate bar has no progress to report — giving it a number would be
+    // a confident lie, so it is left to `aria-busy` and the label.
+    ...(indeterminate
+      ? { "aria-busy": "true" }
+      : { "aria-valuenow": String(progressValue) }),
+    ...(label ? { "aria-label": label } : null),
     display: "flex",
     flexDirection: isColumn ? "column" : "row",
     alignItems: "center",
@@ -164,6 +176,9 @@ export const ProgressBar = (props) => {
     progressValue = Math.min(Math.max(newValue, 0), max);
     percentage = (progressValue / max) * 100;
     fill.style.width = `${percentage}%`;
+    // The announced number has to be the drawn number: a reader kept on the build
+    // value would hear "0%" while the bar filled.
+    container.setAttribute("aria-valuenow", String(progressValue));
 
     if (valueElRef) {
       valueElRef.textContent = `${Math.round(percentage)}%`;

@@ -38,6 +38,72 @@ const nextElevation = (value) => {
 
 
 /**
+ * The tags HTML already makes reachable: they are on the Tab path, they answer to
+ * Enter or Space, and a screen reader already knows what they are. Nothing here
+ * has to be done for them, and nothing here may be done *to* them — a native
+ * `<button>` given `role="button"` and a second key handler fires its action
+ * twice.
+ *
+ * @type {Set<string>}
+ */
+const NATIVELY_REACHABLE = new Set([
+  "A",
+  "BUTTON",
+  "INPUT",
+  "SELECT",
+  "TEXTAREA",
+]);
+
+/**
+ * Makes an element that only answers to a mouse answer to a keyboard too.
+ *
+ * `onPress` is routed to `click`, and a `click` on a `div` is not something a
+ * keyboard can produce: the widget was invisible to Tab, had no name for an
+ * assistive technology, and did nothing on Enter. This is the whole of the
+ * contract the framework owes — the same three things HTML would have given the
+ * widget for free had it been built from a `button`.
+ *
+ * Everything is conditional on the app not having said so already: an explicit
+ * `role` or `tabIndex` is a decision, and `-1` ("keep this off the Tab path") is
+ * a decision the engine must not overwrite.
+ *
+ * @param {HTMLElement} widget - The pressable element.
+ * @param {Array<{event: string, handler: Function}>} listeners - The effect
+ *   listener list, so the key handler is released by the next update like every
+ *   other effect here.
+ * @returns {void}
+ */
+const makeKeyboardPressable = (widget, listeners) => {
+  if (NATIVELY_REACHABLE.has(widget.tagName)) return;
+  if (widget.disabled === true || widget.getAttribute("aria-disabled") === "true") {
+    return;
+  }
+
+  if (!widget.hasAttribute("role")) widget.setAttribute("role", "button");
+  if (!widget.hasAttribute("tabindex")) widget.tabIndex = 0;
+
+  /**
+   * Enter and Space are what a press is for someone with no pointer.
+   */
+  const onKeyDown = (event) => {
+    // A nested control owns its own keys: pressing Enter on a Button inside a
+    // clickable Card must open the card as well as fire the button.
+    if (event.target !== widget) return;
+    if (event.key !== "Enter" && event.key !== " " && event.key !== "Spacebar") {
+      return;
+    }
+    // Held down, Space is one press, not sixty.
+    if (event.repeat) return;
+    // Space would otherwise scroll the page instead of pressing the control.
+    event.preventDefault();
+    if (typeof widget.onclick === "function") widget.onclick(event);
+  };
+
+  widget.addEventListener("keydown", onKeyDown);
+  listeners.push({ event: "keydown", handler: onKeyDown });
+};
+
+/**
  * Applies interactive visual effects to a widget that has a click handler.
  *
  * On every call, previously registered effect listeners are removed before new
@@ -47,7 +113,11 @@ const nextElevation = (value) => {
  * **Base effects (always applied):**
  * - `-webkit-tap-highlight-color` set to `transparent` to suppress the default
  *   mobile tap flash.
- * - `outline` removed for a cleaner focused appearance.
+ *
+ * The focus ring is **not** touched here. It used to be: this function wrote
+ * `outline: none` onto every widget, which read as a cleaner screenshot and cost
+ * every keyboard user the answer to "where am I". The ring is the document's
+ * own rule (`src/utils/focusRing.js`) and an inline `outline` would outrank it.
  *
  * **Press / hover effects (only when a click handler is present and
  * `disableTransform !== true`):**
@@ -79,10 +149,14 @@ export const applyEffects = (widget) => {
   }
 
   widget.style.webkitTapHighlightColor = "transparent";
-  widget.style.outline = "none";
 
   const hasClick = widget.onclick && typeof widget.onclick === "function";
   if (!hasClick) return widget;
+
+  // Declared here because reachability is not a transform: a widget with
+  // `disableTransform` still has to be operable without a mouse.
+  const listeners = [];
+  makeKeyboardPressable(widget, listeners);
 
   // Store the current shadow so it can be restored after press / hover effects.
   //
@@ -93,7 +167,6 @@ export const applyEffects = (widget) => {
   const hoverShadow = nextElevation(widget._originalShadow);
 
   const disableTransform = widget._originalProps?.disableTransform === true;
-  const listeners = [];
 
   if (!disableTransform) {
     let isPressed = false;

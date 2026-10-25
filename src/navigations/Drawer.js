@@ -59,6 +59,7 @@ let drawerInstance = null;
  * @returns {DrawerInstance}
  */
 import { toREM } from "../utils/units.js";
+import { trapFocus } from "../utils/focusScope.js";
 
 export const Drawer = (props = {}) => {
   const {
@@ -83,6 +84,16 @@ export const Drawer = (props = {}) => {
   const element = document.createElement("div");
   let isOpen = false;
   let closeTimer = null;
+  // What `trapFocus` hands back while the drawer is open: with a backdrop over
+  // the page, Tab must not walk into that page (see Modal.js for the argument).
+  let releaseFocusScope = null;
+
+  /** Releases the Tab trap exactly once, whoever asks for it first. */
+  const leaveFocusScope = () => {
+    if (!releaseFocusScope) return;
+    releaseFocusScope();
+    releaseFocusScope = null;
+  };
 
   // The outer wrapper covers the full screen so the backdrop sits above all
   // other content. It starts hidden and becomes visible on open().
@@ -200,6 +211,8 @@ export const Drawer = (props = {}) => {
   });
 
   drawerPanel.appendChild(contentContainer);
+  drawerPanel.setAttribute("role", "dialog");
+  drawerPanel.setAttribute("aria-modal", "true");
   element.appendChild(overlay);
   element.appendChild(drawerPanel);
 
@@ -232,6 +245,9 @@ export const Drawer = (props = {}) => {
       closeTimer = null;
       if (onClose) onClose();
     }, 300);
+    // Released now, not with the 300 ms hide: the person closing the drawer
+    // should have their keyboard back while it is still sliding out.
+    leaveFocusScope();
     if (closeOnEsc) document.removeEventListener("keydown", handleKeyDown);
   };
 
@@ -257,6 +273,7 @@ export const Drawer = (props = {}) => {
     drawerPanel.style.transform = "translateX(0)";
     if (onOpen) onOpen();
     if (closeOnEsc) document.addEventListener("keydown", handleKeyDown);
+    releaseFocusScope = trapFocus(drawerPanel);
   };
 
   /**
@@ -273,6 +290,7 @@ export const Drawer = (props = {}) => {
    */
   const destroy = () => {
     if (closeTimer) clearTimeout(closeTimer);
+    leaveFocusScope();
     if (closeOnEsc) document.removeEventListener("keydown", handleKeyDown);
     removeResizeListener();
     if (element.parentNode) element.parentNode.removeChild(element);

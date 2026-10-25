@@ -101,6 +101,10 @@ export const BottomNavigation = (props) => {
 
   const container = WidgetFactory({
     tag: "nav",
+    // A page with a sidebar, a tab bar and this bar has three regions called
+    // "navigation"; the name is what tells them apart. An app that disagrees can
+    // pass its own `aria-label`, which wins below.
+    "aria-label": "Main navigation",
     display: "flex",
     width: `calc(100% - ${toREM(finalMarginLeft)} - ${toREM(finalMarginRight)})`,
     height: height,
@@ -117,12 +121,26 @@ export const BottomNavigation = (props) => {
   });
 
   /**
+   * Mark which tab is the page you are on. The colour says it to an eye and
+   * nothing says it to a reader, who otherwise hears a row of identical buttons.
+   *
+   * @param {number} index - The index of the newly active tab.
+   */
+  const markActive = (index) => {
+    buttons.forEach((btnData, i) => {
+      if (i === index) btnData.btn.setAttribute("aria-current", "page");
+      else btnData.btn.removeAttribute("aria-current");
+    });
+  };
+
+  /**
    * Update icon and label colors for the given active tab index.
    * Used exclusively in non-router mode where the bar manages its own state.
    *
    * @param {number} index - The index of the newly active tab.
    */
   const updateActive = (index) => {
+    markActive(index);
     buttons.forEach((btnData, i) => {
       const isActive = i === index;
       const icon = btnData.btn.querySelector(".material-icons");
@@ -159,6 +177,8 @@ export const BottomNavigation = (props) => {
       if (isSelected) activeIndex = idx;
     });
 
+    markActive(activeIndex);
+
     // Fire only when the route actually moved the selection. A consumer that
     // navigates from `onTabChange` (the normal case) would otherwise recurse:
     // route change -> callback -> goTo -> route change, until the stack blows.
@@ -189,6 +209,9 @@ export const BottomNavigation = (props) => {
       cursor: "pointer",
       padding: "8px 0",
       backgroundColor: "transparent",
+      // Which page you are on has to be said, not only coloured. In router mode
+      // `markActive` re-states this on every navigation.
+      "aria-current": isActive ? "page" : undefined,
       onclick: () => {
         if (useRouter) {
           goTo(itemRoute);

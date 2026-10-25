@@ -55,6 +55,14 @@ const DEFAULT_COLORS = {
   glass: "rgba(255, 255, 255, 0.66)",
   glassBorder: "rgba(255, 255, 255, 0.75)",
   border: "#e2e8f0",
+  // The ring around whatever the keyboard is on. It is a token for the same
+  // reason the rim is one: the theme has to be able to move it. It answers to
+  // WCAG 2.2's 3:1 against the surface it is drawn on, which `#1d4ed8` clears at
+  // 6.4:1 on this boot page and 6.4:1 on its `surface`. It is deliberately not
+  // `primary`: in both shipped palettes the brand plate is neutral zinc, so a
+  // brand-coloured ring would read as "this is selected" instead of "this is
+  // where my keys are".
+  focusRing: "#1d4ed8",
   gray50: "#f8fafc",
   gray100: "#f1f5f9",
   gray200: "#e2e8f0",
@@ -135,6 +143,10 @@ export const palettes = {
     textSecondary: "#52525b",
     textDisabled: "#a1a1aa",
     border: "#e4e4e7",
+    // The blue is this palette's own `infoStrong`, measured 6.70:1 on the page,
+    // 6.42:1 on `surface` and 6.10:1 on `primaryBg` — over the 3:1 a focus
+    // indicator needs wherever it lands, and never mistaken for the zinc plate.
+    focusRing: "#1d4ed8",
     gray50: "#fafafa",
     gray100: "#f4f4f5",
     gray200: "#e4e4e7",
@@ -211,6 +223,9 @@ export const palettes = {
     textSecondary: "#a1a1aa",
     textDisabled: "#52525b",
     border: "#27272a",
+    // Points the other way down the ladder like every other token here: this is
+    // dark's `infoStrong`, 11.03:1 on the page and 9.82:1 on a card.
+    focusRing: "#93c5fd",
     gray50: "#111111",
     gray100: "#1f1f1f",
     gray200: "#27272a",

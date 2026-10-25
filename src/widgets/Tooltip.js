@@ -8,6 +8,9 @@ import { colors } from "../utils/themes.js";
 
 import { toREM } from "../utils/units.js";
 
+/** The bubble and the thing it describes have to be able to name each other. */
+let tooltipIdSeed = 0;
+
 export const Tooltip = (props) => {
   let {
     text,
@@ -50,6 +53,8 @@ export const Tooltip = (props) => {
   let tooltipElement = null;
   let timeoutId = null;
   let isVisible = false;
+
+  const tooltipId = `fletbox-tooltip-${++tooltipIdSeed}`;
 
   let scrollHandler = null;
   let resizeHandler = null;
@@ -98,6 +103,11 @@ export const Tooltip = (props) => {
 
     const tooltip = WidgetFactory({
       tag: "div",
+      // The bubble is what `aria-describedby` on the trigger points at, so the id
+      // and the role live on the element that is actually shown and hidden — its
+      // subtree is the sentence a reader hears.
+      id: tooltipId,
+      role: "tooltip",
       position: "fixed",
       zIndex: zIndex,
       opacity: 0,
@@ -205,6 +215,10 @@ export const Tooltip = (props) => {
       });
 
       isVisible = true;
+      // The link is made while the bubble is up and broken while it is not: an
+      // `aria-describedby` pointing at a hidden node is a control that claims a
+      // description it is not being given.
+      child.setAttribute("aria-describedby", tooltipId);
 
       scrollHandler = hideOnScrollOrResize;
       resizeHandler = hideOnScrollOrResize;
@@ -223,6 +237,7 @@ export const Tooltip = (props) => {
       tooltipElement.style.opacity = "0";
       tooltipElement.style.visibility = "hidden";
       isVisible = false;
+      child.removeAttribute("aria-describedby");
 
       if (scrollHandler) {
         window.removeEventListener("scroll", scrollHandler, true);

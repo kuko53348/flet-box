@@ -43,6 +43,9 @@ export const Rating = (props) => {
   let unsubscribeTheme = null;
   let touchActive = false; // to avoid conflicts with mouse
 
+  /** The score as one sentence, which is what the group is named by. */
+  const groupLabel = () => `${currentValue} out of ${max}`;
+
   // Update all stars according to currentValue
   const updateStars = () => {
     for (let i = 0; i < max; i++) {
@@ -77,6 +80,20 @@ export const Rating = (props) => {
     if (valueTextRef && showValue) {
       valueTextRef.update({ text: currentValue.toFixed(1) });
     }
+
+    // The announced state and the roving stop follow the drawn stars, so a score
+    // set from the keyboard, from a pointer or by `rating.value = 3` is heard the
+    // same way.
+    if (!readOnly) {
+      const selected = Math.round(currentValue);
+      for (let i = 0; i < max; i++) {
+        const wrapper = starWrappers[i];
+        if (!wrapper) continue;
+        wrapper.setAttribute("aria-checked", String(selected === i + 1));
+        wrapper.tabIndex = tabIndexFor(i);
+      }
+    }
+    if (starsContainer) starsContainer.setAttribute("aria-label", groupLabel());
   };
 
   // Change the actual value (persistent)
@@ -111,6 +128,33 @@ export const Rating = (props) => {
   };
 
   // ========== STAR CREATION ==========
+  /**
+   * The star a keyboard stop sits on: the one carrying the score, or the first
+   * when nothing is chosen yet. A group where every star is a stop makes Tab
+   * walk five times through one control.
+   */
+  const tabIndexFor = (i) =>
+    i === (currentValue > 0 ? Math.min(Math.round(currentValue), max) - 1 : 0)
+      ? 0
+      : -1;
+
+  /**
+   * Pick star `i + 1`. With `allowHalf`, pressing the star that is already the
+   * whole score turns it into the half between it and the last one.
+   */
+  const pickStar = (i) => {
+    let newValue = i + 1;
+    if (allowHalf && currentValue === newValue) newValue -= 0.5;
+    setValue(newValue);
+  };
+
+  /** Move the keyboard and the score to star `index`. */
+  const focusStar = (index) => {
+    const clamped = Math.min(Math.max(index, 0), max - 1);
+    starWrappers[clamped]?.focus();
+    setValue(clamped + 1);
+  };
+
   for (let i = 0; i < max; i++) {
     const icon = Icon({
       name: iconInactive,
@@ -130,6 +174,45 @@ export const Rating = (props) => {
       ...(readOnly
         ? { padding: 4 }
         : { minWidth: TAP_MINIMUM, minHeight: TAP_MINIMUM }),
+      // A score shown as filled stars is the only place that state lives: the
+      // glyph is decorative and the number is not rendered when `showValue` is
+      // off. Each star is one choice of a group, which is what `radio` means.
+      ...(readOnly
+        ? {}
+        : {
+            role: "radio",
+            "aria-label": `Star ${i + 1} of ${max}`,
+            "aria-checked": "false",
+            tabIndex: tabIndexFor(i),
+            // The press is a prop, so the engine turns Enter and Space into this
+            // click instead of leaving a star only a finger can light up. The
+            // gesture stays the widget's own `scale(1.15)` above: the engine's
+            // press scale would overwrite it on the same frame.
+            disableTransform: true,
+            onclick: () => pickStar(i),
+            onKeyDown: (e) => {
+              switch (e.key) {
+                case "ArrowRight":
+                case "ArrowDown":
+                  e.preventDefault();
+                  focusStar(i + 1);
+                  break;
+                case "ArrowLeft":
+                case "ArrowUp":
+                  e.preventDefault();
+                  focusStar(i - 1);
+                  break;
+                case "Home":
+                  e.preventDefault();
+                  focusStar(0);
+                  break;
+                case "End":
+                  e.preventDefault();
+                  focusStar(max - 1);
+                  break;
+              }
+            },
+          }),
     });
 
     starIcons.push(icon);
@@ -147,17 +230,9 @@ export const Rating = (props) => {
         wrapper.style.transform = "scale(1)";
         restoreFromPreview();
       });
-      wrapper.addEventListener("click", () => {
-        if (touchActive) return;
-        let newValue = i + 1;
-        if (allowHalf) {
-          if (currentValue === newValue) newValue = newValue - 0.5;
-          else if (currentValue === newValue - 0.5) newValue = newValue;
-          else newValue = newValue;
-        }
-        setValue(newValue);
-      });
-
+      // The click itself is the `onclick` prop above — that is what lets the
+      // engine reach this star without a pointer, and a listener here would run
+      // the same pick twice.
       // ----- TOUCH EVENTS -----
       wrapper.addEventListener("touchstart", (e) => {
         e.preventDefault();
@@ -221,6 +296,11 @@ export const Rating = (props) => {
     gap: gap,
     flexWrap: "wrap",
     children: starWrappers,
+    // One control, not five stops: the group is what a reader lands on and the
+    // score is what they hear there. A read-only rating has no choice to make,
+    // so it is a picture of a number rather than a group of radios.
+    role: readOnly ? "img" : "radiogroup",
+    "aria-label": groupLabel(),
   });
 
   // Ensure initial state

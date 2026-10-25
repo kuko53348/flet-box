@@ -43,6 +43,7 @@ export const Switch = (props) => {
   let knobRef = null;
 
   const updateUI = (newValue) => {
+    if (switchContainer) switchContainer.setAttribute("aria-checked", String(Boolean(newValue)));
     if (switchRef) {
       switchRef.style.backgroundColor = newValue ? activeColor : colors.gray300;
     }
@@ -89,6 +90,10 @@ export const Switch = (props) => {
 
   const switchContainer = WidgetFactory({
     widgetName: "Switch",
+    // A track and a knob say "toggle" to an eye and nothing at all to a screen
+    // reader; the role names the control and `aria-checked` is its state.
+    role: "switch",
+    "aria-checked": String(Boolean(internalValue)),
     display: "flex",
     flexDirection: "row",
     alignItems: "center",
