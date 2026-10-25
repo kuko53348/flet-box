@@ -275,6 +275,7 @@ A typical generated project looks like this:
 ```text
 my-app/
 ├── index.html
+├── jsconfig.json
 ├── package.json
 ├── capacitor.config.json
 ├── manifest.json
@@ -301,7 +302,23 @@ my-app/
 
 The exact folders depend on the selected template.
 
-## A complete beginner workflow
+### Autocomplete without TypeScript
+
+`jsconfig.json` is not a build step: it tells the editor's own JavaScript
+language service to read `flet-box`'s bundled `src/index.d.ts`. With `checkJs`
+on, VS Code, Cursor and any editor that understands `jsconfig.json` autocomplete
+every widget, prop, colour token and helper — and underline a prop that does not
+exist, which is the same error `npm run check` reports from the command line.
+
+Nothing is installed and nothing is compiled. The framework keeps the promise
+honest with `scripts/check-app-types.mjs`, which creates all five templates and
+requires zero diagnostics over their `src/` — a starter that produces red
+squiggles fails `npm test`.
+
+```bash
+npm run check   # the gate: real API, real props, real imports
+```
+
 
 ```bash
 # 1. Create the project
