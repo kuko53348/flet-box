@@ -121,16 +121,25 @@ export default MyWidget;
 
     | Behaviour | Home |
     | --- | --- |
-    | Escaping text for HTML | [`src/utils/htmlEscape.js`](../../src/utils/htmlEscape.js) |
+    | Escaping text for HTML | [`src/helpers/html.js`](../../src/helpers/html.js) |
+    | The four-side box shorthand | [`src/helpers/boxEdges.js`](../../src/helpers/boxEdges.js), behind `margin()`/`padding()` |
     | Injecting `@keyframes`, naming one | [`src/utils/styleInjector.js`](../../src/utils/styleInjector.js) |
-    | The four-side box shorthand | [`src/tools/boxEdges.js`](../../src/tools/boxEdges.js), behind `margin()`/`padding()` |
     | A number that becomes a length | [`src/utils/units.js`](../../src/utils/units.js) |
 
-    Put the helper where its imports stay light: `htmlEscape.js` has none at all
-    on purpose, because importing the Markdown parser from a widget would pull
-    six widgets into that widget's graph. `node scripts/check-shared-helpers.mjs`
-    fails on a second definition, an `@keyframes` rule written outside the
-    injector, or a caller that stopped importing the home.
+    **`src/helpers/` is the folder for reusable code, and a module there imports
+    nothing at all** — no widget, no theme, no engine service. That is what makes
+    it safe to import from anywhere: `html.js` has no dependencies on purpose,
+    because importing the Markdown parser from a widget would pull six widgets
+    into that widget's graph. A helper that needs another module is a service and
+    belongs in `utils/`. `node scripts/check-shared-helpers.mjs` fails on a second
+    definition, an `@keyframes` rule written outside the injector, a helper that
+    grew an import, or a caller that stopped importing the home.
+13. **Only the code the widget needs.** No prop nobody passes, no option kept
+    "for later", no abstraction with a single caller, no wrapper that only
+    forwards its arguments — that last one is code to delete, not to keep. The
+    second caller is when a helper appears (rule 12), not before. Three lines
+    repeated once reads better than a premature module; the same three lines
+    repeated three times do not.
 
 ## Controller widgets
 

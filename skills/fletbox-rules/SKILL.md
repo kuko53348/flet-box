@@ -259,7 +259,11 @@ This is not hypothetical in this framework: the HTML escaper existed three times
 keyframe injector lived in two modules, so the same animation name could be
 appended twice and neither dedupe set knew about the other.
 
-- Put a pure helper in `src/utils/`, anything that returns widgets in
+- Put a pure helper in **`src/helpers/`** — one file per behaviour, and it
+  **imports nothing at all**. That is the property that makes it reusable: a
+  widget can import it without dragging a theme, the parser or another widget
+  into its graph. If the helper needs another module it is a service, not a
+  helper, and it belongs in `src/utils/`. Anything that returns widgets goes in
   `src/components/`. Name it for the behaviour, not for its first caller.
 - Import it from its own path. Re-exporting through a barrel is fine; copying the
   body "to avoid a dependency" is not — if the import drags in too much, move the
@@ -268,5 +272,22 @@ appended twice and neither dedupe set knew about the other.
 - A helper that writes CSS state (`@keyframes`, an injected `<style>`) is owned by
   one module for the whole document. A second injector is a second document-level
   cache, and the same name is then defined twice.
+
+## R15 Essential code only
+
+Write the code the screen needs, in the smallest shape that says it. A feature
+nobody asked for is not a head start — it is code that has to be read, tested and
+maintained before it has a single caller, and it is the code most likely to be
+wrong because nothing uses it yet.
+
+- No option "for later", no prop nobody passes, no abstraction with one caller.
+  The second caller is when the helper appears (R14), not before.
+- A wrapper that only forwards its arguments is code to delete, not to keep: call
+  the function it forwards to.
+- Prefer removing a branch to adding a flag that selects between two branches.
+- Before writing a helper, look for the one that already does it: `flet-box`
+  ships 123 (R12), and the framework's own three are `escapeHtml`, `boxEdges`
+  and `injectKeyframes`.
+
 
 
