@@ -11,7 +11,9 @@
 //   - Skeleton documented a `shimmerColor` it never read;
 //   - a 14px input made iOS zoom the whole page on focus;
 //   - a full-height Drawer put its header under the notch and its footer under
-//     the home indicator.
+//     the home indicator;
+//   - a Tooltip parked itself inside the status bar and a tap left it on screen
+//     with nothing ever dismissing it.
 //
 // It publishes `window.__REGRESSION = { pass, fail, results }`.
 import * as W from "../src/widgets/index.js";
@@ -2872,6 +2874,98 @@ async function run() {
     ok(document.body.children.length === base + 1, `delay lost to its own alias (${document.body.children.length - base} portals)`);
     document.body.lastElementChild.remove();
     fast.hideTooltip();
+  });
+
+  await t("Tooltip: a tap on a device that cannot hover leaves no bubble", async () => {
+    // iOS fires a synthetic `mouseenter` on the first tap and never the matching
+    // `mouseleave`, so the hover listeners used to strand a bubble on screen that
+    // nothing could ever dismiss — two taps, two bubbles, both permanent.
+    const shown = () =>
+      [...document.body.querySelectorAll('[role="tooltip"]')].filter(
+        (b) => b.style.visibility === "visible",
+      ).length;
+
+    const realMatchMedia = window.matchMedia;
+    // Only `(hover: hover)` is answered with a lie; every other query — the
+    // reduced-motion feature the engine reads — still goes to the real thing.
+    window.matchMedia = (query) =>
+      /hover:\s*hover/.test(query)
+        ? { matches: false, media: query, addEventListener() {}, removeEventListener() {} }
+        : realMatchMedia(query);
+    try {
+      ok(!window.matchMedia("(hover: hover)").matches, "the shadow did not take");
+      const before = shown();
+      const touch = mount(W.Tooltip({ text: "stranded", child: W.Text({ text: "t" }), delay: 0 }));
+
+      touch.dispatchEvent(new MouseEvent("mouseenter"));
+      await wait(120);
+      ok(shown() === before, `a mouse-only hover path painted a bubble on a touch device (${shown() - before} extra)`);
+
+      // The keyboard path is the other half of the gate: hiding hover must not
+      // hide focus too, or a Tab user loses the description entirely.
+      touch.dispatchEvent(new FocusEvent("focus"));
+      await wait(120);
+      ok(shown() === before + 1, `focus no longer shows the tooltip (${shown() - before})`);
+      touch.dispatchEvent(new FocusEvent("blur"));
+      await wait(20);
+      ok(shown() === before, "blur left the bubble visible");
+    } finally {
+      window.matchMedia = realMatchMedia;
+    }
+  });
+
+  await t("Tooltip: a bubble with no room above the trigger flips below it", async () => {
+    // The old clamp only pushed the bubble down to `top: 10` and never sideways
+    // past the bottom edge, so a trigger near the top of the screen got a bubble
+    // half over the status bar — on a notched phone `10` is inside it.
+    const trigger = mount(
+      WidgetFactory({
+        tag: "div",
+        text: "t",
+        position: "fixed",
+        top: 24,
+        left: 120,
+        width: 80,
+        height: 24,
+      }),
+    );
+    const tip = W.Tooltip({ text: "flipped", child: trigger, position: "top", delay: 0 });
+
+    tip.showTooltip();
+    await wait(120);
+    const bubble = document.getElementById(tip.getAttribute("aria-describedby"));
+    ok(bubble !== null, "the bubble the trigger points at is not in the document");
+
+    const b = bubble.getBoundingClientRect();
+    const c = tip.getBoundingClientRect();
+    ok(b.top >= c.bottom, `a request for "top" with no room above painted over the trigger (${Math.round(b.top)} vs ${Math.round(c.bottom)})`);
+    const arrow = bubble.lastElementChild;
+    ok(parseFloat(arrow.style.top) < 0, `the arrow stayed on the wrong side (${arrow.style.top})`);
+    ok(b.left >= 0 && b.right <= window.innerWidth, `the flipped bubble hung off the side (${Math.round(b.left)}…${Math.round(b.right)})`);
+    tip.hideTooltip();
+
+    // …and the bottom edge is clamped too, which the old code did not know about.
+    const low = mount(
+      WidgetFactory({
+        tag: "div",
+        text: "l",
+        position: "fixed",
+        top: Math.round(window.innerHeight) - 30,
+        left: 120,
+        width: 80,
+        height: 24,
+      }),
+    );
+    const lowTip = W.Tooltip({ text: "clamped", child: low, position: "bottom", delay: 0 });
+    lowTip.showTooltip();
+    await wait(120);
+    const lowBubble = document.getElementById(lowTip.getAttribute("aria-describedby"));
+    const lb = lowBubble.getBoundingClientRect();
+    ok(
+      lb.bottom <= window.innerHeight,
+      `a bottom bubble under a trigger at the floor ran past it (${Math.round(lb.bottom)} > ${Math.round(window.innerHeight)})`,
+    );
+    lowTip.hideTooltip();
   });
 
   await t("Image: downloadable saves, and never steals onPress", async () => {
