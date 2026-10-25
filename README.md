@@ -38,20 +38,23 @@ Real DOM · No Virtual DOM · No build config to learn.
 
 ## Installation
 
-FletBox isn't on the npm registry, so clone it and link the CLI locally:
+FletBox is on npm, and it drags nothing in with it — `"dependencies": {}`:
 
 ```bash
-brew install node                 # macOS/Linux: ensure Node >= 18
-
-git clone https://github.com/kuko53348/flet-box.git
-cd flet-box
-npm link                          # link the flet-box CLI globally
+npm install -g flet-box           # the CLI, once (Node >= 20.9)
 
 flet-box create appName           # scaffold your first app
 cd appName
-npm link flet-box                 # link FletBox into the new project
-flet-box run-spa                  # run as SPA with hot reload
+npm install                       # pulls flet-box itself from the registry
+flet-box run                      # dev server with hot reload
 ```
+
+Nothing to install at all: `npx flet-box create appName` runs the same scaffolder
+straight from the registry, and the project it writes declares `flet-box` as a
+normal dependency.
+
+Cloning the repository and `npm link`ing it is still how you *develop the framework
+itself* — see [CONTRIBUTING](docs/CONTRIBUTING.md).
 
 ## Quick start
 
@@ -80,7 +83,7 @@ runApp(App);
 ## Features
 
 - Declarative, widget-based UI · reactive state with `useState` · router for SPAs
-- Zero runtime dependencies; ESM only, Node >= 18 · real DOM, no Virtual DOM
+- Zero runtime dependencies; ESM only, Node >= 20.9 · real DOM, no Virtual DOM
 - Local storage, HTTP services, theme, PWA, and production builds
 - Android & iOS from the CLI (APK, simulator `.app`, `.xcarchive`)
 - Utility API for layout, text, color, animation, and more
@@ -137,12 +140,11 @@ invent against.
 
 ## Android and iOS
 
-`flet-box create` ships the Capacitor config, so the same SPA builds for both platforms. FletBox isn't on the npm registry — link it before installing:
+`flet-box create` ships the Capacitor config, so the same SPA builds for both platforms. The generated project already declares `flet-box` as a dependency, so one install covers everything:
 
 ```bash
 flet-box create my-app && cd my-app
-npm link flet-box              # or: npm install ../path/to/flet-box
-npm install                    # Capacitor CLI, sharp, platform package
+npm install                    # flet-box from the registry, plus the Capacitor toolchain
 ```
 
 - **Android** — Node >= 20.9, a JDK, and the Android SDK. `flet-box build android` → debug APK; `flet-box build android --release [--aab]` → unsigned release artifact to sign yourself (`apksigner` / Play App Signing).
@@ -159,6 +161,8 @@ Read the docs online: **[The FletBox Book — kuko53348.github.io/flet-box-docs]
 They are **one continuous book** — the cover maps every page: [The FletBox Book source](docs/README.md).
 
 Rather than read, click: **[the live widget gallery](https://kuko53348.github.io/flet-box-widgets-exemples/)** gives every widget its own page, renders each example in the browser it was written for, and prints the exact call underneath it. The theme toggle in the corner shows the same screen in light and dark, which is the honest way to judge a default color.
+
+And the book itself is an app: **[`flet-box-docs`](https://www.npmjs.com/package/flet-box-docs)** (`npm install flet-box-docs`) renders these same pages with the framework's own `Markdown` widget, with an index, a theme toggle, an offline cache and Android/iOS wrappers.
 
 - [Your first app](docs/guides/first-app.md) — build a working todo app in 20 minutes
 - [The widget book](docs/widget/README.md) — every widget with property tables and examples

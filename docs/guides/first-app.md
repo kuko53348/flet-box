@@ -4,23 +4,22 @@ This page is for **absolute beginners**. You do not need to know any trick — y
 
 ## Before you start
 
-FletBox is not published to the npm registry, so first you install the CLI once and link it globally:
+You need Node.js 20.9 or newer and one command, because FletBox is published on npm:
 
 ```bash
-git clone https://github.com/kuko53348/flet-box.git
-cd flet-box
-npm link                          # link the flet-box CLI globally
+npm install -g flet-box           # the CLI, once
 ```
 
-Then create an empty project, link the framework into it, and start the dev server:
+Then create an empty project, install the framework into it, and start the dev server:
 
 ```bash
-cd ..
 flet-box create my-app
 cd my-app
-npm link flet-box                 # or: npm install ../path/to/flet-box
+npm install                       # flet-box itself, from the registry
 npm run dev
 ```
+
+If you would rather not install anything globally, `npx flet-box create my-app` does the same thing.
 
 Open your browser at `http://localhost:8000`. You should see "Hello FletBox" (or a small welcome screen). If you do, everything is working.
 

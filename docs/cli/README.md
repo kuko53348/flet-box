@@ -21,14 +21,17 @@ npm --version
 
 ## Install FletBox
 
-Inside the FletBox package directory:
+FletBox is published to npm, so the CLI is one install away:
 
 ```bash
-npm install
-npm link
+npm install -g flet-box
 ```
 
-After linking, the `flet-box` command is available globally on your computer.
+Or run it without installing anything globally — `npx` fetches the same package:
+
+```bash
+npx flet-box create my-app
+```
 
 Check that it works:
 
@@ -37,10 +40,20 @@ flet-box --version
 flet-box --help
 ```
 
-When using the published package, install it in a project with:
+Inside a project the framework itself is an ordinary dependency:
 
 ```bash
 npm install flet-box
+```
+
+Cloning the repository and linking it is the exception, and it is for people
+editing the framework:
+
+```bash
+git clone https://github.com/kuko53348/flet-box.git
+cd flet-box
+npm install
+npm link                          # the `flet-box` command now points at this checkout
 ```
 
 ## Your first project
@@ -636,9 +649,17 @@ For normal application development, `npm install flet-box` is usually enough.
 
 ### `flet-box: command not found`
 
-The CLI is not linked or installed globally. From the FletBox package directory, run:
+The CLI is not installed globally. Install the published package:
 
 ```bash
+npm install -g flet-box
+```
+
+If you are working from a clone of the framework instead, link that checkout so the
+command points at the code you are editing:
+
+```bash
+cd flet-box
 npm install
 npm link
 ```

@@ -72,3 +72,24 @@ Front cover (this page)
 - [Server toolkit](server/README.md) — Express/SQLite/Redis backend helpers (separate toolkit).
 - [Architecture](arquitectura.md) — how the framework is built inside.
 - [Contributing](CONTRIBUTING.md) — for people who add code or docs to FletBox.
+
+## Read this book as an app
+
+The same pages are also a FletBox application: **[flet-box-docs](https://github.com/kuko53348/flet-box-docs)**, published to npm as its own package.
+
+```bash
+npm install flet-box-docs        # then: cd node_modules/flet-box-docs && npm install && npm run dev
+```
+
+It is a normal FletBox project — the router, a categorized index, cross-document
+Previous/Next, a light/dark toggle, an offline cache, and Capacitor wrappers for
+Android and iOS — and every page is rendered by the framework's own `Markdown`
+widget, so the book is also a live demo of the widget that writes it.
+
+Its `docs/` folder is a **snapshot** of this folder, refreshed before each
+release; when the app is online it reads the published source instead, so a page
+added here arrives on an installed device without a new build. That is why
+`flet-box-docs` carries a version of its own: it is a shipping app, and its
+`npm run build` refuses to bundle until `src/constants.js` states both versions
+out loud — the app's own, which must match its `package.json`, and the framework
+release its pages describe.
