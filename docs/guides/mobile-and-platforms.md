@@ -82,8 +82,10 @@ which lets the web view paint behind the notch and the home indicator. That is
 what a full-bleed app wants, but it only looks right if content steps back from
 those edges, so the framework reads `env(safe-area-inset-*)` wherever a widget
 touches a screen edge: the [AppBar](../widget/AppBar.md) adds the top inset to
-its own padding and the [Drawer](../widget/Drawer.md) pads its panel, so a header
-never sits under the status bar and a footer never under the gesture bar. The
+its own padding, the [Drawer](../widget/Drawer.md) pads its panel and the
+[Tooltip](../widget/Tooltip.md) measures the same box before it picks the side
+its bubble goes on, so a header never sits under the status bar, a footer never
+under the gesture bar and a tooltip never flips into either. The
 value is `0` on a device with no inset, so nothing is configured per platform and
 a desktop browser is untouched.
 
@@ -97,6 +99,19 @@ Container({
   children: [/* tabs */],
 });
 ```
+
+### Hover does not exist here
+
+A touch screen has no resting pointer, and iOS answers the first tap on an
+element with a synthetic `mouseenter` that no `mouseleave` ever follows. So a
+hover-only affordance on a phone is one that appears and then cannot be
+dismissed, which is why [Tooltip](../widget/Tooltip.md) binds its hover path only
+when `matchMedia("(hover: hover)")` matches and stays reachable through keyboard
+focus everywhere else. The same test is the one to copy for a custom hover card,
+peek row or mouse-following cursor: gate it on the media query, and give the
+information a home the finger can reach — the control's own label, a
+[SnackBar](../widget/SnackBar.md), or a
+[BottomSheet](../widget/BottomSheet.md).
 
 ## Install Capacitor
 

@@ -116,11 +116,12 @@ const tip = Tooltip({
 
 - Attach it to any widget via child; the tooltip is a separate portal, so overflow hidden ancestors do not cut it off.
 - delay controls how long the pointer must rest before the tooltip appears; lower it for dense toolbars, raise it for error-prone hints.
-- The bubble is clamped to the viewport edges, so top/left placements can sit slightly inside the window bounds.
+- The bubble keeps to the device's safe area, so a placement is a request: an edge with no room for it gets the opposite edge instead.
 
 ## Accessibility
 
 - The wrapped child keeps its focus handlers, so keyboard users tabbing onto it get the same tooltip as mouse hover.
+- On a device that cannot hover the bubble stays hidden. iOS answers the first tap with a synthetic mouseenter and never sends the matching mouseleave, so a tap-shown tooltip is a bubble nothing can dismiss. Anything a tooltip explains has to be explained by the control's own label too.
 
 ## Behavior
 
@@ -128,6 +129,7 @@ const tip = Tooltip({
 - The wrapped child gains showTooltip, hideTooltip, updateContent, and updatePosition helpers for imperative control.
 - A pointer that leaves before the wait is over never shows the bubble: leaving clears the timer.
 - tooltipDelay is the old name of delay. When both are given, delay wins.
+- The requested position is a preference, not a promise: when the bubble would not fit between the trigger and the safe-area edge it is placed on the opposite side, and the arrow follows it.
 
 ## Related widgets
 
