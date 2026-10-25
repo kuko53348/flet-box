@@ -212,3 +212,34 @@ R2 still outranks this one: when the exact signature is not in memory,
 call is worse than the plain JavaScript it replaced — and `npm run check` will
 catch it, which is the point of running it.
 
+## R13 The keyboard is part of the screen, not an extra
+
+The engine already carries the whole of it, and an app only has to not break it:
+
+- **A handler given as a prop is a keyboard control.** `onPress` (or `onClick`)
+  on any widget makes the engine add `role="button"`, put it on the Tab path and
+  wire Enter and Space. A handler attached to the element *after* the widget was
+  built is a mouse-only control — the pass already ran. Express the control with
+  a prop.
+- **Never write `outline: none`**, and never add a global `*:focus` rule that
+  removes it. The ring is one rule the framework injects, coloured by the
+  `colors.focusRing` token; an inline `outline` outranks it and leaves a screen
+  where nobody can see where they are. Change the token with
+  `registerPalette`, or override with a class — the rule is zero-specificity for
+  exactly that.
+- **A control needs a name.** An icon with no `aria-label` and no visible text is
+  read as "button". An unnamed `Icon` is `aria-hidden` decoration by design, so
+  pressable icons take a label.
+- **Fields keep two jobs apart:** the border is validation, the ring is focus.
+  `label` names the field, the widget's own `validate` method announces the
+  verdict, and the message is already a live region with `aria-invalid` on the
+  input.
+- **Overlays trap focus and give it back.** `Modal`, `BottomSheet` and `Drawer`
+  do it; do not build a full-screen scrim with its own Escape listener beside
+  them.
+
+Prove it the way the framework does: press Tab through the screen, then Enter and
+Space on each control, then open an overlay and Tab past its last control.
+`npm run ui` covers names, labels, tap targets and contrast, and no checker has a
+keyboard — the last step is yours.
+

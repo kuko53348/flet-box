@@ -223,7 +223,7 @@ Run the gate, then open the page.
 ## Continue reading
 
 - **Previous:** [The CLI](../cli/README.md) — Chapter 11
-- **Next:** [Minify and protect a FletBox build](minification-and-protection.md) — Appendix A
+- **Next:** [Accessibility](accessibility.md) — Chapter 13
 - **Index:** [Guides index](README.md) · [The FletBox Book](../README.md)
 
 You are reading **Chapter 12 · Clean UI**.

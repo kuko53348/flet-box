@@ -13,6 +13,9 @@ This directory is the **conceptual index** of FletBox: how to build apps, set up
 - **[Clean UI](clean-ui.md)** — Chapter 12 · the four skills `flet-box create`
   installs, the token scale, the 25 rules, and the `flet-box check-ui` gate that
   enforces them.
+- **[Accessibility](accessibility.md)** — Chapter 13 · the focus ring, the
+  keyboard pass over every press, the roles and states the widgets declare, and
+  the overlays that hold the keyboard.
 - **[Widget structure](widget-structure.md)** — the canonical, modular shape every widget follows (and how new ones are added).
 
 ## Appendices (Advanced — for shipping)
