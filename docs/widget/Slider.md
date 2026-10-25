@@ -123,6 +123,7 @@ const price = Slider({
 
 - onChanged fires continuously while dragging; use onChangeEnd for the value to commit, such as a filter request.
 - Set step to snap to meaningful increments instead of every integer.
+- On a vertical slider, width is the rail's length and height its thickness.
 
 ## Accessibility
 
@@ -132,6 +133,7 @@ const price = Slider({
 
 - Dragging the track or thumb updates the value and fires onChanged; releasing fires onChangeEnd once.
 - The returned element exposes value, min, max, step, setValue() and getValue(), and disconnects its ResizeObserver on unmount.
+- During a drag the fill follows the pointer with no easing; the 0.1s ease belongs to a value that changes by itself, from a key press or setValue().
 
 ## Related widgets
 
