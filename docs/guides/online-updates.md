@@ -116,7 +116,7 @@ Every bundle ships a small manifest at `www/config.json`. This is what a running
 
 `update.url` is resolved automatically, in this order:
 
-1. `update.url` in `fletbox.config.json` at your project root (explicit wins).
+1. `update.url` in `fletbox.config.json` at your project root (explicit wins) — unless it is still the scaffold placeholder, which is not a choice. See [The Pages address of a generated app](#the-pages-address-of-a-generated-app).
 2. Derived from the `repository` field of `package.json`, mapped to GitHub Pages: `https://<user>.github.io/<repo>/`.
 3. Derived from the **current project's** git remote `origin` (when it is a GitHub URL). This means `flet-box createBundle` always points at the project it is built in, never at the flet-box framework installed as a dependency.
 4. If none of these exist, OTA is **disabled** and the bundle simply runs what shipped in it.
@@ -152,10 +152,22 @@ things at once:
 - writes that address into the header of the generated `.github/workflows/build.yml`;
 - prints it in the closing summary, with the one-time setting Pages needs.
 
-Without `--repo` nothing is invented. `fletbox.config.json` keeps the generic
-placeholder `https://TU-USUARIO.github.io/TU-REPO/`, the workflow header names a
-guess built from the folder name, and the workflow says so in its own comment:
-write the real address in both files that state it.
+Without `--repo` nothing is invented at scaffold time. `fletbox.config.json` keeps
+the generic placeholder `https://TU-USUARIO.github.io/TU-REPO/`, the workflow
+header names a guess built from the folder name, and the workflow says in its own
+comment which part of that address still has to be checked by hand.
+
+The build does not trust that placeholder. `TU-USUARIO` and `TU-REPO` mean "not
+configured yet", so `flet-box createBundle` falls through to rules 2 and 3 and
+writes the address it derived — and prints that it derived, because a manifest
+pointing at a real site next to a file that still says `TU-REPO` is a half-filled
+config you should either finish or leave alone. A project with no GitHub remote
+yet gets `update.url: null`: OTA is off, the bundle runs what shipped in it, and
+nothing polls a host that does not exist.
+
+That matters because the failure used to be silent. The app compares bundle
+**hashes**, and OTA is built never to break the app, so a placeholder URL that
+reached a bundle produced no error, no dialog and no update — ever.
 
 **The workflow log is the authority.** The header names the address you typed at
 scaffold time; the `Where this lives` step prints the address the run *actually*
@@ -274,7 +286,7 @@ Requirements: a **public** GitHub repository, GitHub Pages enabled (Settings →
 | Symptom | Likely cause |
 | --- | --- |
 | Build prints "THIS APP DOES NOT SUPPORT OTA UPDATES" | No public GitHub repo is reachable from the project (no `origin` remote, a non-GitHub remote, or nothing configured). The app still works — it runs the bundle it shipped with. Create the repo, push it, and rebuild. |
-| No dialog, app runs old code | `update.url` missing/incorrect, or no `v*` tag was published — a normal push updates the site but deliberately leaves the manifest out, so there is nothing to compare against. |
+| No dialog, app runs old code | `update.url` wrong — a real address that is not where the bundle is (the scaffold placeholder is not one of those: the build derives the address and prints it). Or no `v*` tag was published — a normal push updates the site but deliberately leaves the manifest out, so there is nothing to compare against. |
 | `hash mismatch` in console | The published `config.json` and bundle are from different builds. Re-run `flet-box release` so both are published together. |
 | Dialog appears but download fails | The Pages site is not reachable/CORS-blocked from the app origin. Pages serves with permissive headers; check you are not behind a proxy that strips them. |
 | Update applies but reverts on next launch | Cache Storage unavailable (private browsing). The bundle runs once but cannot persist. |

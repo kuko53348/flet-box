@@ -97,9 +97,12 @@ CI:      .github/workflows/build.yml publishes the web to GitHub Pages on every 
 ```
 
 The first positional argument is always the project name; a flag that arrives
-before it is read as the name. Without `--repo` nothing is invented — the
-placeholder stays in both files and the workflow says which two to edit. The
-reason the workflow log, not the header, is the authority on the live address is
+before it is read as the name. Without `--repo` nothing is invented: the
+placeholder stays in `fletbox.config.json` and in the workflow header, and the
+header says which part of it is still a guess. `flet-box createBundle` reads that
+placeholder as "not configured" and derives the real Pages address from the
+project, so the manifest is never aimed at a host that does not exist. The reason
+the workflow log, not the header, is the authority on the live address is
 explained in [The Pages address of a generated app](../guides/online-updates.md).
 
 ## Project templates
