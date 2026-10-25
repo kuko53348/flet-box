@@ -21,10 +21,9 @@
  */
 
 import { toREM } from "../utils/units.js";
+import { injectKeyframes, animationName } from "../utils/styleInjector.js";
 import { mixColor } from "./color.js";
 import { prefersReducedMotion, markMotionLoop } from "./motion.js";
-
-const injectedKeyframes = new Set();
 
 /**
  * Effect names whose values represent CSS lengths and must be expressed in rem.
@@ -297,41 +296,6 @@ const interpolateGradient = (gradient1, gradient2, t) => {
     return `conic-gradient(${newAngleOrPosition ? newAngleOrPosition + ", " : ""}${stopsString})`;
   }
   return gradient1;
-};
-
-/**
- * Injects a named `@keyframes` rule into the document `<head>`.
- * Skips injection if a rule with the same name has already been added
- * (tracked via the module-level `injectedKeyframes` Set).
- *
- * @param {string} name      - The keyframe animation name.
- * @param {string} keyframes - The keyframe body (everything inside `@keyframes name { … }`).
- * @returns {void}
- */
-/**
- * Stable hash of a keyframe body, used as the generated animation name so that
- * identical keyframes are injected only once.
- *
- * @param {string} keyframes
- * @returns {string}
- */
-const hashKeyframes = (keyframes) => {
-  let h1 = 0x811c9dc5;
-  let h2 = 0x01000193;
-  for (let i = 0; i < keyframes.length; i++) {
-    const c = keyframes.charCodeAt(i);
-    h1 = Math.imul(h1 ^ c, 0x01000193);
-    h2 = Math.imul(h2 + c, 0x85ebca6b) ^ (h2 >>> 13);
-  }
-  return (h1 >>> 0).toString(36) + (h2 >>> 0).toString(36);
-};
-
-const injectKeyframes = (name, keyframes) => {
-  if (injectedKeyframes.has(name)) return;
-  const style = document.createElement("style");
-  style.textContent = `@keyframes ${name} { ${keyframes} }`;
-  document.head.appendChild(style);
-  injectedKeyframes.add(name);
 };
 
 /** The duration a step that does not name one gets. */
@@ -741,7 +705,7 @@ export const AnimatedBox = ({
     // single <style>. A per-call unique name (`Date.now()`) made the dedupe check
     // in `injectKeyframes` dead code: every call appended a permanent <style> to
     // document.head, and AnimatedText calls this once per letter.
-    const name = `anim-${hashKeyframes(keyframes)}`;
+    const name = animationName("anim", keyframes);
     injectKeyframes(name, keyframes);
     return { name, span, startsAt, loop };
   });

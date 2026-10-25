@@ -7,24 +7,8 @@ import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 import { composeUpdate } from "../utils/composeUpdate.js";
 import { generateHighlightedHtml } from "../utils/syntaxHighlight.js";
-
-/**
- * Escapes text for safe insertion as HTML. Local to this file on purpose:
- * importing it from utils/markdownParser.js would pull six widget modules into
- * the dependency graph of every Markdown instance.
- *
- * @param {string} text - Raw text to escape.
- * @returns {string} Text with `&`, `<`, `>`, `"` and `'` replaced by entities.
- */
+import { escapeHtml } from "../utils/htmlEscape.js";
 import { toREM } from "../utils/units.js";
-
-const escapeCode = (text) =>
-  String(text)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
 
 /** Monotonic counter giving each Markdown instance its own CSS scope class. */
 let markdownScopeUid = 0;
@@ -122,7 +106,7 @@ const SH = {
  * @returns {string}
  */
 const shSpan = (text, color) => {
-  const safe = escapeCode(text);
+  const safe = escapeHtml(text);
   return color ? `<span style="color:${color}">${safe}</span>` : safe;
 };
 
@@ -152,15 +136,15 @@ const applyRules = (line, rules) => {
   let m;
   while ((m = combined.exec(line)) !== null) {
     // Text between the previous match and this one — escape and emit as-is.
-    if (m.index > last) out += escapeCode(line.slice(last, m.index));
+    if (m.index > last) out += escapeHtml(line.slice(last, m.index));
     // Find which named group matched.
     const ruleIndex = rules.findIndex((_, i) => m.groups[`r${i}`] !== undefined);
     const color = rules[ruleIndex][1];
-    out += `<span style="color:${color}">${escapeCode(m[0])}</span>`;
+    out += `<span style="color:${color}">${escapeHtml(m[0])}</span>`;
     last = m.index + m[0].length;
   }
   // Remaining plain text.
-  if (last < line.length) out += escapeCode(line.slice(last));
+  if (last < line.length) out += escapeHtml(line.slice(last));
   return out;
 };
 
@@ -258,7 +242,7 @@ const highlightLine = (line, lang) => {
       return applyRules(line, RULES_JSON);
 
     default:
-      return escapeCode(line);
+      return escapeHtml(line);
   }
 };
 
@@ -311,7 +295,7 @@ const legacyCopy = (text) => {
 const renderFencedBlock = (block) => {
   const lang = block.lang.replace(/[^A-Za-z0-9#+._-]/g, "").toLowerCase();
   const cls = lang ? ` class="language-${lang}"` : "";
-  const label = lang ? `<span class="md-lang-label">${escapeCode(lang)}</span>` : "";
+  const label = lang ? `<span class="md-lang-label">${escapeHtml(lang)}</span>` : "";
 
   // Highlight line-by-line. Lines are joined with a bare "\n" — no wrapper
   // <span> per line because display:block + \n produced two line separators,
@@ -323,7 +307,7 @@ const renderFencedBlock = (block) => {
 
   // The raw code is embedded in a hidden <textarea> so the copy handler can
   // read it without stripping HTML and without touching the DOM of <code>.
-  const safeRaw = escapeCode(block.code);
+  const safeRaw = escapeHtml(block.code);
 
   return (
     `<div class="md-code-block">` +
@@ -591,7 +575,7 @@ const parseMarkdown = (text) => {
   // a `<style>` opened by a sample swallows every following block as CSS.
   html = html.replace(
     /`(.*?)`/g,
-    (_match, code) => `<code>${escapeCode(code)}</code>`,
+    (_match, code) => `<code>${escapeHtml(code)}</code>`,
   );
 
   // Pull real HTML tags out too, so the inline rules below never rewrite an
@@ -623,7 +607,7 @@ const parseMarkdown = (text) => {
   html = html.replace(
     /!\[(.*?)\]\((.*?)\)/g,
     (_match, alt, src) =>
-      `<img src="${escapeCode(src)}" alt="${escapeCode(alt)}" loading="lazy">`,
+      `<img src="${escapeHtml(src)}" alt="${escapeHtml(alt)}" loading="lazy">`,
   );
 
   // Links — opens in a new tab with rel="noopener" for security. The URL is
@@ -632,7 +616,7 @@ const parseMarkdown = (text) => {
   html = html.replace(
     /\[(.*?)\]\((.*?)\)/g,
     (_match, label, href) =>
-      `<a href="${escapeCode(href)}" target="_blank" rel="noopener">${label}</a>`,
+      `<a href="${escapeHtml(href)}" target="_blank" rel="noopener">${label}</a>`,
   );
 
   // Unordered lists — tag each "- item" line as an unordered <li>, then group

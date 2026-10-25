@@ -6,6 +6,7 @@ import { Row } from "../widgets/Row.js";
 import { Icon } from "../widgets/Icon.js";
 import { CodeViewer } from "../widgets/CodeViewer.js";
 import { colors } from "./themes.js";
+import { escapeHtml } from "./htmlEscape.js";
 
 // ========== TABLES ==========
 const isTableLine = (line) => {
@@ -346,16 +347,13 @@ export const parseInlineMarkdown = (text) => text;
 /**
  * Escapes HTML special characters to prevent injection when inserting into innerHTML.
  * Converts `& < > " '` to their corresponding HTML entities.
- * @param {string} text - Raw text to escape.
- * @returns {string} HTML-safe string.
+ *
+ * Re-exported from the shared escaper so this module and the widgets that build
+ * HTML share one implementation; the name stays public here because
+ * `parseMarkdown` has always published it.
+ * @type {import("./htmlEscape.js").escapeHtml}
  */
-export const escapeHtml = (text) =>
-  String(text)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
+export { escapeHtml };
 
 // Default export
 export default {

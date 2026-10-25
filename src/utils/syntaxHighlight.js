@@ -1,6 +1,7 @@
 // utils/syntaxHighlight.js
 import { color } from "../tools/color.js";
 import { getTheme } from "./themes.js";
+import { escapeHtml } from "./htmlEscape.js";
 
 // ========== FLETBOX COLORS ==========
 const fletboxColors = {
@@ -385,23 +386,6 @@ export const generateHighlightedHtml = (
   }
 
   return html;
-};
-
-// ========== ESCAPE HTML ==========
-/**
- * Escapes HTML special characters so that token values can be safely inserted
- * into a `<span>` element's content.
- * @param {string} text - Raw token text.
- * @returns {string} HTML-safe string.
- * @private
- */
-const escapeHtml = (text) => {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
 };
 
 export default { tokenize, generateHighlightedHtml, highlightColors, highlightPalettes, syntaxPaletteFor };
