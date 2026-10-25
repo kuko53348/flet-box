@@ -4,6 +4,9 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>flet-box — regression guards</title>
+    <!-- The same face an app gets from `flet-box create`: a guard that measures an
+         icon glyph has to measure the ligature the font draws, not the word. -->
+    <link rel="stylesheet" href="../src/fonts/icons.css" />
     <style>
       body { background: #0f172a; color: #e2e8f0; font-family: ui-monospace, Menlo, monospace; padding: 16px; }
       h1 { font-size: 17px; }

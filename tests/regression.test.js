@@ -2090,6 +2090,45 @@ async function run() {
     ok(off.querySelector("button") === null, "a plain Input grew a trailing control");
   });
 
+  await t("Input: the trailing controls are icons, not emoji", async () => {
+    // The reveal button used to paint `👁` and `🙈`. An emoji is a colour bitmap:
+    // the field's own `color` cannot reach it, the operating system's emoji font
+    // draws it (20×17px measured, in a slot the field sizes at 16), and on iOS it
+    // is a monkey face sitting in the middle of a form.
+    if (document.fonts?.load) await document.fonts.load('16px "Material Icons"');
+    ok(document.fonts.check('16px "Material Icons"'), "the face the .material-icons class asks for never loaded");
+
+    const field = mount(W.Input({ type: "password", passwordToggle: true, clearable: true, value: "s3cret" }));
+    const [clearBtn, revealBtn] = [...field.querySelectorAll("button")];
+    ok(clearBtn !== undefined && revealBtn !== undefined, `expected two trailing controls, got ${field.querySelectorAll("button").length}`);
+
+    const glyphOf = (btn) => btn.firstElementChild;
+    const clearGlyph = glyphOf(clearBtn);
+    const revealGlyph = glyphOf(revealBtn);
+    ok(clearGlyph !== null && revealGlyph !== null, "a trailing control holds raw text instead of an icon element");
+    ok(revealGlyph.classList.contains("material-icons"), "the reveal glyph is not drawn by the framework's icon font");
+    ok(clearGlyph.textContent === "close", `the clear control reads "${clearGlyph.textContent}"`);
+    ok(revealGlyph.textContent === "visibility", `the hidden state reads "${revealGlyph.textContent}"`);
+
+    // The ligature is TEXT: unless it is hidden, a reader says the button's name
+    // and then spells out the icon's identifier.
+    ok(revealGlyph.getAttribute("aria-hidden") === "true", "the ligature is readable");
+    ok(revealBtn.getAttribute("aria-label") === "Show value", "the button lost its accessible name");
+    ok(revealBtn.type === "button", "a trailing control would submit the form it lives in");
+
+    // And it fits the slot it is given — the number an emoji (20) or an unloaded
+    // ligature ("visibility" is 57px of Arial) would fail.
+    const box = revealGlyph.getBoundingClientRect();
+    ok(box.width <= 16.5 && box.height <= 16.5, `the glyph overflows its 16px slot (${box.width}×${box.height})`);
+
+    revealBtn.click();
+    ok(revealGlyph.textContent === "visibility_off", `revealing did not swap the icon (${revealGlyph.textContent})`);
+    ok(revealBtn.getAttribute("aria-label") === "Hide value", "the accessible name did not follow the state");
+    ok(field._input.type === "text", "the field stopped revealing");
+    revealBtn.click();
+    ok(revealGlyph.textContent === "visibility", "hiding did not swap the icon back");
+  });
+
   await t("Checkbox/Radio/Switch: activeColor paints the active state", async () => {
     // The three controls hardcoded the theme color when active, so the documented
     // `activeColor` prop changed nothing.

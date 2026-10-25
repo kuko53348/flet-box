@@ -522,11 +522,19 @@ export const Input = (props) => {
   // --- Trailing controls (clear / reveal) ---
   // Real `<button type="button">` elements: they are keyboard-reachable, and the
   // `type` keeps them from submitting a form the input happens to live in.
-  const makeTrailingButton = (glyph, label, onPress) => {
+  //
+  // The glyph is a Material icon name, drawn by the same `.material-icons` face
+  // every other icon in the framework uses. An emoji is not a substitute: it is a
+  // colour bitmap the field's own `color` cannot reach, it is painted by the
+  // operating system's emoji font, and it is wider than the 16px slot it is given
+  // — measured 20×17px for `👁` against 12.2px for the `✕` beside it, so one row
+  // of trailing controls carried three different optical sizes and a glyph that
+  // could not follow the theme.
+  const makeTrailingButton = (iconName, label, onPress) => {
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.textContent = glyph;
     btn.setAttribute("aria-label", label);
+    btn.appendChild(Icon({ name: iconName, size: 16, color: colors.textSecondary }));
     btn.style.width = toREM(32);
     btn.style.height = toREM(32);
     btn.style.flexShrink = "0";
@@ -554,7 +562,7 @@ export const Input = (props) => {
   };
 
   if (clearable) {
-    clearButton = makeTrailingButton("✕", "Clear", () => {
+    clearButton = makeTrailingButton("close", "Clear", () => {
       handleInput("", null);
       inputElement.focus();
     });
@@ -564,10 +572,12 @@ export const Input = (props) => {
   if (passwordToggle) {
     let revealed = type !== "password";
     const paint = (btn) => {
-      btn.textContent = revealed ? "🙈" : "👁";
+      // The ligature is the text of the icon span, so changing the name is
+      // changing the picture — and the button keeps its one accessible name.
+      btn.firstElementChild.textContent = revealed ? "visibility_off" : "visibility";
       btn.setAttribute("aria-label", revealed ? "Hide value" : "Show value");
     };
-    const btn = makeTrailingButton("👁", "Show value", () => {
+    const btn = makeTrailingButton("visibility", "Show value", () => {
       revealed = !revealed;
       inputElement.type = revealed ? "text" : "password";
       paint(btn);
