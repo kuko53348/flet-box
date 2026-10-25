@@ -85,6 +85,11 @@ export const BottomSheet = (props) => {
     // left to the engine, its `click` would become a full-viewport tab stop.
     role: "presentation",
     tabIndex: -1,
+    // ...but it is also the panel's parent, and the engine's press feedback writes
+    // `scale: 0.98` on whatever carries the handler: pressing the backdrop shrank the
+    // whole layer, so the sheet dipped and grew a shadow-less frame for the length of
+    // the press. A scrim is not a control — it presses nothing, it only dismisses.
+    disableTransform: true,
     opacity: 0,
     visibility: "hidden",
     transition: `opacity ${animationDuration}ms ease, visibility ${animationDuration}ms ease`,

@@ -13,6 +13,11 @@ import { colors } from "../utils/themes.js";
 
 import { toREM } from "../utils/units.js";
 
+// Nodes already reported by the shared-content warning below. A screen that
+// reuses one `steps` array steals it once per stepper per render, and a wall of
+// identical warnings is a warning nobody reads.
+const warnedContent = new WeakSet();
+
 export const Stepper = (props) => {
   const {
     steps = [],
@@ -41,6 +46,9 @@ export const Stepper = (props) => {
   } = props;
 
   let currentStep = Math.min(Math.max(activeStep, 0), steps.length - 1);
+  // The two orientations share the marker, the state and the press, and disagree
+  // about everything else — so the branch is decided once, here.
+  const vertical = orientation !== "horizontal";
   let stepsContainer = null;
   let contentContainer = null;
   let navContainer = null;
@@ -117,67 +125,104 @@ export const Stepper = (props) => {
         });
       }
 
-      // Label
+      // The label, in the ink the stage decides, placed where the orientation
+      // puts it: under the marker in the horizontal track, beside it in the
+      // vertical one. Both branches used to draw their own, so a vertical step
+      // read "Account" twice — once under the circle and once stranded at the far
+      // edge of a row the marker column had already stretched across.
+      const labelColor = isActive ? colors.primary : colors.textSecondary;
       const label = showLabels
-        ? Text({
-            text: step.label,
-            size: 12,
-            color: isActive ? colors.primary : colors.textSecondary,
-            marginTop: 4,
-            align: "center",
-          })
+        ? vertical
+          ? Text({ text: step.label, size: 14, color: labelColor })
+          : Text({
+              text: step.label,
+              size: 12,
+              color: labelColor,
+              marginTop: 4,
+              align: "center",
+            })
         : null;
 
-      const stepColumn = Column({
-        alignItems: "center",
-        flex: needsWrap ? "auto" : 1,
-        minWidth: needsWrap ? "80px" : "0",
+      // The number, the check and the accent carry the stage, and all three are
+      // drawn: the check is a decorative glyph and the label alone does not say
+      // whether the step is behind, ahead or where you are. The state goes in
+      // the name, and `aria-current` marks the step you are on. The press lives
+      // on this box, so the whole strip answers — not only the circle.
+      const press = {
         cursor: "pointer",
-        // The number, the check and the accent carry the stage, and all three are
-        // drawn: the check is a decorative glyph and the label alone does not say
-        // whether the step is behind, ahead or where you are. The state goes in
-        // the name, and `aria-current` marks the step you are on.
         "aria-label": `${step.label || `Step ${idx + 1}`} (${
           isCompleted ? "completed" : isActive ? "current" : "upcoming"
         })`,
         "aria-current": isActive ? "step" : undefined,
         onclick: () => goToStep(idx),
-        children: [indicator, label].filter(Boolean),
-      });
+      };
 
-      if (orientation === "horizontal") {
-        stepsContainer.appendChild(stepColumn);
-        if (!isLast && !needsWrap) {
-          const connector = Container({
-            flex: 1,
-            height: "2px",
-            minWidth: "10px",
-            backgroundColor:
-              idx < currentStep ? colors.success : colors.gray300,
-          });
-          stepsContainer.appendChild(connector);
-        } else if (!isLast && needsWrap) {
-          const spacer = Container({ width: 8 });
-          stepsContainer.appendChild(spacer);
-        }
-      } else {
-        const verticalStep = Row({
-          gap: 12,
-          alignItems: "center",
-          children: [stepColumn, Text({ text: step.label, size: 14 })],
-        });
-        stepsContainer.appendChild(verticalStep);
+      stepsContainer.appendChild(
+        vertical
+          ? Row({
+              alignItems: "center",
+              gap: 12,
+              width: "100%",
+              ...press,
+              children: [indicator, label].filter(Boolean),
+            })
+          : Column({
+              alignItems: "center",
+              flex: needsWrap ? "auto" : 1,
+              minWidth: needsWrap ? "80px" : "0",
+              ...press,
+              children: [indicator, label].filter(Boolean),
+            }),
+      );
+
+      // Only the horizontal track links its markers; a vertical list is already
+      // read in order, and the Column's own gap is the separation.
+      if (!vertical && !isLast) {
+        stepsContainer.appendChild(
+          needsWrap
+            ? Container({ width: 8 })
+            : Container({
+                flex: 1,
+                height: "2px",
+                minWidth: "10px",
+                backgroundColor:
+                  idx < currentStep ? colors.success : colors.gray300,
+              }),
+        );
       }
     });
 
-    // Update content
+    // Update content. One place owns the slot, and it only rewrites it when the
+    // node already there is not this step's: `appendChild` of the node that is
+    // already the child is a detach and a re-attach, which throws away the
+    // content's layout, the caret of a field being typed in, and any transition
+    // it was mid-way through.
     if (contentContainer) {
-      while (contentContainer.firstChild) {
-        contentContainer.removeChild(contentContainer.firstChild);
-      }
       const stepContent = steps[currentStep]?.content;
-      if (stepContent) {
-        contentContainer.appendChild(stepContent);
+      if (contentContainer.firstChild !== stepContent) {
+        while (contentContainer.firstChild) {
+          contentContainer.removeChild(contentContainer.firstChild);
+        }
+        if (stepContent) {
+          // A DOM node has one parent, so the same `content` cannot show in two
+          // steppers: the second `appendChild` moves it and leaves the first with
+          // an empty slot that reads as "the widget is invisible". Nothing else
+          // says so, and the stepper that lost it looks like it never rendered.
+          if (
+            stepContent.parentElement &&
+            stepContent.parentElement !== contentContainer &&
+            !warnedContent.has(stepContent)
+          ) {
+            warnedContent.add(stepContent);
+            console.warn(
+              "Stepper: this step's content is already mounted in another tree, " +
+                "so that stepper is now empty — a widget node has one parent. Build " +
+                "the steps array where the Stepper is built; do not share one array " +
+                "between steppers.",
+            );
+          }
+          contentContainer.appendChild(stepContent);
+        }
       }
     }
 
@@ -272,9 +317,11 @@ export const Stepper = (props) => {
 
   stepsWrapper.appendChild(stepsContainer);
 
-  // Content container
+  // Content container — built empty. `updateUI()` below is the only writer of
+  // this slot, so the first paint goes through the same code as every
+  // navigation, instead of mounting the node here and detaching it a line later
+  // to mount the same node again.
   contentContainer = Container({
-    child: steps[currentStep]?.content || null,
     width: "100%",
     overflow: "auto",
   });

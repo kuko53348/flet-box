@@ -32,6 +32,11 @@ const ModalOverlay = ({
     // "button" on the Tab path, inside the trap, ahead of the dialog's own.
     role: "presentation",
     tabIndex: -1,
+    // And no press feedback either: the panel is this element's child, so the
+    // engine's `scale: 0.98` shrank the whole layer — the dialog dipped 1.45px and
+    // lost 9px of width for the length of the press. A scrim dismisses; it is not
+    // a control that answers to being pushed.
+    disableTransform: true,
     position: "fixed",
     top: "0",
     left: "0",
@@ -75,7 +80,10 @@ const ModalHeader = ({
       Text({
         text: title,
         size: 18,
-        weight: "80%",
+        // `80%` is not a font weight — the browser drops the declaration and the
+        // dialog title rendered at the body weight. The sibling overlay header
+        // (`BottomSheet`) asks for `bold`, and this is the same decision.
+        weight: "bold",
         color: headerTextColor || colors.text,
         flex: 1,
       }),

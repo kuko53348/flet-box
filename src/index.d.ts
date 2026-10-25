@@ -789,6 +789,12 @@ declare module 'flet-box' {
     size?: number;
     activeColor?: Color;
     label?: string;
+    /**
+     * How the checked state is painted. `outlined` (default) keeps the box hollow and
+     * draws the tick in `activeColor`; `filled` turns the whole box into an
+     * `activeColor` plate and takes the tick to whichever ink reads on it.
+     */
+    variant?: 'outlined' | 'filled';
   }
   export function Checkbox(props: CheckboxProps): Widget & {
     setChecked(checked: boolean, triggerCallback?: boolean): void;

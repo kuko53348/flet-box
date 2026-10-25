@@ -17,7 +17,13 @@
 //   - GridView read neither the `children` callers hand it nor the row height it
 //     reserves, so a "3-column grid" painted one column of full-width rows;
 //   - a Badge anchored itself to the width its parent happened to give the
-//     wrapper, so the pill sat on the far edge of the card instead of the icon.
+//     wrapper, so the pill sat on the far edge of the card instead of the icon;
+//   - a Checkbox rounded nothing, and the `borderRadius` it documented rounded the
+//     invisible 40-unit row around the box instead of the box itself;
+//   - a Stepper mounted its active content only once something was pressed, so it
+//     drew its rail, its buttons and nothing in between;
+//   - a vertical step drew its label twice and stranded the second copy at the
+//     far edge of the row.
 //
 // It publishes `window.__REGRESSION = { pass, fail, results }`.
 import * as W from "../src/widgets/index.js";
@@ -1200,6 +1206,55 @@ async function run() {
     bs.destroy?.();
   });
 
+  await t("Modal/BottomSheet: a backdrop press dismisses without sinking the panel", async () => {
+    // The engine's press feedback writes `scale: 0.98` on the element that carries
+    // the click handler — and on both overlays that element is the scrim, which is
+    // the panel's own parent. So holding the pointer on the backdrop shrank the whole
+    // layer: the sheet measured -5.3px of travel and 10px less width, the modal 1.45px
+    // and 9.04px, and both lost their shadow, for the length of the press. A scrim
+    // dismisses; it is not a control that answers to being pushed.
+    const pressScrim = async (build, label) => {
+      const ctrl = build();
+      await wait(20);
+      const scrim = document.body.lastElementChild;
+      ctrl.open();
+      // The entry transition has to settle before a rect means anything.
+      await wait(400);
+      const panel = scrim.firstChild;
+      const before = panel.getBoundingClientRect();
+      scrim.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+      ok(scrim.style.scale === "", `${label}: the scrim scaled the layer to ${scrim.style.scale}`);
+      ok(scrim.style.boxShadow === "", `${label}: the press stripped the scrim's shadow`);
+      const during = panel.getBoundingClientRect();
+      ok(
+        Math.abs(during.top - before.top) < 0.5,
+        `${label}: the panel dipped ${(during.top - before.top).toFixed(2)}px`,
+      );
+      ok(
+        Math.abs(before.width - during.width) < 0.5,
+        `${label}: the panel lost ${(before.width - during.width).toFixed(2)}px of width`,
+      );
+      scrim.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
+      // No feedback, same gesture: the backdrop still dismisses.
+      scrim.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      await wait(20);
+      ok(
+        scrim.style.opacity === "0",
+        `${label}: a backdrop press no longer dismisses (opacity ${scrim.style.opacity})`,
+      );
+      ctrl.destroy?.();
+    };
+
+    await pressScrim(
+      () => W.BottomSheet({ content: W.Text({ text: "sheet" }) }),
+      "BottomSheet",
+    );
+    await pressScrim(
+      () => W.Modal({ title: "T", content: W.Text({ text: "x" }) }),
+      "Modal",
+    );
+  });
+
   // ---------------------------------------------------------------- animate.js
   await t("animate.js: negative duration terminates and `from: undefined` never writes NaN", async () => {
     const { animate, animateAsync } = await import("../src/animations/animate.js");
@@ -2283,16 +2338,18 @@ async function run() {
     ok(rim(themed) !== "rgb(0, 0, 0)", "the default theme color disappeared");
   });
 
-  await t("Checkbox: a square frame with a bordered rim and a centred tick", () => {
-    // The box was a filled 4-unit-radius blob: the rounding made a 20-unit
-    // control read as a pill, and the fill painted over the border it was
-    // supposed to show. It is now a flush square whose rim is visible in both
-    // states, with the tick centred inside it.
+  await t("Checkbox: a framed box with a scale corner and a centred tick", () => {
+    // Two bugs, one element. The box used to be a filled 4-unit-radius blob whose
+    // rounding made a 20-unit control read as a pill and whose fill painted over the
+    // rim; it became a flush square, and then stayed one — `borderRadius: 0` put a raw
+    // right angle inside the rounded cards, fields and buttons of the same screen
+    // (rule 02's "two products on one page"). It now carries a step of the radius
+    // scale, keeps the rim visible in both states, and centres the tick.
     withBothThemes((theme) => {
       const cb = mount(W.Checkbox({ checked: true }));
       const boxEl = cb.firstElementChild;
       const cs = getComputedStyle(boxEl);
-      ok(cs.borderRadius === "0px", `${theme}: corners are ${cs.borderRadius}`);
+      ok(cs.borderRadius === "4px", `${theme}: corners are ${cs.borderRadius}`);
       ok(cs.borderTopWidth === "2px" && cs.borderTopStyle === "solid", `${theme}: rim is ${cs.borderTop}`);
       ok(
         cs.backgroundColor === "rgba(0, 0, 0, 0)",
@@ -2310,6 +2367,99 @@ async function run() {
           `vs frame centre ${frame.left + frame.width / 2},${frame.top + frame.height / 2}`,
       );
       cb.remove();
+    });
+  });
+
+  await t("Checkbox: the corner belongs to the box, not to the row around it", () => {
+    // `borderRadius` is a documented prop of every widget, and here it reached the
+    // root: a 40-unit transparent row that grows with its label (measured 144px wide
+    // around a 20px box). The corner the app asked for was rounding nothing at all,
+    // while the control it was meant to round stayed at 0.
+    const plain = mount(W.Checkbox({}));
+    const plainBox = plain.firstElementChild;
+    ok(
+      getComputedStyle(plainBox).borderTopLeftRadius === "4px",
+      `default corner is ${getComputedStyle(plainBox).borderTopLeftRadius}`,
+    );
+    ok(
+      getComputedStyle(plain).borderTopLeftRadius === "0px",
+      "the invisible row got a corner of its own",
+    );
+
+    // A bigger box carries a bigger step, and both are on the scale.
+    const big = mount(W.Checkbox({ size: 32 }));
+    ok(
+      getComputedStyle(big.firstElementChild).borderTopLeftRadius === "8px",
+      `size 32 corner is ${getComputedStyle(big.firstElementChild).borderTopLeftRadius}`,
+    );
+
+    const asked = mount(W.Checkbox({ borderRadius: 12, label: "Rounded by the app" }));
+    ok(
+      getComputedStyle(asked.firstElementChild).borderTopLeftRadius === "12px",
+      `caller's radius landed on the row only: ${getComputedStyle(asked.firstElementChild).borderTopLeftRadius}`,
+    );
+    // …and the row keeps it, because that is where a `bgColor` on a labelled
+    // checkbox paints.
+    ok(
+      getComputedStyle(asked).borderTopLeftRadius === "12px",
+      "the caller's radius stopped reaching the root it used to round",
+    );
+    [plain, big, asked].forEach((el) => el.remove());
+  });
+
+  await t("Checkbox: variant 'filled' paints an accent plate with a readable tick", () => {
+    // The checked state had one look: a rim and a tick in the accent, on a transparent
+    // box. `variant: "filled"` is the plate the rest of the API already names
+    // (`Button`, `Chip`, `Input`, `Dropdown`), and it must not invent a color knob —
+    // the plate is the `activeColor` the control already carries, and the tick takes
+    // whichever ink reads on it.
+    withBothThemes((theme) => {
+      const accent = "rgb(37, 99, 235)";
+      const filled = mount(W.Checkbox({ checked: true, variant: "filled", activeColor: accent }));
+      const boxEl = filled.firstElementChild;
+      const cs = getComputedStyle(boxEl);
+      ok(cs.backgroundColor === accent, `${theme}: plate is ${cs.backgroundColor}`);
+      // The rim is the plate's own edge, so a filled box shows no second outline.
+      ok(cs.borderTopColor === accent, `${theme}: rim is ${cs.borderTopColor}`);
+      // The corner is the same decision it always was — the plate is clipped by it.
+      ok(cs.borderRadius === "4px", `${theme}: the plate squared off at ${cs.borderRadius}`);
+
+      const tick = boxEl.firstElementChild;
+      const ink = getComputedStyle(tick).color;
+      const ratio = color(ink).contrastRatio(color(accent));
+      ok(ratio >= 4.5, `${theme}: tick ${ink} on ${accent} is ${ratio.toFixed(2)}:1`);
+
+      // Only the checked state is a plate: a filled *off* box is a button.
+      const off = mount(W.Checkbox({ variant: "filled", activeColor: accent }));
+      ok(
+        getComputedStyle(off.firstElementChild).backgroundColor === "rgba(0, 0, 0, 0)",
+        `${theme}: an unchecked box filled itself (${getComputedStyle(off.firstElementChild).backgroundColor})`,
+      );
+      // …and the repaint on press is the same decision, not a second one. The inline
+      // value: the box cross-fades over 200 ms, so a computed read right after the
+      // press still reports the colour it is leaving.
+      const plateOf = (el) => el.firstElementChild.style.backgroundColor;
+      const inkOf = (el) => color(el.firstElementChild.firstElementChild.style.color).hex();
+      off.setChecked(true);
+      ok(plateOf(off) === accent, `${theme}: setChecked did not lay the plate (${plateOf(off)})`);
+      ok(
+        inkOf(off) === color(ink).hex(),
+        `${theme}: the tick did not move to the plate's ink (${inkOf(off)} vs ${ink})`,
+      );
+      off.setChecked(false);
+      ok(
+        plateOf(off) === "transparent",
+        `${theme}: unchecking left the plate behind (${plateOf(off)})`,
+      );
+
+      // The default is the look every app already shipped.
+      const outlined = mount(W.Checkbox({ checked: true, activeColor: accent }));
+      ok(
+        getComputedStyle(outlined.firstElementChild).backgroundColor === "rgba(0, 0, 0, 0)",
+        `${theme}: the default variant started filling itself`,
+      );
+
+      [filled, off, outlined].forEach((el) => el.remove());
     });
   });
 
@@ -2336,6 +2486,102 @@ async function run() {
     ok(row.height >= TAP_MINIMUM, `the labelled row is ${row.height}px tall`);
     cb.click();
     ok(cb.getChecked() === true, "clicking the label did not toggle the box");
+  });
+
+  await t("Stepper: the active step's content is mounted on the first paint", async () => {
+    // The rail and the button bar drew themselves; the content slot stayed empty
+    // until something was pressed. The symptom reads as "the widget inside is
+    // invisible", and the only way to make it appear was to navigate away and
+    // back — which re-claims the node — so a flow looked broken in a still image.
+    const slotOf = (el) => [...el.children].find((c) => c.style.overflow === "auto");
+    const one = W.Text({ text: "step one" });
+    const two = W.Text({ text: "step two" });
+    const s = mount(W.Stepper({ steps: [{ label: "a", content: one }, { label: "b", content: two }] }));
+    const slot = slotOf(s);
+    ok(slot, "the stepper rendered no content slot");
+    ok(
+      slot.children.length === 1,
+      `the slot holds ${slot.children.length} nodes on the first paint`,
+    );
+    ok(slot.firstChild === one, "the slot mounted a step other than the active one");
+    ok(
+      slot.firstChild.getBoundingClientRect().height > 0,
+      "the mounted content painted nothing",
+    );
+
+    // The slot has one writer, and it does not touch a node that is already there:
+    // re-appending it is a detach and a re-attach, which drops the caret of a
+    // field being typed in and restarts anything mid-transition.
+    let churn = 0;
+    const watcher = new MutationObserver((records) => {
+      churn += records.length;
+    });
+    watcher.observe(slot, { childList: true });
+    s.goTo(0);
+    await wait(30);
+    watcher.disconnect();
+    ok(churn === 0, `staying on the same step rewrote the content ${churn} times`);
+
+    s.next();
+    ok(slot.firstChild === two, "next() did not swap the content");
+    s.back();
+    ok(slot.firstChild === one, "back() did not bring the content back");
+    s.remove();
+  });
+
+  await t("Stepper: a content node claimed by two steppers says so out loud", () => {
+    // A DOM node has one parent, so one `steps` array handed to two steppers
+    // leaves the first with an empty slot. The move is the DOM's, and nothing else
+    // on screen explains a flow that draws its rail, its buttons and no content.
+    const slotOf = (el) => [...el.children].find((c) => c.style.overflow === "auto");
+    const shared = W.Text({ text: "mine" });
+    const warns = [];
+    const originalWarn = console.warn;
+    console.warn = (...args) => warns.push(String(args[0] || ""));
+    let a;
+    let b;
+    try {
+      a = mount(W.Stepper({ steps: [{ label: "a", content: shared }] }));
+      b = mount(W.Stepper({ steps: [{ label: "a", content: shared }] }));
+      ok(slotOf(a).children.length === 0, "the first stepper kept the node");
+      ok(slotOf(b).children.length === 1, "the second stepper never claimed it");
+      const mine = warns.filter((w) => /Stepper:/.test(w));
+      ok(mine.length === 1, `shared content warned ${mine.length} times, expected 1`);
+      ok(/one parent/.test(mine[0]), `the warning did not name the cause: ${mine[0]}`);
+    } finally {
+      console.warn = originalWarn;
+      a?.remove();
+      b?.remove();
+    }
+  });
+
+  await t("Stepper: a vertical step labels itself once, beside its marker", () => {
+    // The horizontal track puts the label under the marker and the vertical row
+    // beside it — and the vertical branch built its own second label on top of the
+    // column's, while the column itself carried `flex: 1`. So every vertical step
+    // read "Account" twice: once under the circle, once stranded at the far edge.
+    const labels = ["Account", "Profile", "Review"];
+    const steps = labels.map((label) => ({ label, content: W.Text({ text: label }) }));
+    const v = mount(W.Stepper({ steps, orientation: "vertical" }));
+    const rail = v.children[0].children[0];
+    const rows = [...rail.children];
+    ok(rows.length === labels.length, `the vertical rail drew ${rows.length} rows`);
+    rows.forEach((row, i) => {
+      const word = labels[i];
+      const drawn = ((row.textContent || "").match(new RegExp(word, "g")) || []).length;
+      ok(drawn === 1, `"${word}" is drawn ${drawn} times in one step`);
+      const marker = row.firstElementChild.getBoundingClientRect();
+      const text = row.lastElementChild.getBoundingClientRect();
+      ok(
+        text.left >= marker.right - 1 && text.left - marker.right < 40,
+        `the label sits ${Math.round(text.left - marker.right)}px from its marker, not beside it`,
+      );
+      ok(
+        Math.abs(marker.top + marker.height / 2 - (text.top + text.height / 2)) < 8,
+        `the label is not on the marker's centre line (${word})`,
+      );
+    });
+    v.remove();
   });
 
   await t("Stack: alignment anchors children at the documented nine points", async () => {

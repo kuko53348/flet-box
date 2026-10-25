@@ -1,7 +1,13 @@
 import { color } from "../tools/color.js";
 
+// A fill this code can measure: a hex, an opaque `rgb()`/`hsl()`, or a named color.
+// The `$` anchors the whole alternation, so each branch has to match the *entire*
+// value — the `rgba?\(\s*\d` this file used to carry could only ever match the
+// three-character string "rgb", which made every functional color fall through to
+// the caller's default. An alpha'd fill stays unmeasured on purpose: what reads on
+// it depends on what is behind it.
 const SOLID_COLOR =
-  /^(#[0-9a-f]{3,8}|rgba?\(\s*\d|hsla?\(\s*\d|black|white|red|green|blue|yellow|cyan|magenta|gray|darkgray|lightgray)$/i;
+  /^(#[0-9a-f]{3,8}|rgb\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\)|hsl\(\s*[\d.]+(?:deg)?\s*,\s*[\d.]+%\s*,\s*[\d.]+%\s*\)|black|white|red|green|blue|yellow|cyan|magenta|gray|darkgray|lightgray)$/i;
 
 /**
  * Black or white, whichever reads better on `background` by WCAG contrast.

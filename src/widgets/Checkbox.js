@@ -5,6 +5,7 @@
 import { WidgetFactory } from "../widget-factory/index.js";
 import { Text } from "./Text.js";
 import { colors } from "../utils/themes.js";
+import { readableInk } from "../utils/readableInk.js";
 import { TAP_MINIMUM, LABEL_TEXT } from "../tools/index.js";
 
 export const Checkbox = (props) => {
@@ -16,6 +17,8 @@ export const Checkbox = (props) => {
     size = 20,
     activeColor = colors.primary,
     label = null,
+    borderRadius = null,
+    variant = "outlined",
     ...rest
   } = props;
 
@@ -33,26 +36,55 @@ export const Checkbox = (props) => {
   // clears the 3:1 non-text minimum on each surface.
   const offColor = disabled ? colors.border : colors.gray500;
 
+  // `variant: "filled"` is the same word the rest of the API already uses for a solid
+  // plate (`Button`, `Chip`, `Input`, `Dropdown`), and it changes the *checked* state
+  // only: a filled box that means "off" is a button, not a checkbox. The plate is the
+  // accent the control already carries, so one brand color per screen still holds, and
+  // the tick takes whichever of black or white reads on it — the same decision `Button`
+  // makes, and it falls back to the theme's own on-plate ink for a fill this code
+  // cannot measure (a gradient, a CSS variable).
+  const isFilled = variant === "filled";
+  const plateInk = readableInk(activeColor, colors.onPrimary);
+
+  // The corner is a decision, and this control shipped none: `borderRadius: 0` put a
+  // raw square plate inside the rounded cards, fields and buttons of the same screen,
+  // which is rule 02's "two products on one page". It is snapped to two steps of the
+  // radius scale rather than scaled continuously — a radius between the steps is the
+  // drift rule 03 calls `OFF_SCALE_RADIUS`, and two checkboxes on one form that differ
+  // by 1px of corner read as a mistake nobody can name. `4` on the default 20-unit box,
+  // `8` once the box is big enough to carry it.
+  const boxRadius = borderRadius ?? (size >= 28 ? 8 : 4);
+
+  // The three things a state decides, in one place, so the box built below and every
+  // repaint on press cannot disagree. A checked box always wears the accent: the rim
+  // used to fall to `colors.border` while disabled, which measured 1.2:1 on the dark
+  // card — a locked-on checkbox that looked unchecked.
+  const rimFor = (on) => (on ? activeColor : offColor);
+  const fillFor = (on) => (on && isFilled ? activeColor : "transparent");
+  const tickFor = (on) =>
+    on && isFilled ? plateInk : disabled ? colors.textDisabled : activeColor;
+
   const updateUI = (newChecked) => {
     // The state an assistive technology reads is this attribute, not the tick it
     // cannot see. `updateUI` is the one place the visual state is painted, so the
     // attribute and the box cannot disagree.
     if (checkbox) checkbox.setAttribute("aria-checked", String(Boolean(newChecked)));
     if (checkboxRef) {
-      checkboxRef.style.border = `2px solid ${newChecked ? activeColor : offColor}`;
+      checkboxRef.style.border = `2px solid ${rimFor(newChecked)}`;
+      checkboxRef.style.backgroundColor = fillFor(newChecked);
     }
     if (checkMarkRef) {
       checkMarkRef.style.display = newChecked ? "inline-block" : "none";
+      checkMarkRef.style.color = tickFor(newChecked);
     }
   };
 
-  // The tick is drawn inside the frame, in the active colour: a filled plate
-  // would hide the border the box is supposed to show, and the theme ink it used
-  // to carry (white in light, near-black in dark) only read on that plate.
+  // The tick lives inside the frame, in the accent — or in the plate's readable ink
+  // once `variant: "filled"` turns the box into a solid plate.
   const checkMark = WidgetFactory({
     tag: "span",
     textContent: "✓",
-    color: disabled ? colors.textDisabled : activeColor,
+    color: tickFor(internalChecked),
     fontSize: Math.max(12, Math.round(size * 0.65)),
     fontWeight: "bold",
     lineHeight: 1,
@@ -60,14 +92,14 @@ export const Checkbox = (props) => {
   });
   checkMarkRef = checkMark;
 
-  // The visual square. Everything drawn lives here, so the box below can be the
+  // The visual box. Everything drawn lives here, so the root below can be the
   // finger's target without becoming a 40-unit checkbox.
   const box = WidgetFactory({
     width: size,
     height: size,
-    border: `2px solid ${disabled ? colors.border : internalChecked ? activeColor : offColor}`,
-    borderRadius: 0,
-    backgroundColor: "transparent",
+    border: `2px solid ${rimFor(internalChecked)}`,
+    borderRadius: boxRadius,
+    backgroundColor: fillFor(internalChecked),
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -125,6 +157,13 @@ export const Checkbox = (props) => {
   // Pressing the words must not scale the words. The box on its own keeps the
   // default press feedback, because there the root *is* the control.
   if (isLabelled) rootProps.disableTransform = true;
+
+  // A caller's radius is the control's, so it rounds the drawn box above. It is
+  // re-applied to the root only when it was actually given: that row is where a
+  // `bgColor` lands on a labelled checkbox, and it must keep the corner such an app
+  // already saw. Left alone otherwise, because the root is invisible and its own
+  // corner is nobody's business.
+  if (borderRadius !== null) rootProps.borderRadius = borderRadius;
 
   const checkbox = WidgetFactory({ ...rootProps, ...rest });
 
