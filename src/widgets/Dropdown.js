@@ -195,7 +195,14 @@ export const Dropdown = (inputProps = {}) => {
     const clearIcon = Icon({
       name: "close",
       size: 16,
+      // 16 of glyph plus 12 of padding on each side is the 40-unit target. The
+      // negative vertical margin keeps that box from stretching the field: the
+      // padding is paid to the thumb, not to the header.
+      paddingVertical: 12,
+      paddingHorizontal: 12,
+      marginVertical: -12,
       cursor: "pointer",
+      "aria-label": "Clear selection",
       onclick: (e) => {
         e.stopPropagation();
         if (!currentDisabled) {

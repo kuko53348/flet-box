@@ -57,7 +57,12 @@ export const Chip = (props) => {
    */
   const chipPadding =
     padding === undefined
-      ? { paddingVertical: 4, paddingHorizontal: 12 }
+      ? {
+          // The delete glyph carries the 40-unit target itself, so the row does
+          // not need a second gutter above and below it.
+          paddingVertical: onDelete ? 0 : 4,
+          paddingHorizontal: 12,
+        }
       : typeof padding === "number"
         ? { paddingVertical: padding, paddingHorizontal: padding * 2 }
         : { padding };
@@ -108,6 +113,10 @@ export const Chip = (props) => {
       // reader would say, on a control whose whole job is to take this label away.
       "aria-label": label ? `Remove ${label}` : "Remove",
       size: Math.max(12, size - 2),
+      // The glyph stays small; the box is the 40-unit target, in framework
+      // units so it grows with the reader's font like every other length.
+      width: TAP_MINIMUM,
+      height: TAP_MINIMUM,
       color: txtColor,
       cursor: "pointer",
       onclick: (e) => {

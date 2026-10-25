@@ -19,7 +19,7 @@
     "dev": "node bin/cli.js run --hot",
     "build": "node bin/cli.js createBundle",
     "release": "node bin/cli.js release",
-    "test": "node scripts/check-widgets.mjs && node scripts/check-widget-scale.mjs && node scripts/check-a11y.mjs && node scripts/check-prop-registry.mjs && node scripts/check-docs-props.mjs && node scripts/check-api-surface.mjs && node scripts/check-api-propscan.mjs && node scripts/check-time-helpers.mjs && node scripts/check-router-base.mjs && node scripts/check-clean-ui.mjs && node scripts/check-skills.mjs && node scripts/check-ota-assets.mjs && node scripts/check-pwa-shell.mjs && node scripts/check-cli-install.mjs && python3 tools/snippets-creator-flet-box/build_snippets.py --check && node scripts/check-snippets.mjs",
+    "test": "node scripts/check-widgets.mjs && node scripts/check-widget-scale.mjs && node scripts/check-a11y.mjs && node scripts/check-prop-registry.mjs && node scripts/check-docs-props.mjs && node scripts/check-api-surface.mjs && node scripts/check-api-propscan.mjs && node scripts/check-time-helpers.mjs && node scripts/check-router-base.mjs && node scripts/check-clean-ui.mjs && node scripts/check-framework-ui.mjs && node scripts/check-skills.mjs && node scripts/check-ota-assets.mjs && node scripts/check-pwa-shell.mjs && node scripts/check-cli-install.mjs && python3 tools/snippets-creator-flet-box/build_snippets.py --check && node scripts/check-snippets.mjs",
     "test:browser": "node scripts/run-browser-tests.mjs"
   },
   "keywords": [

@@ -1,0 +1,4 @@
+{
+  "src/utils/markdownParser.js:LIST_WITHOUT_STATE": "markdownParser.js is the Markdown renderer, not a screen: a list here is a paragraph node inside a parsed document, and the app that renders it owns its own loading, empty and failed states.",
+  "src/widgets/GridView.js:LIST_WITHOUT_STATE": "GridView.js is the list itself. The loading/empty/failed states are the caller's data to describe (the app writes them next to the widget), so requiring them inside the engine would paint a message the app never asked for."
+}

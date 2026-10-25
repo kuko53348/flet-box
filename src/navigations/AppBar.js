@@ -139,6 +139,10 @@ export const AppBar = (props) => {
     finalLeading = Icon({
       name: "arrow_back",
       size: 24,
+      // 24 of glyph plus 8 of padding is the 40-unit target a thumb needs. Both
+      // numbers are framework units, so the target grows with the reader's font.
+      paddingVertical: 8,
+      paddingHorizontal: 8,
       color: iconColor,
       cursor: "pointer",
       "aria-label": "Go back",

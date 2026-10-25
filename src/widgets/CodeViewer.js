@@ -7,6 +7,7 @@ import { colors } from "../utils/themes.js";
 import { composeUpdate } from "../utils/composeUpdate.js";
 import { generateHighlightedHtml, syntaxPaletteFor } from "../utils/syntaxHighlight.js";
 import { clipboard } from "../tools/clipboard.js";
+import { TAP_MINIMUM } from "../tools/index.js";
 
 import { toREM } from "../utils/units.js";
 
@@ -105,10 +106,11 @@ code = "",
     backgroundColor: colors.card,
     color: colors.text,
     border: `1px solid ${colors.border}`,
-    borderRadius: 6,
-    padding: "2px 8px",
+    borderRadius: 8,
+    padding: "8px 12px",
+    minHeight: TAP_MINIMUM,
     fontFamily: "monospace",
-    fontSize: 11,
+    fontSize: 12,
     lineHeight: "1.6",
     flexShrink: 0,
     cursor: "pointer",

@@ -92,7 +92,7 @@ export const Stepper = (props) => {
           justifyContent: "center",
           alignItems: "center",
           child: isCompleted
-            ? Icon({ name: "check", size: 18, color: "#fff" })
+            ? Icon({ name: "check", size: 18, color: colors.onSecondary })
             : Text({
                 text: String(idx + 1),
                 size: 14,
@@ -197,24 +197,17 @@ export const Stepper = (props) => {
           }),
         );
       }
-      if (currentStep === steps.length - 1) {
-        buttons.push(
-          Button({
-            text: finishLabel,
-            variant: "filled",
-            bgColor: colors.success,
-            onPress: finish,
-          }),
-        );
-      } else {
-        buttons.push(
-          Button({
-            text: nextLabel,
-            variant: "filled",
-            onPress: next,
-          }),
-        );
-      }
+      // One filled call, not a filled call per branch: the last step swaps the
+      // label, the plate and the handler, and never paints two primaries.
+      const isLast = currentStep === steps.length - 1;
+      buttons.push(
+        Button({
+          text: isLast ? finishLabel : nextLabel,
+          variant: "filled",
+          bgColor: isLast ? colors.successPlate : colors.primary,
+          onPress: isLast ? finish : next,
+        }),
+      );
 
       const navRow = Row({
         justifyContent: "flex-end",

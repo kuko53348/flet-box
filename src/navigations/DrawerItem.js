@@ -218,7 +218,7 @@ export const DrawerItem = (props) => {
 
   const textWidget = Text({
     text: label,
-    size: 15,
+    size: 14,
     color: unselectedColor,
     fontWeight: "400",
     flex: 1,

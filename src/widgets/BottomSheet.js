@@ -10,6 +10,7 @@ import { Text } from "./Text.js";
 import { Icon } from "./Icon.js";
 import { Container } from "./Container.js";
 import { toREM } from "../utils/units.js";
+import { PILL } from "../tools/index.js";
 import { trapFocus } from "../utils/focusScope.js";
 
 export const BottomSheet = (props) => {
@@ -113,7 +114,7 @@ onclick: (e) => e.stopPropagation(), // ✅ Prevents the click from reaching the
           width: dragHandleWidth,
           height: dragHandleHeight,
           backgroundColor: dragHandleColor,
-          borderRadius: dragHandleHeight / 2,
+          borderRadius: PILL,
         }),
       })
     : null;
@@ -139,7 +140,11 @@ onclick: (e) => e.stopPropagation(), // ✅ Prevents the click from reaching the
     // that a reader could not even find.
     const closeBtn = Icon({
       name: "close",
-      size: 22,
+      size: 24,
+      // 24 + 2 x 8 = 40 framework units: the same target floor every other
+      // pressable control answers to, and it scales with the reader's font.
+      paddingVertical: 8,
+      paddingHorizontal: 8,
       color: colors.textSecondary,
       cursor: "pointer",
       onclick: () => close(),

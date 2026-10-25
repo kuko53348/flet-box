@@ -6,7 +6,7 @@ import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 
 import { toREM } from "../utils/units.js";
-import { TAP_MINIMUM } from "../tools/index.js";
+import { PILL, TAP_MINIMUM } from "../tools/index.js";
 
 export const TreeView = (props) => {
   const {
@@ -219,12 +219,12 @@ export const TreeView = (props) => {
         // `danger` is the signal tone; the plate is the fill white words can
         // actually sit on (6.47:1 in the light theme, 10.02:1 in the dark one).
         backgroundColor: colors.dangerPlate,
-        borderRadius: "12px",
-        padding: "2px 8px",
+        borderRadius: PILL,
+        padding: "4px 8px",
         child: WidgetFactory({
           tag: "span",
-          fontSize: "10px",
-          color: "#ffffff",
+          fontSize: "12px",
+          color: colors.onSecondary,
           fontWeight: "bold",
           textContent: String(node.badge),
         }),

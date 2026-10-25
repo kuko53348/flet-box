@@ -47,21 +47,24 @@ export const AlertDialog = (props) => {
     ...rest
   } = props;
 
-  // Map each variant to its icon name, icon color, and confirm-button color
+  // Map each variant to its icon name, icon colour, and confirm-button plate.
+  // The signal tones (`colors.danger` and friends) are words-on-a-page inks; a
+  // filled confirm carries a label, so it takes the plate that label can sit on
+  // and lets Button pick the ink from the fill (`readableInk`).
   const variantColors = {
     normal: { confirm: colors.primary, icon: "info", iconColor: colors.info },
     danger: {
-      confirm: colors.danger,
+      confirm: colors.dangerPlate,
       icon: "warning",
       iconColor: colors.danger,
     },
     warning: {
-      confirm: colors.warning,
+      confirm: colors.warningPlate,
       icon: "error",
       iconColor: colors.warning,
     },
     success: {
-      confirm: colors.success,
+      confirm: colors.successPlate,
       icon: "check_circle",
       iconColor: colors.success,
     },
@@ -109,9 +112,10 @@ export const AlertDialog = (props) => {
     actions.push(
       Button({
         text: cancelText,
-        borderColor: colors.danger,
-        variant: "filled",
-        color: colors.danger,
+        // Cancel is the way out, not the decision: a second filled plate made
+        // both answers shout, and the red label measured 3.61:1 on the surface.
+        variant: "text",
+        color: colors.dangerStrong,
         onPress: () => {
           if (onCancel) onCancel();
           closeModal();
@@ -125,8 +129,6 @@ export const AlertDialog = (props) => {
       text: confirmText,
       variant: "filled",
       bgColor: variantStyle.confirm,
-      color: colors.text,
-      borderColor: colors.surface,
       onPress: () => {
         if (onConfirm) onConfirm();
         closeModal();

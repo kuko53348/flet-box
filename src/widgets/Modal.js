@@ -84,7 +84,7 @@ const ModalHeader = ({
   if (showCloseButton) {
     const closeIcon = Icon({
       name: "close",
-      size: 22,
+      size: 24,
       color: headerTextColor || colors.textSecondary,
       cursor: "pointer",
       onclick: onClose,
@@ -99,7 +99,10 @@ const ModalHeader = ({
       }),
       // transition: "opacity 0.2s ease",
       borderRadius: "50%",
-      padding: 4,
+      // 24 + 2 x 8 = the 40-unit target; framework units, so it scales with the
+      // reader's font instead of freezing at a pixel size.
+      paddingVertical: 8,
+      paddingHorizontal: 8,
     });
     // Hover effect for close button
     closeIcon.addEventListener("mouseenter", () => {
@@ -526,7 +529,7 @@ export const Modal = (props = {}) => {
                 height: 32,
                 border: `2px solid ${colors.border}`,
                 borderTop: `2px solid ${colors.primary}`,
-                borderRadius: 32,
+                borderRadius: "50%",
                 animation: "modal-spin 0.8s linear infinite",
               }),
               Text({

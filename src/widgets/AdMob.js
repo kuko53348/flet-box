@@ -195,7 +195,7 @@ export const AdMob = (props) => {
       tag: "span",
       text: currentLabel.toUpperCase(),
       color,
-      fontSize: 11,
+      fontSize: 12,
       fontWeight: 600,
       letterSpacing: 2,
       userSelect: "none",

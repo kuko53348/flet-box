@@ -7,6 +7,7 @@ import { Row } from "../widgets/Row.js";
 import { Text } from "../widgets/Text.js";
 import { Icon } from "../widgets/Icon.js";
 import { toREM } from "../utils/units.js";
+import { PILL } from "../tools/index.js";
 
 /**
  * @typedef {Object} TabDefinition
@@ -232,11 +233,14 @@ export const Tabs = (props) => {
       : null;
     const badgeWidget = badge
       ? Container({
-          backgroundColor: colors.danger,
-          borderRadius: 10,
-          padding: "2px 6px",
+          // The signal red is a words-on-a-page tone; white on it measured
+          // 2.77:1 in the dark theme. A count is a fill carrying white, so it
+          // takes the plate (`dangerPlate`) and the palette's white (`onSecondary`).
+          backgroundColor: colors.dangerPlate,
+          borderRadius: PILL,
+          padding: "4px 8px",
           marginLeft: 4,
-          child: Text({ text: String(badge), size: 10, color: "#fff" }),
+          child: Text({ text: String(badge), size: 12, color: colors.onSecondary }),
         })
       : null;
 

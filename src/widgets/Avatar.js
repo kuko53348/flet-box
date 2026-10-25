@@ -142,7 +142,16 @@ export const Avatar = (inputProps = {}) => {
   /** Chooses the child element for the props currently held. */
   const buildContent = () => {
     if (src) {
-      return Image({ src, width: "100%", height: "100%", fit: "cover" });
+      return Image({
+        src,
+        width: "100%",
+        height: "100%",
+        fit: "cover",
+        // The avatar is decoration around the person's name, which the screen
+        // reads somewhere else. An `alt` here repeats a name the reader already
+        // hears; the empty string is the decision, not the omission.
+        alt: "",
+      });
     }
     if (icon) return Icon({ name: icon, size: size * 0.5, color: textColor });
     if (name) {

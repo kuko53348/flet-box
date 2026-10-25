@@ -390,7 +390,9 @@ export const entriesOf = (code, open, close) => {
 };
 
 /**
- * Numeric literals written in a value, skipping the ones inside strings.
+ * Numeric literals written in a value, skipping the ones inside strings. This is
+ * a lexical scan, not an evaluation: use `measuredNumbers` before judging a
+ * value against a scale, or `base * 1.5` is read as a 1.5 size.
  *
  * @param {string} value
  * @returns {Array<{number: number, offset: number}>}
@@ -413,6 +415,143 @@ export const numbersIn = (value) => {
     i += m[0].length - 1;
   }
   return found;
+};
+
+/**
+ * Tokenise an arithmetic expression made only of number literals operators and
+ * parentheses. Anything else — an identifier, a member access, a call, a
+ * ternary, an object or array — returns null, because its value is decided at
+ * runtime and a static pass that guessed it would report a number the screen
+ * never paints.
+ *
+ * @param {string} text
+ * @returns {Array<{type: string, value?: number}> | null}
+ */
+const arithmeticTokens = (text) => {
+  const tokens = [];
+  let i = 0;
+  while (i < text.length) {
+    const ch = text[i];
+    if (/\s/.test(ch)) {
+      i++;
+      continue;
+    }
+    if (/[0-9]/.test(ch) || (ch === "." && /[0-9]/.test(text[i + 1] ?? ""))) {
+      const match = /^\d*\.?\d+(?:[eE][+-]?\d+)?/.exec(text.slice(i));
+      tokens.push({ type: "number", value: Number(match[0]) });
+      i += match[0].length;
+      continue;
+    }
+    if (/[A-Za-z_$]/.test(ch)) return null;
+    if ("+-*/%()".includes(ch)) {
+      tokens.push({ type: ch });
+      i++;
+      continue;
+    }
+    return null;
+  }
+  return tokens;
+};
+
+/**
+ * Evaluate a token list by recursive descent. Null means "not provable", which
+ * is never the same answer as "off the scale".
+ *
+ * @param {Array<{type: string, value?: number}>} tokens
+ * @returns {number | null}
+ */
+const foldArithmetic = (tokens) => {
+  let i = 0;
+  const bad = () => {
+    throw new Error("unmeasurable");
+  };
+  const primary = () => {
+    const token = tokens[i++];
+    if (!token) bad();
+    if (token.type === "number") return token.value;
+    if (token.type === "(") {
+      const value = expression();
+      if (tokens[i++]?.type !== ")") bad();
+      return value;
+    }
+    return bad();
+  };
+  const unary = () => {
+    if (tokens[i]?.type === "-") {
+      i++;
+      return -unary();
+    }
+    if (tokens[i]?.type === "+") {
+      i++;
+      return unary();
+    }
+    return primary();
+  };
+  const term = () => {
+    let value = unary();
+    while (["*", "/", "%"].includes(tokens[i]?.type)) {
+      const op = tokens[i++].type;
+      const right = unary();
+      if (op === "*") value *= right;
+      else if (right === 0) bad();
+      else value = op === "/" ? value / right : value % right;
+    }
+    return value;
+  };
+  const expression = () => {
+    let value = term();
+    while (["+", "-"].includes(tokens[i]?.type)) {
+      const op = tokens[i++].type;
+      value = op === "+" ? value + term() : value - term();
+    }
+    return value;
+  };
+  try {
+    if (!tokens.length) return null;
+    const value = expression();
+    if (i !== tokens.length || !Number.isFinite(value)) return null;
+    return value;
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * The numbers a prop value provably paints, and whether the pass can say at all.
+ *
+ * A value is measured when it is a literal (`24`), arithmetic over literals
+ * (`8 * 3`), a quoted pixel shorthand (`"12px 20px"`), or any other literal
+ * string (a preset name has no numbers and is therefore on no scale to break).
+ * It is unmeasured when its value depends on an identifier, a ternary, a call or
+ * a member access — `size: base * 1.5`, `sz.h - 8`, `padding: size > 20 ? … : 0`.
+ * The distinction is the point: a lexical scan reads the `1.5` inside
+ * `base * 1.5` as the size and reports a value the screen never renders.
+ *
+ * @param {string} value raw prop value
+ * @returns {{measured: boolean, numbers: number[]}}
+ */
+export const measuredNumbers = (value) => {
+  const text = value.trim();
+  if (!text) return { measured: true, numbers: [] };
+  const quote = text[0];
+  if (isQuote(quote)) {
+    const end = skipString(text, 0);
+    if (end !== text.length) return { measured: false, numbers: [] };
+    const body = text.slice(1, end - 1);
+    if (/\\|\$\{/.test(body)) return { measured: false, numbers: [] };
+    if (/\b(?:var|calc|clamp|min|max|rgb|rgba|hsl|hsla)\s*\(|%/.test(body)) {
+      return { measured: false, numbers: [] };
+    }
+    const numbers = [...body.matchAll(/-?\d+(?:\.\d+)?px|\b0\b/g)].map((match) =>
+      match[0].endsWith("px") ? Number(match[0].slice(0, -2)) : 0,
+    );
+    return { measured: true, numbers };
+  }
+  const tokens = arithmeticTokens(text);
+  if (!tokens) return { measured: false, numbers: [] };
+  const folded = foldArithmetic(tokens);
+  if (folded === null) return { measured: false, numbers: [] };
+  return { measured: true, numbers: [folded] };
 };
 
 /**
@@ -695,6 +834,68 @@ const finding = (ctx, line, code, message, detail) => ({
  * @param {object} ctx resolved package data
  * @returns {object[]} findings
  */
+/**
+ * Is the `{` at `brace` a function body? Looks back over the parameter list and
+ * asks what closes it: `function`, an arrow, or a method name. Control blocks
+ * (`if`, `for`, `switch`, `catch`, `try`, `else`) and object literals — including
+ * a widget's own `Widget({ … })` — are not function bodies.
+ *
+ * @param {string} code
+ * @param {number} brace index of `{`
+ * @returns {boolean}
+ */
+const opensFunction = (code, brace) => {
+  let i = brace - 1;
+  let depth = 0;
+  while (i >= 0) {
+    const ch = code[i];
+    if (ch === ")" || ch === "]") depth++;
+    else if (ch === "(" || ch === "[") {
+      if (depth === 0) break;
+      depth--;
+    } else if (depth === 0 && (ch === ";" || ch === "{" || ch === "}" || ch === "\n")) {
+      break;
+    }
+    i--;
+  }
+  const head = code.slice(i + 1, brace).trim();
+  if (/^(?:async\s+)?function\b/.test(head)) return true;
+  if (/(?:^|[\s;}])(?:async\s+)?(?:\([^]*?\)|[A-Za-z_$][\w$]*)\s*=>$/.test(head)) return true;
+  const method = /^([A-Za-z_$][\w$]*)\s*\([^]*\)$/.exec(head);
+  return Boolean(
+    method &&
+      !["if", "for", "while", "switch", "catch", "with", "do", "else", "try"].includes(
+        method[1],
+      ),
+  );
+};
+
+/**
+ * The brace range of every function body in a file.
+ *
+ * @param {string} code
+ * @returns {Array<[number, number]>} `[open, close]` pairs
+ */
+export const functionBodies = (code) => {
+  const bodies = [];
+  const open = [];
+  for (let i = 0; i < code.length; i++) {
+    const ch = code[i];
+    if (isQuote(ch)) {
+      i = skipString(code, i) - 1;
+      continue;
+    }
+    if (ch === "{") {
+      open.push(i);
+      continue;
+    }
+    if (ch !== "}") continue;
+    const start = open.pop();
+    if (start !== undefined && opensFunction(code, start)) bodies.push([start, i]);
+  }
+  return bodies;
+};
+
 const checkFile = (file, ctx) => {
   const findings = [];
   const src = fs.readFileSync(file, "utf8");
@@ -716,6 +917,7 @@ const checkFile = (file, ctx) => {
     }
     return { ...call, props };
   });
+  const bodies = functionBodies(code);
 
   /**
    * The nearest enclosing call that says it paints a plate. Its props are handed
@@ -771,23 +973,27 @@ const checkFile = (file, ctx) => {
     );
   };
 
-  const namedByTooltip = (call) =>
-    enclosing(call).some((other) => other.name === "Tooltip" && other.props.has("text"));
-
   /**
    * A glyph control that carries its own accessible name is named, even when this
    * pass cannot see the wrapper: an app that builds the control inside a helper
-   * and wraps the *result* in a Tooltip has a `child: iconButton("share")` at the
-   * call site, and a lexical scan stops at the helper's own braces. `aria-*` is a
-   * routed passthrough (translateProps.js:948), so the name really does reach the
+   * and names the *result* at the call site has a `child: iconButton("share")` at
+   * the call site, and a lexical scan stops at the helper's own braces. `aria-*` is
+   * a routed passthrough (translateProps.js:948), so the name really does reach the
    * DOM — which is the sentence the finding asks for.
+   *
+   * A `Tooltip` is deliberately not on this list. It points `aria-describedby` at
+   * the bubble, and a description is not a name: a screen reader still announces
+   * "button" with no word for what it does.
    */
   const namedByAria = (call) =>
     [...call.props.keys()].some((key) => /^aria-(label|labelledby)$/i.test(key));
 
-  const isFilled = (call) =>
-    call.name === "Button" &&
-    !/['"`](outlined|text)['"`]/.test(call.props.get("variant")?.value ?? "");
+  const isFilled = (call) => {
+    if (call.name !== "Button") return false;
+    const variant = call.props.get("variant")?.value.trim();
+    if (variant === undefined) return true;
+    return /^(['"`])filled\1$/.test(variant);
+  };
 
   /** A width that caps the block: a number or a percentage below full bleed. */
   const capsWidth = (call) => {
@@ -811,7 +1017,8 @@ const checkFile = (file, ctx) => {
       if (SKIP_VALUE_KEYS.has(key)) continue;
       const kind = ctx.propKinds.get(key);
       const valueLine = lineOf(offsets, entry.valueStart);
-      const numbers = numbersIn(entry.value);
+      const measured = measuredNumbers(entry.value);
+      const numbers = measured.numbers;
 
       if (kind === "color" || COLOR_FALLBACK_KEYS.has(key)) {
         const literal = colorLiteralIn(entry.value);
@@ -834,45 +1041,35 @@ const checkFile = (file, ctx) => {
 
       if (kind === "spacing") {
         for (const n of numbers) {
-          if (SPACING_SCALE.has(Math.abs(n.number))) continue;
+          if (SPACING_SCALE.has(Math.abs(n))) continue;
           push(
             valueLine,
             "OFF_SCALE_SPACING",
-            `${call.name}.${key} = ${n.number} is not on the spacing scale.`,
+            `${call.name}.${key} = ${n} is not on the spacing scale.`,
             "Use 4 · 8 · 12 · 16 · 18 · 24 · 32 · 40 · 48 · 64 · 96. The scale is what makes two screens look like one app.",
           );
         }
         // A CSS shorthand still has to obey the scale: `padding: '12px 20px'` is
-        // the same mistake with a unit glued on.
-        if (!numbers.length) {
-          for (const match of entry.value.matchAll(/\d+(?:\.\d+)?px/g)) {
-            const value = Number(match[0].slice(0, -2));
-            if (SPACING_SCALE.has(value)) continue;
-            push(
-              valueLine,
-              "OFF_SCALE_SPACING",
-              `${call.name}.${key} = '${match[0]}' is not on the spacing scale.`,
-              "Use 4 · 8 · 12 · 16 · 18 · 24 · 32 · 40 · 48 · 64 · 96, or the plain number the factory prefers.",
-            );
-          }
-        }
+        // the same mistake with a unit glued on, and `measuredNumbers` already
+        // read it — an unmeasurable one (`calc`, `var`, a percentage) reports no
+        // numbers instead of the literals it happens to contain.
       } else if (kind === "radius") {
         for (const n of numbers) {
-          if (RADIUS_SCALE.has(Math.abs(n.number))) continue;
+          if (RADIUS_SCALE.has(Math.abs(n))) continue;
           push(
             valueLine,
             "OFF_SCALE_RADIUS",
-            `${call.name}.${key} = ${n.number} is not a scale radius.`,
+            `${call.name}.${key} = ${n} is not a scale radius.`,
             "Use 4 · 8 · 12 · 16 · 20 · 24 · 999 (a pill). A radius between them is a shape no other card in this app has.",
           );
         }
       } else if (kind === "type" && (key === "fontSize" || call.name === "Text")) {
         for (const n of numbers) {
-          if (TYPE_SCALE.has(Math.abs(n.number))) continue;
+          if (TYPE_SCALE.has(Math.abs(n))) continue;
           push(
             valueLine,
             "OFF_SCALE_TYPE",
-            `${call.name}.${key} = ${n.number} is not a scale type size.`,
+            `${call.name}.${key} = ${n} is not a scale type size.`,
             "12 caption · 14 body-small · 16 body · 18 subtitle · 24 title · 32 headline · 40/48 display. One size per element, one weight per role.",
           );
         }
@@ -880,23 +1077,36 @@ const checkFile = (file, ctx) => {
 
       if (tappable && (key === "height" || key === "minHeight")) {
         for (const n of numbers) {
-          if (n.number <= 0 || n.number >= TAP_MINIMUM) continue;
+          if (n <= 0 || n >= TAP_MINIMUM) continue;
           push(
             valueLine,
             "SMALL_TAP_TARGET",
-            `${call.name} is pressable but only ${n.number}px tall.`,
+            `${call.name} is pressable but only ${n}px tall.`,
             `Fitts: a finger needs ${TAP_MINIMUM}x${TAP_MINIMUM}. Get there with \`height\`, not with padding.`,
           );
         }
       }
 
       if (tappable && ICON_WIDGETS.includes(call.name) && key === "size") {
+        // A glyph's target is its box, not its font size: `size: 16, padding: 12`
+        // is 40x40 and legal, while `size: 16` alone is the glyph and nothing else.
+        // A padding this pass cannot resolve makes the target unmeasured.
+        const padded = props.has("paddingVertical")
+          ? measuredNumbers(props.get("paddingVertical").value)
+          : props.has("padding")
+            ? measuredNumbers(props.get("padding").value)
+            : { measured: true, numbers: [0] };
+        const vertical = padded.measured ? Math.abs(padded.numbers[0] ?? 0) : null;
         for (const n of numbers) {
-          if (n.number >= TAP_MINIMUM || props.has("height")) continue;
+          if (vertical === null) break;
+          const target = n + vertical * 2;
+          if (target >= TAP_MINIMUM || props.has("height") || props.has("minHeight")) break;
           push(
             valueLine,
             "SMALL_TAP_TARGET",
-            `${call.name} is pressable at size ${n.number}, so its whole target is ${n.number}px.`,
+            `${call.name} is pressable at size ${n}${
+              vertical ? ` with ${vertical} of padding` : ""
+            }, so its whole target is ${target}px.`,
             `Wrap it in the ${TAP_MINIMUM}px box it needs, or use \`Button({ icon, onPress })\` and keep the glyph at 20.`,
           );
         }
@@ -956,14 +1166,13 @@ const checkFile = (file, ctx) => {
       ICON_WIDGETS.includes(call.name) &&
       tappable &&
       !labeledBySibling(call) &&
-      !namedByTooltip(call) &&
       !namedByAria(call)
     ) {
       push(
         line,
         "ICON_ONLY_CONTROL",
         `${call.name} is pressable and carries no name.`,
-        "Wrap it in `Tooltip({ text, child })`, put a `Text` beside it, or name the control itself with `\"aria-label\": \"Share\"`. A glyph with no words is a guess, and a screen reader says nothing at all.",
+        'A glyph with no words is a guess, and a screen reader says nothing at all. A `Tooltip` is a description (`aria-describedby`), not a name: put a `Text` beside the control or name it with `"aria-label": "Share"`.',
       );
     }
     if (
@@ -971,14 +1180,13 @@ const checkFile = (file, ctx) => {
       ["icon", "iconLeft", "iconRight"].some((key) => props.has(key)) &&
       !props.has("text") &&
       !labeledBySibling(call) &&
-      !namedByTooltip(call) &&
       !namedByAria(call)
     ) {
       push(
         line,
         "ICON_ONLY_CONTROL",
         "Button shows an icon and no label.",
-        "Give it `text`, or wrap it in `Tooltip({ text, child })`. Every person reads an unnamed glyph slightly differently.",
+        'Give it `text`, or name it with `"aria-label": "Share"`. A tooltip explains the control, it does not name it.',
       );
     }
 
@@ -1076,13 +1284,35 @@ const checkFile = (file, ctx) => {
     }
   }
 
-  // Rule 04 — one screen, one primary action. Emphasis is a budget, not a style.
+  // Rule 04 — one view, one primary action. Emphasis is a budget, not a style.
+  // The view is the function body a screen renders, not the file: a components
+  // module exports several screens, and two buttons in two components are never
+  // on the same screen. A `variant` this pass cannot resolve counts as neither,
+  // since the button may be outlined at runtime.
   const primaries = calls.filter(isFilled);
-  if (primaries.length > 1) {
+  const scopeOf = (call) => {
+    let scope = null;
+    for (const [start, end] of bodies) {
+      if (call.open > start && call.close < end && (scope === null || start > scope)) {
+        scope = start;
+      }
+    }
+    if (scope !== null) return `fn:${scope}`;
+    const root = enclosing(call).at(-1);
+    return root ? `root:${root.open}` : "file";
+  };
+  const views = new Map();
+  for (const call of primaries) {
+    const scope = scopeOf(call);
+    if (!views.has(scope)) views.set(scope, []);
+    views.get(scope).push(call);
+  }
+  for (const group of views.values()) {
+    if (group.length < 2) continue;
     push(
-      1,
+      lineOf(offsets, group[0].open),
       "MULTIPLE_PRIMARY_ACTIONS",
-      `${primaries.length} filled buttons in this file (lines ${primaries
+      `${group.length} filled buttons in this view (lines ${group
         .map((call) => lineOf(offsets, call.open))
         .join(", ")}).`,
       "Everything filled is competing with everything else. Keep one filled, make the next `variant: \"outlined\"`, and drop the rest to `variant: \"text\"`.",

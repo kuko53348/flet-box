@@ -53,10 +53,14 @@ export const Switch = (props) => {
   };
 
   // Createste knob
+  // The knob is a white plate in every theme: it sits on a track whose colour
+  // the caller picks (`activeColor`), so it cannot borrow `onPrimary` — in dark
+  // that token is page ink and the knob would vanish into the grey track.
+  // `onSecondary` is the palette's own answer for a white surface.
   const knob = WidgetFactory({
     width: sz.knob,
     height: sz.knob,
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.onSecondary,
     borderRadius: "50%",
     transform: internalValue ? `translateX(${travel()})` : "translateX(0)",
     transition: "transform 0.2s ease",

@@ -304,7 +304,7 @@ export const Slider = (props) => {
         const label = WidgetFactory({
           tag: "span",
           textContent: mark.label,
-          fontSize: "10px",
+          fontSize: "12px",
           color: colors.textSecondary,
           position: "absolute",
           ...(isHorizontal

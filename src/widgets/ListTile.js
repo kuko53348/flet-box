@@ -92,9 +92,8 @@ export const ListTile = (props) => {
     textChildren.push(
       Text({
         text: subtitle,
-        size: 13,
+        size: 14,
         color: colors.textSecondary,
-        marginTop: 2,
         ...subtitleProps,
       }),
     );
@@ -105,8 +104,10 @@ export const ListTile = (props) => {
       Text({
         text: description,
         size: 12,
-        color: colors.textDisabled,
-        marginTop: 2,
+        // `textDisabled` is the ink of a control that cannot be used, and the
+        // dark palette answers it with #52525B — 2.57:1 on the page. A
+        // description is content, so it takes the muted-but-readable token.
+        color: colors.textSecondary,
         ...descriptionProps,
       }),
     );
@@ -116,7 +117,7 @@ export const ListTile = (props) => {
   const centerColumn =
     textChildren.length > 0
       ? Column({
-          gap: 2,
+          gap: 4,
           alignItems: "flex-start",
           flex: 1,
           minWidth: 0, // allows the column to shrink below its content size in a flex row

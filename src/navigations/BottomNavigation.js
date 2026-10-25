@@ -241,7 +241,7 @@ export const BottomNavigation = (props) => {
       // vacío. La prop correcta para contenido de texto es `text`.
       labelWidget = Text({
         text: item.label,
-        size: 11,
+        size: 12,
         color: isActive ? selectedColor : unselectedColor,
         fontWeight: isActive ? "500" : "400",
         className: "bottom-nav-label",

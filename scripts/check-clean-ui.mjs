@@ -206,9 +206,82 @@ await check("20 and 24 are steps, and 22 between them is not", async () => {
   assert.equal(drift.length, 1, "a corner between two steps slipped past the scale");
 });
 await bites("a type size off the scale", "OFF_SCALE_TYPE", [["size: 32,", "size: 30,"]]);
+
+// The gate judges what a value yields, not the digits that happen to sit inside
+// it. `base * 1.5` is 24 at runtime; reading the 1.5 as the size is a finding the
+// screen never had. Arithmetic over literals is folded first, and a value that
+// depends on an identifier, a call, a member access or a ternary is unmeasured —
+// silence, which is neither a pass nor a finding.
+await check("arithmetic on literals is folded before judging", async () => {
+  const spacing = (findings) => findings.filter((item) => item.code === "OFF_SCALE_SPACING");
+  assert.deepEqual(
+    spacing(await scan(mutate("fold", [["padding: 24,", "padding: 8 * 3,"]]))),
+    [],
+    "an on-scale result was rejected because its operands were judged",
+  );
+  const drift = spacing(await scan(mutate("fold", [["padding: 24,", "padding: 8 + 2,"]])));
+  assert.equal(drift.length, 1, "an off-scale result slipped past the scale");
+  const type = (findings) => findings.filter((item) => item.code === "OFF_SCALE_TYPE");
+  assert.deepEqual(
+    type(await scan(mutate("fold", [["size: 32,", "size: 16 * 2,"]]))),
+    [],
+    "a computed type size on the scale was rejected",
+  );
+  assert.equal(
+    type(await scan(mutate("fold", [["size: 32,", "size: 14 * 2,"]]))).length,
+    1,
+    "a computed type size off the scale slipped past",
+  );
+});
+
+await check("a value the pass cannot resolve is unmeasured, not a finding", async () => {
+  const withGutter = (source) =>
+    source.replace("const retry = () => {};", "const gutter = 26;\nconst retry = () => {};");
+  const spacing = (findings) => findings.filter((item) => item.code === "OFF_SCALE_SPACING");
+  for (const value of ["gutter", "rows.length > 1 ? 26 : 24", '"calc(8px + 5px)"']) {
+    const findings = await scan(withGutter(mutate("unmeasured", [["padding: 24,", `padding: ${value},`]])));
+    assert.deepEqual(
+      spacing(findings).map((item) => item.message),
+      [],
+      `${value} was judged instead of left unmeasured`,
+    );
+  }
+  const tapped = await scan(
+    mutate("unmeasured", [["onPress: save, height: 40", "onPress: save, height: Math.max(12, 30)"]]),
+  );
+  assert.deepEqual(
+    tapped.filter((item) => item.code === "SMALL_TAP_TARGET").map((item) => item.message),
+    [],
+    "a call's result was read as a literal height",
+  );
+  const shorthand = await scan(mutate("shorthand", [["padding: 24,", 'padding: "12px 20px",']]));
+  assert.equal(
+    shorthand.filter((item) => item.code === "OFF_SCALE_SPACING").length,
+    1,
+    "a quoted shorthand stopped being measured",
+  );
+});
 await bites("a tap target below 40", "SMALL_TAP_TARGET", [
   ["onPress: save, height: 40", "onPress: save, height: 28"],
 ]);
+
+// A pressable glyph's target is its box, not its font size: 16 of glyph with 12
+// of padding on each side is the 40 a thumb needs. Reading `size` alone would
+// reject it; reading it as the target would accept 16 with no padding.
+await check("a glyph's target is its box, not its font size", async () => {
+  const icon = (padding) =>
+    `import { Icon } from "flet-box";\nconst screen = () => Icon({ name: "share", size: 16${
+      padding ? `, padding: ${padding}` : ""
+    }, onPress: () => {} });\n`;
+  const targets = (findings) => findings.filter((item) => item.code === "SMALL_TAP_TARGET");
+  assert.deepEqual(
+    targets(await scan(icon(12))),
+    [],
+    "a 16 glyph with 12 of padding is a 40 target and was rejected",
+  );
+  assert.equal(targets(await scan(icon(8))).length, 1, "a 16 glyph with 8 of padding is 32 and slipped through");
+  assert.equal(targets(await scan(icon(null))).length, 1, "a bare 16 glyph slipped through");
+});
 await bites("text the same color as its fill", "LOW_CONTRAST", [
   ['weight: "bold", color: colors.text', 'weight: "bold", color: colors.warning, bgColor: colors.warning'],
 ]);
@@ -248,6 +321,40 @@ await bites("the destructive button first", "CONFIRM_ORDER", [
 await bites("two filled buttons on one view", "MULTIPLE_PRIMARY_ACTIONS", [
   ['height: 40, variant: "text", color: colors.textSecondary', "height: 40, color: colors.textSecondary"],
 ]);
+
+// A view is the component function, not the file. Two components that each ship
+// one filled button are two screens, and a components module must not fail for
+// exporting both. A `variant` the pass cannot resolve is unmeasured: the button
+// may be outlined at runtime, so counting it as the primary would be a guess.
+await check("the primary count is per view, not per file", async () => {
+  const twoScreens = `import { Button, Column } from "flet-box";
+const go = () => {};
+export const SaveBar = () => {
+  return Column({ children: [Button({ text: "Save", onPress: go })] });
+};
+export const DeleteBar = () => Column({ children: [Button({ text: "Delete", onPress: go })] });
+`;
+  assert.deepEqual(
+    (await scan(twoScreens))
+      .filter((item) => item.code === "MULTIPLE_PRIMARY_ACTIONS")
+      .map((item) => item.message),
+    [],
+    "two components with one primary each were counted as one view",
+  );
+  const computed = mutate("computed variant", [
+    [
+      'Button({ text: "Cancel", onPress: leave, height: 40, variant: "text", color: colors.textSecondary }),\n          Button({ text: "Save changes", onPress: save, height: 40 })',
+      'Button({ text: "Cancel", onPress: leave, height: 40, color: colors.textSecondary }),\n          Button({ text: "Save changes", onPress: save, height: 40, variant: mode })',
+    ],
+  ]);
+  assert.deepEqual(
+    (await scan(computed))
+      .filter((item) => item.code === "MULTIPLE_PRIMARY_ACTIONS")
+      .map((item) => item.message),
+    [],
+    "a computed variant was counted as a filled button",
+  );
+});
 await bites("a form across the whole window", "UNCONSTRAINED_FORM_WIDTH", [
   ["maxWidth: 480,", 'width: "100%",'],
 ]);
@@ -417,9 +524,20 @@ await check("an outlined chip still answers for its own words", async () => {
   assert.match(hit.message, /3\.5\d:1/, `the finding lost the page number: ${hit.message}`);
 });
 
-// The Tooltip half of the name rule is lexical, so a control built by a helper
-// and wrapped at the call site reads as a bare glyph. An `aria-label` on the
-// control itself is the same promise and this pass can see it.
+// A Tooltip reaches the DOM as `aria-describedby`, and a description is not a
+// name: the glyph is still a button a screen reader announces without a word for
+// what it does. A real name is `aria-label`/`aria-labelledby`, which this lexical
+// pass can see even when the control is built by a helper and labelled at the
+// call site.
+await check("a tooltip is a description, not a name", async () => {
+  const findings = await scan(
+    `import { Icon, Tooltip } from "flet-box";\nconst screen = () => Tooltip({ text: "Share", child: Icon({ name: "share", size: 44, onPress: () => {} }) });\n`,
+  );
+  assert.ok(
+    findings.some((item) => item.code === "ICON_ONLY_CONTROL"),
+    "a tooltip counted as the control's accessible name",
+  );
+});
 await check("a glyph control that names itself is not nameless", async () => {
   const findings = await scan(
     `${IMPORTS}\nconst iconButton = (name, label) => Button({ icon: name, "aria-label": label, onPress: () => {} });\nconst screen = () => iconButton("share", "Share");\n`,
