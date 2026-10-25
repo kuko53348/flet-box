@@ -114,6 +114,23 @@ export default MyWidget;
     pass CSS props directly (`backgroundColor`, `padding`, `flexDirection`,
     `whiteSpace`, …) with aliases resolved by the factory. `style: { ... }` is
     rejected with a warning (`processProps`), so it never silently half-applies.
+12. **A shared helper has one home.** The first time a helper is written it is
+    local; the second time it is a module both callers import. Two copies pass
+    every test on the day they are written and diverge on the day one is fixed —
+    so the home is named and the gate enforces it:
+
+    | Behaviour | Home |
+    | --- | --- |
+    | Escaping text for HTML | [`src/utils/htmlEscape.js`](../../src/utils/htmlEscape.js) |
+    | Injecting `@keyframes`, naming one | [`src/utils/styleInjector.js`](../../src/utils/styleInjector.js) |
+    | The four-side box shorthand | [`src/tools/boxEdges.js`](../../src/tools/boxEdges.js), behind `margin()`/`padding()` |
+    | A number that becomes a length | [`src/utils/units.js`](../../src/utils/units.js) |
+
+    Put the helper where its imports stay light: `htmlEscape.js` has none at all
+    on purpose, because importing the Markdown parser from a widget would pull
+    six widgets into that widget's graph. `node scripts/check-shared-helpers.mjs`
+    fails on a second definition, an `@keyframes` rule written outside the
+    injector, or a caller that stopped importing the home.
 
 ## Controller widgets
 
@@ -158,6 +175,10 @@ Everything else returns an `HTMLElement`.
   to the baseline is never the fix.
 - `node scripts/check-widgets.mjs --write-baseline` — re-snapshot after a batch
   of fixes (only to *remove* entries in practice).
+- `node scripts/check-shared-helpers.mjs` — the single-home contract from rule
+  12: one definition per shared helper, the module named in the rule, and every
+  caller importing it. `--root <dir>` checks another checkout, which is how each
+  of its five rules was proven to fail when the rule is broken.
 - `/tests/widget-contract.html` — runtime contract: every widget instantiates,
   returns an element (or a documented controller), exposes `update()`, and
   reports its real `_widgetName`.

@@ -12,6 +12,7 @@ FletBox: zero-runtime-dependency vanilla-JS UI framework with a Flet-like declar
 - `npm test` — runs static checkers, in order:
   - `node scripts/check-widgets.mjs` — widget-structure contract against `scripts/widget-contract-baseline.json`.
   - `node scripts/check-widget-scale.mjs` — the rem contract, against `scripts/widget-scale-baseline.json` (same shrink-only rule, `--write-baseline` to regenerate). It flags a length written straight to `el.style.*` that is neither `toREM(...)` nor measured geometry, and it fails if `src/widget-factory/` grows a second px→rem converter: `remTool.js` must import `src/utils/units.js`, because the private copy that used to live there divided by a literal 16 and ignored `setBaseFontSize()`, so the same `40` painted 40px through a widget helper and 50px through a routed prop.
+  - `node scripts/check-shared-helpers.mjs` — one home per shared helper, because copies do not diverge when they are written, they diverge when one of them is fixed. It fails on a second definition of `injectKeyframes` or of the HTML escaper, a second stable keyframe hash, a second copy of the four-side box cascade, or an `@keyframes` rule written outside `src/utils/styleInjector.js`; it also asserts the modules that used to carry a copy still import the home. `--root <dir>` checks another checkout, which is how each rule was proven to bite (five mutations, one per rule).
   - `node scripts/check-a11y.mjs` — the accessibility contract, with no baseline because every rule is absolute: nothing in `src/` writes an inline `outline` (it outranks the engine's ring — that is how a focused field came to have none) and the registry routes no `outline` prop; `src/utils/focusRing.js` still holds the `:focus-visible` rule, the `--color-focusRing` token and the `[data-fb-field]` `:has()` pair, injected once from `createWidget.js`; both palettes define `focusRing` and the rule's boot fallback equals the boot palette; `effects.js` still gives a pressable widget role, Tab stop, Enter/Space and a released keydown listener, and does it outside the `disableTransform` branch; every file that reads the Escape key also imports and releases `trapFocus`; the trap's `FOCUSABLE_SELECTOR` and the ring's selector are the same list; no widget or navigation assigns `el.onclick` after the factory returned unless the same file passes it to `applyEffects` (the Dropdown's listbox option is the one allowlisted exception, and a stale entry fails too); and `Input` still writes the field marker. Proven by 19 mutations, one per guard.
   - `node scripts/check-prop-registry.mjs` — the `ALL_PROPS` registry vs what widgets/navigations actually read.
   - `node scripts/check-docs-props.mjs` — the `docs/widget/*.md` prop tables vs the registry, the implementations and `src/index.d.ts`. Blocks `DEAD` (a documented prop nothing routes or reads) and `BOOL_STYLE` (a documented `boolean` that reaches CSS as `1` because its registry entry has no `boolValues`).
@@ -139,3 +140,15 @@ styles, and every resource released through an idempotent `onUnmount` disposer
 snapshot lives in `scripts/widget-contract-baseline.json` and must only shrink.
 Before marking a widget done, also open `/tests/widget-contract.html` (runtime
 contract) and `/tests/smoke.html` (every widget instantiates).
+
+The second half of the shape is about what a widget does *not* own. A helper the
+widgets share has one home and every widget imports it — `escapeHtml` in
+`src/utils/htmlEscape.js` (a leaf module, because importing the Markdown parser
+from a widget would pull six widgets into that widget's graph), `injectKeyframes`
+and `animationName` in `src/utils/styleInjector.js`, the four-side resolver behind
+`margin()`/`padding()` in `src/tools/boxEdges.js`, and `toREM` in
+`src/utils/units.js`. `scripts/check-shared-helpers.mjs` is the gate: a second
+copy fails `npm test`, and the message names the home it belongs in. The rule is
+not tidiness — an escaper that exists three times is a security boundary edited in
+one of them, and a keyframe injector per module is a second dedupe set that cannot
+see the first.

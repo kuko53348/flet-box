@@ -1,6 +1,6 @@
 ---
 name: fletbox-rules
-description: The working contract for a FletBox app - FletBox syntax only, never a widget or prop from React/Vue/Svelte/Flutter, look an API up before using it, the rem unit contract, prop aliases, key-based state, resource cleanup and the two gates that prove the work. Read first, before any other skill, and before writing or editing a single file in src/.
+description: The working contract for a FletBox app - FletBox syntax only, never a widget or prop from React/Vue/Svelte/Flutter, look an API up before using it, the rem unit contract, prop aliases, key-based state, resource cleanup, one home for every shared helper, and the two gates that prove the work. Read first, before any other skill, and before writing or editing a single file in src/.
 ---
 
 # Rules — how to work inside this framework
@@ -242,4 +242,31 @@ Prove it the way the framework does: press Tab through the screen, then Enter an
 Space on each control, then open an overlay and Tab past its last control.
 `npm run ui` covers names, labels, tap targets and contrast, and no checker has a
 keyboard — the last step is yours.
+
+## R14 The second copy is a module
+
+The first time you write a helper, it is yours. The second time the same code
+appears — the same formatter, the same validation, the same escaped string, the
+same card — it stops being a line you happen to share and becomes one module both
+files import. A screen-specific variant is a prop on the shared component, never a
+second component that starts as a copy.
+
+**Why:** two identical copies pass every test on the day they are written. They
+diverge on the day one of them is fixed — the fix lands in the copy that was in
+front of you, the other keeps the bug, and nothing tells you which is which.
+This is not hypothetical in this framework: the HTML escaper existed three times,
+`margin()` and `padding()` were byte-identical files apart from one word, and a
+keyframe injector lived in two modules, so the same animation name could be
+appended twice and neither dedupe set knew about the other.
+
+- Put a pure helper in `src/utils/`, anything that returns widgets in
+  `src/components/`. Name it for the behaviour, not for its first caller.
+- Import it from its own path. Re-exporting through a barrel is fine; copying the
+  body "to avoid a dependency" is not — if the import drags in too much, move the
+  helper down into a leaf module instead, which is exactly why the framework's
+  escaper imports nothing at all.
+- A helper that writes CSS state (`@keyframes`, an injected `<style>`) is owned by
+  one module for the whole document. A second injector is a second document-level
+  cache, and the same name is then defined twice.
+
 
