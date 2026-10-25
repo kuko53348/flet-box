@@ -701,6 +701,15 @@ that made it findable.
   bloom over a light page is indistinguishable from a smudge:
   `CircularBar({ glow: true, glowColor: colors.primary })`, or a tinted `shadow`
   string on the CTA. One glowing element per screen.
+- A reader's choice does not raise the budget. `ThemePicker` lets them pick the
+  hue; the three placements stay the only places it is spent. The picker marks
+  the chosen square with the page's ink and a tick, never with the accent — a
+  swatch selected in its own color says nothing the square does not already say,
+  and rule 28 forbids spending the accent on the control that hands it out.
+- An app that ships a brand color sets it at boot with
+  `applyAccentPreference("teal")`, never with `setAccent`: the first paints
+  without writing a preference, so the picker still opens blank for a reader who
+  has never chosen; the second answers for them and writes `localStorage`.
 
 ## 29 The number is the hero
 
@@ -807,6 +816,7 @@ Stack({ alignment: "bottom-left", height: 420, children: [
 | switch 2 views of one object | segmented pill with a sliding plate | `Tabs({ variant: "pills", tabs, activeIndex, activeTextColor, buttonColor })` |
 | choose 1 of N with a preview | selection **tile**, not a radio list | `ListTile({ selected, selectedBgColor })`, or a 2-up `Row` of `Card`s |
 | pick a color/size | dot row, selected gets a ring | `Avatar({ shape: "circle", size: 28 })` row, ring via `borderColor` + `borderWidth` |
+| pick the app's accent | two-tone square per hue family | `ThemePicker({ size: 48, showLabels: true })` — it repaints the screen and remembers the choice; hand-built swatches do neither |
 | count then buy | stepper merged into the CTA | one `Row` of `Button`s inside the add-to-cart bar, not two actions |
 | navigate the app | bottom bar, active = accent + label | `BottomNavigation({ items, currentIndex, selectedColor, unselectedColor, showLabels: true })` |
 | a badge on an icon | dot, never a word | `Badge({ value, size, offset, borderColor: colors.background })` |
@@ -879,6 +889,23 @@ ink      white or near-white, and its opacity tiers
   Build it as a ramp so a card, a tile and a plate can be three steps of one hue
   instead of three hues — which is the only way 27's surface discipline is
   possible without breaking 25's one-accent law.
+- **A preset beats a mid-tone.** An app that has no ramp of its own does not pick
+  a blue and hope: it takes one of the twelve families the framework ships
+  (`listAccents()`, `listAccentRamps()` to see the stops) and paints a **stop** of
+  that ramp, so `colors.primary` and `colors.primaryBg` are two steps of one
+  gradient and never a hue plus a guess. Each pair is bought with seven measured
+  numbers per theme: the accent carries its own label at 4.5:1, reads as text on
+  the page at 4.5:1 and as a glyph on a card at 3:1, its wash holds page ink,
+  secondary ink and the accent at 4.5:1, and the wash lifts off the background by
+  1.04-1.5. That is why `#3b82f6` is not a brand color — white words on it
+  measure 3.15:1 — and why a hue the list lacks is registered instead of
+  invented: `registerAccent` takes an `id`, a `label` and a `light`/`dark` pair —
+  one hex each, or a five-stop ramp, whose stop 0 (light) and stop 1 (dark) are
+  the ones painted and whose wash is a stop further along the same direction.
+  Run a ramp the other way and the plate lands *under* the accent instead of just
+  off the page. It belongs in `src/database/themes.js` beside the palette it
+  feeds (rule 03), and a registered pair answers to the same veto as a hand-built
+  one.
 - **The light/dark pair rule**: for the same hue in both palettes, lift the
   lightness and drop the saturation going dark. That is why this framework's dark
   `dangerStrong` is `#fca5a5` where the light one is `#b91c1c` — the readable red

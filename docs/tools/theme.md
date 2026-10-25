@@ -1,17 +1,30 @@
 # Themes
 
 ## Overview
-FletBox ships a built-in color system: `colors` is the palette of the current theme, `palettes` holds all named palettes, and the theme functions switch between light and dark, subscribe to changes, and follow the system preference. A `ThemeProvider` and the `useTheme()` hook wrap them for component-based apps.
+FletBox ships a built-in color system: `colors` is the palette of the current theme, `palettes` holds all named palettes, and the theme functions switch between light and dark, subscribe to changes, and follow the system preference. On top of that sit the accent presets — selectable hue families that paint `colors.primary`, its ink and its wash over whichever palette is active — and the theme functions carry them too. A `ThemeProvider` and the `useTheme()` hook wrap all of it for component-based apps.
 
 ## When to use
 - Style widgets with semantic tokens (`colors.surface`, `colors.primary`, `colors.error`) instead of hard-coded hex values.
 - Add a light/dark toggle that re-colors the whole app instantly.
 - Follow the OS dark/light setting automatically.
+- Let the reader pick the app's color — buttons, icons and plates and all — with [`ThemePicker`](../widget/ThemePicker.md) and `setAccent`.
 
 ## Import
 
 ```javascript
-import { colors, setTheme, registerPalette, toggleTheme, subscribeTheme, ThemeProvider } from "flet-box";
+import {
+  colors,
+  setTheme,
+  registerPalette,
+  toggleTheme,
+  subscribeTheme,
+  ThemeProvider,
+  registerAccent,
+  setAccent,
+  applyAccentPreference,
+  getAccent,
+  listAccents,
+} from "flet-box";
 ```
 
 ## Functions
@@ -20,6 +33,12 @@ import { colors, setTheme, registerPalette, toggleTheme, subscribeTheme, ThemePr
 | --- | --- | --- | --- |
 | `setTheme` | `setTheme('light' \| 'dark')` | `Record<string, string>` | Switch the active palette. |
 | `registerPalette` | `registerPalette(themeName, palette)` | `Record<string, string>` | Merge brand tokens into a named palette and repaint the page. |
+| `registerAccent` | `registerAccent({ id, label?, light, dark })` | `Accent \| null` | Add or replace one selectable accent. Each end of the pair is a hex or a five-stop ramp; `null` means the argument was unusable. |
+| `setAccent` | `setAccent(id \| null)` | `Record<string, string>` | Lay an accent over the live palette and store the choice. `null`, or an id nothing registered, takes it back off. |
+| `applyAccentPreference` | `applyAccentPreference(id)` | `string \| null` | Paint the app's own brand at boot, and only when the reader has never picked one. Never stores anything. |
+| `getAccent` | `getAccent()` | `string \| null` | The accent id on screen, or `null` while the palette's own `primary` shows. |
+| `listAccents` | `listAccents()` | `Accent[]` | Every selectable family, in registration order — `{ id, label, light, dark }`. |
+| `listAccentRamps` | `listAccentRamps()` | `Array` | The same families with all five stops of each theme beside them, for a swatch that shows the whole ramp. |
 | `getTheme` | `getTheme()` | `string` | The active theme name. |
 | `toggleTheme` | `toggleTheme()` | `string` | Flip light/dark and return the new name. |
 | `getColor` | `getColor(name, opacity?)` | `string` | Resolve a token (optionally with alpha). |
@@ -27,7 +46,7 @@ import { colors, setTheme, registerPalette, toggleTheme, subscribeTheme, ThemePr
 | `applySystemTheme` | `applySystemTheme()` | `string` | Apply light/dark from the OS preference. |
 | `watchSystemTheme` | `watchSystemTheme()` | `() => void` | Follow the OS preference live; returns an unsubscribe function. |
 | `ThemeProvider` | `ThemeProvider({ children, theme? })` | `Widget` | Provide a theme (defaults to system) for a subtree. |
-| `useTheme` | `useTheme()` | object | `{ colors, setTheme, getTheme, toggleTheme, getColor, applySystemTheme }`. |
+| `useTheme` | `useTheme()` | object | `{ colors, setTheme, getTheme, toggleTheme, getColor, applySystemTheme, setAccent, getAccent, listAccents }`. |
 
 Plus the constants: `colors` (current palette) and `palettes` (all named palettes, keyed by name).
 
@@ -36,9 +55,10 @@ Plus the constants: `colors` (current palette) and `palettes` (all named palette
 Every token is available on `colors`:
 
 - **Brand:** `primary`, `secondary`, `info`, `success`, `warning`, `danger`, `error`.
+- **On a fill:** `onPrimary` — the ink the theme puts on a `primary` plate. Ask the theme for it; a literal `#ffffff` is a bug the moment the reader picks a pale accent.
 - **Surfaces:** `background`, `surface`, `card`, `overlay`.
 - **Text:** `text`, `textSecondary`, `textDisabled`, `divider`, `border`, `shadow`.
-- **Tints:** `gray50` … `gray900`, plus the soft backgrounds `errorBg`, `successBg`, `warningBg`, `infoBg`.
+- **Tints:** `gray50` … `gray900`, plus the soft backgrounds `primaryBg`, `errorBg`, `successBg`, `warningBg`, `infoBg`.
 - **Glass:** `glass` (the translucent surface) and `glassBorder` (its rim), meant to pair with `backdropFilter`. Light is white glass, dark is a slate pane with a light rim.
 
 The `dark` palette overrides the surface/text tokens; `gray*` and brand colors also shift to keep contrast. Read [the palette walkthrough](../guides/utilities.md) for usage patterns.
@@ -79,6 +99,54 @@ Run it once, at startup, before the first screen renders. The generated app does
 it at the bottom of `src/database/themes.js` — the same file that declares
 `lightColors` and `darkColors` — so a project that edits its brand colors is
 already correct without touching `src/app.js`.
+
+## Accent presets: `setAccent`
+
+`registerPalette` says what a theme is. An **accent** is what the reader picks
+inside it: one hue family painted over the palette's `primary`, its ink and its
+wash, so every button, icon and selected plate on the screen moves together.
+Twelve families ship (`listAccents()`), and each is a *pair* — the stop that hue
+wears on a light page and the stop it wears on a dark one — which is why a
+[`ThemePicker`](../widget/ThemePicker.md) swatch is split down the middle.
+
+```javascript
+import { ThemePicker, applyAccentPreference, listAccents } from "flet-box";
+
+// At boot: the app's own brand, and only if the reader has never chosen.
+applyAccentPreference("teal");
+
+// In a settings sheet: the reader's choice, which paints and persists.
+ThemePicker({
+  accents: listAccents().filter((a) => ["teal", "blue", "rose", "orange"].includes(a.id)),
+  size: 48,
+  onChange: (id) => console.log("accent:", id),
+});
+```
+
+What it does:
+
+- **It is a layer, not a second palette.** The one repaint funnel lays the
+  accent's `primary`, `onPrimary` and `primaryBg` over the theme's own tokens, so
+  a toggle, an OS flip or a `setTheme` from anywhere keeps the choice instead of
+  writing the brand back over it. The `--color-*` properties and the PWA status
+  bar move with it because they read the same tokens.
+- **`setAccent` is the reader's verb, `applyAccentPreference` is the app's.** The
+  first stores `"fletbox-accent"`, so the picker opens on the answer the reader
+  gave; the second paints without storing, so a first visit shows nothing
+  ticked. An unknown id changes nothing, and `setAccent(null)` gives the palette
+  its own brand back.
+- **A family is measured before it ships.** Each pair clears the numbers a
+  hand-built palette has to as well: white or near-black words on the accent at
+  4.5:1, the accent as text on the page at 4.5:1 and as a glyph on a card at 3:1,
+  page ink, secondary ink and the accent itself on its wash at 4.5:1, and the
+  wash lifting off the background by 1.04 to 1.5. `#3b82f6` fails the first one —
+  white words measure 3.15:1 on it — which is why an accent is a stop on a ramp
+  and never the middle of one.
+- **A brand the list lacks is registered, not typed.**
+  `registerAccent` takes an `id`, a `label` and a `light`/`dark` pair: one hex
+  each, and the wash and `colors.onPrimary` are derived, or a five-stop ramp whose
+  stop 0 (light) and stop 1 (dark) are the ones painted. The call belongs in
+  `src/database/themes.js`, beside the palette it feeds.
 
 ## Examples
 
@@ -131,6 +199,7 @@ runApp(ThemeProvider({ children: ThemedApp() }), "root");
 - [Device & environment](device.md) — previous chapter.
 - [Markdown, code & HTML](markdown.md) — next chapter.
 - [Colors and utilities guide](../guides/utilities.md) — palette walkthrough.
+- [ThemePicker](../widget/ThemePicker.md) — the swatch grid that calls `setAccent`.
 
 ---
 

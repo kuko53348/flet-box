@@ -158,6 +158,7 @@ is already in place; the table exists so you know what not to duplicate.
 | `Switch` | `switch` | `aria-checked` |
 | `Checkbox` | `checkbox` | `aria-checked` |
 | `Radio` / `Rating` | `radio` / `radiogroup` | `aria-checked` |
+| `ThemePicker` | `radiogroup` / `radio` | `aria-checked`; one Tab stop per swatch, and Enter or Space picks |
 | `Slider` | `slider` | `aria-valuemin`, `aria-valuemax`, `aria-valuenow`, `aria-orientation` |
 | `ProgressBar`, `CircularBar` | `progressbar` | `aria-valuemin`, `aria-valuemax`, `aria-valuenow`, `aria-busy` while indeterminate |
 | `Dropdown` | `combobox` | `aria-expanded`, `aria-controls`, `aria-activedescendant`, `aria-invalid`, `aria-labelledby` |
