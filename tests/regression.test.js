@@ -25,7 +25,11 @@
 //   - a vertical step drew its label twice and stranded the second copy at the
 //     far edge of the row;
 //   - a Stack, documented as the container that layers its children in one box,
-//     laid them out in the flow one under the other.
+//     laid them out in the flow one under the other;
+//   - a vertical Slider read the rail's thickness from `width`, the same prop that
+//     sets its length, so an 8-unit rail painted 160 units wide;
+//   - a Slider's fill eased every write, so during a drag the bar chased the thumb
+//     by up to a fifth of the rail instead of moving with it.
 //
 // It publishes `window.__REGRESSION = { pass, fail, results }`.
 import * as W from "../src/widgets/index.js";
@@ -2076,6 +2080,74 @@ async function run() {
     } finally {
       window.requestAnimationFrame = origRaf;
     }
+  });
+
+  // ------------------------------------------- Slider: a vertical rail
+  // The rail's thickness came from `width`, which on a vertical slider is the same
+  // prop that sets its *length*: `Slider({ orientation: "vertical", width: 160,
+  // height: 8 })` measured 160 units thick and painted a blob, not a rail.
+  await t("Slider: a vertical rail is height thick and width long", () => {
+    const slider = mount(
+      W.Slider({ orientation: "vertical", width: 160, height: 8, value: 60 }),
+    );
+    const wrapper = slider.querySelector("div");
+    const track = wrapper.children[0];
+    const thumb = wrapper.children[1];
+    const box = track.getBoundingClientRect();
+    ok(Math.abs(box.height - 160) < 0.5, `the rail is ${box.height} long, not 160`);
+    ok(Math.abs(box.width - 8) < 0.5, `the rail is ${box.width} thick — \`width\` set the thickness too`);
+    ok(
+      Math.abs(thumb.getBoundingClientRect().left + thumb.offsetWidth / 2 - (box.left + box.width / 2)) < 1,
+      "the thumb is off the rail's centre line",
+    );
+    slider.remove();
+  });
+
+  // ------------------------------------------- Slider: a drag is 1:1
+  // The fill eased its own size on every write, so each pointer move restarted a
+  // 100 ms ease that never caught up. Measured in the demo on 2026-10-25: 20% of
+  // the rail behind the thumb at the end of a 450 ms drag, then sliding another
+  // 250 ms once the pointer stopped.
+  await t("Slider: the fill moves with the pointer, not after it", () => {
+    const slider = mount(
+      W.Slider({ orientation: "vertical", width: 200, height: 8, min: 0, max: 100, value: 10 }),
+    );
+    const wrapper = slider.querySelector("div");
+    const track = wrapper.children[0];
+    const fill = track.children[0];
+    const thumb = wrapper.children[1];
+    const box = track.getBoundingClientRect();
+    const target = box.bottom - box.height * 0.9;
+    const at = (y) => ({
+      bubbles: true,
+      cancelable: true,
+      clientX: box.left + box.width / 2,
+      clientY: y,
+    });
+
+    track.dispatchEvent(new MouseEvent("mousedown", at(target)));
+    ok(slider.value === 90, `the press set ${slider.value}, not 90`);
+    const fillBox = fill.getBoundingClientRect();
+    ok(
+      Math.abs(fillBox.height - box.height * 0.9) < 1,
+      `the fill painted ${fillBox.height} of the ${(box.height * 0.9).toFixed(1)} the pointer asked for — the bar is chasing the thumb`,
+    );
+    const thumbBox = thumb.getBoundingClientRect();
+    ok(
+      Math.abs(thumbBox.top + thumbBox.height / 2 - target) < 1,
+      `the thumb sits at ${(thumbBox.top + thumbBox.height / 2).toFixed(1)}, not under the pointer at ${target.toFixed(1)}`,
+    );
+
+    document.dispatchEvent(new MouseEvent("mouseup", at(target)));
+    // The ease belongs to a value that changes by itself, so it has to come back
+    // once the gesture ends: delete the transition outright and this is what goes.
+    slider.setValue(30);
+    const midBox = fill.getBoundingClientRect();
+    ok(
+      Math.abs(midBox.height - box.height * 0.3) > 2,
+      "a programmatic change jumped straight to its size — the fill lost its ease",
+    );
+    slider.remove();
   });
 
   // ------------------------------------------------- Stepper: showNavigation

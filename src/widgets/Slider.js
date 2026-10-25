@@ -25,6 +25,12 @@ const SLIDER_PROP_KEYS = [
   "onChanged", "onPress", "onChangeEnd",
 ];
 
+// The fill eases for a value that changes *by itself* — a key press, `setValue`,
+// an `update({ value })`. During a gesture it is switched off (see `onStart`):
+// an ease that restarts on every pointer move never catches up, so the bar spends
+// the whole drag chasing the thumb instead of moving with it.
+const FILL_EASE = "width 0.1s ease, height 0.1s ease";
+
 export const Slider = (props) => {
   let {
     // Basic values
@@ -78,9 +84,11 @@ export const Slider = (props) => {
   let displayPercent = inverted ? 1 - rawPercent : rawPercent;
 
   let isHorizontal = orientation === "horizontal";
-  let trackSize = isHorizontal ? height : width;
-  let trackLength =
-    toREM(trackSize);
+  // `height` is the rail's thickness and `width` its length in both orientations:
+  // a vertical slider is the same box turned 90°, so its vertical extent comes from
+  // `width` (the root below) while the rail stays `height` thin. Reading the
+  // thickness from `width` here painted a 160-unit rail 160 units *wide*.
+  let trackLength = toREM(height);
   let thumbSizeNum = typeof thumbSize === "number" ? thumbSize : 24;
 
   // Positioning retries while the track still measures 0 (hidden parent, not laid
@@ -181,7 +189,7 @@ export const Slider = (props) => {
     position: "absolute",
     backgroundColor: color,
     borderRadius: trackLength,
-    transition: disabled ? "none" : "width 0.1s ease, height 0.1s ease",
+    transition: disabled ? "none" : FILL_EASE,
     ...(isHorizontal
       ? {
           width: `${displayPercent * 100}%`,
@@ -456,6 +464,7 @@ export const Slider = (props) => {
     document.removeEventListener("touchmove", onMove);
     document.removeEventListener("touchend", onEnd);
     thumb.style.cursor = "grab";
+    fill.style.transition = disabled ? "none" : FILL_EASE;
     if (wrapper.style) wrapper.style.touchAction = "";
   };
 
@@ -464,6 +473,9 @@ export const Slider = (props) => {
     e.preventDefault();
     dragging = true;
     hasMoved = false;
+    // Before the first value write: with the ease still on, the jump to the press
+    // point animates and every later move restarts that animation.
+    fill.style.transition = "none";
     thumb.style.cursor = "grabbing";
     if (e.pointerId !== undefined) {
       currentPointerId = e.pointerId;
