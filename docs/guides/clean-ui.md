@@ -35,13 +35,13 @@ pointed at from one `.cursor/rules/<name>.mdc` each:
 | Skill | What it owns |
 | --- | --- |
 | `fletbox-rules` | The working contract: FletBox syntax only, never invent an API and the four ways to look one up, the rem rule, aliases, cleanup, the two gates, the memory duty. |
-| `fletbox-design` | The 25 numbered rules below — tokens, the scale, hierarchy, the four states, measured contrast, composition, the framework traps, the dated tells, density. |
+| `fletbox-design` | The numbered rules below — tokens, the scale, hierarchy, the four states, measured contrast, composition, the framework traps, the dated tells, density (00–24), then the visual atlas of looks that hold up, each reduced to calls this framework makes (25–37). |
 | `fletbox-motion` | Whether a thing may move at all, and through which of `AnimatedBox`, `AnimatedText`, `ParallaxBox` or `animate`. |
 | `fletbox-memory` | The `.fletbox/memory/` journal that hands progress from one AI to the next. |
 
 | Home | What it holds |
 | --- | --- |
-| `skills/fletbox-design/SKILL.md` (framework) → `skills/…`, `.claude/skills/…`, `.qoder/skills/…` (app) | The rules as the agent reads them, in 25 numbered sections. The app's copies are generated; edit the framework file and regenerate, never the mirror. |
+| `skills/fletbox-design/SKILL.md` (framework) → `skills/…`, `.claude/skills/…`, `.qoder/skills/…` (app) | The rules as the agent reads them, in 38 numbered sections across two parts. The app's copies are generated; edit the framework file and regenerate, never the mirror. |
 | `AGENTS.md` §4 of the app | The short version: one brand color per screen, no hex literals, spacing and radius only from the scale. |
 | `src/tools/scale.js` in the framework | The tables themselves — `SPACING_SCALE`, `RADIUS_SCALE`, `TYPE_SCALE`, `TAP_MINIMUM`, `PILL`, `LABEL_TEXT`. |
 | `bin/commands/checkUi.js` | The gate. It re-exports those same tables instead of keeping its own copy, and `scripts/check-skills.mjs` fails when a skill and the gate stop naming the same codes. |
@@ -93,9 +93,17 @@ The framework keeps this honest with its own gate, `scripts/check-widget-scale.m
 (part of `npm test`): a length written straight to `el.style.*` that is neither
 `toREM(...)` nor measured geometry fails the build.
 
-## The 25 rules
+## The rules
 
-When two of them conflict, take them in this order: **consistency · clarity ·
+The skill numbers its rules 00–37 and splits them in two parts. **00–24 are the
+enforceable contract**: each one is cited by at least one `check-ui` code, so
+`npm run ui` can fail a screen for breaking it, and `scripts/check-skills.mjs`
+fails if a code loses its rule. **25–37 are the visual atlas** — the archetypes,
+the accent budget, the surfaces, the dated tells — judgement about what to
+choose, which no static pass can prove. The atlas lives only in the skill; this
+page indexes it by number and does not copy it, so the two cannot drift.
+
+When two rules conflict, take them in this order: **consistency · clarity ·
 accessibility · usability · scalability · maintainability · conversion**.
 
 | # | Rule | What it forbids |
@@ -125,6 +133,29 @@ accessibility · usability · scalability · maintainability · conversion**.
 | 22 | Where these books are wrong | Following a guideline that measurement disagrees with. |
 | 23 | What no checker can see | Taste, hierarchy in the wild, whether the screen solves the problem. |
 | 24 | The loop | Fixing the checker instead of the code, or leaving a rule you had to break undocumented. |
+
+### Part II — the visual atlas, 25–37
+
+Read these after the table, never instead of it: every recipe still has to pass
+`npm run check` and `npm run ui`. They are indexed here so a rule number in a
+review comment points somewhere, and they are written out in full in
+`skills/fletbox-design/SKILL.md`.
+
+| # | Rule | What it decides |
+| --- | --- | --- |
+| 25 | Three laws | One accent, one surface family, one hero — across mobile, web, both themes. |
+| 26 | Pick an archetype | Acid-on-black, tinted paper, photo-bleed, bento, editorial, single-hue field — name one before the first widget. |
+| 27 | Surfaces are never the extremes | No pure black under pure white: the steps between them are where hierarchy lives. |
+| 28 | The accent budget | How much saturated hue a screen may spend, and on what. |
+| 29 | The number is the hero | The one element at 3–5× the rest, and why it is usually a number. |
+| 30 | Radius, nesting and the pill | `outer = inner + padding`, and when a pill is a decision. |
+| 31 | Photo, scrim, sheet | The sheet overlaps the photo, the scrim earns the text over it. |
+| 32 | The shape of each control | Which control carries which affordance, from the widgets that exist. |
+| 33 | Data widgets | The dial, the bento tile, the axis-less chart. |
+| 34 | Genre recipes | What a finance, commerce, travel or wellness screen actually uses. |
+| 35 | Deriving a palette | Building a hue family from one accent without leaving contrast behind. |
+| 36 | The dated visual tells | What reads as 2021, and what to choose instead. |
+| 37 | Choosing, in five questions | How to land on an archetype and a palette for a brief. |
 
 ## What `flet-box check-ui` proves
 

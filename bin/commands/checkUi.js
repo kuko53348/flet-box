@@ -120,8 +120,9 @@ export const INFO_CODES = new Set([
  * Which design rule each code proves, and the number the finding prints.
  *
  * The gate is the machine half of a contract whose human half is
- * `skills/fletbox-design/SKILL.md`: 25 numbered rules, read by the agent that
- * builds the screen. A finding that says `OFF_SCALE_SPACING` tells the reader the
+ * `skills/fletbox-design/SKILL.md`: 38 numbered rules across two parts, of which
+ * this table cites the enforceable 00-24 (25-37 are the visual atlas, judgement
+ * no static pass can prove). A finding that says `OFF_SCALE_SPACING` tells the reader the
  * value is wrong; a finding that says `OFF_SCALE_SPACING — rule 07` tells them to
  * open rule 07 and learn *why*, which is the only way the next screen is right
  * without being told twice. `scripts/check-skills.mjs` fails if a code is missing

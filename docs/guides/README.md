@@ -11,8 +11,8 @@ This directory is the **conceptual index** of FletBox: how to build apps, set up
 - **[FletBox utilities](utilities.md)** — Chapter 10 · layout/theme/format helpers and validator tools.
 - **[The CLI](../cli/README.md)** — Chapter 11 · create, run, and build projects with `flet-box`.
 - **[Clean UI](clean-ui.md)** — Chapter 12 · the four skills `flet-box create`
-  installs, the token scale, the 25 rules, and the `flet-box check-ui` gate that
-  enforces them.
+  installs, the token scale, the numbered rules (00–24 enforced, 25–37 the
+  visual atlas), and the `flet-box check-ui` gate that enforces them.
 - **[Accessibility](accessibility.md)** — Chapter 13 · the focus ring, the
   keyboard pass over every press, the roles and states the widgets declare, and
   the overlays that hold the keyboard.
