@@ -110,7 +110,6 @@ Each harness writes a global (`window.__TESTS`, `window.__SMOKE`, `window.__REGR
 
 - Public entry `src/index.js`; types in `src/index.d.ts`. A public API is complete only when three surfaces agree: runtime implementation, `src/index.js` export, and `src/index.d.ts` declaration — `scripts/check-api-surface.mjs` enforces this under `npm test`. Two rules follow from it: every `interface`/`type` in `index.d.ts` must be `export`ed (otherwise consumers cannot `import type` it), and the package must stay importable in Node (never touch `window`/`document` at module scope — guard with `typeof window !== "undefined"`).
 - `src/widget-factory/` is the ONLY rendering engine — `WidgetFactory` turns props into an `HTMLElement` with style, events, children, lifecycle, and reactivity. Never add a second rendering system.
-- `src/create-index.sh` is STALE: it writes to a non-existent `src/widget-builder/`. Do not run it.
 - Adding a widget: file in `src/widgets/`, export from `src/widgets/index.js` and `src/index.js`, type + props in `src/index.d.ts`, doc page + `basic`/`normal`/`full` examples in `docs/widget/`.
 - Prop aliases are a deliberate feature (e.g. `bgColor` ≡ `backgroundColor`, `onPress` ≡ `onClick`), resolved by the factory; each alias must keep exactly one meaning. Widgets also expose reactive property setters (e.g. `widget.text = ...`).
 - State is key-based RAM + subscribers (`useState`); router lives in `src/navigations/Router.js`.
