@@ -149,10 +149,16 @@ export const Badge = (props) => {
     return badgeElement;
   }
 
-  // Wrap the child and the badge in a Stack so the badge is positioned relative to the child
+  // Wrap the child and the badge in a Stack so the badge is positioned relative to
+  // the child. The wrapper has to BE the child's box: `display: inline-block` only
+  // shrinks to fit inside a block parent, and the common parent here is a flex
+  // Column, whose default `align-items: stretch` pulled the anchor to the full row
+  // width — so a badge on a 28px icon landed 250px away from it, on the far edge of
+  // the card. `alignSelf` is what resists that stretch.
   const badgeStack = Stack({
     position: "relative",
     display: "inline-block",
+    alignSelf: "flex-start",
     children: [validChild, badgeElement],
     ...rest,
   });

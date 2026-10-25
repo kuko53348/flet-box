@@ -13,7 +13,11 @@
 //   - a full-height Drawer put its header under the notch and its footer under
 //     the home indicator;
 //   - a Tooltip parked itself inside the status bar and a tap left it on screen
-//     with nothing ever dismissing it.
+//     with nothing ever dismissing it;
+//   - GridView read neither the `children` callers hand it nor the row height it
+//     reserves, so a "3-column grid" painted one column of full-width rows;
+//   - a Badge anchored itself to the width its parent happened to give the
+//     wrapper, so the pill sat on the far edge of the card instead of the icon.
 //
 // It publishes `window.__REGRESSION = { pass, fail, results }`.
 import * as W from "../src/widgets/index.js";
@@ -1851,6 +1855,41 @@ async function run() {
       );
       return true;
     }));
+
+  // ------------------------------------------------------------------ Badge
+  await t("Badge: the pill anchors to its child, not to the parent's width", async () => {
+    // The panel is what every app writes: a full-width Column. Its default
+    // `align-items: stretch` used to pull the badge's anchor box to the panel's
+    // width, and the pill — positioned against that box — landed on the far edge
+    // of the card, hundreds of pixels from the icon it claims to mark.
+    const icon = W.Icon({ name: "notifications", size: 28 });
+    const panel = W.Container({
+      width: "100%",
+      padding: 16,
+      children: [W.Badge({ value: 3, child: icon })],
+    });
+    host.appendChild(panel);
+    await wait(80);
+
+    const wrap = icon.parentElement;
+    const pill = wrap.lastElementChild;
+    const ib = icon.getBoundingClientRect();
+    const wb = wrap.getBoundingClientRect();
+    const pb = pill.getBoundingClientRect();
+    ok(
+      panel.getBoundingClientRect().width > ib.width * 3,
+      "the panel is no wider than the icon: this guard would prove nothing about the stretch",
+    );
+    ok(
+      Math.abs(wb.width - ib.width) <= 1,
+      `the anchor box is ${Math.round(wb.width)}px around a ${Math.round(ib.width)}px child — the wrapper took its parent's width, so the badge cannot know where the child ends`,
+    );
+    ok(
+      Math.abs(pb.right - ib.right) <= 8,
+      `the pill sits ${Math.round(pb.right - ib.right)}px past the child's right edge, on the parent's corner`,
+    );
+    panel.remove();
+  });
 
   // ------------------- The OS answer is painted, never written down as a choice
   await t("applySystemTheme follows the OS without pinning the preference", async () => {
