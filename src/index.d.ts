@@ -6,6 +6,9 @@ declare module 'flet-box' {
   // Tipos base
   // =========================================================================
   export type Widget = HTMLElement;
+  // A Scaffold slot: an element, a factory it re-runs on each route change (so a
+  // nav can relight the active item), a boolean show/hide, or null for absent.
+  export type Slot = Widget | (() => Widget) | boolean | null;
   export type Color = string;
   export type Size = number | string;
   export type Padding = number | string;
@@ -79,8 +82,35 @@ declare module 'flet-box' {
     // `Size`, not `number`: for a Text this is a font size and for a Button it is
     // the `small | medium | large` preset — the widget decides which it reads.
     size?: Size;
+    // The engine routes these as plain style on every widget, so declaring them
+    // only on `Container` made `Column({ maxWidth: 720, flex: 1 })` — the layout
+    // recipe the design skill teaches — a false error in a JS editor.
+    flex?: number;
+    minWidth?: Size;
+    maxWidth?: Size;
+    minHeight?: Size;
+    maxHeight?: Size;
+    border?: string;
+    borderTop?: string;
+    borderBottom?: string;
+    borderLeft?: string;
+    borderRight?: string;
+    cursor?: string;
+    // The engine routes `display` untouched; `Stack` sets it internally and an
+    // app that overrides it is doing something the type must not forbid.
+    display?: string;
     padding?: Padding;
     margin?: Margin;
+    // The engine routes each margin side, and the `mt/mr/mb/ml` aliases, as rem
+    // lengths on every widget: `Text({ marginTop: 4 })` is legal at runtime.
+    marginTop?: Size;
+    marginRight?: Size;
+    marginBottom?: Size;
+    marginLeft?: Size;
+    mt?: Size;
+    mr?: Size;
+    mb?: Size;
+    ml?: Size;
     bgColor?: Color;
     // Alias kept because the engine routes it and every generated template uses
     // it: `bgColor` is the Flet-style short name for the same style.
@@ -100,6 +130,9 @@ declare module 'flet-box' {
     disabled?: boolean;
     onPress?: (widget: Widget) => void;
     onClick?: (widget: Widget) => void;
+    // The lowercase alias the engine also routes (`{ prop: "onclick" }` in
+    // translateProps); the generated AppBar reaches for it.
+    onclick?: (widget: Widget) => void;
     // A child's own cross-axis answer to its parent's `alignItems`. It belongs on
     // `CommonProps` rather than on the layouts because the widget that needs it is
     // the *child* — a chip centred inside a row whose other children stretch.
@@ -259,7 +292,9 @@ declare module 'flet-box' {
     direction?: 'row' | 'column';
     gap?: number | string;
     justifyContent?: 'flex-start' | 'center' | 'flex-end' | 'space-between' | 'space-around' | 'space-evenly';
-    alignItems?: 'flex-start' | 'center' | 'flex-end' | 'stretch';
+    // `start`/`end`/`baseline` are CSS Box Alignment values the engine passes
+    // through untouched, so the type has to admit them.
+    alignItems?: 'flex-start' | 'center' | 'flex-end' | 'start' | 'end' | 'baseline' | 'stretch';
     wrap?: boolean | 'wrap' | 'nowrap' | 'wrap-reverse';
     child?: Widget;
     children?: Widget[];
@@ -511,7 +546,9 @@ declare module 'flet-box' {
     color?: Color;
     textColor?: Color;
     borderColor?: Color;
-    size?: 'small' | 'medium' | 'large';
+    // Chip reads `size` as a font size in pixels and scales its icons from it,
+    // so the preset union was a type the implementation never accepted.
+    size?: number;
     borderRadius?: number | string;
     elevation?: number;
     gap?: number;
@@ -664,7 +701,7 @@ declare module 'flet-box' {
     margin?: number | { top?: number; right?: number; bottom?: number; left?: number };
     orientation?: 'horizontal' | 'vertical';
   }
-  export function Divider(props: DividerProps): Widget;
+  export function Divider(props?: DividerProps): Widget;
 
   // =========================================================================
   // Formularios e interacción
@@ -914,16 +951,17 @@ declare module 'flet-box' {
   // Navegación
   // =========================================================================
   export interface ScaffoldProps extends CommonProps {
-    appBar?: Widget | boolean;
+    appBar?: Slot;
     body?: Widget | Record<string, any>;
-    bottomBar?: Widget | boolean;
-    fab?: Widget | boolean;
-    drawer?: Widget;
-    leftNavBar?: Widget;
+    bottomBar?: Slot;
+    fab?: Slot;
+    // `Drawer()` returns an instance, not an element, and Scaffold unwraps it.
+    drawer?: Widget | DrawerInstance | null;
+    leftNavBar?: Slot;
     leftNavBarWidth?: number;
-    rightNavBar?: Widget;
+    rightNavBar?: Slot;
     rightNavBarWidth?: number;
-    navSideBar?: Widget;
+    navSideBar?: Slot;
     navSideBarWidth?: number;
     navSideBarPosition?: 'left' | 'right';
     routes?: Record<string, any>;
@@ -941,14 +979,14 @@ declare module 'flet-box' {
   };
 
   export interface AdaptiveScaffoldProps extends CommonProps {
-    appBar?: Widget;
+    appBar?: Slot;
     body?: Widget | Record<string, any>;
-    bottomBar?: Widget;
-    fab?: Widget;
-    drawer?: Widget;
-    leftNavBar?: Widget | (() => Widget);
+    bottomBar?: Slot;
+    fab?: Slot;
+    drawer?: Widget | DrawerInstance | null;
+    leftNavBar?: Slot;
     leftNavBarWidth?: number;
-    rightNavBar?: Widget | (() => Widget);
+    rightNavBar?: Slot;
     rightNavBarWidth?: number;
     routes?: Record<string, any>;
     backgroundColor?: Color;

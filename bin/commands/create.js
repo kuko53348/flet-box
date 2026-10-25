@@ -250,6 +250,10 @@ export const createProject = async (projectName, rawArgs = []) => {
     templates.packageJson(finalName),
   );
   createFile(
+    path.join(projectPath, "jsconfig.json"),
+    templates.jsconfig(),
+  );
+  createFile(
     path.join(projectPath, "fletbox.config.json"),
     templates.fletboxConfig(otaUrl || undefined),
   );

@@ -879,6 +879,28 @@ self.addEventListener('fetch', event => {
 });
 `;
 
+// Not TypeScript: an editor reads this file and runs its bundled JS language
+// service over `flet-box`'s own .d.ts, so a prop autocompletes and a prop that
+// does not exist is a squiggle. `bundler` is the resolution an unbundled-ESM
+// app needs, and TypeScript 7 removed `node10` outright — an older editor that
+// still only knows `node` ignores the whole jsconfig, which is no worse than
+// not having one. Nothing here is compiled or installed.
+export const jsconfig = () => `{
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowJs": true,
+    "checkJs": true,
+    "strict": false,
+    "noEmit": true,
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*.js"],
+  "exclude": ["node_modules", "www", "dist"]
+}`;
+
 export const packageJson = (name) => `{
   "name": ${JSON.stringify(name)},
   "version": "1.0.0",
@@ -1663,6 +1685,15 @@ npm install
 npm run dev
 \`\`\`
 
+## Autocomplete without TypeScript
+
+\`jsconfig.json\` points the editor's own JavaScript language service at
+\`flet-box\`'s bundled \`.d.ts\` — nothing to install, nothing to compile. Every
+widget, prop, colour token and helper autocompletes in VS Code (or any editor
+that reads jsconfig), and a prop that does not exist is underlined as an error
+instead of failing silently at runtime. \`src/\` is the only folder checked;
+\`npm run check\` remains the gate that runs in CI.
+
 ## Working with an AI assistant
 
 This project ships an in-project agent contract, so an AI editing the app uses the
@@ -2066,7 +2097,7 @@ import { AppBar, Icon, Tooltip, colors, openDrawer, toggleTheme, getTheme } from
 // It reads the theme instead of subscribing to it: setTheme() re-renders the app,
 // so a component that subscribed would add a listener on every render and never
 // remove it.
-export const AppBarComponent = ({ title, isMobile = false, showBack = false, onBack }) => {
+export const AppBarComponent = ({ title, isMobile = false, showBack = false, onBack = () => {} }) => {
     const isDark = getTheme() === 'dark';
 
     return AppBar({
