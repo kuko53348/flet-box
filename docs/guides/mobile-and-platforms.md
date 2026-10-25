@@ -75,6 +75,29 @@ Your Capacitor configuration must point `webDir` to that output directory, commo
 
 The exact configuration file may be `capacitor.config.ts`, `capacitor.config.json`, or another format depending on how Capacitor was initialized.
 
+### The safe area
+
+Every app `flet-box create` writes carries `viewport-fit=cover` in `index.html`,
+which lets the web view paint behind the notch and the home indicator. That is
+what a full-bleed app wants, but it only looks right if content steps back from
+those edges, so the framework reads `env(safe-area-inset-*)` wherever a widget
+touches a screen edge: the [AppBar](../widget/AppBar.md) adds the top inset to
+its own padding and the [Drawer](../widget/Drawer.md) pads its panel, so a header
+never sits under the status bar and a footer never under the gesture bar. The
+value is `0` on a device with no inset, so nothing is configured per platform and
+a desktop browser is untouched.
+
+A screen that pins its own content to an edge — a hand-built tab bar, a floating
+action row — has to ask for the same inset. A length prop accepts the expression
+as it stands, because only a value made purely of pixels is converted to rem:
+
+```js
+Container({
+  paddingBottom: "calc(16px + env(safe-area-inset-bottom, 0px))",
+  children: [/* tabs */],
+});
+```
+
 ## Install Capacitor
 
 ```bash
@@ -224,6 +247,19 @@ Both platforms serve the app from a local HTTPS origin
 (`https://localhost`), configured with `androidScheme` and `iosScheme` in
 `capacitor.config.json`. A remote API has to allow that origin in its CORS
 configuration.
+
+### Text fields do not zoom the page
+
+iOS magnifies the whole viewport when a text control whose computed font size is
+under 16px receives focus, which reads as the screen growing and staying
+deformed after you type. FletBox floors the field text at 16px on iOS only: a
+`medium` or `small` field renders slightly larger there, while its box, label
+and icons keep the design's sizes. A reader who raises the browser font still
+gets a larger field, because the floor bounds the field's rem value instead of
+replacing it.
+
+Nothing has to be configured in the app, and the viewport is left alone: adding
+`maximum-scale=1` would stop the zoom by also blocking pinch-to-zoom.
 
 ### Add iOS to the project
 

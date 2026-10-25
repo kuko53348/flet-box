@@ -116,6 +116,7 @@ openDrawer();
 - The drawer keeps itself sized to the viewport on resize (`dimensions.addListener`), and `destroy()` removes that listener and the `keydown` handler.
 - When you pass `drawer` to a [Scaffold](Scaffold.md), a `menu` icon in the [AppBar](AppBar.md) opens it, `closeDrawerOnNavigate` can close it on route change, and the shell tears it down with its `_cleanup`.
 - Keydown (`Escape`) and resize listeners are only active while the drawer exists or is open — no leaks on the normal lifecycle.
+- The panel paints the screen edge to edge and pads its content by `env(safe-area-inset-*)`, so on a notched phone the `header` clears the status bar and the `footer` clears the home indicator without the background leaving a gap. Nothing has to be configured, and the `width`/`height` of the panel stay what you passed: the padding is inside the box (`border-box`). On a device with no inset the values are `0`, so the drawer looks exactly as it did.
 
 ## Related widgets
 - [DrawerItem](DrawerItem.md)
