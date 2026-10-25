@@ -366,6 +366,12 @@ declare module 'flet-box' {
     columns?: number;
     spacing?: number;
     itemHeight?: number;
+    /**
+     * The cells themselves, laid out `columns` per row. This is the same contract
+     * as `data` + `renderItem` read the other way round: pass the built widgets
+     * here, or the items plus a builder. One of the two — `data` wins.
+     */
+    children?: Widget[] | Widget;
   }
   export function GridView(props: GridViewProps): Widget;
 

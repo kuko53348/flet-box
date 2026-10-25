@@ -1768,6 +1768,90 @@ async function run() {
     );
   });
 
+  // ------------------------------------------------------------- GridView
+  // Both guards measure at a 16px root font, so `itemHeight: 40` is 40 CSS pixels
+  // and the numbers below are the documented ones, not a scaling artifact. The
+  // measurement happens while the grid is still in the DOM: a detached element
+  // answers every rect with zeros.
+  const measureGrid = async (props, read) => {
+    const root = document.documentElement;
+    const previous = root.style.fontSize;
+    root.style.fontSize = "16px";
+    const grid = W.GridView(props);
+    host.appendChild(grid);
+    await wait(150);
+    const cells = Array.from(grid.querySelectorAll("div")).filter(
+      (d) => d.style.position === "absolute" && d.style.width.endsWith("%"),
+    );
+    const out = read(cells);
+    grid.remove();
+    if (previous) root.style.fontSize = previous;
+    else root.style.removeProperty("font-size");
+    return out;
+  };
+
+  // Built per test: a grid stretches the elements it is handed, so a shared array
+  // would let the first test's layout leak into the second.
+  const makeCells = () =>
+    Array.from({ length: 6 }, (_, i) =>
+      W.Container({ backgroundColor: colors.card, child: W.Text({ text: `${i + 1}` }) }),
+    );
+
+  const gridProps = () => ({
+    columns: 3,
+    itemHeight: 40,
+    spacing: 8,
+    height: 200,
+    expand: false,
+    children: makeCells(),
+  });
+
+  await t("GridView: children become the grid instead of a vertical stack", () =>
+    measureGrid(gridProps(), (cells) => {
+      ok(
+        cells.length === 6,
+        `a 3-column grid of 6 cells laid out ${cells.length} cells — the items never reached the grid math, so they painted as the factory's own children (one per row)`,
+      );
+      const box = cells.map((c) => c.getBoundingClientRect());
+      const cols = new Set(box.map((c) => Math.round(c.x)));
+      const rows = new Set(box.map((c) => Math.round(c.y)));
+      const widths = new Set(box.map((c) => Math.round(c.width)));
+      ok(cols.size === 3, `columns: 3 produced ${cols.size} distinct column positions`);
+      ok(rows.size === 2, `6 cells in 3 columns produced ${rows.size} rows`);
+      ok(widths.size === 1, `the cells came in ${widths.size} different widths`);
+      return true;
+    }));
+
+  await t("GridView: a cell fills the slot its itemHeight reserves", () =>
+    measureGrid(gridProps(), (cells) => {
+      ok(cells.length >= 4, "the grid rendered too few cells to measure");
+      const inner = cells.map((c) => c.firstElementChild.getBoundingClientRect());
+      // itemHeight is the cell, spacing is the gutter between two of them, and the
+      // row pitch has to be the two added together or one row eats the next.
+      ok(
+        Math.round(inner[0].height) === 40,
+        `itemHeight: 40 gave its cell ${Math.round(inner[0].height)}px — the row was reserved but the cell only ever grew as tall as its content`,
+      );
+      ok(
+        Math.round(inner[1].x - (inner[0].x + inner[0].width)) === 8,
+        `spacing: 8 left ${Math.round(inner[1].x - (inner[0].x + inner[0].width))}px between two neighbours`,
+      );
+      ok(
+        Math.round(inner[3].y - inner[0].y) === 48,
+        `a 40-cell with spacing 8 stacked its rows ${Math.round(inner[3].y - inner[0].y)}px apart, so the cell and the pitch disagree`,
+      );
+      // The scroll area has to be tall enough for the last row it positions: a
+      // height that subtracts the trailing gutter paints the final row over the footer.
+      const area = cells[0].parentElement.parentElement;
+      const last = cells[cells.length - 1].getBoundingClientRect();
+      const areaBottom = area.getBoundingClientRect().top + parseFloat(area.style.height);
+      ok(
+        last.bottom <= areaBottom + 0.5,
+        `the last cell ends at ${last.bottom} but the list declares its area ${areaBottom} — the trailing gutter was subtracted twice`,
+      );
+      return true;
+    }));
+
   // ------------------- The OS answer is painted, never written down as a choice
   await t("applySystemTheme follows the OS without pinning the preference", async () => {
     const savedPref = localStorage.getItem("fletbox-theme");

@@ -179,11 +179,18 @@ export const ListView = (props) => {
    * Calculates the logical height of the virtual item area. Header and footer are
    * siblings of `innerContainer` and contribute to the scrollbar through their own
    * layout boxes, so they must not be added here.
+   *
+   * Grid mode keeps the trailing gutter. Each cell carries half of the spacing on
+   * every side, so a row ends `slotHeight()` below where it starts and the last one
+   * really is that tall; subtracting the gap there shortened the area by a gutter and
+   * the final row painted over the footer.
+   *
    * @returns {number} Total height in pixels.
    */
   const getTotalHeight = () => {
     const rows = getTotalRows();
     if (rows === 0) return 0;
+    if (isGridMode) return rows * slotHeight();
     return Math.max(0, rows * slotHeight() - gapHeight());
   };
 
@@ -253,8 +260,19 @@ export const ListView = (props) => {
         const col = i % cols;
         wrapper.style.left = `${(col / cols) * 100}%`;
         wrapper.style.width = `${100 / cols}%`;
-        wrapper.style.padding = `0 ${toREM(gap / 2)}`;
+        // The slot is the cell: `itemSize` tall, with `gap` split across the four
+        // sides so two neighbours meet at exactly one gutter. Without the height the
+        // wrapper was only as tall as its content, so `itemSize` reserved the row but
+        // never sized the cell — a grid of labels floating at the top of their rows.
+        // Written in framework units, like the `getItemTop` pitch it must match.
+        wrapper.style.height = toREM(itemSize + gap);
+        wrapper.style.padding = toREM(gap / 2);
         wrapper.style.boxSizing = "border-box";
+        // The cell fills its slot by being stretched, not by writing a height into
+        // the element the caller handed over: their node stays theirs, and a cell
+        // that asked for its own height still keeps it.
+        wrapper.style.display = "grid";
+        wrapper.style.gridTemplateRows = "minmax(0, 1fr)";
       } else {
         wrapper.style.left = "0";
         wrapper.style.right = "0";
