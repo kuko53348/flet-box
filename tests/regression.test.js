@@ -23,7 +23,9 @@
 //   - a Stepper mounted its active content only once something was pressed, so it
 //     drew its rail, its buttons and nothing in between;
 //   - a vertical step drew its label twice and stranded the second copy at the
-//     far edge of the row.
+//     far edge of the row;
+//   - a Stack, documented as the container that layers its children in one box,
+//     laid them out in the flow one under the other.
 //
 // It publishes `window.__REGRESSION = { pass, fail, results }`.
 import * as W from "../src/widgets/index.js";
@@ -2597,9 +2599,128 @@ async function run() {
     ok(read("top-left") === "flex/flex-start/flex-start", `top-left → ${read("top-left")}`);
     ok(read("top-center") === "flex/flex-start/center", `top-center → ${read("top-center")}`);
     ok(read("bottom-center") === "flex/flex-end/center", `bottom-center → ${read("bottom-center")}`);
-    // an explicit axis must win over the preset, and no alignment keeps the block
+    // An explicit axis must win over the preset, and no alignment still anchors
+    // at top-left: a Stack whose default was `block` put its layers wherever the
+    // flow felt like, which is the one thing this container promises not to do.
     ok(read("center", { justifyContent: "flex-end" }) === "flex/flex-end/center", "explicit justifyContent ignored");
-    ok(getComputedStyle(mount(W.Stack({ width: 40, height: 40 }))).display === "block", "a plain Stack stopped being a block");
+    ok(read(undefined) === "flex/flex-start/flex-start", `no alignment → ${read(undefined)}`);
+  });
+
+  await t("Stack: the children paint in the same box, not one after the other", async () => {
+    // The widget is documented as the overlay container — `Stack.md` opens with
+    // "children occupy the same box" — and it never layered anything: every child
+    // arrived in normal flow, so the second tile sat below the first and the only
+    // way to get an overlay was for each child to declare a `position` itself.
+    // Measured as deltas from the box, because the harness host is off-screen.
+    const layer = (alignment) => {
+      const s = mount(
+        W.Stack({
+          width: 200,
+          height: 120,
+          alignment,
+          children: [
+            W.Container({ width: 200, height: 120 }),
+            W.Container({ width: 100, height: 48 }),
+          ],
+        }),
+      );
+      const box = s.getBoundingClientRect();
+      const kids = [...s.children].map((k) => {
+        const r = k.getBoundingClientRect();
+        return {
+          x: Math.round(r.left - box.left),
+          y: Math.round(r.top - box.top),
+          w: Math.round(r.width),
+          h: Math.round(r.height),
+        };
+      });
+      return {
+        first: kids[0],
+        layer: kids[1],
+        pos: getComputedStyle(s.children[1]).position,
+        // Do the two tiles still cover each other anywhere?
+        shared:
+          Math.min(kids[0].x + kids[0].w, kids[1].x + kids[1].w) > Math.max(kids[0].x, kids[1].x) &&
+          Math.min(kids[0].y + kids[0].h, kids[1].y + kids[1].h) > Math.max(kids[0].y, kids[1].y),
+      };
+    };
+
+    const top = layer();
+    ok(top.pos === "absolute", `the layer is ${top.pos}, expected absolute`);
+    ok(top.shared, "the two children share no pixels at all");
+    ok(`${top.layer.x},${top.layer.y}` === "0,0", `default anchor → ${top.layer.x},${top.layer.y}`);
+
+    // 200-wide box, 100-wide tile, 120-high box, 48-high tile → the nine points.
+    const expected = {
+      "top-left": "0,0",
+      "top-center": "50,0",
+      "top-right": "100,0",
+      "center-left": "0,36",
+      center: "50,36",
+      "center-right": "100,36",
+      "bottom-left": "0,72",
+      "bottom-center": "50,72",
+      "bottom-right": "100,72",
+    };
+    for (const [alignment, want] of Object.entries(expected)) {
+      const got = layer(alignment);
+      ok(`${got.layer.x},${got.layer.y}` === want, `${alignment} → ${got.layer.x},${got.layer.y}, expected ${want}`);
+      ok(got.shared, `${alignment} put the layer outside the box`);
+    }
+  });
+
+  await t("Stack: the first child sizes the box and two claims still hold", async () => {
+    // Taking every child out of the flow would fix the layering and break the
+    // sizing: an unsized Stack would collapse to 0px and the overlay would be
+    // invisible, which reads as a different bug. So the first child stays in the
+    // flow and is what gives the box its height.
+    const sized = mount(
+      W.Stack({ children: [W.Container({ width: 140, height: 70 }), W.Container({ width: 50, height: 20 })] }),
+    );
+    ok(Math.round(sized.getBoundingClientRect().height) === 70, `box height=${sized.getBoundingClientRect().height}, expected the first child's 70`);
+
+    // A layer that names its own edges keeps them, and a child that claims a
+    // `position` outranks the overlay rule: opting back into the flow is possible.
+    const pinned = mount(
+      W.Stack({
+        width: 240,
+        height: 160,
+        children: [W.Container({ width: 240, height: 160 }), W.Container({ width: 100, height: 48, top: 8, right: 8 })],
+      }),
+    );
+    const pbox = pinned.getBoundingClientRect();
+    const plank = pinned.children[1].getBoundingClientRect();
+    ok(Math.round(pbox.right - plank.right) === 8, `right inset=${pbox.right - plank.right}, expected 8`);
+    ok(Math.round(plank.top - pbox.top) === 8, `top inset=${plank.top - pbox.top}, expected 8`);
+
+    const opted = mount(
+      W.Stack({
+        width: 240,
+        children: [
+          W.Container({ width: 240, height: 48, position: "relative" }),
+          W.Container({ width: 240, height: 48, position: "relative" }),
+        ],
+      }),
+    );
+    const ob = opted.getBoundingClientRect();
+    ok(
+      Math.round(opted.children[1].getBoundingClientRect().top - ob.top) === 48,
+      "a child that declared position: relative did not stay in the flow",
+    );
+  });
+
+  await t("Stack: the float reaches the children an update brings later", async () => {
+    // Why the rule lives in a stylesheet and not on each child: `update()`
+    // replaces the child nodes, and a style written onto a node leaves with it.
+    const s = mount(
+      W.Stack({ width: 200, height: 120, children: [W.Container({ width: 200, height: 120 }), W.Container({ width: 100, height: 48 })] }),
+    );
+    s.update({ children: [W.Container({ width: 200, height: 120 }), W.Container({ width: 100, height: 48 })] });
+    ok(s.children.length === 2, `children=${s.children.length}`);
+    ok(getComputedStyle(s.children[1]).position === "absolute", "the replacement layer was left in the flow");
+
+    // One tag for the whole document, however many stacks were built.
+    ok(document.querySelectorAll("#fletbox-stack").length === 1, `${document.querySelectorAll("#fletbox-stack").length} stack stylesheets`);
   });
 
   await t("alignSelf: one child can answer the parent's cross axis alone", () => {

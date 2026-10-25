@@ -327,6 +327,17 @@ declare module 'flet-box' {
   }
   export function Column(props: ColumnProps): Widget;
 
+  /**
+   * Layers its children in the same box.
+   *
+   * The first child stays in the flow and gives the stack its size; every child
+   * after it is taken out of the flow and painted over that box, so a stack with
+   * nothing sized and no sized first child has no room for its layers.
+   *
+   * `alignment` is the corner a layer with no edges of its own sits on
+   * (top-left by default). A layer that names `top`/`right`/`bottom`/`left` keeps
+   * those, and a child that declares its own `position` is left in the flow.
+   */
   export interface StackProps extends CommonProps {
     children?: Widget[];
     position?: 'relative' | 'absolute' | 'stack';
