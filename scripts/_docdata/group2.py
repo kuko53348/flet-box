@@ -412,6 +412,7 @@ WIDGET_DOCS = {
         "tips": [
             "Match type to the data (email, password, search) so mobile keyboards adapt.",
             "Set validation and showValidationMessage to get inline feedback without extra code.",
+            "The trailing controls are Icon glyphs from the Material face the app links in its own index.html, drawn in the theme's secondary ink. An emoji in that slot ignores the colour, the font and the size the field sets.",
         ],
         "accessibility": [
             "Always give a label or placeholder so the field has an accessible name.",
@@ -420,6 +421,7 @@ WIDGET_DOCS = {
         "behavior": [
             "onChange fires on every keystroke; onEnter fires when the user presses Enter.",
             "clearable and passwordToggle add trailing controls that manage the value for you.",
+            "passwordToggle swaps visibility for visibility_off and moves the button's accessible name with the state.",
         ],
         "basic": '''const name = Input({
   placeholder: "Your name",
