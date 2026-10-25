@@ -303,7 +303,11 @@ export const CircularChart = (props) => {
       const cy = getCenterY();
       ctx.beginPath();
       ctx.arc(cx, cy, r, 0, Math.PI * 2);
-      ctx.fillStyle = colors.gray200;
+      // The disc behind a donut is the hole's filler, not a shape of its own:
+      // `gray200` painted a pale plate inside the ring, so the widget read as a
+      // pie with a grey centre instead of a ring with nothing in it. The slices'
+      // separators already use `colors.card` for the same reason.
+      ctx.fillStyle = colors.card;
       ctx.fill();
     }
   };

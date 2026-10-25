@@ -4709,7 +4709,7 @@
     "prefix": "installText",
     "description": "Make a FletBox widgets installText widget",
     "body": [
-      "text: \"\ud83d\udcf2 Install\","
+      "text: \"Install\", icon: \"get_app\","
     ]
   },
   "FletBox widgets onInstalled": {

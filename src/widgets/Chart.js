@@ -11,6 +11,36 @@ import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 
 /**
+ * The step a Y axis labels in: a round number whose mantissa is 1, 2 or 5.
+ *
+ * Reading the axis off the padded range divided into five — what this did before —
+ * puts the labels wherever the data happens to end: a `[6, 21]` series wrote
+ * `0, 4, 8, 13, 17, 21`, whose steps are 4, 4, 5, 4, 4. Equal gridline spacing with
+ * unequal labelled steps reads as a rounding bug even when nothing is rounding, and
+ * it makes the top label disagree with the line it sits on.
+ *
+ * @param {number} rough - The step the desired number of lines implies.
+ * @returns {number} The nearest round step at or above it.
+ */
+const niceStep = (rough) => {
+  if (!(rough > 0)) return 1;
+  const exponent = Math.pow(10, Math.floor(Math.log10(rough)));
+  const mantissa = rough / exponent;
+  const nice = mantissa <= 1 ? 1 : mantissa <= 2 ? 2 : mantissa <= 5 ? 5 : 10;
+  return nice * exponent;
+};
+
+/**
+ * How many decimals a step needs to be written honestly: a 0.5 step labelled as
+ * `0` and `1` describes neither of its lines.
+ *
+ * @param {number} step
+ * @returns {number}
+ */
+const stepDecimals = (step) =>
+  Math.max(0, Math.min(6, -Math.floor(Math.log10(step))));
+
+/**
  * Creates a Chart widget rendered on an HTML5 `<canvas>` element.
  *
  * @param {Object} props - Configuration for the chart.
@@ -432,23 +462,28 @@ export const Chart = (props) => {
     ctx.strokeStyle = axisColor;
     ctx.lineWidth = 0.5;
 
-    const steps = 5;
+    // Lines sit on round values inside the plotted range, not on fifths of it.
     const range = maxValue - minValue;
+    const step = niceStep(range / 5);
+    const decimals = stepDecimals(step);
+    const first = Math.ceil(minValue / step) * step;
+    const lines = range > 0 ? Math.floor((maxValue - first) / step) : 0;
 
-    for (let i = 0; i <= steps; i++) {
-      const value = minValue + (i / steps) * range;
+    for (let i = 0; i <= lines; i++) {
+      const value = first + i * step;
       const y = getYPosition(value, minValue, maxValue, chartHeight);
       ctx.beginPath();
       ctx.moveTo(pad.left, y);
       ctx.lineTo(canvasWidth - pad.right, y);
       ctx.stroke();
 
-      // Round very small floating-point values to 0 to avoid displaying "-0.00"
-      const displayValue = Math.abs(value) < 0.01 ? 0 : Math.round(value);
+      // A step of 0.5 needs one decimal; a step of 5 needs none. Writing `-0` for
+      // a value that is zero by rounding reads as a negative axis.
+      const label = Math.abs(value) < step / 100 ? 0 : value.toFixed(decimals);
       ctx.fillStyle = yAxisColor;
       ctx.font = "9px sans-serif";
       ctx.textAlign = "right";
-      ctx.fillText(displayValue, pad.left - 5, y + 3);
+      ctx.fillText(label, pad.left - 5, y + 3);
     }
   };
 

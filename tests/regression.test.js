@@ -29,7 +29,17 @@
 //   - a vertical Slider read the rail's thickness from `width`, the same prop that
 //     sets its length, so an 8-unit rail painted 160 units wide;
 //   - a Slider's fill eased every write, so during a drag the bar chased the thumb
-//     by up to a fifth of the rail instead of moving with it.
+//     by up to a fifth of the rail instead of moving with it;
+//   - a Chart wrote its Y labels at fifths of the padded range, so `[6, 12, 19, 21]`
+//     was labelled 0, 4, 8, 13, 17, 21 — gridlines evenly spaced, steps not;
+//   - InstallButton put the 📲 emoji in its default label, which is a picture the
+//     operating system draws and painted as a tofu box where that font is missing;
+//   - a Markdown link was coloured with `colors.primary`, which in light is the
+//     page's own ink, so with no underline a link read as an ordinary word;
+//   - a shut Accordion drew nothing at all: its 'contained' plate was the card's
+//     own color and its divider only existed once the panel was open;
+//   - a CircularChart donut filled its own hole with `gray200`, so the ring sat on
+//     a pale disc instead of the page.
 //
 // It publishes `window.__REGRESSION = { pass, fail, results }`.
 import * as W from "../src/widgets/index.js";
@@ -4162,6 +4172,200 @@ async function run() {
     } finally {
       html.style.fontSize = savedRootFont;
       if (!hadMarker) html.removeAttribute("data-fb-ios");
+    }
+  });
+
+  // ------------------------------------------------- Chart: Y-axis label steps
+  await t("Chart: the Y axis labels in one round step, not in fifths of the range", async () => {
+    const orig = HTMLCanvasElement.prototype.getContext;
+
+    /** Mount one chart and return only the texts drawn in the Y-axis gutter. */
+    const axisOf = async (props) => {
+      const drawn = [];
+      HTMLCanvasElement.prototype.getContext = function (kind, ...rest) {
+        const ctx = orig.call(this, kind, ...rest);
+        if (ctx && kind === "2d" && !ctx.__fbRecorded) {
+          ctx.__fbRecorded = true;
+          const fill = ctx.fillText.bind(ctx);
+          ctx.fillText = (text, x, y, ...more) => {
+            // The Y gutter only. The x-axis labels and the value tags are drawn
+            // inside a `translate()`, so their own coordinates are `0, 0`.
+            if (x > 0 && x < 50) drawn.push(String(text));
+            return fill(text, x, y, ...more);
+          };
+        }
+        return ctx;
+      };
+      try {
+        const chart = mount(W.Chart({ type: "bar", width: 300, height: 200, ...props }));
+        await wait(80);
+        chart.remove();
+      } finally {
+        HTMLCanvasElement.prototype.getContext = orig;
+      }
+      return drawn;
+    };
+
+    // `[6, 12, 19, 21]` bars scale from 0 to 23.1, which in fifths is
+    // 0, 4.6, 9.2, 13.9, 18.5, 23.1 — written as 0, 4, 8, 13, 17, 21: equal
+    // gridlines with unequal labelled steps (4, 4, 5, 4, 4).
+    const axis = (await axisOf({ data: [6, 12, 19, 21], labels: ["a", "b", "c", "d"] })).map(Number);
+    ok(axis.length >= 3, `only ${axis.length} Y labels were drawn`);
+    const steps = axis.slice(1).map((v, i) => +(v - axis[i]).toFixed(6));
+    ok(
+      steps.every((s) => Math.abs(s - steps[0]) < 1e-6),
+      `the axis reads ${axis.join(", ")} — steps of ${steps.join(", ")}: the labels do not agree with their own gridlines`,
+    );
+    const exponent = 10 ** Math.floor(Math.log10(steps[0]));
+    const mantissa = +(steps[0] / exponent).toFixed(6);
+    ok(
+      [1, 2, 5, 10].includes(mantissa),
+      `the axis counts by ${steps[0]}, which is not a 1/2/5 step`,
+    );
+    ok(axis.every((v) => Number.isInteger(v)), `a whole-number series is labelled with fractions: ${axis.join(", ")}`);
+
+    // A step of 0.5 must be written with its decimal, or every label says `0`.
+    const tiny = await axisOf({ data: [0.1, 0.2, 0.3], labels: ["a", "b", "c"] });
+    ok(tiny.some((t) => t.includes(".")), `a 0–0.3 axis reads ${tiny.join(", ")} — every label rounds to zero`);
+  });
+
+  // ------------------------------------------------- InstallButton: its glyph
+  await t("InstallButton: the default installs with a named glyph, not an emoji", () => {
+    const btn = mount(W.InstallButton({}));
+    window.dispatchEvent(new Event("beforeinstallprompt"));
+
+    const glyphs = [...btn.querySelectorAll(".material-icons")].map((s) => s.textContent.trim());
+    ok(glyphs.includes("get_app"), `no icon-font glyph in the default button (glyphs: ${JSON.stringify(glyphs)})`);
+    const label = btn.textContent || "";
+    ok(
+      !/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u.test(label),
+      `the default label still carries an OS emoji: ${JSON.stringify(label.trim().slice(0, 24))}`,
+    );
+    btn.remove();
+  });
+
+  // ------------------------------------- Rating / Markdown: default ink reads
+  await t("Rating, Markdown ink and a readable link", () => {
+    withBothThemes((theme) => {
+      // A star is the only place the score lives, and an unfilled star is a cell
+      // of the control, not decoration — both are graphics, so the floor is 3:1.
+      const rating = mount(W.Rating({ value: 3 }));
+      const stars = [...rating.querySelectorAll(".material-icons")];
+      const filled = stars.find((s) => s.textContent.trim() === "star");
+      const empty = stars.find((s) => s.textContent.trim() === "star_border");
+      ok(filled && empty, `${theme}: no filled and empty star was painted`);
+      for (const [what, star] of [["filled", filled], ["empty", empty]]) {
+        const ratio = color(getComputedStyle(star).color).contrastRatio(colors.surface);
+        ok(
+          ratio >= 3,
+          `${theme}: the ${what} star is ${ratio.toFixed(2)}:1 on the card (${getComputedStyle(star).color})`,
+        );
+      }
+      rating.remove();
+
+      // 12px words: the floor is 4.5:1, and inline code sits on its own plate.
+      const md = mount(
+        W.Markdown({
+          content: "call `helper()` first — see [the guide](https://flet-box.dev)",
+        }),
+      );
+      const code = md.querySelector("code");
+      ok(code, `${theme}: Markdown painted no inline <code>`);
+      if (code) {
+        const style = getComputedStyle(code);
+        const ratio = color(style.color).contrastRatio(style.backgroundColor);
+        ok(
+          ratio >= 4.5,
+          `${theme}: inline code is ${ratio.toFixed(2)}:1 on its own plate (${style.color} on ${style.backgroundColor})`,
+        );
+      }
+      // A link in running text has no underline by default, so its colour is the
+      // only thing saying "press me". `linkColor` used to be `colors.primary`, and
+      // in light the primary plate IS the page ink (1.12:1 apart), which rendered
+      // a sentence with an invisible word in it.
+      const link = md.querySelector("a");
+      ok(link, `${theme}: Markdown rendered no anchor for [text](url)`);
+      if (link) {
+        const ink = color(getComputedStyle(link).color);
+        const body = color(getComputedStyle(md.querySelector("p") || md).color);
+        const onSurface = ink.contrastRatio(colors.surface);
+        const onBody = ink.contrastRatio(body);
+        ok(
+          onSurface >= 4.5,
+          `${theme}: a markdown link is ${onSurface.toFixed(2)}:1 on the page (${ink.hex()})`,
+        );
+        ok(
+          onBody >= 1.5,
+          `${theme}: a link reads as body text — ${onBody.toFixed(2)}:1 apart from it (${ink.hex()} vs ${body.hex()})`,
+        );
+      }
+      md.remove();
+    });
+  });
+
+  // ------------------------------------- Accordion: a shut panel still has an edge
+  await t("Accordion: the default draws a boundary when nothing is open", () => {
+    withBothThemes((theme) => {
+      const acc = mount(
+        W.Accordion({
+          title: "Shipping",
+          children: [W.Text({ text: "Two to three days." })],
+        }),
+      );
+      const header = acc.querySelector('[aria-expanded="false"]');
+      ok(header, `${theme}: no collapsed header was painted`);
+      if (header) {
+        const hairline = parseFloat(getComputedStyle(header).borderBottomWidth);
+        ok(
+          hairline >= 1,
+          `${theme}: a shut accordion draws nothing around its title — borderBottomWidth is ${hairline}, so the row is a sentence with a chevron`,
+        );
+      }
+      // 'contained' is the variant that promises a plate. `colors.surface` is the
+      // card underneath it, which is no plate at all.
+      const plate = getComputedStyle(acc).backgroundColor;
+      ok(
+        plate !== "rgba(0, 0, 0, 0)",
+        `${theme}: the default contained accordion paints no background`,
+      );
+      const ratio = color(plate).contrastRatio(colors.surface);
+      ok(
+        ratio >= 1.05,
+        `${theme}: the contained plate is ${ratio.toFixed(2)}:1 against the card it sits on (${plate})`,
+      );
+      acc.remove();
+    });
+  });
+
+  // ------------------------------------- CircularChart: a donut hole is empty
+  await t("CircularChart: the donut's hole shows the card, not a painted disc", async () => {
+    for (const theme of ["light", "dark"]) {
+      setTheme(theme);
+      const chart = mount(
+        W.CircularChart({
+          data: [
+            { label: "A", value: 40 },
+            { label: "B", value: 25 },
+            { label: "C", value: 35 },
+          ],
+          showLabels: true,
+        }),
+      );
+      await wait(150);
+      const canvas = chart.querySelector("canvas");
+      ok(canvas, `${theme}: CircularChart painted no canvas`);
+      if (canvas) {
+        const { data } = canvas
+          .getContext("2d")
+          .getImageData(Math.round(canvas.width / 2), Math.round(canvas.height / 2), 1, 1);
+        const hole = color(`rgb(${data[0]}, ${data[1]}, ${data[2]})`);
+        const card = color(colors.card);
+        ok(
+          hole.contrastRatio(card) < 1.06,
+          `${theme}: the hole is filled ${hole.hex()} while the card is ${card.hex()} — the ring sits on a disc, so the donut reads as a pie with a grey centre`,
+        );
+      }
+      chart.remove();
     }
   });
 

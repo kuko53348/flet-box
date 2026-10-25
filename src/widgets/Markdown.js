@@ -782,13 +782,25 @@ export const Markdown = (props) => {
     color = colors.text,
 
     // Link styling
-    linkColor = colors.primary,
-    linkHoverColor = colors.primary,
+    //
+    // `primary` is the palette's plate, and in light that plate is #18181B — the
+    // page's own ink. A link coloured with it measured rgb(24,24,27) against text
+    // rgb(9,9,11) — 1.12:1 apart, a sentence with an invisible word in it, since `linkUnderline` is off by
+    // default and colour was the only cue. `infoStrong` is the blue this palette
+    // already writes words in (the focus ring uses it for the same reason):
+    // 6.70:1 on the light page, 9.82:1 on the dark card, and unmistakably not body
+    // ink. Hover keeps the same hue and adds the underline — brightening to `info`
+    // would drop to 3.68:1 in light, and a hover state is still text.
+    linkColor = colors.infoStrong,
+    linkHoverColor = colors.infoStrong,
     linkUnderline = false,
 
     // Inline code styling
     codeBgColor = colors.gray100,
-    codeColor = colors.danger,
+    // `danger` is a signal colour for icons and borders; as 12px words on the
+    // `gray100` plate it measured 3.42:1 in light. `dangerStrong` is the palette's
+    // own "red you may write words in" — 5.89:1 on that plate, 8.68:1 in dark.
+    codeColor = colors.dangerStrong,
     codeFontSize = 12,
     codeFontFamily =
       'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace',

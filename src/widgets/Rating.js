@@ -31,10 +31,18 @@ export const Rating = (props) => {
   } = props;
 
   // Colors from theme
+  //
+  // Both inks are the readable end of their own hue, for the same reason Radio's
+  // off-ring is: `colors.border` measured 1.27:1 on a white card and 1.19:1 on a
+  // dark one, so the empty stars were not a dim state but an absent one, and
+  // `colors.warning` (#F59E0B) measured 2.15:1 on white, which made a 4-out-of-5
+  // score harder to see than the label next to it. `gray500` is the neutral
+  // control outline (4.83:1 light, 3.67:1 dark) and `warningStrong` is the amber
+  // the palette already declares for words (5.02:1 light, 12.29:1 dark).
   let activeColor =
-    propActiveColor !== undefined ? propActiveColor : colors.warning;
+    propActiveColor !== undefined ? propActiveColor : colors.warningStrong;
   let inactiveColor =
-    propInactiveColor !== undefined ? propInactiveColor : colors.border;
+    propInactiveColor !== undefined ? propInactiveColor : colors.gray500;
   let currentValue = Math.min(Math.max(value, 0), max);
 
   let starIcons = []; // stores the SPAN elements of each star
@@ -333,8 +341,8 @@ export const Rating = (props) => {
   // Dynamic theme
   if (propActiveColor === undefined || propInactiveColor === undefined) {
     unsubscribeTheme = subscribeTheme(() => {
-      if (propActiveColor === undefined) activeColor = colors.warning;
-      if (propInactiveColor === undefined) inactiveColor = colors.border;
+      if (propActiveColor === undefined) activeColor = colors.warningStrong;
+      if (propInactiveColor === undefined) inactiveColor = colors.gray500;
       updateStars();
     });
   }

@@ -41,7 +41,7 @@ const ACCORDION_PROP_KEYS = [
  * @param {Function} [props.onToggle] - @deprecated Use `onPress` instead. Kept as alias for backward compatibility.
  * @param {'contained'|'outlined'|'ghost'} [props.variant='contained'] - Visual style variant.
  * @param {number} [props.borderRadius=8] - Corner radius in pixels.
- * @param {string} [props.bgColor=colors.surface] - Background color of the container (used in 'contained' variant).
+ * @param {string} [props.bgColor=colors.primaryBg] - Background color of the container (used in 'contained' variant).
  * @param {string} [props.titleColor=colors.text] - Text color of the title when collapsed.
  * @param {string} [props.expandedColor=colors.primary] - Accent color applied to the title-bar background when expanded.
  * @param {string|null} [props.border=null] - Explicit CSS border shorthand. Overrides variant-based border logic.
@@ -75,7 +75,13 @@ export const Accordion = (props) => {
     variant = "contained", // 'contained', 'outlined', 'ghost'
     borderRadius = 8,
     // Colors
-    bgColor = colors.surface,
+    //
+    // A 'contained' panel is a plate, so it has to read as one. `colors.surface`
+    // is the card an accordion already sits on — 1.00:1 in dark, 1.04:1 in light —
+    // which made the variant indistinguishable from 'ghost'. `primaryBg` is the
+    // palette's raised plate: 1.19:1 over the dark card (the overlay Material
+    // uses for elevation) and the same near-white step in light.
+    bgColor = colors.primaryBg,
     titleColor = colors.text,
     expandedColor = colors.primary,
     // Borders
@@ -200,12 +206,17 @@ export const Accordion = (props) => {
       titleBar.style.backgroundColor = "transparent";
     }
 
-    // Show/hide the horizontal divider between title and content
-    if (currentDivider && isExpanded) {
-      contentInner.style.borderTop = `1px solid ${currentDividerColor}`;
-    } else {
-      contentInner.style.borderTop = "none";
-    }
+    // The header's hairline is the only thing that says "this row is a panel".
+    // The default 'contained' variant paints `colors.surface`, which measures
+    // 1.00:1 against a dark card and 1.04:1 against a light one, `elevation`
+    // starts at 0 and the border belongs to 'outlined' — so a shut accordion used
+    // to be a sentence with a chevron on it, and nothing marked it as pressable.
+    // The line belongs to the header, not to the gap below it: it is there open
+    // or shut, so it never doubles when the content appears.
+    titleBar.style.borderBottom = currentDivider
+      ? `1px solid ${currentDividerColor}`
+      : "none";
+    contentInner.style.borderTop = "none";
 
     // Apply border according to priority: explicit > outlined variant > none
     if (currentBorder) {

@@ -857,7 +857,7 @@ attrs_all_placeholders_complete = {
     'allowDangerousHtml': 'allowDangerousHtml: false,',
 
     # ---------- Install Button ----------
-    'installText': 'text: "📲 Install",',
+    'installText': 'text: "Install", icon: "get_app",',
     'onInstalled': 'onInstalled: () => console.log("installed"),',
 
     # =========================================================================

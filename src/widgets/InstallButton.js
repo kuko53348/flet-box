@@ -6,7 +6,13 @@ import { Button } from "./Button.js";
 
 export const InstallButton = (props) => {
   const {
-    text = "📲 Install",
+    // The glyph used to be the 📲 emoji inside the text. An emoji is a picture the
+    // operating system draws, so the button rendered as a tofu box wherever that
+    // font is missing (and the framework already stopped putting emoji in UI in
+    // favour of the bundled Material vocabulary). `get_app` is in `icons.css` for
+    // every platform and inherits `color`, so it themes with the button.
+    text = "Install",
+    icon = "get_app",
     variant = "filled",
     size = "medium",
     borderRadius = 16,
@@ -58,6 +64,7 @@ export const InstallButton = (props) => {
   button = Button({
     widgetName: "InstallButton",
     text: text,
+    icon: icon,
     variant: variant,
     size: size,
     bgColor: backgroundColor,

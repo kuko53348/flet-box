@@ -2399,14 +2399,14 @@
     "prefix": "InstallButton.basic",
     "description": "Make a FletBox widgets InstallButton.basic widget",
     "body": [
-      "InstallButton({ text: \"\ud83d\udcf2 Install\" })"
+      "InstallButton({ text: \"Install\", icon: \"get_app\" })"
     ]
   },
   "FletBox widgets InstallButton.normal": {
     "prefix": "InstallButton.normal",
     "description": "Make a FletBox widgets InstallButton.normal widget",
     "body": [
-      "InstallButton({ text: \"\ud83d\udcf2 Get App\", variant: \"filled\", onInstalled: () => trackInstall() })"
+      "InstallButton({ text: \"Get the app\", variant: \"filled\", icon: \"get_app\", onInstalled: () => trackInstall() })"
     ]
   },
   "FletBox widgets InstallButton.full": {

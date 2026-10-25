@@ -1746,6 +1746,7 @@ declare module 'flet-box' {
 
   export interface InstallButtonProps extends CommonProps {
     text?: string;
+    icon?: string;
     variant?: 'filled' | 'outlined' | 'text';
     size?: 'small' | 'medium' | 'large';
     borderRadius?: number;

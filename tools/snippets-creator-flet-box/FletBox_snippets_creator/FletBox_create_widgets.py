@@ -1238,8 +1238,8 @@ console.log("code block");
 'Inspector.normal': 'printWidgetCode(myComponent)',
 'Inspector.full': '// inspectWidget walks the tree and logs every node.\nconst panel = Column({ children: [Text({ text: "Hello" })] });\ninspectWidget(panel);',
 
-'InstallButton.basic': 'InstallButton({ text: "📲 Install" })',
-'InstallButton.normal': 'InstallButton({ text: "📲 Get App", variant: "filled", onInstalled: () => trackInstall() })',
+'InstallButton.basic': 'InstallButton({ text: "Install", icon: "get_app" })',
+'InstallButton.normal': 'InstallButton({ text: "Get the app", variant: "filled", icon: "get_app", onInstalled: () => trackInstall() })',
 'InstallButton.full': '''InstallButton({
     text: "Install FletBox App",
     variant: "filled",
