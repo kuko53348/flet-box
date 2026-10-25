@@ -40,6 +40,7 @@ export { Tooltip } from "./Tooltip.js";
 export { Pagination } from "./Pagination.js";
 export { TreeView } from "./TreeView.js";
 export { Stepper } from "./Stepper.js";
+export { ThemePicker } from "./ThemePicker.js";
 export { Skeleton } from "./Skeleton.js";
 export { Chart } from "./Chart.js";
 export { QRCode } from "./QRCode.js";

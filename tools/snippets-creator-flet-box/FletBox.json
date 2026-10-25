@@ -1142,6 +1142,55 @@
       "getColor(\"primary\", 0.8)"
     ]
   },
+  "FletBox widgets setAccent": {
+    "prefix": "setAccent",
+    "description": "Make a FletBox widgets setAccent widget",
+    "body": [
+      "setAccent(\"teal\")"
+    ]
+  },
+  "FletBox widgets resetAccent": {
+    "prefix": "resetAccent",
+    "description": "Make a FletBox widgets resetAccent widget",
+    "body": [
+      "setAccent(null)"
+    ]
+  },
+  "FletBox widgets getAccent": {
+    "prefix": "getAccent",
+    "description": "Make a FletBox widgets getAccent widget",
+    "body": [
+      "getAccent()"
+    ]
+  },
+  "FletBox widgets listAccents": {
+    "prefix": "listAccents",
+    "description": "Make a FletBox widgets listAccents widget",
+    "body": [
+      "const options = listAccents()"
+    ]
+  },
+  "FletBox widgets listAccentRamps": {
+    "prefix": "listAccentRamps",
+    "description": "Make a FletBox widgets listAccentRamps widget",
+    "body": [
+      "const ramps = listAccentRamps()"
+    ]
+  },
+  "FletBox widgets registerAccent": {
+    "prefix": "registerAccent",
+    "description": "Make a FletBox widgets registerAccent widget",
+    "body": [
+      "registerAccent({ id: \"brand\", label: \"Brand\", light: \"#1d4ed8\", dark: \"#60a5fa\" })"
+    ]
+  },
+  "FletBox widgets applyAccentPreference": {
+    "prefix": "applyAccentPreference",
+    "description": "Make a FletBox widgets applyAccentPreference widget",
+    "body": [
+      "applyAccentPreference(\"teal\")"
+    ]
+  },
   "FletBox widgets httpGet": {
     "prefix": "httpGet",
     "description": "Make a FletBox widgets httpGet widget",
@@ -8943,6 +8992,38 @@
       "    border: border(1, \"solid\", colors.border),",
       "    padding: 24,",
       "    width: \"100%\"",
+      "})"
+    ]
+  },
+  "FletBox widgets ThemePicker.basic": {
+    "prefix": "ThemePicker.basic",
+    "description": "Make a FletBox widgets ThemePicker.basic widget",
+    "body": [
+      "ThemePicker({})"
+    ]
+  },
+  "FletBox widgets ThemePicker.normal": {
+    "prefix": "ThemePicker.normal",
+    "description": "Make a FletBox widgets ThemePicker.normal widget",
+    "body": [
+      "ThemePicker({ size: 48, showLabels: true, onChange: (id) => console.log(\"accent:\", id) })"
+    ]
+  },
+  "FletBox widgets ThemePicker.full": {
+    "prefix": "ThemePicker.full",
+    "description": "Make a FletBox widgets ThemePicker.full widget",
+    "body": [
+      "ThemePicker({",
+      "    accents: listAccents().filter((a) => [\"blue\", \"teal\", \"green\", \"orange\"].includes(a.id)),",
+      "    size: 48,",
+      "    showLabels: true,",
+      "    label: \"App accent color\",",
+      "    disabled: false,",
+      "    onChange: (id) => saveAccentPreference(id),",
+      "    gap: 12,",
+      "    padding: 16,",
+      "    bgColor: colors.surface,",
+      "    borderRadius: 16",
       "})"
     ]
   },

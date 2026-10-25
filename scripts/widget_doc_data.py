@@ -23,7 +23,7 @@ BOOK = [
     ),
     (
         "Chapter 2 · Interaction basics",
-        ["Button", "Input", "Checkbox", "Radio", "Switch", "Slider", "Dropdown", "Rating"],
+        ["Button", "Input", "Checkbox", "Radio", "Switch", "Slider", "Dropdown", "Rating", "ThemePicker"],
     ),
     (
         "Chapter 3 · Layout, cards and lists",
@@ -388,6 +388,10 @@ DESC = {
     "onMarkerClick": "Fired with the clicked marker.",
     "onMoveEnd": "Fired with `{ center, zoom, bounds }` once the view stops changing.",
     "onUserUpdate": "Fired with `{ lat, lng, accuracy }` on each position the watcher reports.",
+    # Theme accents (ThemePicker). `accents` names nothing else in the library,
+    # so it belongs in DESC; the picker's `label`, `showLabels` and `onChange`
+    # are shared names and live in WIDGET_DESC.
+    "accents": "The families on offer, as `listAccents()` returns them: `{ id, label, light, dark }`. Defaults to every registered family — an app that ships one brand color filters the list rather than registering fewer.",
 }
 
 # Pattern fallbacks were removed; use DESC and the automatic humanizer instead.
@@ -431,5 +435,15 @@ WIDGET_DESC = {
     # is the `activeColor` the control already carries.
     "Checkbox": {
         "variant": "How the checked state reads: `outlined` keeps the box hollow with the tick in `activeColor`, `filled` turns the box into an `activeColor` plate and takes the tick to whichever ink reads on it.",
+    },
+    # DESC's `label` is a caption painted near a control and `showLabels` is a
+    # chart switch. On the picker nothing is painted by `label` — it names the
+    # radiogroup for a screen reader — and `showLabels` prints the family names
+    # under the swatches, so both generic blurbs would describe a different widget.
+    "ThemePicker": {
+        "label": "Accessible name of the color group. Nothing is painted from it; a screen reader announces the row as one question with this wording.",
+        "showLabels": "Print each family's name under its swatch. Off by default, because the two-tone square is the answer and twelve captions is a color survey.",
+        "onChange": "Called with the chosen family id after the accent has already been applied to the screen, so the app only has to remember the choice.",
+        "size": "Edge of one swatch, in framework units. Defaults to 40 — the tap minimum — and the tick badge scales with it.",
     },
 }

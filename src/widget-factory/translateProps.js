@@ -502,6 +502,11 @@ export const ALL_PROPS = [
   { prop: "unselectedColor", domProp: "unselectedColor", type: "special" },
   { prop: "showLabels", domProp: "showLabels", type: "special" },
 
+  // ---- ThemePicker ----
+  // The families a picker offers. `listAccents()` is the default and the widget
+  // reads the list to build one swatch per entry, so it must never reach the DOM.
+  { prop: "accents", domProp: "accents", type: "special" },
+
   // ---- DrawerItem / CollapsibleSideBar ----
   { prop: "route", domProp: "route", type: "special" },
   { prop: "trailingIcon", domProp: "trailingIcon", type: "special" },

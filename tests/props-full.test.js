@@ -623,6 +623,17 @@ const widgetConfigs = {
     margin: 0,
     width: 320,
   }),
+  ThemePicker: () => ({
+    accents: [
+      { id: "teal", label: "Teal", light: "#0f766e", dark: "#2dd4bf" },
+      { id: "rose", label: "Rose", light: "#9f1239", dark: "#fb7185" },
+    ],
+    size: 44,
+    showLabels: true,
+    label: "Pick an accent",
+    disabled: false,
+    onChange: () => {},
+  }),
   Skeleton: () => ({
     variant: "rect",
     width: 120,

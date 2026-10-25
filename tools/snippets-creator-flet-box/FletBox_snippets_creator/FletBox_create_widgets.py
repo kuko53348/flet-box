@@ -1055,6 +1055,21 @@ map.setFollowUser(true);''',
     width: "100%"
 })''',
 
+'ThemePicker.basic': 'ThemePicker({})',
+'ThemePicker.normal': 'ThemePicker({ size: 48, showLabels: true, onChange: (id) => console.log("accent:", id) })',
+'ThemePicker.full': '''ThemePicker({
+    accents: listAccents().filter((a) => ["blue", "teal", "green", "orange"].includes(a.id)),
+    size: 48,
+    showLabels: true,
+    label: "App accent color",
+    disabled: false,
+    onChange: (id) => saveAccentPreference(id),
+    gap: 12,
+    padding: 16,
+    bgColor: colors.surface,
+    borderRadius: 16
+})''',
+
 'Pagination.basic': 'Pagination({ totalItems: 100, onPageChange: (page) => loadPage(page) })',
 'Pagination.normal': 'Pagination({ totalItems: 500, pageSize: 20, currentPage: 1, onPageChange: setPage, showTotal: true })',
 'Pagination.full': '''Pagination({

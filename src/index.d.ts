@@ -1728,6 +1728,34 @@ declare module 'flet-box' {
     getActiveStep(): number;
   };
 
+  /**
+   * One selectable accent: the two stops a single hue wears, one per theme.
+   * `light` is the deep end (it carries white words on a light page) and `dark`
+   * the lifted end (it carries a dark page's own ink). A swatch paints both
+   * because an accent is the pair, never one of them.
+   */
+  export interface Accent {
+    id: string;
+    label: string;
+    light: string;
+    dark: string;
+  }
+
+  export interface ThemePickerProps extends CommonProps {
+    /** Families to offer. Defaults to `listAccents()`, i.e. everything registered. */
+    accents?: Accent[];
+    /** Edge of one swatch, in framework units. Defaults to 40 — the tap minimum. */
+    size?: number;
+    /** Print each family's name under its swatch. Defaults to false. */
+    showLabels?: boolean;
+    /** Accessible name of the group. Defaults to `"Accent color"`. */
+    label?: string;
+    disabled?: boolean;
+    /** Called with the id after the accent has been applied to the screen. */
+    onChange?: (id: string) => void;
+  }
+  export function ThemePicker(props?: ThemePickerProps): Widget;
+
   export interface SkeletonProps extends CommonProps {
     variant?: 'text' | 'circular' | 'avatar' | 'image' | 'card' | 'listTile' | 'button';
     width?: number | string;
@@ -2129,6 +2157,36 @@ declare module 'flet-box' {
     themeName: string,
     palette: Record<string, string>
   ): Record<string, string>;
+  /**
+   * Adds or replaces one selectable accent. Each end of the pair may be a single
+   * hex or a five-stop ramp, in which case the accent and its wash are read off
+   * the stops the shipped families use. Repaints only when that id is on screen.
+   */
+  export function registerAccent(accent: {
+    id: string;
+    label?: string;
+    light: string | string[];
+    dark: string | string[];
+  }): Accent | null;
+  /**
+   * Lays an accent over the live palette and persists the choice. `null` (or an
+   * unknown id) takes it back off, and the screen returns to the palette's own
+   * `primary`.
+   */
+  export function setAccent(id: string | null): Record<string, string>;
+  /** Applies an accent only when the reader has never picked one. Never persists. */
+  export function applyAccentPreference(id: string): string | null;
+  /** The accent on screen, or `null` when the palette's own `primary` is showing. */
+  export function getAccent(): string | null;
+  /** Every selectable accent, in registration order. */
+  export function listAccents(): Accent[];
+  /** The same list with each family's five stops beside it, for a swatch that shows the ramp. */
+  export function listAccentRamps(): Array<{
+    id: string;
+    label: string;
+    light: string[];
+    dark: string[];
+  }>;
   export function getTheme(): string;
   export function toggleTheme(): string;
   export function getColor(colorName: string, opacity?: number): string;
@@ -2143,6 +2201,9 @@ declare module 'flet-box' {
     toggleTheme: typeof toggleTheme;
     getColor: typeof getColor;
     applySystemTheme: typeof applySystemTheme;
+    setAccent: typeof setAccent;
+    getAccent: typeof getAccent;
+    listAccents: typeof listAccents;
   };
 
   export const clipboard: {

@@ -10,7 +10,8 @@
  * ```
  *
  * Included utilities:
- * - **themes**         — color palette, theme switching, CSS variable sync
+ * - **themes**         — color palette, theme switching, CSS variable sync,
+ *                        accent presets (a hue family painted over the palette)
  * - **getWidgetProps** — read widget `_props` safely
  * - **syntaxHighlight** — JavaScript/FletBox tokenizer and HTML highlighter
  * - **markdownParser** — markdown → FletBox widget tree converter
@@ -26,6 +27,12 @@ export {
   colors,
   setTheme,
   registerPalette,
+  registerAccent,
+  setAccent,
+  applyAccentPreference,
+  getAccent,
+  listAccents,
+  listAccentRamps,
   getTheme,
   toggleTheme,
   subscribeTheme,

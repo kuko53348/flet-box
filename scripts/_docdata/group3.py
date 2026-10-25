@@ -113,6 +113,68 @@ WIDGET_DOCS = {
   },
 });''',
     },
+    "ThemePicker": {
+        "summary": "A row of two-tone squares, one per accent family, that picks the color "
+                   "the screen paints its buttons, icons and plates with.",
+        "when": "Use it wherever the reader is allowed to choose the app's color — a settings "
+                "screen or a preferences sheet. It picks the accent, not the theme: light and "
+                "dark stay the reader's own decision.",
+        "related": ["Radio", "Switch", "BottomSheet"],
+        "tips": [
+            "The tap is not decoration: it calls `setAccent(id)`, which repaints every widget "
+            "already on screen and stores the choice, so the next visit opens the same color.",
+            "An app sets its own brand at boot with `applyAccentPreference(id)`, never with "
+            "`setAccent`: the first leaves the picker blank on a reader's first visit, the "
+            "second answers for them before they have chosen.",
+            "Twelve squares is a color survey; four is a decision. Cut the list to what the "
+            "brand allows with `accents: listAccents().filter((a) => [...].includes(a.id))`.",
+            "Each half of a square is the same hue in one theme: the upper-left is what it "
+            "wears on a light page, the lower-right what it wears on a dark one. Only one of "
+            "the two is on screen at a time, and showing both is what makes the choice safe.",
+        ],
+        "accessibility": [
+            "The row is a `radiogroup` named by `label` and every square is a `radio` that "
+            "carries its family's name and `aria-checked`, so the answer is read and not only "
+            "seen. Tab reaches the squares and Enter or Space picks one.",
+            "The selected state is the page's own ink plus a tick badge, never color alone; an "
+            "empty square rims in the same 3:1 gray a `Checkbox` uses for an unchecked box.",
+        ],
+        "behavior": [
+            "`onChange(id)` fires after the screen is repainted, and re-tapping the square "
+            "already chosen fires nothing.",
+            "The picker subscribes to the theme, so a toggle anywhere else on the screen moves "
+            "the tick here without a prop change; the subscription is released on unmount.",
+            "`update({ accents, showLabels, label, disabled })` rebuilds the grid. Any other "
+            "key goes to the factory and styles the row itself.",
+            "`size` is the edge of the square and defaults to the 40-unit tap minimum; the tick "
+            "and its badge scale with it.",
+            "Every shipped family is measured, not eyeballed: the accent carries white or dark "
+            "words at 4.5:1, reads as text on the page and as a glyph on a card, and its wash "
+            "sits just off the background. `tests/regression.test.js` re-measures all of it in "
+            "both themes.",
+        ],
+        "basic": '''const accents = ThemePicker({});''',
+        "normal": '''const accentRow = ThemePicker({
+  size: 48,
+  showLabels: true,
+  onChange: (id) => console.log("accent:", id),
+});''',
+        "full": '''const preferences = BottomSheet({
+  content: Column({
+    gap: 16,
+    children: [
+      Text({ text: "Accent color", size: 18, fontWeight: 600 }),
+      ThemePicker({
+        accents: listAccents().filter((a) => ["teal", "blue", "rose", "orange"].includes(a.id)),
+        size: 44,
+        showLabels: true,
+        label: "Choose the color of the app",
+        onChange: (id) => console.log("picked:", id),
+      }),
+    ],
+  }),
+});''',
+    },
     "Dropdown": {
         "summary": "A select control that shows the current choice and opens a menu of options when clicked.",
         "when": "Use Dropdown when the option list is long enough that radios would crowd the page.",

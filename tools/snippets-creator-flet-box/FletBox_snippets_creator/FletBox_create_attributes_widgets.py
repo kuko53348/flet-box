@@ -220,6 +220,17 @@ attrs_all_placeholders_complete = {
     'watchSystemTheme': 'watchSystemTheme()',
     'getColor': 'getColor("primary", 0.8)',
 
+    # ---------- ACCENTS ----------
+    # An accent is a pair: the stop one hue wears in the light theme and the stop
+    # it wears in the dark one. `null` gives the palette's own brand back.
+    'setAccent': 'setAccent("teal")',
+    'resetAccent': 'setAccent(null)',
+    'getAccent': 'getAccent()',
+    'listAccents': 'const options = listAccents()',
+    'listAccentRamps': 'const ramps = listAccentRamps()',
+    'registerAccent': 'registerAccent({ id: "brand", label: "Brand", light: "#1d4ed8", dark: "#60a5fa" })',
+    'applyAccentPreference': 'applyAccentPreference("teal")',
+
     # ---------- HTTP ----------
     'httpGet': 'const data = await httpGet("https://api.example.com/users")',
     'httpPost': 'const newUser = await httpPost("https://api.example.com/users", { body: { name: "flet-box" } })',

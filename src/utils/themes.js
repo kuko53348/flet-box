@@ -1,5 +1,6 @@
 // src/components/flet-box/utils/themes.js
 import { readableInk } from "./readableInk.js";
+import { ACCENT_PRESETS, accentTokens, accentStop } from "./colors.js";
 
 // ========== DEFAULT COLORS (static, safe) ==========
 const DEFAULT_COLORS = {
@@ -325,9 +326,21 @@ const syncBrowserChrome = () => {
 const applyPalette = (themeName) => {
   const palette = palettes[themeName];
   if (palette) {
-    Object.keys(palette).forEach((key) => {
+    // The accent sits on top of the neutral scale and owns exactly three tokens —
+    // `primary`, the ink that reads on it and its tint — so switching theme keeps
+    // every surface and moves only the brand. Merging here, rather than writing
+    // the tokens straight onto `colors`, is what makes the choice survive a
+    // `setTheme`, an OS flip and a re-register: the layer is re-applied on every
+    // repaint instead of being overwritten by the next palette.
+    //
+    // It therefore also wins over a palette's own `primary`, including one an app
+    // wrote with `registerPalette` — the reader's choice of color is the later
+    // word. An app that wants its brand back calls `setAccent(null)`.
+    const layer = (activeAccent && accents[activeAccent]?.[themeName]) || null;
+    const merged = layer ? { ...palette, ...layer } : palette;
+    Object.keys(merged).forEach((key) => {
       if (colors.hasOwnProperty(key)) {
-        colors[key] = palette[key];
+        colors[key] = merged[key];
       }
     });
   }
@@ -401,6 +414,183 @@ export const registerPalette = (themeName, palette) => {
   if (getTheme() === themeName) applyPalette(themeName);
   return palettes[themeName];
 };
+
+// ========== ACCENTS ==========
+/**
+ * The selectable brand colors, keyed by id.
+ *
+ * An accent is not a fourth palette: it is the three tokens a palette cannot
+ * agree on between its own two themes. `palettes.light` and `palettes.dark`
+ * still own every surface, border and ink; this map owns only `primary`,
+ * `onPrimary` and `primaryBg`, and `applyPalette` lays it over whichever palette
+ * is live. That is why one tap changes the buttons, icons and selection of the
+ * screen without changing whether the screen is dark.
+ *
+ * @type {Object<string, {id: string, label: string, light: Object, dark: Object}>}
+ */
+const accents = {};
+
+/** The accent currently laid over the palette, or `null` for the palette's own. */
+let activeAccent = null;
+
+/**
+ * The three tokens one end of an accent writes, from either shape an accent can
+ * arrive in: a family's ramp, whose wash is a designed stop, or a bare hex, whose
+ * wash has to be derived.
+ *
+ * @param {string|string[]} spec - The accent for one theme.
+ * @param {"light"|"dark"} theme
+ */
+const accentLayer = (spec, theme) =>
+  accentTokens(
+    Array.isArray(spec) ? accentStop(spec, theme) : spec,
+    theme,
+    Array.isArray(spec) ? spec : undefined
+  );
+
+const putAccent = (preset) => {
+  const { id, label, light, dark } = preset || {};
+  if (!id || !light || !dark) return null;
+  accents[id] = {
+    id,
+    label: label || id,
+    light: accentLayer(light, "light"),
+    dark: accentLayer(dark, "dark"),
+    // Kept only when the accent arrived as a ramp; a picker paints the family,
+    // not just its accent stop, and a pair of hexes has no family to show.
+    ramp: Array.isArray(light) || Array.isArray(dark) ? { light, dark } : null,
+  };
+  return accents[id];
+};
+
+ACCENT_PRESETS.forEach(putAccent);
+
+/**
+ * Writes the reader's accent choice down, or removes it. `window` is the test, not
+ * a try/catch around the call, for the same reason `setTheme` uses it: Node 22+
+ * has a global `localStorage` that warns and throws.
+ * @param {string|null} id
+ */
+const persistAccent = (id) => {
+  if (typeof window === "undefined") return;
+  try {
+    if (id) localStorage.setItem("fletbox-accent", id);
+    else localStorage.removeItem("fletbox-accent");
+  } catch (e) {
+    // A full or private store is not a reason to stop painting the page.
+  }
+};
+
+/**
+ * The stored accent, when it is one the engine knows. A stale id — a family an
+ * older build shipped and this one dropped — reads as "no choice" rather than
+ * painting a color nothing derives from.
+ * @returns {string|null}
+ */
+const readStoredAccent = () => {
+  try {
+    const id = localStorage.getItem("fletbox-accent");
+    return id && accents[id] ? id : null;
+  } catch (e) {
+    return null;
+  }
+};
+
+/**
+ * Adds (or replaces) one selectable accent.
+ *
+ * The pair is what a picker shows and what the engine paints: `light` is the deep
+ * end of the hue, dark enough to carry white words on a light page, and `dark` is
+ * the lifted end, bright enough to carry a dark page's own ink. The ink and the
+ * soft tint are derived from each stop, so an app cannot register a family whose
+ * label is unreadable — the same derivation the shipped presets pass.
+ *
+ * Each end may be a single hex or a five-stop ramp (dark-to-light in `light`,
+ * bright-to-dark in `dark`), in which case the accent and its wash are read off
+ * the stops the shipped families use.
+ *
+ * Repaints only when the id being replaced is the one on screen.
+ *
+ * @param {Object} preset
+ * @param {string} preset.id - Stable key, e.g. `"teal"`.
+ * @param {string} [preset.label] - Accessible name shown to the reader; defaults to `id`.
+ * @param {string|string[]} preset.light - The accent, or its ramp, for the light theme.
+ * @param {string|string[]} preset.dark - The accent, or its ramp, for the dark theme.
+ * @returns {Object|null} The stored accent, or `null` when the preset is incomplete.
+ */
+export const registerAccent = (preset) => {
+  const accent = putAccent(preset);
+  if (!accent) return null;
+  if (activeAccent === accent.id) applyPalette(getTheme());
+  return accent;
+};
+
+/**
+ * Lays an accent over the live palette and persists the choice.
+ *
+ * Pass `null` (or an unknown id) to take it back off: the screen returns to
+ * whatever `primary` the palette itself ships, and the stored preference is
+ * cleared so the next boot does it too.
+ *
+ * @param {string|null} id - A registered accent, or `null` for the palette's own.
+ * @returns {Object} The updated `colors` object.
+ */
+export const setAccent = (id) => {
+  if (id && !accents[id]) return colors;
+  activeAccent = id || null;
+  persistAccent(activeAccent);
+  applyPalette(getTheme());
+  return colors;
+};
+
+/**
+ * Applies an accent only when the reader has never picked one.
+ *
+ * This is the one an app calls at boot with its own brand: it sets the default
+ * without writing the reader's preference down, so a picker still shows nothing
+ * selected on the first visit and a later choice still wins over it.
+ *
+ * @param {string} id - A registered accent.
+ * @returns {string|null} The accent now active.
+ */
+export const applyAccentPreference = (id) => {
+  if (readStoredAccent() || !accents[id]) return activeAccent;
+  activeAccent = id;
+  applyPalette(getTheme());
+  return activeAccent;
+};
+
+/**
+ * The accent currently laid over the palette.
+ * @returns {string|null} Its id, or `null` when the palette's own `primary` is showing.
+ */
+export const getAccent = () => activeAccent;
+
+/**
+ * Every selectable accent, in registration order, as the two stops a picker paints.
+ * @returns {Array<{id: string, label: string, light: string, dark: string}>}
+ */
+export const listAccents = () =>
+  Object.values(accents).map(({ id, label, light, dark }) => ({
+    id,
+    label,
+    light: light.primary,
+    dark: dark.primary,
+  }));
+
+/**
+ * The same list with each family's five stops beside it, for a picker that shows
+ * the ramp rather than one square: `light` runs dark-to-light and `dark`
+ * bright-to-dark, so the accent stop of each theme is the one `listAccents` names.
+ * @returns {Array<{id: string, label: string, light: string[], dark: string[]}>}
+ */
+export const listAccentRamps = () =>
+  Object.values(accents).filter(({ ramp }) => ramp).map(({ id, label, ramp }) => ({
+    id,
+    label,
+    light: ramp.light,
+    dark: ramp.dark,
+  }));
 
 /**
  * Returns the currently active theme name.
@@ -528,7 +718,10 @@ export const ThemeProvider = ({ children, theme = null }) => {
  *   getTheme: function,
  *   toggleTheme: function,
  *   getColor: function,
- *   applySystemTheme: function
+ *   applySystemTheme: function,
+ *   setAccent: function,
+ *   getAccent: function,
+ *   listAccents: function
  * }}
  */
 export const useTheme = () => {
@@ -539,12 +732,19 @@ export const useTheme = () => {
     toggleTheme,
     getColor,
     applySystemTheme,
+    setAccent,
+    getAccent,
+    listAccents,
   };
 };
 
 // ========== INITIALIZATION (safe) ==========
 const initTheme = () => {
   try {
+    // Restored before the first paint, not after: laying the accent on afterwards
+    // would repaint the whole page a frame into boot and flash the brand color
+    // over the reader's own choice.
+    activeAccent = readStoredAccent();
     const savedTheme = localStorage.getItem("fletbox-theme");
     if (savedTheme && (savedTheme === "light" || savedTheme === "dark")) {
       applyPalette(savedTheme);
@@ -580,6 +780,11 @@ export default {
   subscribeTheme,
   applySystemTheme,
   watchSystemTheme,
+  registerAccent,
+  setAccent,
+  applyAccentPreference,
+  getAccent,
+  listAccents,
   ThemeProvider,
   useTheme,
 };

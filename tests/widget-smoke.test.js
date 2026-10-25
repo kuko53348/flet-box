@@ -65,6 +65,7 @@ const fixtures = {
     nodes: [{ id: "a", label: "a", children: [{ id: "b", label: "b" }] }],
   }),
   Stepper: () => ({ steps: [{ label: "s1" }] }),
+  ThemePicker: () => ({ showLabels: true }),
   Skeleton: () => ({}),
   Chart: () => ({ data: [1, 2, 3] }),
   QRCode: () => ({ value: "qr" }),
