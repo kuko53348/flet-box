@@ -136,6 +136,7 @@ const trend = Chart({
 ## Behavior
 
 - The canvas redraws when data, labels, type or styling props change.
+- Grid lines and their labels sit on one round step (1, 2 or 5 times a power of ten), so the numbers agree with the lines they name.
 - Candle charts read open, high, low and close in that order from each data object.
 
 ## Related widgets

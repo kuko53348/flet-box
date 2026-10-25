@@ -255,6 +255,8 @@ WIDGET_DOCS = {
         ],
         "behavior": [
             "centerContent accepts a string or a widget rendered in the donut hole.",
+            "The hole is the page showing through, not a filled disc, so a donut reads",
+            "as a ring on any surface.",
             "onHover receives (slice | null, index) as the pointer moves between slices, and",
             "onComplete fires when the entry sweep finishes.",
         ],
@@ -319,6 +321,10 @@ WIDGET_DOCS = {
             "CSS into each other.",
             "Rendered HTML is sanitized before insert; allowDangerousHtml stays false by default",
             "for untrusted input.",
+            "Inline code writes the palette's readable red, so 12px words clear 4.5:1 on the code",
+            "plate in both themes.",
+            "A link takes the palette's readable blue, because in light `primary` is the page's",
+            "own ink and the link would vanish into the sentence.",
         ],
         "basic": '''const notes = Markdown({
   content: `# Hello

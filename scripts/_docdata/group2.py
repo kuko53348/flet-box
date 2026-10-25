@@ -225,6 +225,8 @@ WIDGET_DOCS = {
         "behavior": [
             "onChange receives the numeric value each time the user picks a rating.",
             "readOnly disables onChange while keeping the current value visible.",
+            "An unfilled star uses the palette's control grey and a filled one its readable",
+            "amber, so both states clear 3:1 against the surface they sit on.",
         ],
         "basic": '''const rating = Rating({
   value: 4,
@@ -374,6 +376,8 @@ WIDGET_DOCS = {
         "behavior": [
             "onToggle receives the new expanded boolean whenever the header is activated.",
             "disabled blocks toggling, and animate: false skips the open/close transition.",
+            "A shut panel still shows its edge: the header keeps the divider and the",
+            "'contained' variant paints the raised plate, so it never reads as plain text.",
         ],
         "basic": '''const faq = Accordion({
   title: "What is FletBox?",

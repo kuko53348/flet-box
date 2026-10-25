@@ -23,6 +23,7 @@ const install = InstallButton({
 | Prop | Type | Description |
 | --- | --- | --- |
 | `text` | `string` | Visible text content. |
+| `icon` | `string` | Name of the icon to render. |
 | `variant` | `'filled' \| 'outlined' \| 'text'` | Visual variation or style preset. |
 | `size` | `'small' \| 'medium' \| 'large'` | Overall size preset or pixel value, depending on the widget. |
 | `borderRadius` | `number` | Rounds the corners of the widget. |

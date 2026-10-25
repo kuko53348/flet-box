@@ -117,6 +117,8 @@ const rating = Rating({
 
 - onChange receives the numeric value each time the user picks a rating.
 - readOnly disables onChange while keeping the current value visible.
+- An unfilled star uses the palette's control grey and a filled one its readable
+- amber, so both states clear 3:1 against the surface they sit on.
 
 ## Related widgets
 

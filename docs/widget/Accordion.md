@@ -130,6 +130,8 @@ const faq = Accordion({
 
 - onToggle receives the new expanded boolean whenever the header is activated.
 - disabled blocks toggling, and animate: false skips the open/close transition.
+- A shut panel still shows its edge: the header keeps the divider and the
+- 'contained' variant paints the raised plate, so it never reads as plain text.
 
 ## Related widgets
 

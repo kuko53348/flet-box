@@ -161,6 +161,10 @@ const guide = Markdown({
 - CSS into each other.
 - Rendered HTML is sanitized before insert; allowDangerousHtml stays false by default
 - for untrusted input.
+- Inline code writes the palette's readable red, so 12px words clear 4.5:1 on the code
+- plate in both themes.
+- A link takes the palette's readable blue, because in light `primary` is the page's
+- own ink and the link would vanish into the sentence.
 
 ## Related widgets
 

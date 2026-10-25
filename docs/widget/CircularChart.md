@@ -148,6 +148,8 @@ const chart = CircularChart({
 ## Behavior
 
 - centerContent accepts a string or a widget rendered in the donut hole.
+- The hole is the page showing through, not a filled disc, so a donut reads
+- as a ring on any surface.
 - onHover receives (slice | null, index) as the pointer moves between slices, and
 - onComplete fires when the entry sweep finishes.
 
