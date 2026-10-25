@@ -1,4 +1,4 @@
-// tools/boxEdges.js
+// helpers/boxEdges.js
 /**
  * @file boxEdges.js
  * @description
@@ -13,7 +13,7 @@
  * Resolved per side, in priority order: the individual side, then its axis
  * (`vertical` for top/bottom, `horizontal` for left/right), then `all`, then 0.
  *
- * @module tools/boxEdges
+ * @module helpers/boxEdges
  */
 
 /** A number becomes a px string; anything else is already CSS and passes through. */

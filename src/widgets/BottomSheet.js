@@ -68,14 +68,8 @@ export const BottomSheet = (props) => {
   let sheetContainer = null;
   // What `trapFocus` hands back while the sheet is open (see Modal.js for the
   // whole argument): Tab stays inside the panel and focus goes home on close.
-  let releaseFocusScope = null;
-
-  /** Releases the Tab trap exactly once, whoever asks for it first. */
-  const leaveFocusScope = () => {
-    if (!releaseFocusScope) return;
-    releaseFocusScope();
-    releaseFocusScope = null;
-  };
+  // The release is idempotent, so close and unmount can both call it.
+  let releaseFocusScope = () => {};
 
   let startY = 0;
   let currentY = 0;
@@ -236,7 +230,7 @@ onclick: (e) => e.stopPropagation(), // ✅ Prevents the click from reaching the
       closeTimer = null;
     }
     document.removeEventListener("keydown", handleKeyDown);
-    leaveFocusScope();
+    releaseFocusScope();
   });
 
   // Drag handlers
@@ -312,7 +306,7 @@ onclick: (e) => e.stopPropagation(), // ✅ Prevents the click from reaching the
       closeTimer = null;
       overlay.style.visibility = "hidden";
     }, animationDuration);
-    leaveFocusScope();
+    releaseFocusScope();
     if (onClose) onClose();
     document.removeEventListener("keydown", handleKeyDown);
 
@@ -333,7 +327,7 @@ onclick: (e) => e.stopPropagation(), // ✅ Prevents the click from reaching the
 
   const destroy = () => {
     if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
-    leaveFocusScope();
+    releaseFocusScope();
     document.removeEventListener("keydown", handleKeyDown);
   };
 

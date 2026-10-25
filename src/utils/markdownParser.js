@@ -6,7 +6,7 @@ import { Row } from "../widgets/Row.js";
 import { Icon } from "../widgets/Icon.js";
 import { CodeViewer } from "../widgets/CodeViewer.js";
 import { colors } from "./themes.js";
-import { escapeHtml } from "./htmlEscape.js";
+import { escapeHtml } from "../helpers/html.js";
 
 // ========== TABLES ==========
 const isTableLine = (line) => {
@@ -351,7 +351,7 @@ export const parseInlineMarkdown = (text) => text;
  * Re-exported from the shared escaper so this module and the widgets that build
  * HTML share one implementation; the name stays public here because
  * `parseMarkdown` has always published it.
- * @type {import("./htmlEscape.js").escapeHtml}
+ * @type {import("../helpers/html.js").escapeHtml}
  */
 export { escapeHtml };
 

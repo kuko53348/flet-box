@@ -12,8 +12,13 @@
  *
  * This gate proves the extraction instead of asking for it: each helper below
  * has exactly one definition, in the module named here, and the modules that
- * used to carry a copy must import it. The four rules are independent, so a
- * failure names both the stray copy and the home it belongs in.
+ * used to carry a copy must import it. The rules are independent, so a failure
+ * names both the stray copy and the home it belongs in.
+ *
+ * `src/helpers/` is the folder those homes live in, and its defining property is
+ * that a module there imports nothing: a helper you can import without pulling in
+ * a widget can be used anywhere. Anything that needs another module is a service
+ * and stays in `utils/`.
  *
  * `@keyframes` is deliberately the narrowest rule: it may appear in
  * `src/utils/styleInjector.js` and nowhere else. Keyframes are global, so an
@@ -98,23 +103,23 @@ const SINGLE_HOME = [
   {
     rule: "html-escape",
     pattern: /\.replace\(\s*\/&\/g\s*,\s*["']&amp;["']\s*\)/,
-    home: "src/utils/htmlEscape.js",
+    home: "src/helpers/html.js",
     hint:
-      "import `escapeHtml` from utils/htmlEscape.js. The escaper is a security boundary: three copies is three chances for the one that matters to be edited alone",
+      "import `escapeHtml` from helpers/html.js. The escaper is a security boundary: three copies is three chances for the one that matters to be edited alone",
   },
   {
     rule: "html-escape",
     pattern: /(?:^|\s)(?:export\s+)?(?:function|const)\s+escapeHtml\s*[=(]/m,
-    home: "src/utils/htmlEscape.js",
+    home: "src/helpers/html.js",
     hint:
-      "define the escaper once, in utils/htmlEscape.js; re-export it where the old name has to stay public (`export { escapeHtml }` is a re-export, not a definition, and this rule lets it through)",
+      "define the escaper once, in helpers/html.js; re-export it where the old name has to stay public (`export { escapeHtml }` is a re-export, not a definition, and this rule lets it through)",
   },
   {
     rule: "box-edges",
     pattern: /value\.vertical\s*!==\s*undefined/,
-    home: "src/tools/boxEdges.js",
+    home: "src/helpers/boxEdges.js",
     hint:
-      "resolve the four sides through `boxEdges()` from tools/boxEdges.js — `margin()` and `padding()` share the same CSS grammar, and a private copy is how the two drift about priority order or the two-value shorthand",
+      "resolve the four sides through `boxEdges()` from helpers/boxEdges.js — `margin()` and `padding()` share the same CSS grammar, and a private copy is how the two drift about priority order or the two-value shorthand",
   },
 ];
 
@@ -133,7 +138,33 @@ for (const rule of SINGLE_HOME) {
 }
 
 // ---------------------------------------------------------------------------
-// 2. The modules that used to carry a copy must import the home.
+// 2. A helpers module imports nothing.
+// ---------------------------------------------------------------------------
+
+/**
+ * `src/helpers/` is the folder for reusable code, and the property that makes it
+ * reusable is that importing a helper imports nothing else: no widget, no theme,
+ * no engine service. That is why the HTML escaper lives here and not beside the
+ * Markdown parser — a widget can escape text without dragging six widgets into
+ * its graph. A helper that needs another module is a service, and belongs in
+ * `utils/`.
+ */
+const helperFiles = files.filter((file) => file.path.startsWith("src/helpers/"));
+if (helperFiles.length === 0) {
+  fail("helpers-leaf", "src/helpers/ is gone. Reusable code needs one home, and the modules below import from it.");
+}
+for (const file of helperFiles) {
+  const stray = /^\s*import\b/m.exec(file.text);
+  if (stray) {
+    fail(
+      "helpers-leaf",
+      `${locate(file, stray.index)} imports another module. A helper in src/helpers/ is a leaf — no imports at all — so it can never be the reason a widget pulls in half the framework. If it genuinely needs another module, it is a service: move it to src/utils/.`,
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 3. The modules that used to carry a copy must import the home.
 // ---------------------------------------------------------------------------
 
 /**
@@ -144,11 +175,11 @@ for (const rule of SINGLE_HOME) {
 const DELEGATES = [
   { file: "src/utils/visualEffects.js", from: "./styleInjector.js", names: ["injectKeyframes", "animationName"] },
   { file: "src/animations/AnimatedBox.js", from: "../utils/styleInjector.js", names: ["injectKeyframes", "animationName"] },
-  { file: "src/tools/margin.js", from: "./boxEdges.js", names: ["boxEdges"] },
-  { file: "src/tools/padding.js", from: "./boxEdges.js", names: ["boxEdges"] },
-  { file: "src/widgets/Markdown.js", from: "../utils/htmlEscape.js", names: ["escapeHtml"] },
-  { file: "src/utils/syntaxHighlight.js", from: "./htmlEscape.js", names: ["escapeHtml"] },
-  { file: "src/utils/markdownParser.js", from: "./htmlEscape.js", names: ["escapeHtml"] },
+  { file: "src/tools/margin.js", from: "../helpers/boxEdges.js", names: ["boxEdges"] },
+  { file: "src/tools/padding.js", from: "../helpers/boxEdges.js", names: ["boxEdges"] },
+  { file: "src/widgets/Markdown.js", from: "../helpers/html.js", names: ["escapeHtml"] },
+  { file: "src/utils/syntaxHighlight.js", from: "../helpers/html.js", names: ["escapeHtml"] },
+  { file: "src/utils/markdownParser.js", from: "../helpers/html.js", names: ["escapeHtml"] },
 ];
 
 for (const { file, from, names } of DELEGATES) {
@@ -175,7 +206,7 @@ for (const { file, from, names } of DELEGATES) {
 const byRule = new Map();
 for (const e of errors) byRule.set(e.rule, [...(byRule.get(e.rule) || []), e.message]);
 
-const ruleCount = new Set(SINGLE_HOME.map((rule) => rule.rule)).size + 1;
+const ruleCount = new Set(SINGLE_HOME.map((rule) => rule.rule)).size + 2;
 console.log(`\nFletBox shared-helper contract — ${files.length} files · ${ruleCount} rules`);
 
 if (byRule.size === 0) {

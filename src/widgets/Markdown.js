@@ -7,7 +7,7 @@ import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 import { composeUpdate } from "../utils/composeUpdate.js";
 import { generateHighlightedHtml } from "../utils/syntaxHighlight.js";
-import { escapeHtml } from "../utils/htmlEscape.js";
+import { escapeHtml } from "../helpers/html.js";
 import { toREM } from "../utils/units.js";
 
 /** Monotonic counter giving each Markdown instance its own CSS scope class. */

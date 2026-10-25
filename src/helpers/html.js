@@ -1,5 +1,5 @@
 /**
- * @file htmlEscape.js
+ * @file html.js
  * @description
  * The one HTML escaper in the framework.
  *
@@ -11,7 +11,7 @@
  * because `utils/markdownParser.js` imports six widgets and anything that
  * imported it from a widget would drag all six into that widget's graph.
  *
- * @module utils/htmlEscape
+ * @module helpers/html
  */
 
 /** The five characters that can end text or an attribute value early. */

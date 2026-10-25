@@ -1,7 +1,7 @@
 // utils/syntaxHighlight.js
 import { color } from "../tools/color.js";
 import { getTheme } from "./themes.js";
-import { escapeHtml } from "./htmlEscape.js";
+import { escapeHtml } from "../helpers/html.js";
 
 // ========== FLETBOX COLORS ==========
 const fletboxColors = {

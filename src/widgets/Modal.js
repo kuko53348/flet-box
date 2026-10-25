@@ -333,15 +333,9 @@ export const Modal = (props = {}) => {
   let modalBody = null;
   // What `trapFocus` hands back while the dialog is open: a keyboard user must
   // not be able to Tab out behind the scrim, and focus must return to the button
-  // that opened the dialog when it closes.
-  let releaseFocusScope = null;
-
-  /** Releases the Tab trap exactly once, whoever asks for it first. */
-  const leaveFocusScope = () => {
-    if (!releaseFocusScope) return;
-    releaseFocusScope();
-    releaseFocusScope = null;
-  };
+  // that opened the dialog when it closes. The release is idempotent, so close
+  // and unmount can both call it.
+  let releaseFocusScope = () => {};
 
   // Handlers
   const handleClose = () => {
@@ -360,7 +354,7 @@ export const Modal = (props = {}) => {
       if (overlay) overlay.style.visibility = "hidden";
     }, 300);
     if (closeOnEsc) document.removeEventListener("keydown", handleKeyDown);
-    leaveFocusScope();
+    releaseFocusScope();
     if (onClose) onClose();
   };
 
@@ -464,7 +458,7 @@ export const Modal = (props = {}) => {
       closeTimer = null;
     }
     if (closeOnEsc) document.removeEventListener("keydown", handleKeyDown);
-    leaveFocusScope();
+    releaseFocusScope();
   });
 
   // Public API
@@ -476,7 +470,7 @@ export const Modal = (props = {}) => {
       if (overlay && overlay.parentNode)
         overlay.parentNode.removeChild(overlay);
       if (closeOnEsc) document.removeEventListener("keydown", handleKeyDown);
-      leaveFocusScope();
+      releaseFocusScope();
     },
     get isOpen() {
       return isOpen;

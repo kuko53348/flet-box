@@ -1,5 +1,5 @@
 // tools/padding.js
-import { boxEdges } from "./boxEdges.js";
+import { boxEdges } from "../helpers/boxEdges.js";
 
 /**
  * Generates a CSS `padding` shorthand string from a number, a plain CSS string,
@@ -15,8 +15,8 @@ import { boxEdges } from "./boxEdges.js";
  * - `vertical` — applies to `top` and `bottom`.
  * - `top`, `right`, `bottom`, `left` — individual side overrides.
  *
- * The grammar is shared with `margin()` and lives in `boxEdges.js`, so the two
- * cannot disagree about how a side is resolved.
+ * The grammar is shared with `margin()` and lives in `helpers/boxEdges.js`, so
+ * the two cannot disagree about how a side is resolved.
  *
  * @param {number|string|Object} value
  *   A number (converted to `px`), a raw CSS string, or an options object.

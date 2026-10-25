@@ -86,14 +86,9 @@ export const Drawer = (props = {}) => {
   let closeTimer = null;
   // What `trapFocus` hands back while the drawer is open: with a backdrop over
   // the page, Tab must not walk into that page (see Modal.js for the argument).
-  let releaseFocusScope = null;
-
-  /** Releases the Tab trap exactly once, whoever asks for it first. */
-  const leaveFocusScope = () => {
-    if (!releaseFocusScope) return;
-    releaseFocusScope();
-    releaseFocusScope = null;
-  };
+  // `trapFocus`'s release is idempotent, so close and unmount can both call it,
+  // and the no-op default covers "closed before it was ever opened".
+  let releaseFocusScope = () => {};
 
   // The outer wrapper covers the full screen so the backdrop sits above all
   // other content. It starts hidden and becomes visible on open().
@@ -247,7 +242,7 @@ export const Drawer = (props = {}) => {
     }, 300);
     // Released now, not with the 300 ms hide: the person closing the drawer
     // should have their keyboard back while it is still sliding out.
-    leaveFocusScope();
+    releaseFocusScope();
     if (closeOnEsc) document.removeEventListener("keydown", handleKeyDown);
   };
 
@@ -290,7 +285,7 @@ export const Drawer = (props = {}) => {
    */
   const destroy = () => {
     if (closeTimer) clearTimeout(closeTimer);
-    leaveFocusScope();
+    releaseFocusScope();
     if (closeOnEsc) document.removeEventListener("keydown", handleKeyDown);
     removeResizeListener();
     if (element.parentNode) element.parentNode.removeChild(element);
