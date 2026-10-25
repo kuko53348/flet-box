@@ -303,6 +303,7 @@ WIDGET_DOCS = {
         "behavior": [
             "showZero: false hides the marker entirely when value is 0.",
             "A borderWidth with a matching borderColor creates a clean cutout against the child.",
+            "The wrapper is the child's box: it shrinks to the child and refuses a flex parent's cross-axis stretch, so every `position` anchors on a corner of the child and not on the edge of the row it happens to sit in.",
         ],
         "basic": '''const badge = Badge({
   value: 5,
