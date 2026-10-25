@@ -41,6 +41,7 @@ const grid = GridView({
 | `columns` | `number` | Number of grid columns. |
 | `spacing` | `number` | Space between grid items. |
 | `itemHeight` | `number` | Height of each grid cell. |
+| `children` | `Widget[] \| Widget` | The cells themselves, laid out `columns` per row. The same contract as `data` + `renderItem` read the other way round: pass built widgets here, or the items plus a builder. `data` wins when both are given. |
 
 ### Common props
 
@@ -115,7 +116,7 @@ const grid = GridView({
 
 - `columns` sets the number of columns and `spacing` sets the gap between cells.
 - `itemHeight` fixes each cell's height, which is what makes virtualization possible.
-- It accepts the same `data` and `renderItem` contract as ListView.
+- Give it `data` + `renderItem` when the cells are built from values, and `children` when you already have the widgets: the two are the same contract read from either end.
 
 ## Accessibility
 
@@ -124,6 +125,8 @@ const grid = GridView({
 ## Behavior
 
 - GridView is implemented as ListView with grid wrapping enabled, so it shares the same scrolling and update APIs.
+- Each cell is stretched to fill its slot: `itemHeight` tall, with half of `spacing` on every side so two neighbours meet at exactly one gutter. A cell that asks for its own height keeps it.
+- The number of columns is fixed, not a breakpoint: cells are percentages of the container, so the grid adapts to the width it is given.
 - Rows outside the viewport are removed, so keep per-tile state out of the DOM and in widget state when needed.
 
 ## Related widgets

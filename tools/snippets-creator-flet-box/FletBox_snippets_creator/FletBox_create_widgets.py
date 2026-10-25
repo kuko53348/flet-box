@@ -681,6 +681,13 @@ ListView({
 })''',
 
 'GridView.basic': 'GridView({ data: ["A", "B"], renderItem: (item) => Text({ text: item }), columns: 2 })',
+'GridView.cells': '''const tiles = ["Inbox", "Files", "Teams", "Notes"].map((label) =>
+    Card({ child: Text({ text: label }) })
+);
+
+// The cells are already widgets, so there is nothing to render them from: `children`
+// is the same contract as `data` + `renderItem` read from the other end.
+GridView({ children: tiles, columns: 2, spacing: 12, itemHeight: 96 })''',
 'GridView.normal': 'const images = ["/a.png", "/b.png", "/c.png"];\nGridView({ data: images, renderItem: (img) => Image({ src: img }), columns: 3, spacing: 8 })',
 'GridView.full': '''const gallery = [{ url: "/a.png" }, { url: "/b.png" }];
 

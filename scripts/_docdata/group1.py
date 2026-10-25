@@ -321,13 +321,15 @@ WIDGET_DOCS = {
         "tips": [
             "`columns` sets the number of columns and `spacing` sets the gap between cells.",
             "`itemHeight` fixes each cell's height, which is what makes virtualization possible.",
-            "It accepts the same `data` and `renderItem` contract as ListView.",
+            "Give it `data` + `renderItem` when the cells are built from values, and `children` when you already have the widgets: the two are the same contract read from either end.",
         ],
         "accessibility": [
             "Announce the grid's purpose with a heading and keep each tile's tap target large enough to hit.",
         ],
         "behavior": [
             "GridView is implemented as ListView with grid wrapping enabled, so it shares the same scrolling and update APIs.",
+            "Each cell is stretched to fill its slot: `itemHeight` tall, with half of `spacing` on every side so two neighbours meet at exactly one gutter. A cell that asks for its own height keeps it.",
+            "The number of columns is fixed, not a breakpoint: cells are percentages of the container, so the grid adapts to the width it is given.",
             "Rows outside the viewport are removed, so keep per-tile state out of the DOM and in widget state when needed.",
         ],
         "basic": '''const grid = GridView({

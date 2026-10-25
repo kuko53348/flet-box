@@ -420,4 +420,10 @@ WIDGET_DESC = {
     "Badge": {
         "position": "Corner of the child the badge sits on.",
     },
+    # DESC's `children` promises a `child` alias; the grid has none, because a
+    # single cell is an array of one. What it does promise is the other half of
+    # the ListView contract, so the row has to say which one it is.
+    "GridView": {
+        "children": "The cells themselves, laid out `columns` per row. The same contract as `data` + `renderItem` read the other way round: pass built widgets here, or the items plus a builder. `data` wins when both are given.",
+    },
 }
