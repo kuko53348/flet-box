@@ -156,7 +156,10 @@ const LIGHT_HIGHLIGHT_COLORS = {
   [TokenType.NUMBER]: "#0550ae", // blue
   [TokenType.COMMENT]: "#57606a", // gray
   [TokenType.PROPERTY]: "#953800", // brown
-  [TokenType.FUNCTION]: "#8250df", // purple
+  // `#8250df` clears AA on the framework's own #fafafa pane by 0.33 and fails
+  // one on a slightly darker app plate (#eef2f7 → 4.49). `#6f42c1` is the same
+  // GitHub purple a step deeper: 5.79 there, and 6.51 on white.
+  [TokenType.FUNCTION]: "#6f42c1", // purple
   [TokenType.BRACKET]: "#57606a", // gray
   [TokenType.PUNCTUATION]: "#57606a", // gray
   [TokenType.FLETBOX_COLOR]: "#0e7490", // teal

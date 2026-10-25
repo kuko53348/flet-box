@@ -39,7 +39,10 @@
 //   - a shut Accordion drew nothing at all: its 'contained' plate was the card's
 //     own color and its divider only existed once the panel was open;
 //   - a CircularChart donut filled its own hole with `gray200`, so the ring sat on
-//     a pale disc instead of the page.
+//     a pale disc instead of the page;
+//   - a Markdown code fence carried one dark ink map for every theme, so a light
+//     page painted its comments and keywords in One Dark and nothing in the fence
+//     was readable — while the JS tokens inside the same fence already were.
 //
 // It publishes `window.__REGRESSION = { pass, fail, results }`.
 import * as W from "../src/widgets/index.js";
@@ -345,6 +348,102 @@ async function run() {
       if (saved) setTheme(saved);
       else applySystemTheme();
     }
+  });
+
+  // ----------------------------------------------------------------- Markdown
+  await t("Markdown: every code-fence ink reads on the plate it is painted on", () => {
+    // The fence highlighter shipped ONE dark ink map for every theme, so a light
+    // page painted `bash`/`python`/`css`/`html`/`json` tokens in One Dark — the
+    // `#c678dd` keyword measured 1.93:1 on the light plate and the `#5c6370`
+    // comment 2.46:1 on a dark one. The JS branch was already plate-aware, so the
+    // two highlighters disagreed about what "a dark code block" means.
+    const source = [
+      "```bash",
+      "# a comment somebody has to read",
+      'git commit -m "ship it"',
+      "```",
+      "",
+      "```py",
+      "def add(a, b=2):",
+      "    return a + b  # sum",
+      "```",
+      "",
+      "```js",
+      "const ratio = color('#cf222e').contrastRatio('#ffffff');",
+      "```",
+    ].join("\n");
+
+    /** Alpha-blend `fg` over `bg` the way the browser paints it, as a hex string. */
+    const blend = (fg, bg) => {
+      const f = color(fg);
+      const b = color(bg);
+      const mix = (x, y) => Math.round(f.a * x + (1 - f.a) * y);
+      return color(`rgb(${mix(f.r, b.r)}, ${mix(f.g, b.g)}, ${mix(f.b, b.b)})`).hex();
+    };
+
+    /** The colour the element's text actually sits on, compositing every alpha layer. */
+    const plateUnder = (el) => {
+      const chain = [];
+      for (let n = el; n; n = n.parentElement) chain.push(n);
+      let bg = "#ffffff";
+      for (const n of chain.reverse()) {
+        const c = color(getComputedStyle(n).backgroundColor);
+        if (c.a >= 1) bg = c.hex();
+        else if (c.a > 0) bg = blend(c.rgba(), bg);
+      }
+      return bg;
+    };
+
+    const assertReadable = (label, node, plate) => {
+      const ink = getComputedStyle(node).color;
+      const ratio = color(ink).contrastRatio(plate);
+      ok(ratio >= 4.5, `${label}: ${ink} on ${plate} is ${ratio.toFixed(2)}:1`);
+    };
+
+    withBothThemes((theme) => {
+      const md = mount(W.Markdown({ text: source }));
+      try {
+        const tokens = [...md.querySelectorAll("pre code span")].filter(
+          (s) => s.getAttribute("style"),
+        );
+        ok(tokens.length >= 20, `${theme}: only ${tokens.length} coloured fence tokens`);
+        // a fence is a pane of its own, so each token is read on the plate under it
+        for (const span of tokens)
+          assertReadable(`${theme} token "${span.textContent}"`, span, plateUnder(span));
+        // The header band shades the plate by 18 % black, so the label and the
+        // copy button are read against a stricter surface than the tokens are.
+        for (const sel of [".md-lang-label", ".md-copy-btn"]) {
+          const node = md.querySelector(sel);
+          ok(node, `${theme}: fence header has no ${sel}`);
+          assertReadable(`${theme} ${sel}`, node, plateUnder(node));
+        }
+      } finally {
+        md.remove();
+      }
+    });
+
+    // One plate, one answer: a dark pane on the light page must get the dark inks,
+    // so the mapping follows `preBgColor` and never the reader's theme.
+    withBothThemes((theme) => {
+      for (const [preBgColor, label] of [["#0f172a", "dark pane"], ["#f8fafc", "light pane"]]) {
+        const md = mount(W.Markdown({ text: source, preBgColor }));
+        try {
+          const plate = plateUnder(md.querySelector(".md-lang-label"));
+          ok(
+            color(plate).isDark() === (preBgColor === "#0f172a"),
+            `${theme} ${label}: a ${preBgColor} pane composited to ${plate}`,
+          );
+          for (const sel of [".md-lang-label", ".md-copy-btn"])
+            assertReadable(`${theme} ${label} ${sel}`, md.querySelector(sel), plate);
+          const spans = [...md.querySelectorAll("pre code span")].filter((s) => s.getAttribute("style"));
+          ok(spans.length >= 20, `${theme} ${label}: only ${spans.length} coloured tokens`);
+          for (const span of spans)
+            assertReadable(`${theme} ${label} "${span.textContent}"`, span, plateUnder(span));
+        } finally {
+          md.remove();
+        }
+      }
+    });
   });
 
   // ------------------------------------------------------------- AnimatedBox
