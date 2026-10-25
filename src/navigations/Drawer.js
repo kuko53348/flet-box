@@ -52,6 +52,10 @@ let drawerInstance = null;
  * two corners that face away from the screen edge) to maintain a flush
  * attachment at the edge side.
  *
+ * The panel paints edge to edge and pads its content by the device's safe-area
+ * insets, so a header clears the notch and a footer clears the home indicator
+ * without the background leaving a gap at either edge.
+ *
  * The module keeps a singleton reference so the standalone helper functions
  * (openDrawer, closeDrawer, etc.) can be called without passing an instance.
  *
@@ -121,12 +125,26 @@ export const Drawer = (props = {}) => {
   drawerPanel.style.flexDirection = "column";
   drawerPanel.style.backgroundColor = bgColor;
   drawerPanel.style.overflow = "hidden";
+  // A full-height panel reaches both edges of the screen, and on a notched
+  // phone those edges are the status bar and the home indicator: the header
+  // disappeared under the island and the footer's last row sat under the
+  // gesture bar. The background must stay flush, so only the content moves —
+  // which makes the insets padding, and `border-box` is what stops that padding
+  // from pushing the panel past the height it was just given. `env()` reads 0
+  // wherever the device has no inset, so this is the same no-configuration
+  // platform detection the AppBar's top padding already uses.
+  drawerPanel.style.boxSizing = "border-box";
+  drawerPanel.style.paddingTop = "env(safe-area-inset-top, 0px)";
+  drawerPanel.style.paddingBottom = "env(safe-area-inset-bottom, 0px)";
 
   // Apply border radius only to the corners that face away from the screen edge.
   // A left drawer gets rounded right corners; a right drawer gets rounded left corners.
   if (position === "left") {
     drawerPanel.style.left = toREM(margin);
     drawerPanel.style.right = "auto";
+    // In landscape the notch moves to the anchored side, so the content steps
+    // away from it while the panel keeps covering the edge.
+    drawerPanel.style.paddingLeft = "env(safe-area-inset-left, 0px)";
     drawerPanel.style.borderTopRightRadius = toREM(borderRadius);
     drawerPanel.style.borderBottomRightRadius = toREM(borderRadius);
     drawerPanel.style.borderTopLeftRadius = "0";
@@ -134,6 +152,7 @@ export const Drawer = (props = {}) => {
   } else {
     drawerPanel.style.right = toREM(margin);
     drawerPanel.style.left = "auto";
+    drawerPanel.style.paddingRight = "env(safe-area-inset-right, 0px)";
     drawerPanel.style.borderTopLeftRadius = toREM(borderRadius);
     drawerPanel.style.borderBottomLeftRadius = toREM(borderRadius);
     drawerPanel.style.borderTopRightRadius = "0";

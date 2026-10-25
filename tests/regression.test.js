@@ -9,7 +9,9 @@
 //   - SnackBar.close() fired onClose once per call instead of exactly once;
 //   - AnimatedBox appended a permanent <style> on every call;
 //   - Skeleton documented a `shimmerColor` it never read;
-//   - a 14px input made iOS zoom the whole page on focus.
+//   - a 14px input made iOS zoom the whole page on focus;
+//   - a full-height Drawer put its header under the notch and its footer under
+//     the home indicator.
 //
 // It publishes `window.__REGRESSION = { pass, fail, results }`.
 import * as W from "../src/widgets/index.js";
@@ -1036,6 +1038,65 @@ async function run() {
         bodyColumn.scrollHeight > bodyColumn.clientHeight,
         "the body never overflowed, so the squeeze was not exercised",
       );
+    } finally {
+      d.destroy();
+    }
+  });
+
+  await t("Drawer: the panel pads its content out of the iOS safe area", async () => {
+    // The panel spans the viewport edge to edge, so on a notched phone the
+    // header sat under the status bar and the footer's last row under the home
+    // indicator. Measured with a 59px/34px inset: header top 24px, footer
+    // bottom 836px of an 852px screen — the row was 18px inside the gesture
+    // bar. The insets are padding on the panel, and `border-box` is what keeps
+    // that padding inside the height the panel was given: shrinking the panel
+    // instead would leave the darkened page visible above and below it.
+    // `env()` reads 0 wherever there is no inset, which is the same
+    // no-configuration platform detection the AppBar's top padding uses.
+    const d = Drawer({
+      header: W.Text({ text: "menu" }),
+      footer: W.Text({ text: "foot" }),
+    });
+    d.open();
+    await wait(30);
+    try {
+      const panel = d.element.querySelector('[role="dialog"]');
+      // The computed value resolves `env()` to the device's own inset (0px in
+      // this harness), so the authored declaration is what proves the rule.
+      ok(
+        panel.style.paddingTop === "env(safe-area-inset-top, 0px)",
+        `the header is not inset from the status bar (padding-top: ${panel.style.paddingTop || "none"})`,
+      );
+      ok(
+        panel.style.paddingBottom === "env(safe-area-inset-bottom, 0px)",
+        `the footer is not inset from the home indicator (padding-bottom: ${panel.style.paddingBottom || "none"})`,
+      );
+      ok(
+        getComputedStyle(panel).boxSizing === "border-box",
+        "the insets would push the panel past its own height without border-box",
+      );
+      ok(
+        Math.round(panel.getBoundingClientRect().height) === window.innerHeight,
+        `the panel no longer covers the screen edge to edge (${Math.round(panel.getBoundingClientRect().height)} of ${window.innerHeight})`,
+      );
+      ok(
+        panel.style.paddingLeft === "env(safe-area-inset-left, 0px)",
+        "a left panel does not step away from the notch in landscape",
+      );
+      const right = Drawer({ position: "right", header: W.Text({ text: "x" }) });
+      try {
+        const rightPanel = right.element.querySelector('[role="dialog"]');
+        ok(
+          rightPanel.style.paddingRight === "env(safe-area-inset-right, 0px)",
+          "a right panel insets the wrong side in landscape",
+        );
+        ok(
+          rightPanel.style.paddingLeft === "",
+          "a right panel also padded its open side",
+        );
+      } finally {
+        right.destroy();
+      }
     } finally {
       d.destroy();
     }

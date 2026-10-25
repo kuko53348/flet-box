@@ -55,9 +55,13 @@ const kebab = (key) =>
 const MEASURED =
   /offset(Width|Height)|client(Width|Height|Top|Left)|scroll(Width|Height|Top|Left)|getBoundingClientRect|[Rr]ect|\bdelta\b|dimensions\.|window\.|inner(Width|Height)|outer(Width|Height)|devicePixelRatio|\bdpr\b|canvas|\bctx\b|TILE_SIZE|PIN_|chartHeight|totalFixed|viewport|\bscale\b|translate[XY]?\(|\bmatrix\(/;
 
-/** Values that are already unit-independent. */
+/**
+ * Values that are already unit-independent. `env()` is here because a safe-area
+ * inset is the device's own geometry — the `0px` inside it is only the fallback
+ * for a browser that has no inset, not a size frozen by the framework.
+ */
 const UNIT_FREE =
-  /["'`][\s\d.%]*["'`]|%|auto|inherit|initial|none|calc\(|var\(|vw|vh|fr\b|stretch|fit-content|max-content|min-content/;
+  /["'`][\s\d.%]*["'`]|%|auto|inherit|initial|none|calc\(|var\(|env\(|vw|vh|fr\b|stretch|fit-content|max-content|min-content/;
 
 const HINT =
   'route the number through `toREM(n)` from "src/utils/units.js", or prove the pixel is measured geometry and let the baseline carry it';
