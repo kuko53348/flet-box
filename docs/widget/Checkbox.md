@@ -28,6 +28,7 @@ const terms = Checkbox({
 | `size` | `number` | Overall size preset or pixel value, depending on the widget. |
 | `activeColor` | `Color` | Color used in the active state. |
 | `label` | `string` | Label or caption shown near the control. |
+| `variant` | `'outlined' \| 'filled'` | How the checked state reads: `outlined` keeps the box hollow with the tick in `activeColor`, `filled` turns the box into an `activeColor` plate and takes the tick to whichever ink reads on it. |
 
 ### Common props
 
@@ -80,10 +81,11 @@ const remember = Checkbox({
 import { Checkbox } from "flet-box";
 
 const updates = Checkbox({
-  checked: false,
+  checked: true,
   label: "Email me product updates",
   size: 24,
   activeColor: "#7c3aed",
+  variant: "filled",
   disabled: false,
   onCheck: (checked) => {
     console.log("updates:", checked);
@@ -95,6 +97,7 @@ const updates = Checkbox({
 
 - Use Checkbox inside forms where several options may be true together; use Switch for one immediate on/off setting.
 - onCheck fires with the new boolean, so write it straight into your state.
+- A filled checkbox needs no second color: `activeColor` is the plate and the tick reads itself on it.
 
 ## Accessibility
 
@@ -104,6 +107,9 @@ const updates = Checkbox({
 
 - Uncontrolled when checked is omitted; the widget tracks its own state and reports changes through onCheck.
 - The returned element exposes setChecked(value) and getChecked() for programmatic control.
+- `size` is the edge of the drawn box; the press target around it stays 40 units and does not shrink with it.
+- The box carries a step of the radius scale (4 by default, 8 from `size: 28`), and a `borderRadius` rounds the box rather than the invisible target around it.
+- `variant: 'filled'` changes the checked state only: the box becomes an `activeColor` plate and the tick takes whichever ink reads on it. An unchecked box keeps its rim, because a filled box that means off is a button.
 
 ## Related widgets
 

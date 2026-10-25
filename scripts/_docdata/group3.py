@@ -80,6 +80,7 @@ WIDGET_DOCS = {
         "tips": [
             "Use Checkbox inside forms where several options may be true together; use Switch for one immediate on/off setting.",
             "onCheck fires with the new boolean, so write it straight into your state.",
+            "A filled checkbox needs no second color: `activeColor` is the plate and the tick reads itself on it.",
         ],
         "accessibility": [
             "The check box needs an adjacent visible label; assistive tech cannot infer meaning from the tick glyph alone.",
@@ -87,6 +88,9 @@ WIDGET_DOCS = {
         "behavior": [
             "Uncontrolled when checked is omitted; the widget tracks its own state and reports changes through onCheck.",
             "The returned element exposes setChecked(value) and getChecked() for programmatic control.",
+            "`size` is the edge of the drawn box; the press target around it stays 40 units and does not shrink with it.",
+            "The box carries a step of the radius scale (4 by default, 8 from `size: 28`), and a `borderRadius` rounds the box rather than the invisible target around it.",
+            "`variant: 'filled'` changes the checked state only: the box becomes an `activeColor` plate and the tick takes whichever ink reads on it. An unchecked box keeps its rim, because a filled box that means off is a button.",
         ],
         "basic": '''const terms = Checkbox({
   label: "Accept terms",
@@ -98,10 +102,11 @@ WIDGET_DOCS = {
   onCheck: (checked) => console.log("remember:", checked),
 });''',
         "full": '''const updates = Checkbox({
-  checked: false,
+  checked: true,
   label: "Email me product updates",
   size: 24,
   activeColor: "#7c3aed",
+  variant: "filled",
   disabled: false,
   onCheck: (checked) => {
     console.log("updates:", checked);
@@ -405,6 +410,8 @@ WIDGET_DOCS = {
         "tips": [
             "Steps are clickable, so users can jump around; use onStepChange to validate a step before allowing the move.",
             "variant: icons pulls each step's icon; circles and numbers ignore it.",
+            "A step's content is a live widget and a DOM node has one parent, so build the steps array where the Stepper is built: sharing one array between two steppers empties the first slot, and the widget warns when it happens.",
+            "orientation: vertical puts each label beside its marker; horizontal puts it underneath. showLabels: false hides it in both.",
         ],
         "accessibility": [
             "Expose the current position beyond the highlight color; showLabels: true gives every step visible text.",

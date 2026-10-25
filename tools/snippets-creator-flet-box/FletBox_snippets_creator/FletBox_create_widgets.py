@@ -327,6 +327,8 @@ Column({
     id: "feature-checkbox"
 })''',
 
+'Checkbox.filled': 'Checkbox({ checked: true, variant: "filled", activeColor: colors.primary, label: "Solid plate" })',
+
 'Radio.basic': 'Radio({})',
 'Radio.normal': 'Radio({ selected: option === "a", onSelect: () => setOption("a"), label: "Option A" })',
 'Radio.full': '''Radio({

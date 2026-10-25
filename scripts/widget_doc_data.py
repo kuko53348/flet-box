@@ -426,4 +426,10 @@ WIDGET_DESC = {
     "GridView": {
         "children": "The cells themselves, laid out `columns` per row. The same contract as `data` + `renderItem` read the other way round: pass built widgets here, or the items plus a builder. `data` wins when both are given.",
     },
+    # DESC's `variant` is the generic "style preset" blurb. On a checkbox it decides
+    # how the *checked* state is painted, and the plate color is not a new knob — it
+    # is the `activeColor` the control already carries.
+    "Checkbox": {
+        "variant": "How the checked state reads: `outlined` keeps the box hollow with the tick in `activeColor`, `filled` turns the box into an `activeColor` plate and takes the tick to whichever ink reads on it.",
+    },
 }

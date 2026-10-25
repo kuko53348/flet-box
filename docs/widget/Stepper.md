@@ -122,6 +122,8 @@ const checkout = Stepper({
 
 - Steps are clickable, so users can jump around; use onStepChange to validate a step before allowing the move.
 - variant: icons pulls each step's icon; circles and numbers ignore it.
+- A step's content is a live widget and a DOM node has one parent, so build the steps array where the Stepper is built: sharing one array between two steppers empties the first slot, and the widget warns when it happens.
+- orientation: vertical puts each label beside its marker; horizontal puts it underneath. showLabels: false hides it in both.
 
 ## Accessibility
 

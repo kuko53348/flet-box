@@ -7461,6 +7461,13 @@
       "})"
     ]
   },
+  "FletBox widgets Checkbox.filled": {
+    "prefix": "Checkbox.filled",
+    "description": "Make a FletBox widgets Checkbox.filled widget",
+    "body": [
+      "Checkbox({ checked: true, variant: \"filled\", activeColor: colors.primary, label: \"Solid plate\" })"
+    ]
+  },
   "FletBox widgets Radio.basic": {
     "prefix": "Radio.basic",
     "description": "Make a FletBox widgets Radio.basic widget",
