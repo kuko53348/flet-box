@@ -24,7 +24,7 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync, readFileSync } from "fs"
 import os from "os";
 import path from "path";
 import { fileURLToPath } from "url";
-import { absoluteShareTags, buildBundleConfig, collectAssets } from "../bin/utils/bundleConfig.js";
+import { absoluteShareTags, buildBundleConfig, collectAssets, declaredUpdateUrl, isPlaceholderUpdateUrl, resolveUpdateUrl } from "../bin/utils/bundleConfig.js";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -128,6 +128,124 @@ check("an already-absolute share image is not prefixed again", stamped.includes(
 check("the tags a scraper does not resolve for images stay untouched", stamped.includes('content="Walk through the blue door."') && stamped.includes('content="Guantanamera"'), true);
 check("no base URL means no rewrite (a local bundle keeps its relative paths)", absoluteShareTags(card, null), card);
 check("building twice over the same output cannot double-prefix", absoluteShareTags(stamped, "https://user.github.io/repo/"), stamped);
+
+// ---- The update URL, which is the half that decides whether OTA exists at all --
+//
+// `flet-box create` without `--repo` writes a placeholder into
+// `fletbox.config.json`, and an installed app that gets that string in its
+// manifest polls a host that does not exist forever — silently, because OTA is
+// built never to break the app. So a placeholder must fall through to the
+// derivation, while a real explicit URL must still win.
+const PLACEHOLDER = "https://TU-USUARIO.github.io/TU-REPO/";
+
+/**
+ * Builds a throwaway project. `remote` is installed by writing the two files git
+ * reads (`.git/config` and `.git/HEAD`) so the check never shells out to git and
+ * cannot be skipped by a machine that has it configured differently.
+ */
+const project = (root, { declared = null, repository = null, remote = null } = {}) => {
+  mkdirSync(root, { recursive: true });
+  const pkg = { name: "fixture-app", version: "1.0.0" };
+  if (repository) pkg.repository = repository;
+  writeFileSync(path.join(root, "package.json"), JSON.stringify(pkg));
+  if (declared !== null) {
+    writeFileSync(
+      path.join(root, "fletbox.config.json"),
+      JSON.stringify({ update: { url: declared } }),
+    );
+  }
+  if (remote) {
+    mkdirSync(path.join(root, ".git/refs/heads"), { recursive: true });
+    mkdirSync(path.join(root, ".git/objects"), { recursive: true });
+    writeFileSync(path.join(root, ".git/HEAD"), "ref: refs/heads/main\n");
+    writeFileSync(
+      path.join(root, ".git/config"),
+      `[core]\n\trepositoryformatversion = 0\n[remote "origin"]\n\turl = ${remote}\n\tfetch = +refs/heads/*:refs/remotes/origin/*\n`,
+    );
+  }
+  return root;
+};
+
+const urlRoot = mkdtempSync(path.join(os.tmpdir(), "fletbox-ota-url-"));
+try {
+  const cases = [
+    {
+      label: "a real explicit update.url still wins over the remote",
+      dir: "explicit",
+      want: "https://example.com/app/",
+      declared: "https://example.com/app",
+      repository: "git+https://github.com/kuko53348/derived-app.git",
+      remote: "https://github.com/kuko53348/remote-app.git",
+    },
+    {
+      label: "the placeholder is not a choice: package.json repository decides",
+      dir: "pkg-repo",
+      want: "https://kuko53348.github.io/derived-app/",
+      declared: PLACEHOLDER,
+      repository: "git+https://github.com/kuko53348/derived-app.git",
+    },
+    {
+      label: "with no repository field, the project's own git remote decides",
+      dir: "git-remote",
+      want: "https://kuko53348.github.io/remote-app/",
+      declared: PLACEHOLDER,
+      remote: "https://github.com/kuko53348/remote-app.git",
+    },
+    {
+      label: "a half-filled placeholder (real repo, guessed owner) falls through too",
+      dir: "half",
+      want: "https://kuko53348.github.io/remote-app/",
+      declared: "https://TU-USUARIO.github.io/other-app/",
+      remote: "git@github.com:kuko53348/remote-app.git",
+    },
+    {
+      label: "placeholder with nothing to derive from: OTA is disabled, not mis-aimed",
+      dir: "bare",
+      want: null,
+      declared: PLACEHOLDER,
+    },
+    {
+      label: "a project that declares nothing still derives from its remote",
+      dir: "undeclared",
+      want: "https://kuko53348.github.io/remote-app/",
+      remote: "https://github.com/kuko53348/remote-app.git",
+    },
+  ];
+
+  for (const { label, dir, want, ...setup } of cases) {
+    const root = project(path.join(urlRoot, dir), setup);
+    check(label, resolveUpdateUrl(root), want);
+  }
+
+  // The build reads the file to be able to say "this URL came from derivation".
+  check(
+    "declaredUpdateUrl reports the file, not the resolved answer",
+    declaredUpdateUrl(path.join(urlRoot, "pkg-repo")),
+    PLACEHOLDER,
+  );
+  check(
+    "and reports nothing when the project declares no update.url",
+    declaredUpdateUrl(path.join(urlRoot, "undeclared")),
+    null,
+  );
+
+  // The predicate has to stay narrow: a repository genuinely called `tu-repo`,
+  // or any non-string, is a real site — not a placeholder.
+  check("the placeholder test is case-sensitive on purpose", isPlaceholderUpdateUrl("https://someone.github.io/tu-repo/"), false);
+  check("a real host with a similar path is not a placeholder", isPlaceholderUpdateUrl("https://kuko53348.github.io/my-repo/"), false);
+  check("null and non-strings are not placeholders (they are simply unset)", [isPlaceholderUpdateUrl(null), isPlaceholderUpdateUrl(42)], [false, false]);
+
+  check(
+    "the manifest never carries a placeholder, whatever the project declares",
+    buildBundleConfig({
+      projectRoot: path.join(urlRoot, "bare"),
+      bundleContent: "export default 1;\n",
+    }).update.url,
+    null,
+  );
+} finally {
+  rmSync(urlRoot, { recursive: true, force: true });
+}
 
 if (failures) {
   console.error(`\n${failures} OTA asset check(s) failed.`);

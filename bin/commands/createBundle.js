@@ -17,7 +17,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { c, banner, gradient, section } from "../utils/colors.js";
-import { buildBundleConfig, collectAssets, getGitRemoteUrl, resolveAssetPatterns, absoluteShareTags } from "../utils/bundleConfig.js";
+import { buildBundleConfig, collectAssets, getGitRemoteUrl, resolveAssetPatterns, absoluteShareTags, declaredUpdateUrl, isPlaceholderUpdateUrl } from "../utils/bundleConfig.js";
 import { normaliseManifest, writeSpaFallback } from "../utils/pwaShell.js";
 import { INITIAL_VERSION, incrementVersion, isValidVersion } from "../utils/version.js";
 
@@ -342,12 +342,24 @@ export const createBundle = async (targetArg) => {
         c("gray", "         (or set `update.url` in fletbox.config.json / `repository` in package.json)") +
         "\n",
     );
-  } else if (/TU-USUARIO|TU-REPO/.test(bundleConfig.update.url)) {
+  } else if (isPlaceholderUpdateUrl(declaredUpdateUrl(projectRoot))) {
+    // The file still says TU-USUARIO/TU-REPO, so this address was derived from
+    // the project's own repository — correct for a GitHub-hosted app, and worth
+    // saying out loud because the file the developer will read disagrees with it.
     console.log(
-      c(
-        "yellow",
-        "⚠️ update.url is still the placeholder — OTA points at a fake site. Replace TU-USUARIO/TU-REPO in fletbox.config.json before releasing.",
-      ),
+      c("green", "⬆️  OTA source: ") +
+        c("gray", bundleConfig.update.url) +
+        "\n" +
+        c(
+          "yellow",
+          "    derived from the project's `repository`/git remote: `fletbox.config.json` still holds the placeholder.",
+        ) +
+        "\n" +
+        c(
+          "gray",
+          "    Correct for a GitHub Pages site. Set `update.url` by hand if this app will live on another host.",
+        ) +
+        "\n",
     );
   } else {
     console.log(

@@ -113,9 +113,15 @@ const checks = [
   ["build.yml: names a site address in the header", /^# This app goes live at:\n#   https:\/\/\S+\/$/m.test(generated["build.yml"])],
   ["build.yml: no repo keeps TU-USUARIO visible", generated["build.yml"].includes("https://TU-USUARIO.github.io/guard-test/")],
   ["build.yml: a repo writes its real Pages URL", generated["build.yml (repo)"].includes("https://octocat.guard-test/")],
-  // The placeholder also names the second file that holds the same address, so
-  // the OTA URL and the deploy target cannot drift apart; a real repo drops it.
-  ["build.yml: a placeholder points at fletbox.config.json too", generated["build.yml"].includes("fletbox.config.json (update.url)")],
+  // The placeholder comment names fletbox.config.json and says the build reads
+  // it as "not configured": the address an installed app polls is derived, not
+  // copied from that file. A real repo drops the whole note.
+  [
+    "build.yml: a placeholder explains the config file is derived past",
+    /fletbox\.config\.json[\s\S]{0,400}derives? the address/i.test(
+      generated["build.yml"],
+    ),
+  ],
   ["build.yml: a known repo says nothing about placeholders", !generated["build.yml (repo)"].includes("placeholder")],
   ["build.yml: a value that is not a URL is refused", templates.githubWorkflow("Guard Test", "com.check.app").includes("TU-USUARIO")],
   ["build.yml: web deploys on push, natives are not here", generated["build.yml"].includes("Web: AUTOMATIC") && !/deploy-pages/.test(generated["build.yml"].split("\n  deploy:")[0])],

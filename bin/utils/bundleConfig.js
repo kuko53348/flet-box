@@ -9,7 +9,8 @@
  * comparison that drives the OTA is the `hash` — the version is a human label.
  *
  * Update source URL resolution order:
- *   1. `update.url` in `fletbox.config.json` (explicit wins)
+ *   1. `update.url` in `fletbox.config.json`, when it is set and is no longer
+ *      the scaffold placeholder (explicit wins over the derivation below)
  *   2. derived from the `repository` field of the project's package.json,
  *      mapped to its GitHub Pages URL: https://<user>.github.io/<repo>/
  *   3. derived from the CURRENT PROJECT's git remote `origin` (when it is a
@@ -70,6 +71,23 @@ export const parseGithubRepo = (repository) => {
 };
 
 /**
+ * True when a declared `update.url` is still the scaffold placeholder — the two
+ * tokens `flet-box create` writes when it was not told where the app will live
+ * (`OTA_PLACEHOLDER_URL` in `templates.js`, and the same tokens in the generated
+ * workflow header).
+ *
+ * A placeholder is not a decision, so it must not outrank derivation: a bundle
+ * that carries it points an installed app at a host that does not exist, and the
+ * OTA check fails on every launch in silence — OTA is built never to break the
+ * app, so the only symptom is that an update is never offered.
+ *
+ * @param {*} url
+ * @returns {boolean}
+ */
+export const isPlaceholderUpdateUrl = (url) =>
+  typeof url === "string" && /TU-USUARIO|TU-REPO/.test(url);
+
+/**
  * Resolves the OTA update URL for a project.
  *
  * @param {string} projectRoot - Absolute path to the project root.
@@ -82,9 +100,15 @@ export const resolveUpdateUrl = (projectRoot) => {
     {},
   );
 
-  // 1. Explicit configuration always wins.
+  // 1. Explicit configuration wins — over the derivations below, not over the
+  // truth. An unfilled placeholder falls through, so a project whose origin
+  // remote is a GitHub repo gets its real Pages address without editing a file.
   const explicit = fletboxConfig?.update?.url;
-  if (typeof explicit === "string" && explicit.trim()) {
+  if (
+    typeof explicit === "string" &&
+    explicit.trim() &&
+    !isPlaceholderUpdateUrl(explicit)
+  ) {
     return explicit.endsWith("/") ? explicit : `${explicit}/`;
   }
 
@@ -105,6 +129,26 @@ export const resolveUpdateUrl = (projectRoot) => {
   if (ghRemote) return `https://${ghRemote.user}.github.io/${ghRemote.repo}/`;
 
   return null;
+};
+
+/**
+ * Reads only what the project itself declares as its update source, without
+ * resolving or deriving anything.
+ *
+ * The build prints this when the URL that landed in the manifest came from
+ * derivation instead of from the file: a bundle pointing at a real site while
+ * `fletbox.config.json` still holds the placeholder is a half-filled config, and
+ * only the person editing that file can tell the two apart.
+ *
+ * @param {string} projectRoot - Absolute path to the project root.
+ * @returns {*} The declared `update.url`, or null when the file does not say.
+ */
+export const declaredUpdateUrl = (projectRoot) => {
+  const declared = readJsonSafe(
+    path.join(projectRoot, "fletbox.config.json"),
+    {},
+  )?.update?.url;
+  return typeof declared === "string" && declared.trim() ? declared : null;
 };
 
 /**

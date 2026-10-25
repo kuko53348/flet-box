@@ -1296,14 +1296,21 @@ export const githubWorkflow = (appName = "FletBox App", siteUrl = null) => {
   const site = /^https?:\/\//i.test(String(siteUrl || ""))
     ? String(siteUrl).replace(/\/?$/, "/")
     : `https://TU-USUARIO.github.io/${slug}/`;
-  // Only when the owner is still a guess: the address lives in two files, and a
-  // developer who edits one and not the other ships an app that polls a site
-  // that is not where the bundle is.
+  // Only when the owner is still a guess. The build no longer trusts the
+  // placeholder in fletbox.config.json (createBundle derives the real Pages
+  // address from this repository), so what is left to correct here is the
+  // address a human reads before reading a single step.
   const todo = site.includes("TU-USUARIO")
     ? `# The owner above is a placeholder: this project was created without \`--repo\`,
-# so the folder name is only a guess at the repo name. Write the real address in
-# both files that state it — this header, and fletbox.config.json (update.url),
-# which is the URL an installed app polls for an update.
+# so the folder name is only a guess at the repo name. Put the real owner here
+# once the repository exists.
+#
+# \`fletbox.config.json\` may keep its own placeholder: the build recognises it as
+# "not configured" and derives the address from this repo's repository field or
+# git remote, so an installed app polls the site this workflow deploys. The URL
+# that landed in the manifest is printed by the build and by the
+# \`Where this lives\` step below. Set \`update.url\` by hand only when this app
+# will live on another host.
 `
     : "";
   return `name: Deploy ${appName}
@@ -1779,9 +1786,12 @@ Two workflow files ship with the project, and they answer to different triggers:
 The address this project publishes to is written at the top of
 \`.github/workflows/build.yml\`. \`flet-box create <name> --repo <user>/<repo>\`
 fills it in from the repo; without \`--repo\` it stays
-\`https://TU-USUARIO.github.io/<name>/\`, and the header says which two files to
-edit. That is a sub-path, so \`index.html\` uses relative asset paths and works
-without changes.
+\`https://TU-USUARIO.github.io/<name>/\`, and the header explains what is still a
+guess. The build ignores that placeholder in \`fletbox.config.json\` and derives
+the real address from this repository, so the OTA feed is correct either way.
+
+The Pages address is a sub-path, so \`index.html\` uses relative asset paths and
+works without changes.
 
 **Why a push does not update anyone's app:** this same address is the OTA feed
 installed apps poll, and the update check compares bundle **hashes**, not version
@@ -1871,9 +1881,10 @@ updates:
 \`\`\`
 
 - The GitHub repository **must be public**.
-- Replace \`TU-USUARIO\` with your GitHub username and \`TU-REPO\` with the
-  repository name, or set \`update.url\` to any HTTPS host that serves your
-  \`config.json\` + bundle.
+- \`TU-USUARIO\`/\`TU-REPO\` are a placeholder, not a setting: the build sees them as
+  "not configured" and derives the Pages address from this project's \`repository\`
+  field or git remote, so pushing the folder is enough. Edit \`update.url\` only
+  when the app lives on another HTTPS host that serves your \`config.json\` + bundle.
 - Enable GitHub Pages: **Settings → Pages → Source: GitHub Actions**. Without
   that the deploy step is green and no site exists.
 - Cut a release with \`flet-box release --push\` (bumps the version, rebuilds

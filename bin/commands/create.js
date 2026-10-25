@@ -546,7 +546,10 @@ export const createProject = async (projectName, rawArgs = []) => {
     console.log(
       c(
         "gray",
-        `⬆️  OTA: placeholder set — edit fletbox.config.json and replace TU-USUARIO/TU-REPO with your public GitHub repo.\n`,
+        `⬆️  OTA: ${templates.OTA_PLACEHOLDER_URL} is a placeholder, and the build knows it —\n` +
+          `         it derives the real Pages address from the project's \`repository\`/git remote.\n` +
+          `         So: push this folder to a public GitHub repo and build, or name the repo now\n` +
+          `         with ${c("brightCyan", "flet-box create <name> --repo user/repo")} / edit fletbox.config.json.\n`,
       ),
     );
   }
