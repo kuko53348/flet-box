@@ -8,7 +8,8 @@
 //   - DataTable.updateData() threw on the second call and updateColumns() wiped rows;
 //   - SnackBar.close() fired onClose once per call instead of exactly once;
 //   - AnimatedBox appended a permanent <style> on every call;
-//   - Skeleton documented a `shimmerColor` it never read.
+//   - Skeleton documented a `shimmerColor` it never read;
+//   - a 14px input made iOS zoom the whole page on focus.
 //
 // It publishes `window.__REGRESSION = { pass, fail, results }`.
 import * as W from "../src/widgets/index.js";
@@ -42,6 +43,7 @@ import {
   onBreakpointChange,
 } from "../src/tools/breakpoints.js";
 import { loadFont, fontsReady } from "../src/tools/fonts.js";
+import { ensureFieldFont, looksLikeIOS } from "../src/utils/fieldFont.js";
 
 const results = [];
 let pass = 0;
@@ -3334,6 +3336,77 @@ async function run() {
       both.includes("rgb(0, 0, 255)") && !both.includes("rgb(0, 255, 0)"),
       "shimmerColor did not win over highlightColor",
     );
+  });
+
+  await t("Input: an iOS field is never under 16px, which is what zoomed the page", async () => {
+    const html = document.documentElement;
+    const hadMarker = html.hasAttribute("data-fb-ios");
+    const savedRootFont = html.style.fontSize;
+    try {
+      // The floor: 14 → 16 and 12 → 16, a field already at 16 untouched, and a
+      // raised root font still lifts the field above the floor instead of being
+      // replaced by it (medium is 0.875rem, not a flat 16px).
+      const fieldPx = (size, rootPx) => {
+        if (rootPx) html.style.fontSize = `${rootPx}px`;
+        const root = mount(W.Input({ label: "Email", size }));
+        const px = parseFloat(getComputedStyle(root.querySelector("input")).fontSize);
+        root.remove();
+        html.style.fontSize = savedRootFont;
+        return px;
+      };
+
+      html.setAttribute("data-fb-ios", "");
+      ok(fieldPx() === 16, "a medium field stayed under the 16px threshold iOS zooms at");
+      ok(
+        document.getElementById("fletbox-field-font"),
+        "creating a widget did not inject the field-font rule",
+      );
+      ok(fieldPx("small") === 16, "a small field stayed under the 16px threshold iOS zooms at");
+      ok(fieldPx("large") === 16, "a large field lost its own size to the floor");
+      ok(fieldPx(undefined, 20) === 17.5, "the floor replaced the design size instead of bounding it");
+      ok(
+        document.querySelectorAll("#fletbox-field-font").length === 1,
+        "the field-font stylesheet was injected more than once",
+      );
+
+      html.removeAttribute("data-fb-ios");
+      ok(fieldPx() === 14, "the iOS floor leaked onto a platform that does not need it");
+
+      // The detector: iPhone, iPadOS masquerading as a Mac, and both negatives.
+      ok(
+        looksLikeIOS("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)", "iPhone", 5),
+        "an iPhone was not read as iOS",
+      );
+      ok(
+        looksLikeIOS("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)", "MacIntel", 5),
+        "iPadOS (desktop UA + touch points) was not read as iOS",
+      );
+      ok(
+        !looksLikeIOS("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)", "MacIntel", 0),
+        "a desktop Mac was read as iOS",
+      );
+      ok(
+        !looksLikeIOS("Mozilla/5.0 (Linux; Android 14; Pixel 8)", "Linux armv8l", 5),
+        "Android was read as iOS",
+      );
+
+      // The engine marks the document when the navigator says iOS.
+      const hadUa = Object.getOwnPropertyDescriptor(navigator, "userAgent");
+      Object.defineProperty(navigator, "userAgent", {
+        configurable: true,
+        value: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15",
+      });
+      try {
+        ensureFieldFont();
+        ok(html.hasAttribute("data-fb-ios"), "the engine did not mark the document as iOS");
+      } finally {
+        if (hadUa) Object.defineProperty(navigator, "userAgent", hadUa);
+        else delete navigator.userAgent;
+      }
+    } finally {
+      html.style.fontSize = savedRootFont;
+      if (!hadMarker) html.removeAttribute("data-fb-ios");
+    }
   });
 
   // ------------------------------------------------------------------ report

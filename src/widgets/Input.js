@@ -462,6 +462,10 @@ export const Input = (props) => {
 
   inputElement.style.flex = "1";
   inputElement.style.padding = `${toREM(sz.padding[0])} ${toREM(sz.padding[1])}`;
+  // The length is published for the engine's iOS floor: below 16px WebKit zooms
+  // the whole page on focus, and `fieldFont.js` needs this exact rem value to
+  // raise only what is under the threshold, not every field.
+  inputElement.style.setProperty("--fb-field-font", toREM(sz.fontSize));
   inputElement.style.fontSize = toREM(sz.fontSize);
   inputElement.style.minHeight = toREM(sz.minHeight);
   inputElement.style.border = "none";
