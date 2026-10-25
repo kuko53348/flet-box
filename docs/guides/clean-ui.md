@@ -157,7 +157,7 @@ judging yours. Each finding carries a code, and the code maps to a rule above.
 | `HAND_MIXED_COLOR` | 03 | `colors.primary + "22"` — a one-off shade no other screen can reuse. |
 | `DEAD_ELEVATION` | 10 | A numeric `elevation` on a widget that never reads it: CSS drops the bare number and the box stays flat in silence. |
 | `IMAGE_NO_ALT` | 11 | An `Image` with no `alt` — `alt: ""` is a decision, a missing prop is an oversight. |
-| `ICON_ONLY_CONTROL` | 11 | A pressable glyph with no name; wrap it in `Tooltip({ text, child })`. |
+| `ICON_ONLY_CONTROL` | 11 | A pressable glyph with no accessible name; give it `aria-label` (a `Tooltip` is a description, not a name). |
 | `CENTERED_BODY_TEXT` | 08 | A paragraph centered; a paragraph needs a left edge to find the next line. |
 | `GENERIC_ACTION_LABEL` | 14 | "OK", "Submit", "Click here" — a label that says nothing about what pressing it does. |
 | `CONFIRM_ORDER` | 14 | A destructive button placed before Cancel in the same row. |
@@ -170,7 +170,7 @@ judging yours. Each finding carries a code, and the code maps to a rule above.
 | `SMALL_PRESET` | 03 | `size: "small"` on a control that is the screen's main action (~30px). |
 | `CROWDED_FORM` | 06 | Many fields in one file: group them, or split the task. |
 | `LIST_WITHOUT_STATE` | 12 | A list with no loading, empty or failed state in this file. |
-| `MULTIPLE_PRIMARY_ACTIONS` | 04 | Several filled buttons on one screen. |
+| `MULTIPLE_PRIMARY_ACTIONS` | 04 | More than one filled button in one view; keep one and make the rest outlined or text. |
 
 ## Running the gate
 
@@ -202,6 +202,20 @@ agent, will otherwise copy the exception as if it were the rule.
 
 And a rule you had to break is information about the rule: if the exception was
 right twice, it is a defect in the scale, not in the app.
+
+## The framework runs this gate on itself
+
+A widget cannot ship a default that the gate would reject in your app, because
+`npm test` runs the same checker over the framework's `src/`
+(`scripts/check-framework-ui.mjs`). It found real defects the first time: a tab
+badge wrote white on the signal red (2.77:1 in the dark theme), a `ListTile`
+description borrowed the disabled grey (2.57:1), a dialog painted two filled
+buttons at once, and eleven defaults sat off the scale.
+
+The list of accepted findings lives in `scripts/framework-ui-baseline.json` and
+is shrink-only: every entry carries the reason it is not a defect, and
+`--write-baseline` exits `1` while any entry has no justification. A new finding
+has to be fixed, not snapshotted.
 
 ## What no checker can see
 
