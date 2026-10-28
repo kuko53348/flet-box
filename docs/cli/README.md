@@ -590,6 +590,63 @@ alongside the app, and that file says so.
 The full contract — the 21 rules, every finding code, and how to fix one — is
 [Chapter 12, Clean UI](../guides/clean-ui.md).
 
+## Verify everything at once
+
+`flet-box verify` is the single gate: it runs the anti-hallucination check, the
+clean-UI check, the structural check and the prop contract **in parallel**,
+prints one report and exits with one code. It is the command to run after every
+edit — the report names the gate, the line and what to do about it, instead of
+making you run three commands and remember which one failed.
+
+```bash
+flet-box verify                  # every gate, one report
+flet-box verify --only ui        # one gate: api | ui | structure | surface
+flet-box verify --fix            # the mechanical repair first, then the gates
+flet-box verify --json           # the report as data
+flet-box verify --watch          # re-runs on every edit (500 ms debounce)
+flet-box run --verify            # the same, while the dev server runs
+```
+
+Every generated app ships it as `npm run verify`. The gates read the installed
+package, so they cannot judge your code against an API you do not have.
+
+The four gates, and what each one owns:
+
+| Gate | What it proves |
+| --- | --- |
+| `api` | The code only names widgets and props that exist, and its own modules resolve each other. |
+| `ui` | The code is on the tokens, on the scale, and every control has a name. |
+| `structure` | Two of your modules do not import each other in a circle, every module lives where the project expects it, and no screen writes the DOM by hand. |
+| `surface` | Every prop a widget reads is declared, and every declared prop is read. |
+
+`--fix` runs `flet-box audit-fix` first: it rewrites what it can prove — a
+mistyped prop, a wrong relative path, a missing import — and then the gates
+read the result. A typo is mechanical, and it should never reach you as work
+to do.
+
+## The north metric
+
+Every `flet-box verify` run appends a row to the project's log —
+`.fletbox/metrics/generations.md` for a generated app, `metrics/generations.md`
+for this repository — with the time, the project, whether the gates were green,
+which gates failed and which codes they reported. **Every** run, green or not: a
+log that keeps only the successes cannot tell a correction from a first try.
+
+```bash
+flet-box metrics                  # the metric and the failures that recur
+flet-box metrics --log <file>     # read another log
+```
+
+A **generation** is a run of failing rows closed by the first green one. The
+**north metric** is the share of generations whose *first* run was green — the
+share of code that passed the gate with no correction at all. It is the number
+that moves when the code gets better, not when the report gets softer.
+
+The same command prints the three failures that recur most often and the rule
+each one should belong to, and it **exits non-zero** when a code has come back
+three times with no rule behind it. That is the loop closing: a code that keeps
+coming back is a rule that has not been written yet.
+
 ## Command reference
 
 
@@ -623,6 +680,11 @@ The full contract — the 21 rules, every finding code, and how to fix one — i
 | `flet-box check-ui` | Runs the clean-UI gate over `src/`: tokens, scale, tap targets, labels, contrast. |
 | `flet-box check-ui --tokens` | Prints the measured contrast of every color token, on the background and on the surface. |
 | `flet-box check-ui --strict` | Makes the contrast warnings fail the run, not just the errors. |
+| `flet-box verify` | Runs every gate at once: one report, one exit code. |
+| `flet-box verify --fix` | Runs the mechanical repair first, then the gates. |
+| `flet-box metrics` | Reads the project's log: the north metric and the failures that recur. |
+| `flet-box audit-fix` | Rewrites what it can prove: a broken import, a mistyped prop, a renamed prop. |
+| `flet-box audit-fix --only migrations` | Applies only the renames from [the migration guide](../guides/migration.md). |
 | `flet-box pkg` | Opens the package manager. |
 | `flet-box --version` | Shows the CLI version. |
 | `flet-box --help` | Shows the command list. |

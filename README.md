@@ -54,7 +54,7 @@ straight from the registry, and the project it writes declares `flet-box` as a
 normal dependency.
 
 Cloning the repository and `npm link`ing it is still how you *develop the framework
-itself* — see [CONTRIBUTING](docs/CONTRIBUTING.md).
+itself* — see [CONTRIBUTING](CONTRIBUTING.md).
 
 ## Quick start
 
@@ -173,7 +173,7 @@ And the book itself is an app: **[`flet-box-docs`](https://www.npmjs.com/package
 - [SQLite and the API server](docs/server/data-services.md) — where your data lives + a full SQLite API example
 - [Mobile and platforms](docs/guides/mobile-and-platforms.md) — Android, iOS, PWA, and desktop
 - [Architecture](docs/arquitectura.md) — the widget contract and the single rendering engine
-- [Contributing](docs/CONTRIBUTING.md) — how to add code and docs
+- [Contributing](CONTRIBUTING.md) — how to add code and docs
 
 ## Support & sponsorship
 

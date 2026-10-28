@@ -1,0 +1,114 @@
+name: CI
+
+# The gate that says "this may be merged". It runs on every pull request and
+# on every push to the branches that carry the work, because this repository is
+# developed by pushing directly as often as by pull request — a gate that only
+# ran on pull requests would never run here.
+#
+# It does NOT publish anything. Publishing lives in npm-publish.yml and stays
+# there: a pull request must never be able to reach `npm publish`, even by
+# bumping the version, so the two workflows share nothing but the checkout.
+#
+# What it runs:
+#   - `npm run verify` — the unified gate (API, UI rules, structure, prop
+#     contract), the same one an agent runs after every edit.
+#   - `npm test`       — the static checkers: the widget contract, the scale,
+#     the shared helpers, accessibility, the error boundary, the API
+#     contract, the bundle budget, the docs, the skills, the snippets.
+#   - `npm run test:browser` — the behavioral harnesses, when a browser is
+#     available (see the job below).
+#   - `npm run test:visual` — the visual baseline: the gallery measured in
+#     both themes and compared with `scripts/visual-baseline.json`.
+
+on:
+  pull_request:
+  push:
+    branches: [ refactory, main ]
+  workflow_dispatch:
+
+# Least privilege: this workflow reads the repository and nothing else.
+permissions:
+  contents: read
+
+# A new push cancels the run it supersedes.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gates:
+    name: Static gates
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Unified gate (API, UI, structure, prop contract)
+        run: npm run verify
+
+      - name: Static checkers
+        run: npm test
+
+  browser:
+    name: Browser harnesses
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # The runner already ships Chrome; puppeteer is only the driver, and
+      # `PUPPETEER_SKIP_DOWNLOAD` keeps it from fetching a second browser.
+      # The version is pinned because the runner script imports puppeteer's
+      # ESM entry by path.
+      - name: Install the browser driver
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: "true"
+        run: npm install --no-save puppeteer@22
+
+      - name: Run the behavioral harnesses
+        env:
+          FLETBOX_CHROME: /usr/bin/google-chrome
+        run: npm run test:browser
+
+  visual:
+    name: Visual baseline
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # The gallery is measured with the same numbers on every machine: the
+      # root size is pinned, so the inherited type does not follow the font
+      # that happens to be installed, and only the widgets whose width the
+      # framework pins have their width compared.
+      - name: Measure the gallery and compare it with the baseline
+        env:
+          FLETBOX_CHROME: /usr/bin/google-chrome
+        run: npm run test:visual

@@ -223,7 +223,13 @@ export const Scaffold = (props) => {
           // the release of the handler it adds, which a hand-written
           // `addEventListener` would leak.
           menuIcon.removeAttribute("aria-hidden");
-          menuIcon.setAttribute("aria-label", "Open menu");
+          // The app's name wins. This is a fallback for an icon nobody named —
+          // not a rename — and the shell cannot know the app's language, so
+          // writing over an explicit label turned "Abrir el menú" into
+          // "Open menu" for every reader on a Spanish screen.
+          if (!menuIcon.hasAttribute("aria-label")) {
+            menuIcon.setAttribute("aria-label", "Open menu");
+          }
           applyEffects(menuIcon);
         }
       }

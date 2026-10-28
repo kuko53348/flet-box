@@ -1,6 +1,7 @@
 // Smoke test: instantiate every widget with minimal valid props and mount it.
 // Catches ReferenceError / undefined-symbol bugs (like the old InstallButton).
 import * as W from "../src/widgets/index.js";
+import * as Public from "../src/index.js";
 
 const results = [];
 let pass = 0;
@@ -104,18 +105,59 @@ for (const name of names) {
   }
 }
 
+// A widget whose declaration writes `props?:` promises that the caller may
+// leave the argument out. The promise is in the type, so it has to hold at
+// runtime: the gallery that called `ThemePicker()` with nothing found out it
+// was a lie, and the screen died before it painted a pixel.
+const optionalWidgets = await (async () => {
+  try {
+    const dts = await (await fetch("../src/index.d.ts")).text();
+    return [
+      ...dts.matchAll(/export\s+function\s+([A-Z][\w$]*)\s*\(\s*props\?\s*:/g),
+    ].map((m) => m[1]);
+  } catch {
+    return [];
+  }
+})();
+
+for (const name of optionalWidgets) {
+  // The promise is made by the public barrel: that is what a caller imports.
+  const fn = Public[name] ?? W[name];
+  if (typeof fn !== "function") {
+    record(`${name} (declared optional)`, false, new Error("not exported"));
+    continue;
+  }
+  let el;
+  try {
+    el = fn();
+  } catch (err) {
+    record(`${name} (declared optional)`, false, err);
+    continue;
+  }
+  // Some widgets own a resource — a canvas with a running loop, a listener —
+  // and hand back the disposer. Nothing here needs the element mounted.
+  try {
+    el?._cleanup?.();
+  } catch {
+    /* a widget that cannot be disposed is still a widget that constructed */
+  }
+  record(`${name} (declared optional)`, true);
+}
+
 // Also flag exported widgets we did not cover in fixtures.
 const missing = Object.keys(W).filter(
   (k) => typeof W[k] === "function" && !fixtures[k] && !/^[A-Z]/.test(k) === false,
 );
 
-window.__SMOKE = { pass, fail, results, missing, total: names.length };
+const total = names.length + optionalWidgets.length;
+
+window.__SMOKE = { pass, fail, results, missing, total };
 
 // Render into the page for the harness viewer.
 const out = document.getElementById("out");
 const summary = document.getElementById("summary");
 if (summary) {
-  summary.textContent = `SMOKE: ${pass}/${names.length} widgets instantiated OK${fail ? ` — ${fail} FAILED` : ""}`;
+  summary.textContent = `SMOKE: ${pass}/${total} widgets instantiated OK${fail ? ` — ${fail} FAILED` : ""}`;
   summary.style.color = fail ? "#ff6b6b" : "#4ec9b0";
 }
 if (out) {

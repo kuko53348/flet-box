@@ -109,9 +109,17 @@ function buildButtonChildren(text, textColor, fontSize, gap, iconElements) {
   const middleRow = [];
   if (iconElements.left) middleRow.push(iconElements.left);
   if (text) {
-    middleRow.push(
-      Text({ text, color: textColor, size: fontSize, weight: "bold" }),
-    );
+    const label = Text({ text, color: textColor, size: fontSize, weight: "bold" });
+    // A button label is a label, not a paragraph. Left loose, a long one wraps
+    // to three lines inside a fixed-height pill: the text outgrows the padding
+    // box and the capsule's rounded ends cut into the words. One line with an
+    // ellipsis keeps the shape; the full string stays the accessible name. A
+    // block of copy that needs to wrap is a card or a list tile, not a button.
+    label.style.whiteSpace = "nowrap";
+    label.style.overflow = "hidden";
+    label.style.textOverflow = "ellipsis";
+    label.style.minWidth = "0";
+    middleRow.push(label);
   }
   if (iconElements.right) middleRow.push(iconElements.right);
 
@@ -124,6 +132,10 @@ function buildButtonChildren(text, textColor, fontSize, gap, iconElements) {
         alignItems: "center",
         justifyContent: "center",
         gap,
+        // Without this the row refuses to shrink below the label's intrinsic
+        // width and the ellipsis never engages inside a constrained button.
+        minWidth: 0,
+        maxWidth: "100%",
         child: middleRow,
       }),
     );

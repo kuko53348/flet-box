@@ -1,6 +1,7 @@
 // core/assignProps.js
 import { setStyles } from "./tools.js";
 import { resolveReactive } from "./reactiveValue.js";
+import { guardHandler } from "../utils/errorBoundary.js";
 
 /**
  * Extracts the real value from a prop that may be a reactive accessor or a
@@ -154,11 +155,18 @@ export const assignProps = (widget, props) => {
     if (props.events && Object.keys(props.events).length > 0) {
       Object.entries(props.events).forEach(([event, handler]) => {
         if (typeof handler !== "function") return;
+        // The handler is wrapped where it is attached, so a throw inside it is
+        // reported with the name of the widget that owns it instead of
+        // arriving as an anonymous stack.
+        const guarded = guardHandler(handler, {
+          widgetName: widget._widgetName,
+          event,
+        });
         if (event === "click") {
-          widget.onclick = handler;
+          widget.onclick = guarded;
         } else {
-          widget.addEventListener(event, handler);
-          widget._events.push({ event, handler });
+          widget.addEventListener(event, guarded);
+          widget._events.push({ event, handler: guarded });
         }
       });
     }
@@ -219,11 +227,15 @@ export const assignProps = (widget, props) => {
 
         if (key.startsWith("on") && typeof value === "function") {
           const eventName = key.slice(2).toLowerCase();
+          const guarded = guardHandler(value, {
+            widgetName: widget._widgetName,
+            event: eventName,
+          });
           if (eventName === "click") {
-            widget.onclick = value;
+            widget.onclick = guarded;
           } else {
-            widget.addEventListener(eventName, value);
-            widget._events.push({ event: eventName, handler: value });
+            widget.addEventListener(eventName, guarded);
+            widget._events.push({ event: eventName, handler: guarded });
           }
         } else if (
           [
