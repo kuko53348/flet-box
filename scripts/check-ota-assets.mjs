@@ -20,11 +20,12 @@
  */
 import crypto from "crypto";
 import { execFileSync } from "child_process";
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync, readFileSync } from "fs";
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync, readFileSync, existsSync } from "fs";
 import os from "os";
 import path from "path";
 import { fileURLToPath } from "url";
-import { absoluteShareTags, buildBundleConfig, collectAssets, declaredUpdateUrl, isPlaceholderUpdateUrl, resolveUpdateUrl } from "../bin/utils/bundleConfig.js";
+import { absoluteShareTags, buildBundleConfig, collectAssets, declaredUpdateUrl, isPlaceholderUpdateUrl, resolveUpdateUrl, SHARE_TAGS } from "../bin/utils/bundleConfig.js";
+import { indexHtml } from "../bin/utils/templates.js";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -128,6 +129,64 @@ check("an already-absolute share image is not prefixed again", stamped.includes(
 check("the tags a scraper does not resolve for images stay untouched", stamped.includes('content="Walk through the blue door."') && stamped.includes('content="Guantanamera"'), true);
 check("no base URL means no rewrite (a local bundle keeps its relative paths)", absoluteShareTags(card, null), card);
 check("building twice over the same output cannot double-prefix", absoluteShareTags(stamped, "https://user.github.io/repo/"), stamped);
+
+// ---- The card every created app starts with -------------------------------
+// The stamper can only absolutise a tag the project's own index.html carries,
+// and a missing one fails silently: the share renders as a headline with no
+// picture while the site looks perfect. So `flet-box create` ships every tag
+// the stamper knows, each pointing at a file the bundle actually serves.
+const metaContent = (html, key) => {
+  const tag = html
+    .match(/<meta\b[^>]*>/gi)
+    ?.find((t) => new RegExp(`\\b(?:property|name)\\s*=\\s*["']${key}["']`, "i").test(t));
+  return tag?.match(/\bcontent\s*=\s*(["'])([^"']*)\1/i)?.[2] ?? null;
+};
+const templateHtml = indexHtml("Guantanamera");
+const stampedTemplate = absoluteShareTags(templateHtml, "https://user.github.io/repo/");
+for (const tag of SHARE_TAGS) {
+  check(`the created app carries ${tag}`, metaContent(templateHtml, tag) !== null, true);
+  check(
+    `${tag} is absolute in the built bundle`,
+    /^https:\/\/user\.github\.io\/repo\//.test(metaContent(stampedTemplate, tag) ?? ""),
+    true,
+  );
+}
+check("the card declares its shape before X will show an image", metaContent(templateHtml, "twitter:card"), "summary");
+check("the default picture is the icon the template ships", metaContent(templateHtml, "og:image"), "./src/assets/icon-512.png");
+const createSource = readFileSync(path.join(repoRoot, "bin", "commands", "create.js"), "utf8");
+check(
+  "the picture the card names is a file `flet-box create` copies into every app",
+  createSource.includes('"icon-512.png"'),
+  true,
+);
+
+// ---- And the card this repository's own demo serves ------------------------
+// The root `index.html` is the other card the stamper reads: `npm run build` and
+// `flet-box cloudflare` serve a bundle built from it, so a share of the demo is a
+// share of the framework. It carried a title and a description with no picture
+// and no URL — a scraper shows exactly the headline it is given, so the card was
+// silent about what FletBox looks like. The rule is the template's: the file in
+// the repo stays host-agnostic and names relative paths, the built copy is
+// stamped, and the picture it names is a file the bundle copies.
+const demoHtml = readFileSync(path.join(repoRoot, "index.html"), "utf8");
+const stampedDemo = absoluteShareTags(demoHtml, "https://user.github.io/repo/");
+for (const tag of SHARE_TAGS) {
+  check(`the demo carries ${tag}`, metaContent(demoHtml, tag) !== null, true);
+  check(
+    `${tag} is absolute in the demo's built copy`,
+    /^https:\/\/user\.github\.io\/repo\//.test(metaContent(stampedDemo, tag) ?? ""),
+    true,
+  );
+}
+check("the demo's card declares its shape", metaContent(demoHtml, "twitter:card"), "summary");
+for (const tag of ["og:image", "twitter:image"]) {
+  const picture = metaContent(demoHtml, tag) ?? "";
+  check(
+    `${tag} names a file in the checkout`,
+    existsSync(path.join(repoRoot, picture.replace(/^\.?\//, ""))),
+    true,
+  );
+}
 
 // ---- The update URL, which is the half that decides whether OTA exists at all --
 //

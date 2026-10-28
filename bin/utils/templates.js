@@ -36,6 +36,23 @@ export const indexHtml = (appName = "FletBox App") => `<!DOCTYPE html>
     <meta property="og:title" content="${appName}">
     <meta property="og:description" content="${appName} built with Flet-Box.">
     <meta property="og:type" content="website">
+    <meta property="og:url" content="./">
+    <meta property="og:image" content="./src/assets/icon-512.png">
+    <meta property="og:image:alt" content="${appName}">
+
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="${appName}">
+    <meta name="twitter:description" content="${appName} built with Flet-Box.">
+    <meta name="twitter:url" content="./">
+    <meta name="twitter:image" content="./src/assets/icon-512.png">
+    <meta name="twitter:image:alt" content="${appName}">
+
+    <!-- The share tags stay relative on purpose: this one file runs on :8000,
+         through a tunnel and on Pages. 'flet-box build' rewrites og:image,
+         og:url, twitter:image and twitter:url to absolute URLs at the site
+         origin in the copy it publishes, because a scraper does not resolve
+         a relative path the way a browser does. Replace the icon with a real
+         cover if you have one: a square icon is what a 'summary' card expects. -->
 
     <meta name="theme-color" content="${SHELL_BRAND}">
 
@@ -2138,10 +2155,12 @@ export const AppBarComponent = ({ title, isMobile = false, showBack = false, onB
                 size: 24,
                 height: 40,
                 color: colors.text,
+                'aria-label': 'Open the menu',
                 onclick: () => openDrawer()
             })
         }) : null,
-        // An icon-only control still needs a name: the Tooltip is what says so.
+        // An icon-only control still needs a name, and a Tooltip is a description
+        // (aria-describedby), not a name: the aria-label is what a screen reader says.
         actions: [
             Tooltip({
                 text: isDark ? 'Switch to light' : 'Switch to dark',
@@ -2151,6 +2170,7 @@ export const AppBarComponent = ({ title, isMobile = false, showBack = false, onB
                     size: 24,
                     height: 40,
                     color: colors.text,
+                    'aria-label': isDark ? 'Switch to light' : 'Switch to dark',
                     onclick: () => toggleTheme()
                 })
             })
@@ -2746,8 +2766,9 @@ export const agentsMd = (appName, template, version) =>
     'After every edit, before you say a task is done:',
     '',
     '```bash',
-    'npm run verify        # every gate at once — one report, one exit code; this',
-    '                       # is the command to run after every edit',
+    'npm run verify        # parses first, then every gate, then your test scripts',
+    '                       # — one report, one exit code; this is the command to',
+    '                       # run after every edit',
     'npm run verify -- --fix   # the same, after the mechanical repair: it rewrites',
     '                       # a mistyped prop or a wrong relative path first, so a',
     '                       # typo never reaches you as work to do',
@@ -2762,10 +2783,14 @@ export const agentsMd = (appName, template, version) =>
     'npm run dev            # serve on :8000 — check the UI actually renders',
     '```',
     '',
-    '`npm run verify` runs those two gates, the structural gate (a cycle between',
-    'two of your own modules, a module outside the project folders, markup written',
-    'by hand) and the prop contract in parallel, and prints one report: the gate',
-    'that failed, the line, and what to do about it.',
+    '`npm run verify` parses every module first (`node --check`, the parser the',
+    'runtime uses: a missing `)` comes back as `file:line:column` with a caret',
+    'under the character and a hint), then runs those two gates, the structural',
+    'gate (a cycle between two of your own modules, a module outside the project',
+    'folders, markup written by hand) and the prop contract in parallel, and',
+    'prints one report: the gate that failed, the file at `line:column`, and what',
+    'to do about it. A project that declares its own test scripts gets those run',
+    'too; a created app declares none.',
     'All of them read the installed package, so they are always in sync with what',
     'runs. They exit non-zero on a real error: fix the code, not the checker. A',
     'warning is allowed to stay only when you can justify it in one sentence.',
@@ -2816,7 +2841,7 @@ export const agentsMd = (appName, template, version) =>
     '| Command | What it does |',
     '| --- | --- |',
     '| `npm run dev` | static dev server on port 8000 |',
-    '| `npm run verify` | every gate at once: one report, one exit code |',
+    '| `npm run verify` | parses every module, then every gate, then your test scripts: one report, one exit code |',
     '| `npm run check` | anti-hallucination gate over `src/` |',
     '| `npm run fix` | rewrite mistyped imports and prop names it can prove |',
     '| `npm run metrics` | the north metric: how much code passed the gate with no correction |',
