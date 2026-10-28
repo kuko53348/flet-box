@@ -2,8 +2,10 @@
 // Contract for the two image commands that talk to the machine rather than to
 // Node core: `flet-box images` and `flet-box prune-assets`.
 //
-// Run standalone (like check-image-convert.mjs, it is not wired into `npm test`
-// yet — it depends on a binary that may or may not be installed):
+// Runs in `npm test`. The `images` half shells out to a WebP encoder, so those
+// checks print a skip on a machine where cwebp, magick and convert are all
+// absent instead of failing a host that cannot run the command; the platform
+// table and the whole `prune-assets` contract are pure Node and always run.
 //   node scripts/check-images-cli.mjs
 //
 // What it pins down, and what each assertion was written to catch:
@@ -57,6 +59,8 @@ const check = async (name, fn) => {
 
 console.log("check-images-cli: flet-box images and prune-assets\n");
 
+const encoder = findEncoder();
+
 await check("the platform table names an install command", () => {
   const installer = platformInstaller();
   assert.ok(installer.name, "every platform reports a name");
@@ -76,107 +80,112 @@ await check("an emptied PATH finds no encoder", () => {
   }
 });
 
-await check("images writes a budget WebP and keeps the source", async () => {
-  const dir = path.join(scratch, "photos");
-  fs.mkdirSync(dir, { recursive: true });
-  const source = path.join(dir, "photo.png");
-  writePhoto(source);
-  const before = fs.readFileSync(source);
+if (encoder) {
+  await check("images writes a budget WebP and keeps the source", async () => {
+    const dir = path.join(scratch, "photos");
+    fs.mkdirSync(dir, { recursive: true });
+    const source = path.join(dir, "photo.png");
+    writePhoto(source);
+    const before = fs.readFileSync(source);
 
-  const { exitCode } = await images([dir, "--budget", "40", "--width", "240", "--quiet"]);
-  assert.equal(exitCode, 0, "images exited non-zero");
+    const { exitCode } = await images([dir, "--budget", "40", "--width", "240", "--quiet"]);
+    assert.equal(exitCode, 0, "images exited non-zero");
 
-  const out = path.join(dir, "photo.webp");
-  assert.ok(fs.existsSync(out), "no photo.webp was written");
-  const head = fs.readFileSync(out).subarray(0, 12).toString("ascii");
-  assert.equal(head.slice(0, 4), "RIFF", "output is not a RIFF container");
-  assert.equal(head.slice(8, 12), "WEBP", "output is not WebP");
-  assert.ok(fs.statSync(out).size <= 40 * 1024, `output busts the budget: ${fs.statSync(out).size} bytes`);
-  assert.ok(fs.readFileSync(source).equals(before), "the source PNG was modified");
-});
+    const out = path.join(dir, "photo.webp");
+    assert.ok(fs.existsSync(out), "no photo.webp was written");
+    const head = fs.readFileSync(out).subarray(0, 12).toString("ascii");
+    assert.equal(head.slice(0, 4), "RIFF", "output is not a RIFF container");
+    assert.equal(head.slice(8, 12), "WEBP", "output is not WebP");
+    assert.ok(fs.statSync(out).size <= 40 * 1024, `output busts the budget: ${fs.statSync(out).size} bytes`);
+    assert.ok(fs.readFileSync(source).equals(before), "the source PNG was modified");
+  });
 
-await check("images is idempotent: an in-budget WebP is not re-encoded", async () => {
-  const dir = path.join(scratch, "photos");
-  const out = path.join(dir, "photo.webp");
-  const first = fs.readFileSync(out);
-  const { exitCode } = await images([dir, "--budget", "40", "--width", "240", "--quiet"]);
-  assert.equal(exitCode, 0);
-  assert.ok(fs.readFileSync(out).equals(first), "a second run rewrote bytes the budget already accepted");
-});
+  await check("images is idempotent: an in-budget WebP is not re-encoded", async () => {
+    const dir = path.join(scratch, "photos");
+    const out = path.join(dir, "photo.webp");
+    const first = fs.readFileSync(out);
+    const { exitCode } = await images([dir, "--budget", "40", "--width", "240", "--quiet"]);
+    assert.equal(exitCode, 0);
+    assert.ok(fs.readFileSync(out).equals(first), "a second run rewrote bytes the budget already accepted");
+  });
 
-await check("transparency survives the encoder, and --replace refuses without a consumer", async () => {
-  const dir = path.join(scratch, "alpha");
-  fs.mkdirSync(dir, { recursive: true });
-  const src = path.join(dir, "sticker.png");
-  writePhoto(src, 240, 160, true);
+  await check("transparency survives the encoder, and --replace refuses without a consumer", async () => {
+    const dir = path.join(scratch, "alpha");
+    fs.mkdirSync(dir, { recursive: true });
+    const src = path.join(dir, "sticker.png");
+    writePhoto(src, 240, 160, true);
 
-  const { exitCode } = await images([dir, "--budget", "40", "--width", "240", "--replace", "--root", dir, "--quiet"]);
-  assert.equal(exitCode, 0, "the alpha read-back rejected a WebP that kept its transparency");
+    const { exitCode } = await images([dir, "--budget", "40", "--width", "240", "--replace", "--root", dir, "--quiet"]);
+    assert.equal(exitCode, 0, "the alpha read-back rejected a WebP that kept its transparency");
 
-  const out = path.join(dir, "sticker.webp");
-  assert.ok(fs.existsSync(out), "the transparent PNG produced no WebP");
-  assert.ok(webpCarriesAlpha(fs.readFileSync(out)), "the WebP has no alpha plane: the sticker was flattened");
-  // Nothing in `dir` names sticker.webp — the folder has no sources at all — so
-  // the master stays. Deleting it would be the command destroying the only
-  // lossless copy of a picture nobody has asked for yet.
-  assert.ok(fs.existsSync(src), "--replace removed a source no app references");
-});
+    const out = path.join(dir, "sticker.webp");
+    assert.ok(fs.existsSync(out), "the transparent PNG produced no WebP");
+    assert.ok(webpCarriesAlpha(fs.readFileSync(out)), "the WebP has no alpha plane: the sticker was flattened");
+    // Nothing in `dir` names sticker.webp — the folder has no sources at all — so
+    // the master stays. Deleting it would be the command destroying the only
+    // lossless copy of a picture nobody has asked for yet.
+    assert.ok(fs.existsSync(src), "--replace removed a source no app references");
+  });
 
-await check("an opaque WebP is reported as opaque", async () => {
-  const dir = path.join(scratch, "photos");
-  const opaque = path.join(dir, "photo.webp");
-  assert.ok(fs.existsSync(opaque), "run 1 wrote no photo.webp");
-  // The negative control for the guard above: a detector that answers true for
-  // every file would let a flattened sticker through and prove nothing here.
-  assert.equal(webpCarriesAlpha(fs.readFileSync(opaque)), false, "claimed alpha where the source had none");
-});
+  await check("an opaque WebP is reported as opaque", async () => {
+    const dir = path.join(scratch, "photos");
+    const opaque = path.join(dir, "photo.webp");
+    assert.ok(fs.existsSync(opaque), "run 1 wrote no photo.webp");
+    // The negative control for the guard above: a detector that answers true for
+    // every file would let a flattened sticker through and prove nothing here.
+    assert.equal(webpCarriesAlpha(fs.readFileSync(opaque)), false, "claimed alpha where the source had none");
+  });
 
-await check("--referenced converts what the app names and skips the rest", async () => {
-  const app = path.join(scratch, "app2");
-  fs.mkdirSync(path.join(app, "src"), { recursive: true });
-  fs.mkdirSync(path.join(app, "assets"), { recursive: true });
-  fs.writeFileSync(path.join(app, "index.html"), '<link rel="icon" href="./assets/favicon.png">\n');
-  fs.writeFileSync(path.join(app, "src", "data.js"), 'export const hero = "assets/hero.webp";\n');
-  writePhoto(path.join(app, "assets", "hero.png"));
-  writePhoto(path.join(app, "assets", "favicon.png"));
+  await check("--referenced converts what the app names and skips the rest", async () => {
+    const app = path.join(scratch, "app2");
+    fs.mkdirSync(path.join(app, "src"), { recursive: true });
+    fs.mkdirSync(path.join(app, "assets"), { recursive: true });
+    fs.writeFileSync(path.join(app, "index.html"), '<link rel="icon" href="./assets/favicon.png">\n');
+    fs.writeFileSync(path.join(app, "src", "data.js"), 'export const hero = "assets/hero.webp";\n');
+    writePhoto(path.join(app, "assets", "hero.png"));
+    writePhoto(path.join(app, "assets", "favicon.png"));
 
-  const { exitCode } = await images([path.join(app, "assets"), "--budget", "40", "--referenced", "--root", app, "--quiet"]);
-  assert.equal(exitCode, 0);
-  assert.ok(fs.existsSync(path.join(app, "assets", "hero.webp")), "a referenced source was skipped");
-  assert.ok(
-    !fs.existsSync(path.join(app, "assets", "favicon.webp")),
-    "it invented a favicon.webp: the browser asks for a PNG there and nothing loads the WebP",
-  );
-});
+    const { exitCode } = await images([path.join(app, "assets"), "--budget", "40", "--referenced", "--root", app, "--quiet"]);
+    assert.equal(exitCode, 0);
+    assert.ok(fs.existsSync(path.join(app, "assets", "hero.webp")), "a referenced source was skipped");
+    assert.ok(
+      !fs.existsSync(path.join(app, "assets", "favicon.webp")),
+      "it invented a favicon.webp: the browser asks for a PNG there and nothing loads the WebP",
+    );
+  });
 
-await check("--replace deletes a master once the app loads its WebP", async () => {
-  const app = path.join(scratch, "app3");
-  fs.mkdirSync(path.join(app, "src"), { recursive: true });
-  fs.mkdirSync(path.join(app, "assets", "shots"), { recursive: true });
-  fs.writeFileSync(path.join(app, "src", "data.js"), 'export const shot = "sticker2.webp";\n');
-  writePhoto(path.join(app, "assets", "shots", "sticker2.png"));
+  await check("--replace deletes a master once the app loads its WebP", async () => {
+    const app = path.join(scratch, "app3");
+    fs.mkdirSync(path.join(app, "src"), { recursive: true });
+    fs.mkdirSync(path.join(app, "assets", "shots"), { recursive: true });
+    fs.writeFileSync(path.join(app, "src", "data.js"), 'export const shot = "sticker2.webp";\n');
+    writePhoto(path.join(app, "assets", "shots", "sticker2.png"));
 
-  const { exitCode } = await images([path.join(app, "assets"), "--budget", "40", "--replace", "--root", app, "--quiet"]);
-  assert.equal(exitCode, 0);
-  assert.ok(fs.existsSync(path.join(app, "assets", "shots", "sticker2.webp")), "no WebP was written");
-  assert.ok(!fs.existsSync(path.join(app, "assets", "shots", "sticker2.png")), "the source the app replaced survived");
-});
+    const { exitCode } = await images([path.join(app, "assets"), "--budget", "40", "--replace", "--root", app, "--quiet"]);
+    assert.equal(exitCode, 0);
+    assert.ok(fs.existsSync(path.join(app, "assets", "shots", "sticker2.webp")), "no WebP was written");
+    assert.ok(!fs.existsSync(path.join(app, "assets", "shots", "sticker2.png")), "the source the app replaced survived");
+  });
 
-await check("images leaves assets/logo.png alone: it is the app icon", async () => {
-  const app = path.join(scratch, "app4");
-  fs.mkdirSync(path.join(app, "src"), { recursive: true });
-  fs.mkdirSync(path.join(app, "assets"), { recursive: true });
-  // The native icon scripts build this path with path.join, so no source ever
-  // contains the string — the protection has to be in the command, not in a scan.
-  fs.writeFileSync(path.join(app, "src", "data.js"), 'export const x = "assets/other.webp";\n');
-  writePhoto(path.join(app, "assets", "logo.png"));
-  writePhoto(path.join(app, "assets", "other.png"));
+  await check("images leaves assets/logo.png alone: it is the app icon", async () => {
+    const app = path.join(scratch, "app4");
+    fs.mkdirSync(path.join(app, "src"), { recursive: true });
+    fs.mkdirSync(path.join(app, "assets"), { recursive: true });
+    // The native icon scripts build this path with path.join, so no source ever
+    // contains the string — the protection has to be in the command, not in a scan.
+    fs.writeFileSync(path.join(app, "src", "data.js"), 'export const x = "assets/other.webp";\n');
+    writePhoto(path.join(app, "assets", "logo.png"));
+    writePhoto(path.join(app, "assets", "other.png"));
 
-  const { exitCode } = await images([path.join(app, "assets"), "--budget", "40", "--replace", "--root", app, "--quiet"]);
-  assert.equal(exitCode, 0);
-  assert.ok(fs.existsSync(path.join(app, "assets", "logo.png")), "the icon master was deleted");
-  assert.ok(!fs.existsSync(path.join(app, "assets", "logo.webp")), "a WebP icon was written — Capacitor and Xcode read PNG");
-});
+    const { exitCode } = await images([path.join(app, "assets"), "--budget", "40", "--replace", "--root", app, "--quiet"]);
+    assert.equal(exitCode, 0);
+    assert.ok(fs.existsSync(path.join(app, "assets", "logo.png")), "the icon master was deleted");
+    assert.ok(!fs.existsSync(path.join(app, "assets", "logo.webp")), "a WebP icon was written — Capacitor and Xcode read PNG");
+  });
+} else {
+  console.log("  skip the `images` checks — no cwebp, magick or convert on PATH");
+}
+
 
 await check("prune keeps what the app names and deletes what it does not", async () => {
   const app = path.join(scratch, "app");

@@ -2,13 +2,13 @@
 
 The FletBox CLI helps you create, run, expand, and build FletBox applications from the terminal.
 
-You do not need to create every folder by hand. The CLI can create a working project, add screens and components, start a development server, and prepare a production bundle.
+You do not need to create every folder by hand. The CLI can create a working project, add screens and components, start a development server, prepare a production bundle, and check the code against the API the installed framework really has.
 
 ## Before you start
 
 Install:
 
-- Node.js 18 or newer.
+- Node.js 20.9 or newer.
 - npm.
 - A terminal such as Terminal, iTerm, PowerShell, or the VS Code terminal.
 
@@ -590,34 +590,115 @@ alongside the app, and that file says so.
 The full contract — the 21 rules, every finding code, and how to fix one — is
 [Chapter 12, Clean UI](../guides/clean-ui.md).
 
-## Verify everything at once
+## Look up the API the app really has
 
-`flet-box verify` is the single gate: it runs the anti-hallucination check, the
-clean-UI check, the structural check and the prop contract **in parallel**,
-prints one report and exits with one code. It is the command to run after every
-edit — the report names the gate, the line and what to do about it, instead of
-making you run three commands and remember which one failed.
+`flet-box check-api` reads your own `src/` and reports every name that does not
+belong to the installed package: a widget that does not exist, a prop the real
+widget never reads, a widget called with a positional string instead of a props
+object, an import from another framework, and a broken import between two of your
+own modules — the last two resolved statically, so it works offline and in CI.
+
+It imports the package's barrel for real and reads its own types, so it cannot
+judge your code against an API you do not have.
 
 ```bash
-flet-box verify                  # every gate, one report
-flet-box verify --only ui        # one gate: api | ui | structure | surface
+flet-box check-api                      # scan ./src
+flet-box check-api --props Button       # print one widget's real props
+flet-box check-api --list               # print every public export
+flet-box check-api --emit-api           # write .fletbox/api/cheatsheet.md
+flet-box check-api --json               # the findings as data
+flet-box check-api --root ../my-app     # scan another project
+```
+
+Aliases: `flet-box check`, `checkApi`, `doctor`. It exits `1` when it finds an
+error, which is what lets it be the `api` gate inside `flet-box verify` and the
+`npm run check` a created app ships.
+
+`--emit-api` writes the cheatsheet an assistant should read before it writes any
+code for the app: every widget, every prop the package can prove, and a prop that
+has been renamed marked `(deprecated → onPress)` — the old spelling still works,
+so nothing else will tell you it is the one being retired. `flet-box create`
+generates the file at scaffold time; after a version bump, regenerate it with the
+command above. It is the API at that version, not the one you remember.
+
+## Unpack a widget
+
+Every prop lives in four places, and they can disagree: the type declaration, the
+engine's prop registry, the widget's own source, and its doc page.
+`flet-box unpack <Widget>` cross-checks the four and labels each disagreement
+instead of hiding it:
+
+| Label | What it means |
+| --- | --- |
+| `DEAD` | Declared in the interface, routed by the engine nowhere and read by the widget nowhere — writing it has no effect. |
+| `INVENTED` | The widget reads it, and no interface declares it. |
+| `UNDOCUMENTED` | The engine handles it for this widget and the interface hides it — the editor underlines a call that works. |
+| `DOC-ONLY` | The doc page promises it and the code has never heard of it. |
+| `CODE-ONLY` | The code accepts it and the doc page never mentions it. |
+
+```bash
+flet-box unpack Button                  # what Button really accepts, prop by prop
+flet-box unpack Button --example        # a paste-ready call using only verified props
+flet-box unpack Modal --diff            # declared vs real, and what disagrees
+flet-box unpack Button --json           # the same contract as data
+flet-box unpack --all                   # every widget → .fletbox/api/api.json
+flet-box unpack --all --md              # and the readable api.md beside it
+flet-box unpack --all --json            # the whole surface on stdout, writing nothing
+flet-box unpack Button --root ../my-app # read another project's package
+```
+
+`--example` is the answer to "what can I paste". It is built only from props the
+four surfaces agree on, never carries a renamed one, samples no blind `width` or
+`height` (a number pasted into `Switch` collapses it), and never drops a required
+prop — so the call it prints runs.
+
+`--all` writes the whole verified surface to `.fletbox/api/api.json`, the file a
+created app's assistant reads as data; `--md` puts `api.md` beside it and
+`--json` prints the same tree to stdout instead of writing anything. `npm run
+api` in a created app is `unpack --all --md`.
+
+## Verify everything at once
+
+`flet-box verify` is the single command: it parses every module, then runs the
+anti-hallucination check, the clean-UI check, the structural check and the prop
+contract **in parallel**, and then runs whichever test scripts the project
+declares — one report, one exit code. It is the command to run after every edit:
+the report names the gate, the file at `line:column` and what to do about it,
+instead of making you run six commands and remember which one failed.
+
+```bash
+flet-box verify                  # every gate and every suite, one report
+flet-box verify --only syntax    # one gate: syntax | api | ui | structure | surface | tests
+flet-box verify --only tests     # the project's own suites, nothing else
 flet-box verify --fix            # the mechanical repair first, then the gates
 flet-box verify --json           # the report as data
-flet-box verify --watch          # re-runs on every edit (500 ms debounce)
+flet-box verify --watch          # re-runs the fast gates on every edit (no suites)
+flet-box verify --no-tests       # the static gates only; run the suites yourself
 flet-box run --verify            # the same, while the dev server runs
 ```
 
 Every generated app ships it as `npm run verify`. The gates read the installed
 package, so they cannot judge your code against an API you do not have.
 
-The four gates, and what each one owns:
+The gates, and what each one owns:
 
 | Gate | What it proves |
 | --- | --- |
+| `syntax` | Every module loads. Each `.js`/`.mjs`/`.cjs` outside `node_modules`, `www` and `dist` is handed to `node --check` — the parser the runtime uses — and a parse error is reported at `file:line:column` with the offending source line, a caret under the character and a hint: an unclosed brace, a backtick that never closes, a smart quote that only looks like a quote. |
 | `api` | The code only names widgets and props that exist, and its own modules resolve each other. |
 | `ui` | The code is on the tokens, on the scale, and every control has a name. |
 | `structure` | Two of your modules do not import each other in a circle, every module lives where the project expects it, and no screen writes the DOM by hand. |
 | `surface` | Every prop a widget reads is declared, and every declared prop is read. |
+| `tests` | The project's own suites run and pass. `test`, `test:browser` and `test:visual` are run one after another when `package.json` declares them; a failing suite's own last output is the finding, which is where the rule is named. A project that declares none — a generated app — gets a skipped step, not a green one. |
+
+The parse gate runs first because the other four read code as text. A file that
+does not load is a line, not a finding about an invented prop, and telling the
+two apart is the difference between one edit and a guess.
+
+Every finding prints the same four things: the file at `line:column`, the code,
+what is wrong and a `→` suggestion. Warnings are printed too, under *what to
+review* — they do not fail the run, but they name the same line, which is the
+only form in which an agent can act on them.
 
 `--fix` runs `flet-box audit-fix` first: it rewrites what it can prove — a
 mistyped prop, a wrong relative path, a missing import — and then the gates
@@ -680,7 +761,17 @@ coming back is a rule that has not been written yet.
 | `flet-box check-ui` | Runs the clean-UI gate over `src/`: tokens, scale, tap targets, labels, contrast. |
 | `flet-box check-ui --tokens` | Prints the measured contrast of every color token, on the background and on the surface. |
 | `flet-box check-ui --strict` | Makes the contrast warnings fail the run, not just the errors. |
+| `flet-box check-api` | Checks that every widget, prop and import your code names really exists. |
+| `flet-box check-api --props <Widget>` | Prints the real props of one widget. |
+| `flet-box check-api --list` | Prints every public export. |
+| `flet-box check-api --emit-api` | Writes `.fletbox/api/cheatsheet.md`, the API an assistant reads first. |
+| `flet-box unpack <Widget>` | Cross-checks a widget's four surfaces and labels what disagrees. |
+| `flet-box unpack <Widget> --example` | Prints a paste-ready call built only from verified props. |
+| `flet-box unpack <Widget> --diff` | Prints the reconciliation alone: declared vs real, and what disagrees. |
+| `flet-box unpack --all` | Writes the whole verified surface to `.fletbox/api/api.json`. |
+| `flet-box unpack --all --md` | Adds the readable `api.md` beside it. |
 | `flet-box verify` | Runs every gate at once: one report, one exit code. |
+| `flet-box verify --no-tests` | The static gates only, for a pipeline that runs the suites in their own jobs. |
 | `flet-box verify --fix` | Runs the mechanical repair first, then the gates. |
 | `flet-box metrics` | Reads the project's log: the north metric and the failures that recur. |
 | `flet-box audit-fix` | Rewrites what it can prove: a broken import, a mistyped prop, a renamed prop. |

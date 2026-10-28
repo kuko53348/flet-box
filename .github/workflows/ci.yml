@@ -9,9 +9,9 @@ name: CI
 # there: a pull request must never be able to reach `npm publish`, even by
 # bumping the version, so the two workflows share nothing but the checkout.
 #
-# What it runs:
-#   - `npm run verify` — the unified gate (API, UI rules, structure, prop
-#     contract), the same one an agent runs after every edit.
+# What it runs, once each:
+#   - `npm run verify` — the parse gate and the four static gates (API, UI,
+#     structure, prop contract), the same command an agent runs after an edit.
 #   - `npm test`       — the static checkers: the widget contract, the scale,
 #     the shared helpers, accessibility, the error boundary, the API
 #     contract, the bundle budget, the docs, the skills, the snippets.
@@ -19,6 +19,13 @@ name: CI
 #     available (see the job below).
 #   - `npm run test:visual` — the visual baseline: the gallery measured in
 #     both themes and compared with `scripts/visual-baseline.json`.
+#
+# `verify` runs the project's suites by itself, which here would mean `npm
+# test` twice and Chrome twice. The gates job therefore passes `--no-tests`: the
+# suites have their own jobs, and a red measurement stays in its own job where it
+# cannot hide a red check. It is said out loud instead of pretending to be the
+# nested case — `FLETBOX_VERIFY_NESTED` reports "already inside a verify run",
+# which is true of a test script that calls verify and false of a CI job.
 
 on:
   pull_request:
@@ -52,8 +59,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Unified gate (API, UI, structure, prop contract)
-        run: npm run verify
+      - name: Unified gate (parse, API, UI, structure, prop contract)
+        run: npm run verify -- --no-tests
 
       - name: Static checkers
         run: npm test

@@ -25,8 +25,8 @@ terminal is the one command that must never appear in a handoff.
 
 | Command | What it proves | When |
 | --- | --- | --- |
-| `npm run verify` | one report, one exit code: the anti-hallucination gate, the design gate, the structural gate and the prop contract, run in parallel | after every edit |
-| `npm test` | the static checkers: the widget contract, the scale, the shared helpers, accessibility, the error boundary, the API contract, the bundle budget, the docs, the skills, the snippets | before you commit |
+| `npm run verify` | one report, one exit code: every module is parsed first, then the anti-hallucination gate, the design gate, the structural gate and the prop contract run, and then the project's own suites (`test`, `test:browser`, `test:visual`) | after every edit |
+| `npm test` | the static checkers: the widget contract, the scale, the shared helpers, accessibility, the error boundary, the API contract, the bundle budget, the image tooling, the docs, the skills, the snippets | before you commit |
 | `npm run test:browser` | the behavioural harnesses in `tests/`, driven in a real Chrome | when the change touches runtime behaviour |
 | `npm run test:visual` | the gallery measured in light and dark against `scripts/visual-baseline.json` | when the change touches how a widget paints |
 | `npm run metrics` | the north metric: the share of generations whose first run was already green | to know whether the rules are landing |

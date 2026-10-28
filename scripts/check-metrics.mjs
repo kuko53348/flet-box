@@ -199,6 +199,9 @@ await check("every code the gates can report has a rule behind it", () => {
     "HAND_WRITTEN_DOM",
     "INVENTED_PROP",
     "DEAD_PROP",
+    "GATE_FAILED",
+    "SYNTAX_ERROR",
+    "TEST_SUITE_FAILED",
   ];
   for (const code of codes) {
     assert.ok(owner(code), `${code} has no rule behind it`);

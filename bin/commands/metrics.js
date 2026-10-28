@@ -49,6 +49,8 @@ export const OWNERS = {
   INVENTED_PROP: "src/index.d.ts — the declaration is the contract",
   DEAD_PROP: "src/index.d.ts — the declaration or the widget",
   GATE_FAILED: "the gate itself — a missing package, not a mistake in the code",
+  SYNTAX_ERROR: "the parser itself — the finding carries the line, the column and the hint",
+  TEST_SUITE_FAILED: "the project's own suite — run it alone, its failing line names the rule",
 };
 
 /**

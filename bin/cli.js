@@ -95,6 +95,7 @@ ${cmd("   └─ --strict", "fail on contrast warnings too")}
 ${cmd("   └─ alias", "ui | checkUi")}
 ${cmd("verify", "Every gate at once: one report, one exit code")}
 ${cmd("   └─ --only <gate>", "run one gate: api | ui | structure | surface")}
+${cmd("   └─ --no-tests", "the static gates only; the project's suites run alone")}
 ${cmd("   └─ --fix", "the mechanical repair first, then the gates")}
 ${cmd("   └─ --json", "the report as data")}
 ${cmd("   └─ alias", "check-all")}

@@ -150,14 +150,19 @@ npm run verify     # every gate, one report, one exit code
    revert the change and hand the report back with what you tried.
 4. A warning may stay only when you can justify it in one sentence.
 
-`npm run verify` is `flet-box verify`: it runs the anti-hallucination gate
-(invented widgets, positional arguments, foreign imports, broken imports), the
-design gate (tokens, the scale, tap targets, labels, contrast), the structural
-gate (a cycle between two of the app's own modules, a module outside the
-project's folders, markup written by hand) and the prop contract (a prop the
-widget reads but nothing declares) **in parallel**, and prints one report with
-one exit code. `flet-box verify --watch` re-runs it on every edit, and
-`flet-box run --verify` does the same while the dev server runs.
+`npm run verify` is `flet-box verify`: it parses every module first (`node
+--check`, the parser the runtime uses — a missing `)` is reported as
+`file:line:column` with the offending line, a caret under the character and a
+hint), then runs the anti-hallucination gate (invented widgets, positional
+arguments, foreign imports, broken imports), the design gate (tokens, the scale,
+tap targets, labels, contrast), the structural gate (a cycle between two of the
+app's own modules, a module outside the project's folders, markup written by
+hand) and the prop contract (a prop the widget reads but nothing declares), and
+prints one report with one exit code. A project that declares its own `test`,
+`test:browser` or `test:visual` script gets those run too; a generated app
+declares none, so that step is skipped there. `flet-box verify --watch` re-runs
+the fast gates on every edit, and `flet-box run --verify` does the same while the
+dev server runs.
 
 A mistyped name is mechanical, not creative: `npm run fix` rewrites what it
 can prove (`chilldren` → `children`, `bgColr` → `bgColor`, a relative path that
