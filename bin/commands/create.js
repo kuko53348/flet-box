@@ -20,6 +20,7 @@ import { parseGithubRepo } from "../utils/bundleConfig.js";
 import { checkApi } from "../commands/checkApi.js";
 import { unpack } from "../commands/unpack.js";
 import { skillNames, readSkill } from "../utils/skills.js";
+import { CONTRACT_FILE, readContract } from "../utils/contract.js";
 import { c, banner, gradient } from "../utils/colors.js";
 
 /**
@@ -223,6 +224,7 @@ export const createProject = async (projectName, rawArgs = []) => {
     // AI agent contract: rules, memory and the generated API cheatsheet.
     ".fletbox/api",
     ".fletbox/memory/notes",
+    ".fletbox/metrics",
     ".claude",
     ".claude/skills",
     ".qoder/skills",
@@ -449,6 +451,12 @@ export const createProject = async (projectName, rawArgs = []) => {
     templates.cursorRules(),
   );
 
+  // The code-generation contract: one file at the package root, copied here
+  // byte-for-byte. AGENTS.md is this app's rules; this one is what an agent
+  // that *writes* code in the app must obey — the golden rule, the
+  // prohibitions, the ten design rules and the verification protocol.
+  createFile(path.join(projectPath, CONTRACT_FILE), readContract());
+
   // The agent skills: `skills/` at the package root is the only source, one
   // kebab-case folder per subject (rules, design, motion, memory). The app gets
   // the same text twice over: once as `skills/` at its own root — the folder any
@@ -495,6 +503,12 @@ export const createProject = async (projectName, rawArgs = []) => {
   createFile(
     path.join(projectPath, ".fletbox/memory/notes/current-status.md"),
     templates.memoryStatusMd(finalName, template),
+  );
+  // The metrics log: one row per verify run, so the north metric can say how
+  // much of the generated code passed the gate with no correction at all.
+  createFile(
+    path.join(projectPath, ".fletbox/metrics/generations.md"),
+    templates.metricsLogMd(),
   );
   createFile(
     path.join(projectPath, "scripts/check-app.mjs"),
