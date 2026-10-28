@@ -26,7 +26,7 @@ Capacitor packages the compiled web application inside a native shell. You can a
 
 ### For every platform
 
-- Node.js 18 or newer.
+- Node.js 20.9 or newer (the CLI's `engines` floor).
 - npm.
 - A working FletBox project.
 - A production build that creates the directory configured as Capacitor's `webDir`.
