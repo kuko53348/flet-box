@@ -1,8 +1,8 @@
 {
   "framework": {
-    "raw": 359635,
-    "gzip": 113322,
-    "brotli": 95604,
+    "raw": 359697,
+    "gzip": 113379,
+    "brotli": 95556,
     "modules": {
       "src/widget-factory/translateProps.js": 41670,
       "src/widgets/Markdown.js": 22676,
@@ -21,7 +21,7 @@
       "src/widgets/ListView.js": 5065,
       "src/widgets/Tooltip.js": 4842,
       "src/navigations/Tabs.js": 4757,
-      "src/navigations/Scaffold.js": 4478,
+      "src/navigations/Scaffold.js": 4540,
       "src/tools/time.js": 4200,
       "src/widgets/CircularBar.js": 4019,
       "src/widgets/TreeView.js": 3866,

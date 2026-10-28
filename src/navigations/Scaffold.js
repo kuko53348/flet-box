@@ -16,7 +16,7 @@ import { initRouter, getCurrentRoute, subscribe } from "./Router.js";
  * @property {HTMLElement|Function} [rightNavBar] - Persistent right sidebar widget or factory function.
  * @property {number} [rightNavBarWidth=260] - Width of the right sidebar in pixels.
  * @property {HTMLElement|Function} [navSideBar] - Legacy alias for leftNavBar (deprecated).
- * @property {number} [navSideBarWidth=260] - Legacy alias for leftNavBarWidth (deprecated).
+ * @property {number} [navSideBarWidth=260] - Width of the legacy navSideBar, on whichever side navSideBarPosition picks.
  * @property {"left"|"right"} [navSideBarPosition="left"] - Legacy: which side navSideBar renders on.
  * @property {Object} [routes] - Route map object for router mode (path → component).
  * @property {string} [basePath] - Deployment prefix, e.g. "/flet-box-docs". Auto-detected when omitted.
@@ -94,14 +94,20 @@ export const Scaffold = (props) => {
     initRouter(routesConfig, currentUrl, { base: basePath });
   }
 
-  // Resolve the legacy navSideBar prop to the appropriate side.
+  // Resolve the legacy navSideBar prop to the appropriate side, and carry its
+  // own width with it: reading the position but not the width made
+  // `navSideBarWidth` a documented no-op that always painted 260.
   let finalLeftNavBar = leftNavBar;
   let finalRightNavBar = rightNavBar;
+  let finalLeftWidth = leftNavBarWidth;
+  let finalRightWidth = rightNavBarWidth;
   if (navSideBar && !leftNavBar && !rightNavBar) {
     if (navSideBarPosition === "right") {
       finalRightNavBar = navSideBar;
+      finalRightWidth = navSideBarWidth;
     } else {
       finalLeftNavBar = navSideBar;
+      finalLeftWidth = navSideBarWidth;
     }
   }
 
@@ -301,7 +307,7 @@ export const Scaffold = (props) => {
     if (widget) {
       leftNavBarContainer.appendChild(widget);
       if (mainContentContainer)
-        mainContentContainer.style.width = `calc(100% - ${toREM(leftNavBarWidth)})`;
+        mainContentContainer.style.width = `calc(100% - ${toREM(finalLeftWidth)})`;
     }
   };
 
@@ -415,7 +421,7 @@ export const Scaffold = (props) => {
 
     if (finalLeftNavBar) {
       leftNavBarContainer = document.createElement("div");
-      leftNavBarContainer.style.width = toREM(leftNavBarWidth);
+      leftNavBarContainer.style.width = toREM(finalLeftWidth);
       leftNavBarContainer.style.flexShrink = "0";
       leftNavBarContainer.style.overflow = "auto";
       leftNavBarContainer.style.height = "100%";
@@ -435,7 +441,7 @@ export const Scaffold = (props) => {
 
     if (finalRightNavBar) {
       rightNavBarContainer = document.createElement("div");
-      rightNavBarContainer.style.width = toREM(rightNavBarWidth);
+      rightNavBarContainer.style.width = toREM(finalRightWidth);
       rightNavBarContainer.style.flexShrink = "0";
       rightNavBarContainer.style.overflow = "auto";
       rightNavBarContainer.style.height = "100%";

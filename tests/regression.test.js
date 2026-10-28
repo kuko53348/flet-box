@@ -4579,6 +4579,46 @@ async function run() {
     shell.remove();
   });
 
+  await t("Scaffold: navSideBarWidth reaches whichever side navSideBar picked", () => {
+    // The legacy pair was read for its position and not its width, so a
+    // documented `navSideBarWidth: 320` still painted 260 and narrowed the body
+    // by 260 — the prop was accepted, documented and ignored.
+    for (const position of ["left", "right"]) {
+      const shell = mount(
+        Scaffold({
+          navSideBar: W.Text({ text: "legacy-bar" }),
+          navSideBarPosition: position,
+          navSideBarWidth: 320,
+          body: W.Text({ text: "body" }),
+        })
+      );
+      const row = shell.children[1];
+      const bar = position === "left" ? row.children[0] : row.children[row.children.length - 1];
+      ok(bar, `${position}: Scaffold built no bar container`);
+      ok(bar.textContent.includes("legacy-bar"), `${position}: the legacy bar is empty`);
+      ok(
+        bar.style.width === "20rem",
+        `${position}: bar width is ${bar.style.width || "unset"}, expected 20rem (320 / 16)`
+      );
+      const content = position === "left" ? row.children[1] : row.children[0];
+      // The left bar also writes the body's width; the right one lets the body's
+      // `flex: 1` take the rest, so only the left side has a number to read.
+      if (position === "left") {
+        ok(
+          content.style.width === "calc(100% - 20rem)",
+          `${position}: the body is narrowed by ${content.style.width || "nothing"}`
+        );
+      } else {
+        ok(
+          getComputedStyle(content).flexGrow === "1",
+          `${position}: the body no longer takes the space the bar leaves`
+        );
+      }
+      shell._cleanup();
+      shell.remove();
+    }
+  });
+
   await t("Tabs: iconPosition puts the icon after, above or below the label", () => {
     // Only "left" had a branch, so every other documented value dropped the
     // icon entirely instead of moving it.
