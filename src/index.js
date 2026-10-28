@@ -150,6 +150,7 @@ export {
   setAccent,
   applyAccentPreference,
   getAccent,
+  getAccentSurfaces,
   listAccents,
   listAccentRamps,
   getTheme,
