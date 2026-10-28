@@ -402,6 +402,40 @@ DESCRIPTION_FALLBACKS = []
 # shared name needs the page that disagrees to say so here — otherwise writing
 # one widget's row silently rewrites every other page that uses the name.
 WIDGET_DESC = {
+    # The controls that report a value answer with `onPress` — the framework-wide
+    # name — and keep their old spelling as a deprecated alias. `DESC`'s `onPress`
+    # promises the widget itself, which is what every other widget receives, so
+    # these six pages have to say what their callback actually carries.
+    "Radio": {
+        "onPress": "Called with the new selected state (`true` or `false`).",
+        "onSelect": "Deprecated alias of `onPress`.",
+    },
+    "Checkbox": {
+        "onPress": "Called with the new checked state (`true` or `false`).",
+        "onCheck": "Deprecated alias of `onPress`.",
+        # DESC's `variant` is the generic "style preset" blurb. On a checkbox it
+        # decides how the *checked* state is painted, and the plate color is not
+        # a new knob — it is the `activeColor` the control already carries.
+        "variant": "How the checked state reads: `outlined` keeps the box hollow with the tick in `activeColor`, `filled` turns the box into an `activeColor` plate and takes the tick to whichever ink reads on it.",
+    },
+    "Switch": {
+        "onPress": "Called with the new toggled state (`true` or `false`).",
+        "onToggle": "Deprecated alias of `onPress`.",
+    },
+    "Accordion": {
+        "onPress": "Called with the new expanded state (`true` or `false`).",
+        "onToggle": "Deprecated alias of `onPress`.",
+    },
+    "Dropdown": {
+        "onPress": "Called with the chosen value.",
+        "onChange": "Deprecated alias of `onPress`.",
+    },
+    "Slider": {
+        "onPress": "Called with the new value while the thumb moves.",
+        "onChanged": "Deprecated alias of `onPress`.",
+    },
+    # `Scaffold` is not here: its page is hand-written (chapter 8), so the
+    # generator never reads a blurb for it.
     "Maps": {
         "center": "View centre as `[lat, lng]`, `{lat, lng}` or `{latitude, longitude}`.",
         "markers": "Pins to draw: bare positions or `{position, label, color, id, rotation, clickable, data}` records.",
@@ -430,12 +464,6 @@ WIDGET_DESC = {
     "GridView": {
         "children": "The cells themselves, laid out `columns` per row. The same contract as `data` + `renderItem` read the other way round: pass built widgets here, or the items plus a builder. `data` wins when both are given.",
     },
-    # DESC's `variant` is the generic "style preset" blurb. On a checkbox it decides
-    # how the *checked* state is painted, and the plate color is not a new knob — it
-    # is the `activeColor` the control already carries.
-    "Checkbox": {
-        "variant": "How the checked state reads: `outlined` keeps the box hollow with the tick in `activeColor`, `filled` turns the box into an `activeColor` plate and takes the tick to whichever ink reads on it.",
-    },
     # DESC's `label` is a caption painted near a control and `showLabels` is a
     # chart switch. On the picker nothing is painted by `label` — it names the
     # radiogroup for a screen reader — and `showLabels` prints the family names
@@ -445,5 +473,8 @@ WIDGET_DESC = {
         "showLabels": "Print each family's name under its swatch. Off by default, because the two-tone square is the answer and twelve captions is a color survey.",
         "onChange": "Called with the chosen family id after the accent has already been applied to the screen, so the app only has to remember the choice.",
         "size": "Edge of one swatch, in framework units. Defaults to 40 — the tap minimum — and the tick badge scales with it.",
+        # `surfaces` is not a paint switch on the picker: it changes what the tap
+        # calls, so the row has to say which tokens move with it.
+        "surfaces": "Offer each family as a theme rather than only as a brand: the tap also paints the page, the panels, the cards and the hairlines from that family's own ramp. Off by default, because a tinted page is a bigger promise than a button color.",
     },
 }

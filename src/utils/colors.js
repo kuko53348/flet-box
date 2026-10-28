@@ -209,3 +209,67 @@ export const ACCENT_PRESETS = ACCENT_FAMILIES;
  */
 export const accentStop = (ramp, theme) => ramp[STOPS[theme].primary];
 
+// How far each surface sits from the stop the ramp hands it.
+//
+// The rule both themes follow: **the plate is not the surface layer's business.**
+// `accentTokens` already writes `primaryBg` from the one stop the family was
+// measured against — vetoes 4, 5 and 6 in this file's header put the page's inks
+// and the accent on it at 4.5:1 — so a theme that invented its own plate would be
+// re-deriving a number the set was chosen for passing. The layer adds what the
+// accent never owned: the page, the panels, the cards and the hairlines, built
+// around that stop.
+//
+// Light reads down the ramp: the palest stop is the page, the veto'd wash is the
+// panel one step deeper, and a hairline steps just below it. A card goes back to
+// white, the way it lifts off `#fafafa` today. The cost of keeping the measured
+// wash is one collision — a selected row painted `primaryBg` inside a panel painted
+// `surface` is the same color, exactly as it is in the neutral palette, where
+// `#f4f4f5` sits on `#fafafa` at 1.05.
+//
+// Dark reads the same ramp from the other end, and it scales the *deep accent*
+// stop rather than the darkest one: multiplying a channel toward black keeps the
+// hue exactly (scaling toward white washes it out — `#042f2e` stops reading as
+// teal at all), and the darkest stop is too dark to divide three ways with any
+// visible step. Blue's `#0b1220` split into page/panel/card separates at L* 1.3
+// and 1.5, which is no layers at all; the same three depths taken from `#1d4ed8`
+// land at L* 2.3 / 4.5 / 8.6 — where the shipped neutral dark palette sits
+// (`#09090b` at 2.5, `#18181b` at 8.4) — with the family's hue left intact.
+const DARK_PAGE_DROP = 90;
+const DARK_PANEL_DROP = 82;
+const DARK_CARD_DROP = 72;
+const DARK_EDGE_DROP = 55;
+const LIGHT_EDGE_DROP = 6;
+
+/**
+ * The surface tokens one family writes when the accent is chosen as a *theme*
+ * rather than as a brand color: page, panels, cards and hairlines.
+ *
+ * Only the surfaces move. The ink scale stays the palette's own neutral, because
+ * every one of those grays was measured against a near-white and a near-black page
+ * and a tinted stop of a saturated family is within a few percent of both — the
+ * text does not need re-deriving, it needs re-measuring, which is what the veto in
+ * `tests/regression.test.js` does. The semantic signals (`success`, `danger`,
+ * their plates and alert tints) keep their own hues for the same reason a tinted
+ * theme must still be able to say "this failed".
+ *
+ * @param {string[]} ramp - The family's five stops for this theme.
+ * @param {"light"|"dark"} theme
+ * @returns {{ background: string, surface: string, card: string, border: string, divider: string }}
+ */
+export const accentSurfaces = (ramp, theme) =>
+  theme === "dark"
+    ? {
+        background: color(ramp[3]).darken(DARK_PAGE_DROP).hex(),
+        surface: color(ramp[3]).darken(DARK_PANEL_DROP).hex(),
+        card: color(ramp[3]).darken(DARK_CARD_DROP).hex(),
+        border: color(ramp[3]).darken(DARK_EDGE_DROP).hex(),
+        divider: color(ramp[3]).darken(DARK_EDGE_DROP).hex(),
+      }
+    : {
+        background: ramp[4],
+        surface: ramp[3],
+        card: "#ffffff",
+        border: color(ramp[3]).darken(LIGHT_EDGE_DROP).hex(),
+        divider: color(ramp[3]).darken(LIGHT_EDGE_DROP).hex(),
+      };
+

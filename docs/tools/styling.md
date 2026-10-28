@@ -18,7 +18,7 @@ import { border, margin, padding, gradient, shadow, color } from "flet-box";
 | Function | Signature | Returns | Description |
 | --- | --- | --- | --- |
 | `animation` | `animation(name, duration?, timing?, iteration?)` | `string` | CSS `animation` shorthand. `name` can also be an options object (`{ name, duration, timing, delay, iteration, direction, fillMode }`). |
-| `border` | `border(width = 1, style = "solid", color?)` | `string` | CSS `border` shorthand, e.g. `1px solid #e2e8f0`. |
+| `border` | `border(width = 1, style = "solid", color)` | `string` | CSS `border` shorthand, e.g. `1px solid #e2e8f0`. The colour is required: a border without one is invisible. |
 | `gradient` | `gradient(type, colors, angle = 135)` | `string` | A CSS gradient background. `type` is `"linear"`, `"circle"` (radial), or `"conic"`; `colors` is an array of color strings. |
 | `margin` / `padding` | `margin(value)` / `padding(value)` | `string` | Spacing CSS. `value` can be a number, a string, or `{ all, horizontal, vertical, top, right, bottom, left }`. |
 | `rgba` | `rgba(r, g, b, a = 1)` | `string` | `rgba(r, g, b, a)` with an alpha default of `1`. |
@@ -29,7 +29,7 @@ import { border, margin, padding, gradient, shadow, color } from "flet-box";
 | `flex` | `flex(grow, shrink = 1, basis = "0%")` | `string` | CSS `flex` shorthand. `grow` can also be `{ grow, shrink, basis }`. |
 | `grid` | `grid(options)` | `string` | CSS grid template from `{ columns, rows, gap }`; `gap` can be a number or `{ row, column }`. |
 | `color` | `color(value)` | Color object | A mutable, chainable color. See the Color object below. |
-| `stackPosition` | `stackPosition(widget, props)` | `Widget` | Applies absolute positioning/centering to a widget and returns it. |
+| `stackPosition` | `stackPosition(widget, props)` | `Widget` | Anchors a widget absolutely over its positioned ancestor and returns it. Takes `top`/`right`/`bottom`/`left` (numbers go through the `rem` contract), the logical `start`/`end`, and the shorthands `centerX`, `centerY`, `center`, `fullWidth`, `fullHeight`, `full`. A `false` value means "do not apply". |
 | `toREM` / `toPX` | `toREM(value)` / `toPX(value)` | `string \| undefined` | Convert a value between `rem` and `px`. |
 | `setBaseFontSize` | `setBaseFontSize(px)` | `void` | Change the `rem` base (default `16`). |
 | `getBaseFontSize` | `getBaseFontSize()` | `number` | The current `rem` base. |

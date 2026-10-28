@@ -1,6 +1,6 @@
 // src/components/flet-box/utils/themes.js
 import { readableInk } from "./readableInk.js";
-import { ACCENT_PRESETS, accentTokens, accentStop } from "./colors.js";
+import { ACCENT_PRESETS, accentSurfaces, accentTokens, accentStop } from "./colors.js";
 
 // ========== DEFAULT COLORS (static, safe) ==========
 const DEFAULT_COLORS = {
@@ -326,17 +326,26 @@ const syncBrowserChrome = () => {
 const applyPalette = (themeName) => {
   const palette = palettes[themeName];
   if (palette) {
-    // The accent sits on top of the neutral scale and owns exactly three tokens —
-    // `primary`, the ink that reads on it and its tint — so switching theme keeps
-    // every surface and moves only the brand. Merging here, rather than writing
-    // the tokens straight onto `colors`, is what makes the choice survive a
+    // The accent sits on top of the neutral scale and owns three tokens by
+    // default — `primary`, the ink that reads on it and its tint — so switching
+    // theme keeps every surface and moves only the brand. Worn as a *theme*
+    // (`setAccent(id, { surfaces: true })`) it also writes the page, the panels,
+    // the cards and the hairlines off the same five stops, which is the difference
+    // between a colored button and a colored app. Merging here, rather than
+    // writing the tokens straight onto `colors`, is what makes the choice survive a
     // `setTheme`, an OS flip and a re-register: the layer is re-applied on every
     // repaint instead of being overwritten by the next palette.
     //
     // It therefore also wins over a palette's own `primary`, including one an app
     // wrote with `registerPalette` — the reader's choice of color is the later
     // word. An app that wants its brand back calls `setAccent(null)`.
-    const layer = (activeAccent && accents[activeAccent]?.[themeName]) || null;
+    const accent = activeAccent ? accents[activeAccent] : null;
+    const layer = accent
+      ? {
+          ...accent[themeName],
+          ...(accentSurfacesOn && accent[`${themeName}Surfaces`]),
+        }
+      : null;
     const merged = layer ? { ...palette, ...layer } : palette;
     Object.keys(merged).forEach((key) => {
       if (colors.hasOwnProperty(key)) {
@@ -430,8 +439,14 @@ export const registerPalette = (themeName, palette) => {
  */
 const accents = {};
 
+/** What the stored value puts between a family's id and "it also paints the page". */
+const SURFACES_SUFFIX = "+surfaces";
+
 /** The accent currently laid over the palette, or `null` for the palette's own. */
 let activeAccent = null;
+
+/** Whether that accent also paints the page and its panels, or only the brand. */
+let accentSurfacesOn = false;
 
 /**
  * The three tokens one end of an accent writes, from either shape an accent can
@@ -448,6 +463,18 @@ const accentLayer = (spec, theme) =>
     Array.isArray(spec) ? spec : undefined
   );
 
+/**
+ * The page and panel tokens the same end writes when the accent is worn as a
+ * theme. Only a ramp can produce them: five stops are a scale, and a bare brand
+ * hex is one color with no lightness to walk.
+ *
+ * @param {string|string[]} spec
+ * @param {"light"|"dark"} theme
+ * @returns {Object|null}
+ */
+const accentSurfaceLayer = (spec, theme) =>
+  Array.isArray(spec) ? accentSurfaces(spec, theme) : null;
+
 const putAccent = (preset) => {
   const { id, label, light, dark } = preset || {};
   if (!id || !light || !dark) return null;
@@ -456,6 +483,8 @@ const putAccent = (preset) => {
     label: label || id,
     light: accentLayer(light, "light"),
     dark: accentLayer(dark, "dark"),
+    lightSurfaces: accentSurfaceLayer(light, "light"),
+    darkSurfaces: accentSurfaceLayer(dark, "dark"),
     // Kept only when the accent arrived as a ramp; a picker paints the family,
     // not just its accent stop, and a pair of hexes has no family to show.
     ramp: Array.isArray(light) || Array.isArray(dark) ? { light, dark } : null,
@@ -469,13 +498,22 @@ ACCENT_PRESETS.forEach(putAccent);
  * Writes the reader's accent choice down, or removes it. `window` is the test, not
  * a try/catch around the call, for the same reason `setTheme` uses it: Node 22+
  * has a global `localStorage` that warns and throws.
+ *
+ * Surfaces ride on the end of the same value (`"teal+surfaces"`) so the stored
+ * form stays a string a person can read in devtools, and a bare id — what every
+ * app wrote before surfaces existed — still parses.
  * @param {string|null} id
+ * @param {boolean} surfaces
  */
-const persistAccent = (id) => {
+const persistAccent = (id, surfaces) => {
   if (typeof window === "undefined") return;
   try {
-    if (id) localStorage.setItem("fletbox-accent", id);
-    else localStorage.removeItem("fletbox-accent");
+    if (id) {
+      localStorage.setItem(
+        "fletbox-accent",
+        surfaces ? `${id}${SURFACES_SUFFIX}` : id,
+      );
+    } else localStorage.removeItem("fletbox-accent");
   } catch (e) {
     // A full or private store is not a reason to stop painting the page.
   }
@@ -485,12 +523,15 @@ const persistAccent = (id) => {
  * The stored accent, when it is one the engine knows. A stale id — a family an
  * older build shipped and this one dropped — reads as "no choice" rather than
  * painting a color nothing derives from.
- * @returns {string|null}
+ * @returns {{id: string, surfaces: boolean}|null}
  */
 const readStoredAccent = () => {
   try {
-    const id = localStorage.getItem("fletbox-accent");
-    return id && accents[id] ? id : null;
+    const raw = localStorage.getItem("fletbox-accent");
+    if (!raw) return null;
+    const surfaces = raw.endsWith(SURFACES_SUFFIX);
+    const id = surfaces ? raw.slice(0, -SURFACES_SUFFIX.length) : raw;
+    return id && accents[id] ? { id, surfaces } : null;
   } catch (e) {
     return null;
   }
@@ -532,13 +573,25 @@ export const registerAccent = (preset) => {
  * whatever `primary` the palette itself ships, and the stored preference is
  * cleared so the next boot does it too.
  *
+ * With `{ surfaces: true }` the family is worn as a whole theme: the same five
+ * stops also write `background`, `surface`, `card`, `border` and `divider`, so the
+ * page, the panels and the hairlines take the hue and not only the buttons. The
+ * ink scale, the focus ring and the semantic signals stay the palette's — a tinted
+ * theme still has to be able to say "this failed". An accent registered as a bare
+ * pair of hexes has no scale to walk, so it keeps painting brand only.
+ *
  * @param {string|null} id - A registered accent, or `null` for the palette's own.
+ * @param {Object} [options]
+ * @param {boolean} [options.surfaces] - Also paint the page and its panels.
  * @returns {Object} The updated `colors` object.
  */
-export const setAccent = (id) => {
+export const setAccent = (id, options) => {
   if (id && !accents[id]) return colors;
   activeAccent = id || null;
-  persistAccent(activeAccent);
+  accentSurfacesOn = Boolean(
+    activeAccent && options?.surfaces && accents[activeAccent].lightSurfaces,
+  );
+  persistAccent(activeAccent, accentSurfacesOn);
   applyPalette(getTheme());
   return colors;
 };
@@ -551,11 +604,16 @@ export const setAccent = (id) => {
  * selected on the first visit and a later choice still wins over it.
  *
  * @param {string} id - A registered accent.
+ * @param {Object} [options]
+ * @param {boolean} [options.surfaces] - Wear it as a theme, not only as a brand.
  * @returns {string|null} The accent now active.
  */
-export const applyAccentPreference = (id) => {
+export const applyAccentPreference = (id, options) => {
   if (readStoredAccent() || !accents[id]) return activeAccent;
   activeAccent = id;
+  accentSurfacesOn = Boolean(
+    options?.surfaces && accents[id].lightSurfaces,
+  );
   applyPalette(getTheme());
   return activeAccent;
 };
@@ -565,6 +623,17 @@ export const applyAccentPreference = (id) => {
  * @returns {string|null} Its id, or `null` when the palette's own `primary` is showing.
  */
 export const getAccent = () => activeAccent;
+
+/**
+ * Whether the active accent also paints the page and its panels, or only the brand.
+ *
+ * A picker needs this to decide whether a tap on the cell already ticked is a
+ * no-op: the same family means two different things, and re-tapping it to move
+ * between them must repaint.
+ *
+ * @returns {boolean}
+ */
+export const getAccentSurfaces = () => accentSurfacesOn;
 
 /**
  * Every selectable accent, in registration order, as the two stops a picker paints.
@@ -744,7 +813,9 @@ const initTheme = () => {
     // Restored before the first paint, not after: laying the accent on afterwards
     // would repaint the whole page a frame into boot and flash the brand color
     // over the reader's own choice.
-    activeAccent = readStoredAccent();
+    const stored = readStoredAccent();
+    activeAccent = stored?.id ?? null;
+    accentSurfacesOn = Boolean(stored?.surfaces);
     const savedTheme = localStorage.getItem("fletbox-theme");
     if (savedTheme && (savedTheme === "light" || savedTheme === "dark")) {
       applyPalette(savedTheme);

@@ -23,6 +23,7 @@ const accents = ThemePicker({});
 | `accents` | `Accent[]` | The families on offer, as `listAccents()` returns them: `{ id, label, light, dark }`. Defaults to every registered family — an app that ships one brand color filters the list rather than registering fewer. |
 | `size` | `number` | Edge of one swatch, in framework units. Defaults to 40 — the tap minimum — and the tick badge scales with it. |
 | `showLabels` | `boolean` | Print each family's name under its swatch. Off by default, because the two-tone square is the answer and twelve captions is a color survey. |
+| `surfaces` | `boolean` | Offer each family as a theme rather than only as a brand: the tap also paints the page, the panels, the cards and the hairlines from that family's own ramp. Off by default, because a tinted page is a bigger promise than a button color. |
 | `label` | `string` | Accessible name of the color group. Nothing is painted from it; a screen reader announces the row as one question with this wording. |
 | `disabled` | `boolean` | Disables interaction and shows the non-interactive state. |
 | `onChange` | `(id: string) => void` | Called with the chosen family id after the accent has already been applied to the screen, so the app only has to remember the choice. |
@@ -139,6 +140,7 @@ const preferences = BottomSheet({
 - An app sets its own brand at boot with `applyAccentPreference(id)`, never with `setAccent`: the first leaves the picker blank on a reader's first visit, the second answers for them before they have chosen.
 - Twelve squares is a color survey; four is a decision. Cut the list to what the brand allows with `accents: listAccents().filter((a) => [...].includes(a.id))`.
 - Each half of a square is the same hue in one theme: the upper-left is what it wears on a light page, the lower-right what it wears on a dark one. Only one of the two is on screen at a time, and showing both is what makes the choice safe.
+- `surfaces: true` makes the same tap a theme instead of a brand color: the page, the panels, the cards and the hairlines are read off the family's ramp, from its palest stop down. The words never change color with it — the ink scale is the palette's own — so a tinted theme cannot make itself unreadable.
 
 ## Accessibility
 
@@ -149,7 +151,7 @@ const preferences = BottomSheet({
 
 - `onChange(id)` fires after the screen is repainted, and re-tapping the square already chosen fires nothing.
 - The picker subscribes to the theme, so a toggle anywhere else on the screen moves the tick here without a prop change; the subscription is released on unmount.
-- `update({ accents, showLabels, label, disabled })` rebuilds the grid. Any other key goes to the factory and styles the row itself.
+- `update({ accents, showLabels, surfaces, label, disabled })` rebuilds the grid. Any other key goes to the factory and styles the row itself.
 - `size` is the edge of the square and defaults to the 40-unit tap minimum; the tick and its badge scale with it.
 - Every shipped family is measured, not eyeballed: the accent carries white or dark words at 4.5:1, reads as text on the page and as a glyph on a card, and its wash sits just off the background. `tests/regression.test.js` re-measures all of it in both themes.
 

@@ -16,7 +16,7 @@
  * - **syntaxHighlight** — JavaScript/FletBox tokenizer and HTML highlighter
  * - **markdownParser** — markdown → FletBox widget tree converter
  * - **visualEffects**  — CSS animations (stripes, shimmer, glow, pulse)
- * - **stackPosition**  — dataset-based absolute positioning for Stack children
+ * - **stackPosition**  — absolute positioning for a widget layered over its parent
  * - **units**          — px ↔ rem conversion helpers
  * - **navigation**     — tree-navigation mixin for widget objects
  * - **stopWebRefresh** — disables browser refresh gestures
@@ -31,6 +31,7 @@ export {
   setAccent,
   applyAccentPreference,
   getAccent,
+  getAccentSurfaces,
   listAccents,
   listAccentRamps,
   getTheme,

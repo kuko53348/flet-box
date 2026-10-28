@@ -1149,6 +1149,13 @@
       "setAccent(\"teal\")"
     ]
   },
+  "FletBox widgets setAccentTheme": {
+    "prefix": "setAccentTheme",
+    "description": "Make a FletBox widgets setAccentTheme widget",
+    "body": [
+      "setAccent(\"teal\", { surfaces: true })"
+    ]
+  },
   "FletBox widgets resetAccent": {
     "prefix": "resetAccent",
     "description": "Make a FletBox widgets resetAccent widget",
@@ -1161,6 +1168,13 @@
     "description": "Make a FletBox widgets getAccent widget",
     "body": [
       "getAccent()"
+    ]
+  },
+  "FletBox widgets getAccentSurfaces": {
+    "prefix": "getAccentSurfaces",
+    "description": "Make a FletBox widgets getAccentSurfaces widget",
+    "body": [
+      "const paintedAsTheme = getAccentSurfaces()"
     ]
   },
   "FletBox widgets listAccents": {
@@ -6298,49 +6312,49 @@
     "prefix": "stackStart",
     "description": "Make a FletBox widgets stackStart widget",
     "body": [
-      "start: 16, // parent Stack needs position: \"stack\""
+      "start: 16, // needs position: \"stack\" on this widget"
     ]
   },
   "FletBox widgets stackEnd": {
     "prefix": "stackEnd",
     "description": "Make a FletBox widgets stackEnd widget",
     "body": [
-      "end: 16, // parent Stack needs position: \"stack\""
+      "end: 16, // needs position: \"stack\" on this widget"
     ]
   },
   "FletBox widgets stackCenterX": {
     "prefix": "stackCenterX",
     "description": "Make a FletBox widgets stackCenterX widget",
     "body": [
-      "centerX: true, // parent Stack needs position: \"stack\""
+      "centerX: true, // needs position: \"stack\" on this widget"
     ]
   },
   "FletBox widgets stackCenterY": {
     "prefix": "stackCenterY",
     "description": "Make a FletBox widgets stackCenterY widget",
     "body": [
-      "centerY: true, // parent Stack needs position: \"stack\""
+      "centerY: true, // needs position: \"stack\" on this widget"
     ]
   },
   "FletBox widgets stackCenter": {
     "prefix": "stackCenter",
     "description": "Make a FletBox widgets stackCenter widget",
     "body": [
-      "center: true, // parent Stack needs position: \"stack\""
+      "center: true, // needs position: \"stack\" on this widget"
     ]
   },
   "FletBox widgets stackFullHeight": {
     "prefix": "stackFullHeight",
     "description": "Make a FletBox widgets stackFullHeight widget",
     "body": [
-      "fullHeight: true, // parent Stack needs position: \"stack\""
+      "fullHeight: true, // needs position: \"stack\" on this widget"
     ]
   },
   "FletBox widgets stackFull": {
     "prefix": "stackFull",
     "description": "Make a FletBox widgets stackFull widget",
     "body": [
-      "full: true, // parent Stack needs position: \"stack\""
+      "full: true, // needs position: \"stack\" on this widget"
     ]
   },
   "FletBox widgets basePath": {
@@ -6781,7 +6795,7 @@
     "prefix": "stackPosition",
     "description": "Make a FletBox widgets stackPosition widget",
     "body": [
-      "// The public helper only records the offsets on the dataset; the parent Stack reads them.",
+      "// Ancla el widget sobre su ancestro posicionado: posici\u00f3n absoluta + offsets en rem.",
       "const badge = Text({ text: \"3\" });",
       "stackPosition(badge, { top: 8, right: 8 });"
     ]

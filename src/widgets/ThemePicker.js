@@ -11,8 +11,11 @@
  *
  * Tapping calls `setAccent`, which repaints every widget already on screen and
  * writes the choice to `localStorage`, so the next visit opens in the same color.
- * The picker subscribes to the theme, so a toggle somewhere else on the screen
- * moves the selection here without this widget being asked.
+ * With `surfaces: true` the tap lays the family over the page as well — background,
+ * panels, cards and hairlines all read off the same ramp — so the picker chooses a
+ * *theme* and not only a brand color. The picker subscribes to the theme, so a
+ * toggle somewhere else on the screen moves the selection here without this widget
+ * being asked.
  */
 import { WidgetFactory } from "../widget-factory/index.js";
 import { Text } from "./Text.js";
@@ -20,6 +23,7 @@ import { Icon } from "./Icon.js";
 import {
   colors,
   getAccent,
+  getAccentSurfaces,
   setAccent,
   listAccents,
   subscribeTheme,
@@ -32,13 +36,14 @@ import { TAP_MINIMUM, LABEL_TEXT, PILL } from "../tools/scale.js";
  * @param {Object} props
  * @returns {HTMLElement} The picker's root row.
  */
-export const ThemePicker = (props) => {
+export const ThemePicker = (props = {}) => {
   const {
     accents = listAccents(),
     size = TAP_MINIMUM,
     showLabels = false,
     label = "Accent color",
     disabled = false,
+    surfaces = false,
     onChange,
     ...rest
   } = props;
@@ -50,6 +55,8 @@ export const ThemePicker = (props) => {
   let choices = accents;
   let labelled = showLabels;
   let off = disabled;
+  // Whether a tap lays the family over the page too, or only over the brand.
+  let tinted = surfaces;
 
   // The diagonal split. `135deg` runs from the top-left corner, so the first stop
   // owns the half a reader's eye reaches first — which is the light theme, the one
@@ -160,8 +167,11 @@ export const ThemePicker = (props) => {
       // handlers that arrive as props.
       root.update({
         onPress: () => {
-          if (getAccent() === accent.id) return;
-          setAccent(accent.id);
+          // Re-tapping the ticked cell still has to work when the cell changed
+          // meaning: the same id paints brand-only or a whole theme depending on
+          // `surfaces`, and that flag can arrive through `update()`.
+          if (getAccent() === accent.id && getAccentSurfaces() === tinted) return;
+          setAccent(accent.id, { surfaces: tinted });
           if (onChange) onChange(accent.id);
         },
       });
@@ -205,13 +215,18 @@ export const ThemePicker = (props) => {
     cells.length = 0;
   });
 
-  composeUpdate(group, ["accents", "showLabels", "label", "disabled"], (next) => {
-    if (next.label !== undefined) group.setAttribute("aria-label", next.label);
-    if (next.accents !== undefined) choices = next.accents;
-    if (next.showLabels !== undefined) labelled = next.showLabels;
-    if (next.disabled !== undefined) off = next.disabled;
-    if (next.accents || next.showLabels || next.disabled) rebuild();
-  });
+  composeUpdate(
+    group,
+    ["accents", "showLabels", "label", "disabled", "surfaces"],
+    (next) => {
+      if (next.label !== undefined) group.setAttribute("aria-label", next.label);
+      if (next.accents !== undefined) choices = next.accents;
+      if (next.showLabels !== undefined) labelled = next.showLabels;
+      if (next.disabled !== undefined) off = next.disabled;
+      if (next.surfaces !== undefined) tinted = next.surfaces;
+      if (next.accents || next.showLabels || next.disabled || next.surfaces) rebuild();
+    },
+  );
 
   return group;
 };

@@ -374,7 +374,7 @@ WIDGET_DOCS = {
             "The title becomes the toggle label, so write it as a clear question or section name.",
         ],
         "behavior": [
-            "onToggle receives the new expanded boolean whenever the header is activated.",
+            "onPress receives the new expanded boolean whenever the header is activated.",
             "disabled blocks toggling, and animate: false skips the open/close transition.",
             "A shut panel still shows its edge: the header keeps the divider and the",
             "'contained' variant paints the raised plate, so it never reads as plain text.",
@@ -386,7 +386,7 @@ WIDGET_DOCS = {
         "normal": '''const faq = Accordion({
   title: "Shipping options",
   expanded: false,
-  onToggle: (expanded) => console.log(expanded),
+  onPress: (expanded) => console.log(expanded),
   children: Text({ text: "Free shipping over $50." }),
 });''',
         "full": '''const faq = Accordion({
@@ -405,7 +405,7 @@ WIDGET_DOCS = {
   divider: true,
   animate: true,
   animationDuration: 250,
-  onToggle: (expanded) => console.log(expanded),
+  onPress: (expanded) => console.log(expanded),
   children: Text({ text: "We accept cards, PayPal, and bank transfer." }),
 });''',
     },
