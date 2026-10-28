@@ -417,6 +417,7 @@ WIDGET_DOCS = {
         "behavior": [
             "Size presets control padding, font size, and icon size; `fullWidth` stretches the button to 100%.",
             "`onPress` receives no arguments and is wired to the native click; `elevation` picks a shadow level.",
+            "The label is one line. A longer `text` is ellipsized instead of wrapped, so a fixed-height pill keeps its shape and the words never run through the rounded ends; the full string stays the accessible name. A block of copy that needs to wrap belongs in a card or a list tile, not in a button.",
         ],
         "basic": '''const save = Button({
   text: "Save",
@@ -443,7 +444,7 @@ WIDGET_DOCS = {
 });''',
     },
     "Icon": {
-        "summary": "Material icon glyph rendered as a span. `name` is required and maps to a Material Icons ligature.",
+        "summary": "Material icon glyph rendered as a span. `name` (or its alias `icon`) names the Material Icons ligature to draw.",
         "when": "Use Icon for compact actions, status indicators, and decoration next to a label.",
         "related": ["Button", "Text", "Row", "ListTile"],
         "tips": [

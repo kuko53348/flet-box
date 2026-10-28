@@ -99,7 +99,30 @@ declare module 'flet-box' {
     // The engine routes `display` untouched; `Stack` sets it internally and an
     // app that overrides it is doing something the type must not forbid.
     display?: string;
+    // The rest of the layout and border styles the engine already routes on
+    // every widget (`translateProps.js`). Declaring them only on `Container`
+    // made `Column({ flexDirection: "row", flexGrow: 1 })` — the recipe the
+    // layout skill teaches — a false error in a JS editor.
+    boxSizing?: 'border-box' | 'content-box';
+    flexDirection?: 'row' | 'column' | 'row-reverse' | 'column-reverse';
+    flexGrow?: number;
+    flexShrink?: number;
+    gap?: number | string;
+    fontSize?: number;
+    borderColor?: Color;
+    borderWidth?: number;
     padding?: Padding;
+    // The engine routes each padding side, and the `pt/pr/pb/pl` aliases, as rem
+    // lengths on every widget, exactly like the margins below: `AppBar` reads
+    // the top one to keep its title clear of a notch.
+    paddingTop?: Size;
+    paddingRight?: Size;
+    paddingBottom?: Size;
+    paddingLeft?: Size;
+    pt?: Size;
+    pr?: Size;
+    pb?: Size;
+    pl?: Size;
     margin?: Margin;
     // The engine routes each margin side, and the `mt/mr/mb/ml` aliases, as rem
     // lengths on every widget: `Text({ marginTop: 4 })` is legal at runtime.
@@ -136,11 +159,17 @@ declare module 'flet-box' {
     opacity?: number;
     visible?: boolean;
     disabled?: boolean;
-    onPress?: (widget: Widget) => void;
-    onClick?: (widget: Widget) => void;
+    // The handler receives a DOM Event on every widget that forwards the click
+    // through the engine (Container, Row, Column, Text, Button, Icon, Image,
+    // Avatar, Card, ListTile). A widget that answers with a value declares its
+    // own: Switch/Checkbox/Radio pass the new boolean, Accordion the expanded
+    // state. `(widget: Widget)` named an argument no call site ever received,
+    // so a correct `onPress: (checked: boolean) => ...` was underlined.
+    onPress?: (event?: Event) => void;
+    onClick?: (event?: Event) => void;
     // The lowercase alias the engine also routes (`{ prop: "onclick" }` in
     // translateProps); the generated AppBar reaches for it.
-    onclick?: (widget: Widget) => void;
+    onclick?: (event?: Event) => void;
     // A child's own cross-axis answer to its parent's `alignItems`. It belongs on
     // `CommonProps` rather than on the layouts because the widget that needs it is
     // the *child* — a chip centred inside a row whose other children stretch.
@@ -329,7 +358,7 @@ declare module 'flet-box' {
     alignItems?: ContainerProps['alignItems'];
     wrap?: boolean | 'wrap' | 'nowrap' | 'wrap-reverse';
     children?: Widget[];
-    onPress?: (widget: Widget) => void;
+    onPress?: (event?: Event) => void;
   }
   export function Row(props: RowProps): Widget;
 
@@ -338,7 +367,7 @@ declare module 'flet-box' {
     justifyContent?: ContainerProps['justifyContent'];
     alignItems?: ContainerProps['alignItems'];
     children?: Widget[];
-    onPress?: (widget: Widget) => void;
+    onPress?: (event?: Event) => void;
   }
   export function Column(props: ColumnProps): Widget;
 
@@ -418,7 +447,7 @@ declare module 'flet-box' {
     letterSpacing?: number | string;
     type?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'p';
     styles?: Array<'bold' | 'italic' | 'underline' | 'strikethrough' | 'mark' | 'small' | 'code'>;
-    onPress?: (widget: Widget) => void;
+    onPress?: (event?: Event) => void;
   }
   export function Text(props: TextProps): Widget;
 
@@ -446,10 +475,13 @@ declare module 'flet-box' {
   export function Button(props: ButtonProps): Widget;
 
   export interface IconProps extends CommonProps {
-    name: string;
+    // `icon` is the runtime alias the widget reads first (`icon || name`), so
+    // both spellings describe a glyph and neither is the odd one out.
+    name?: string;
+    icon?: string;
     size?: number;
     color?: Color;
-    onPress?: (widget: Widget) => void;
+    onPress?: (event?: Event) => void;
   }
   export function Icon(props: IconProps): Widget;
 
@@ -464,7 +496,7 @@ declare module 'flet-box' {
     downloadFileName?: string;
     onLoad?: (widget: Widget) => void;
     onError?: (widget: Widget) => void;
-    onPress?: (widget: Widget) => void;
+    onPress?: (event?: Event) => void;
   }
   export function Image(props: ImageProps): Widget;
 
@@ -478,7 +510,7 @@ declare module 'flet-box' {
     shape?: 'circle' | 'rounded' | 'square';
     online?: boolean;
     badgeColor?: Color;
-    onPress?: (widget: Widget) => void;
+    onPress?: (event?: Event) => void;
   }
   export function Avatar(props: AvatarProps): Widget & {
     updateContent(newProps: Partial<AvatarProps>): void;
@@ -494,7 +526,7 @@ declare module 'flet-box' {
     borderWidth?: number;
     borderStyle?: 'solid' | 'dashed' | 'dotted';
     borderColor?: Color;
-    onPress?: (widget: Widget) => void;
+    onPress?: (event?: Event) => void;
   }
   export function Card(props: CardProps): Widget;
 
@@ -510,7 +542,9 @@ declare module 'flet-box' {
     /** Text props merged into the description line. */
     descriptionProps?: Partial<TextProps>;
     rightItem?: Widget;
-    onPress?: (widget: Widget) => void;
+    /** Space between the left item, the text column and the right item. */
+    gap?: number;
+    onPress?: (event?: Event) => void;
     selected?: boolean;
     disabled?: boolean;
     divider?: boolean;
@@ -668,6 +702,8 @@ declare module 'flet-box' {
     height?: number;
     thumbSize?: number;
     color?: Color;
+    /** Colour of the knob alone, when it must differ from the filled track. */
+    thumbColor?: Color;
     trackColor?: Color;
     orientation?: 'horizontal' | 'vertical';
     inverted?: boolean;
@@ -711,6 +747,8 @@ declare module 'flet-box' {
     bgColor?: Color;
     expandedColor?: Color;
     titleColor?: Color;
+    /** Colour of the rule between the header and the panel. */
+    dividerColor?: Color;
     titleSize?: number;
     titleWeight?: string;
     titlePadding?: string;
@@ -1116,6 +1154,8 @@ declare module 'flet-box' {
     icon?: string;
     label: string;
     route?: string;
+    /** Space between the icon, the label and the trailing icon. */
+    gap?: number;
     onPress?: () => void;
     onSelect?: () => void;
     trailingIcon?: string;

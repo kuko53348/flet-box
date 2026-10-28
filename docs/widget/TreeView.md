@@ -86,23 +86,39 @@ Every widget also accepts these shared props — see [common props](COMMON_PROPS
 | `maxWidth` | `Size` | Maximum width the widget may grow to. |
 | `minHeight` | `Size` | Minimum height the widget may shrink to. |
 | `maxHeight` | `Size` | Maximum height the widget may grow to. |
-| `border` | `string` | The `border` value for the widget. |
-| `borderTop` | `string` | The `borderTop` value for the widget. |
-| `borderBottom` | `string` | The `borderBottom` value for the widget. |
-| `borderLeft` | `string` | The `borderLeft` value for the widget. |
-| `borderRight` | `string` | The `borderRight` value for the widget. |
-| `cursor` | `string` | The `cursor` value for the widget. |
+| `border` | `string` | CSS `border` shorthand for all four edges: width, style and color in one string. |
+| `borderTop` | `string` | The top edge of the border alone, for a widget whose rim differs per side. |
+| `borderBottom` | `string` | The bottom edge of the border alone, for a widget whose rim differs per side. |
+| `borderLeft` | `string` | The left edge of the border alone, for a widget whose rim differs per side. |
+| `borderRight` | `string` | The right edge of the border alone, for a widget whose rim differs per side. |
+| `cursor` | `string` | CSS `cursor` value: what the pointer becomes over the widget (`pointer`, `grab`, `not-allowed`). |
 | `display` | `string` | CSS `display` value for the container. |
+| `boxSizing` | `'border-box' \| 'content-box'` | Which box `width` and `height` measure: `border-box` keeps the size you asked for and pushes padding inward. |
+| `flexDirection` | `'row' \| 'column' \| 'row-reverse' \| 'column-reverse'` | Main axis of a flex container: `row` places children side by side, `column` stacks them. |
+| `flexGrow` | `number` | Share of the leftover space this child takes, relative to its siblings. |
+| `flexShrink` | `number` | How readily the child gives space back when the row overflows; `0` keeps its size. |
+| `gap` | `number \| string` | Space between children along the layout axis. |
+| `fontSize` | `number` | Size of the font. |
+| `borderColor` | `Color` | Color used for the border. |
+| `borderWidth` | `number` | Width of the border. |
 | `padding` | `Padding` | Space inside the widget, between its content and its border. |
+| `paddingTop` | `Size` | Space inside the widget, on the top edge only. |
+| `paddingRight` | `Size` | Space inside the widget, on the right edge only. |
+| `paddingBottom` | `Size` | Space inside the widget, on the bottom edge only. |
+| `paddingLeft` | `Size` | Space inside the widget, on the left edge only. |
+| `pt` | `Size` | Alias of `paddingTop`. |
+| `pr` | `Size` | Alias of `paddingRight`. |
+| `pb` | `Size` | Alias of `paddingBottom`. |
+| `pl` | `Size` | Alias of `paddingLeft`. |
 | `margin` | `Margin` | Space outside the widget, between it and its neighbors. |
-| `marginTop` | `Size` | The `marginTop` value for the widget. |
-| `marginRight` | `Size` | The `marginRight` value for the widget. |
-| `marginBottom` | `Size` | The `marginBottom` value for the widget. |
-| `marginLeft` | `Size` | The `marginLeft` value for the widget. |
-| `mt` | `Size` | The `mt` value for the widget. |
-| `mr` | `Size` | The `mr` value for the widget. |
-| `mb` | `Size` | The `mb` value for the widget. |
-| `ml` | `Size` | The `ml` value for the widget. |
+| `marginTop` | `Size` | Space outside the widget, on the top edge only. |
+| `marginRight` | `Size` | Space outside the widget, on the right edge only. |
+| `marginBottom` | `Size` | Space outside the widget, on the bottom edge only. |
+| `marginLeft` | `Size` | Space outside the widget, on the left edge only. |
+| `mt` | `Size` | Alias of `marginTop`. |
+| `mr` | `Size` | Alias of `marginRight`. |
+| `mb` | `Size` | Alias of `marginBottom`. |
+| `ml` | `Size` | Alias of `marginLeft`. |
 | `bgColor` | `Color` | Background color. Alias: `backgroundColor`. |
 | `backgroundColor` | `Color` | Background color. Alias of `bgColor`. |
 | `color` | `Color` | Foreground color, usually the text or icon color. |
@@ -112,16 +128,16 @@ Every widget also accepts these shared props — see [common props](COMMON_PROPS
 | `filter` | `string` | Raw CSS `filter` value applied to the widget itself, e.g. `blur(4px)`. |
 | `backdropFilter` | `string` | Raw CSS `backdrop-filter` value: what sits behind the widget is blurred through it, which is what makes a translucent card frosted glass. |
 | `maskImage` | `string` | Raw CSS `mask-image` value, used to fade a widget out at its edges instead of cutting it. |
-| `bgImage` | `string` | The `bgImage` value for the widget. |
-| `bgSize` | `string` | Size of the bg. |
-| `bgPosition` | `string` | Position of the bg. |
-| `bgRepeat` | `string` | The `bgRepeat` value for the widget. |
+| `bgImage` | `string` | Image painted behind the widget's content (CSS `background-image`), placed with `bgSize` and `bgPosition`. |
+| `bgSize` | `string` | How the background image fills its box (`cover`, `contain`, or a length). |
+| `bgPosition` | `string` | Where the background image is anchored (`center`, `top`, `50% 20%`). |
+| `bgRepeat` | `string` | Whether the background image tiles; `no-repeat` for a single cover. |
 | `opacity` | `number` | Opacity from 0 (invisible) to 1 (fully opaque). |
 | `visible` | `boolean` | Whether the widget is rendered and visible. |
 | `disabled` | `boolean` | Disables interaction and shows the non-interactive state. |
-| `onPress` | `(widget: Widget) => void` | Callback fired when the widget is pressed. Alias: `onClick`. |
-| `onClick` | `(widget: Widget) => void` | Callback fired when the widget is clicked. Alias: `onPress`. |
-| `onclick` | `(widget: Widget) => void` | The `onclick` value for the widget. |
+| `onPress` | `(event?: Event) => void` | Callback fired when the widget is pressed. Alias: `onClick`. |
+| `onClick` | `(event?: Event) => void` | Callback fired when the widget is clicked. Alias: `onPress`. |
+| `onclick` | `(event?: Event) => void` | Lowercase alias of `onClick`, kept because the shipped templates and the HTML habit write it. |
 | `alignSelf` | `AlignSelf` | Overrides the parent's `alignItems` for this child alone (CSS `align-self`). Alias: `selfAlign`. |
 | `selfAlign` | `AlignSelf` | Alias of `alignSelf`. |
 | `id` | `string` | DOM `id` for the rendered element. |
