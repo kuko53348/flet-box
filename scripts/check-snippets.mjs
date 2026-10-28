@@ -14,7 +14,7 @@
  *   node scripts/check-snippets.mjs --full     # list every finding
  *   node scripts/check-snippets.mjs --json     # machine-readable report
  *
- * Findings (everything except BROKEN_CALL fails the build):
+ * Findings (every one of them fails the build):
  * - SYNTAX           — the body is not valid JavaScript at all.
  * - BROKEN_IMPORT    — it imports a name the package does not export.
  * - DEAD_SNIPPET     — the widget it builds does not exist.
@@ -22,9 +22,12 @@
  *                      never mentions in its source.
  * - POSITIONAL_ARG   — a config-object API (`Text`, `SnackBar`) called with a
  *                      positional string, which builds an empty widget.
- * - BROKEN_CALL      — a free call that is neither exported nor declared
- *                      locally; most of these are example-local placeholders
- *                      (`fetchMore()`), so the tier only informs.
+ * - BROKEN_CALL      — a call to a name neither the package nor the body
+ *                      declares. A parameter is a binding, so `(item) => …` and
+ *                      `({ onSelect }) => onSelect(item)` are not findings; a
+ *                      placeholder handler is written as one that logs, and a
+ *                      placeholder screen as a real widget, because the reader
+ *                      pastes the body and it has to run.
  * - DUPLICATE_PREFIX — two category files claim the same prefix.
  * - AGGREGATE_DRIFT  — FletBox.json differs from the union of the category files.
  * - UNCOVERED_EXPORT — the package exports a name that no snippet shows.
@@ -288,11 +291,69 @@ const importedNames = (source) => {
   return names;
 };
 
+/** Splits a binding list on its top-level commas: `{ a, b }, c` is two parts. */
+const splitBindings = (list) => {
+  const parts = [];
+  let depth = 0;
+  let start = 0;
+  for (let i = 0; i < list.length; i++) {
+    const c = list[i];
+    if ("([{".includes(c)) depth++;
+    else if (")]}".includes(c)) depth--;
+    else if (c === "," && depth === 0) {
+      parts.push(list.slice(start, i));
+      start = i + 1;
+    }
+  }
+  parts.push(list.slice(start));
+  return parts;
+};
+
+/** Names one binding pattern declares: `value`, `{ a, b: c }`, `[x, y]`. */
+const bindingNames = (pattern) => {
+  const names = new Set();
+  const text = pattern.trim();
+  if (/^[{\[]/.test(text)) {
+    for (const part of splitBindings(text.slice(1, -1))) {
+      const name = part.split(":").pop().split("=")[0].trim();
+      if (/^[A-Za-z_$][\w$]*$/.test(name)) names.add(name);
+    }
+    return names;
+  }
+  const name = text.split("=")[0].trim();
+  if (/^[A-Za-z_$][\w$]*$/.test(name)) names.add(name);
+  return names;
+};
+
+/**
+ * Every parameter list in the body, arrow and function alike.
+ *
+ * A parameter is bound just like a `const`: `renderItem: (item) => …` declares
+ * `item`, and `export const MyList = ({ data, onSelect }) => …` declares both —
+ * the destructured parameter is how a component receives its handler, so
+ * reading only `const`/`let`/`var` reported `onSelect(item)` as a free call
+ * inside the one snippet that defines it.
+ */
+const PARAM_LIST_RE = /\(([^()]*(?:\([^()]*\)[^()]*)*)\)\s*=>|\bfunction\b\s*[A-Za-z_$]?[\w$]*\s*\(([^()]*(?:\([^()]*\)[^()]*)*)\)/g;
+const SINGLE_PARAM_RE = /(^|[^\w$.])([A-Za-z_$][\w$]*)\s*=>/g;
+
+const parameterNames = (masked) => {
+  const names = new Set();
+  for (const m of masked.matchAll(PARAM_LIST_RE)) {
+    for (const part of splitBindings(m[1] ?? m[2] ?? "")) {
+      for (const name of bindingNames(part)) names.add(name);
+    }
+  }
+  for (const m of masked.matchAll(SINGLE_PARAM_RE)) names.add(m[2]);
+  return names;
+};
+
 /**
  * Names declared inside the snippet itself.
  *
  * Destructuring counts too: `const [count, setCount] = useState(…)` binds both
- * names, and without it every React-style example looks broken.
+ * names, and without it every React-style example looks broken — and so does a
+ * parameter, which is the same binding written on the left of an arrow.
  */
 const declaredNames = (masked) => {
   const names = new Set();
@@ -303,12 +364,10 @@ const declaredNames = (masked) => {
   for (const re of [/\b(?:const|let|var)\s*\[([^\]]*)\]/g, /\b(?:const|let|var)\s*\{([^}]*)\}/g]) {
     let m;
     while ((m = re.exec(masked))) {
-      for (const part of m[1].split(",")) {
-        const name = part.split(":").pop().split("=")[0].trim();
-        if (/^[A-Za-z_$][\w$]*$/.test(name)) names.add(name);
-      }
+      for (const name of bindingNames(`{${m[1]}}`)) names.add(name);
     }
   }
+  for (const name of parameterNames(masked)) names.add(name);
   return names;
 };
 
@@ -569,7 +628,7 @@ const LABELS = {
   DEAD_SNIPPET: "the widget a snippet builds does not exist",
   UNKNOWN_PROP: "prop unknown to the registry and never mentioned by the widget",
   POSITIONAL_ARG: "widget called with a positional string instead of a props object — builds an empty widget",
-  BROKEN_CALL: "free call that is neither exported nor declared locally (usually an example-local placeholder)",
+  BROKEN_CALL: "call to a name neither the package nor the body declares — the reader pastes the body and it throws",
   DUPLICATE_PREFIX: "same prefix claimed by two category files — editor load order decides",
   AGGREGATE_DRIFT: "FletBox.json (what the editor loads) differs from the category files",
   UNPARSABLE: "snippet file is not valid JSON",
@@ -579,8 +638,10 @@ const LABELS = {
 
 /**
  * Findings that make a snippet unusable, or that mean the fix never reaches the
- * editor. BROKEN_CALL is deliberately not here: examples are allowed to call a
- * placeholder they describe (`Header()`, `refresh()`).
+ * editor. Every tier is here: a body the reader pastes has to run, so a free
+ * call to a name nobody declares is as fatal as a syntax error — the library
+ * declares its own placeholders instead (`const Header = () => …`, a handler
+ * that logs) and a parameter counts as a binding.
  */
 function blockingCount() {
   return (
@@ -589,6 +650,7 @@ function blockingCount() {
     findings.deadSnippet.length +
     findings.unknownProp.length +
     findings.positionalArg.length +
+    findings.brokenCall.length +
     findings.duplicatePrefix.length +
     findings.aggregateDrift.length +
     findings.unparsable.length +

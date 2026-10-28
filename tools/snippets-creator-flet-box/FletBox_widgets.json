@@ -153,7 +153,12 @@
     "prefix": "Stack.basic",
     "description": "Make a FletBox widgets Stack.basic widget",
     "body": [
-      "Stack({ children: [Box(), Box()] })"
+      "Stack({",
+      "    children: [",
+      "        Container({ width: 120, height: 120, bgColor: colors.primary, borderRadius: 12 }),",
+      "        Text({ text: \"On top\", color: \"#ffffff\" })",
+      "    ]",
+      "})"
     ]
   },
   "FletBox widgets Stack.normal": {
@@ -236,7 +241,7 @@
     "prefix": "Button.normal",
     "description": "Make a FletBox widgets Button.normal widget",
     "body": [
-      "Button({ text: \"Submit\", variant: \"filled\", onPress: () => submit() })"
+      "Button({ text: \"Submit\", variant: \"filled\", onPress: () => console.log(\"submit\") })"
     ]
   },
   "FletBox widgets Button.full": {
@@ -257,8 +262,8 @@
       "    padding: padding({ horizontal: 24, vertical: 12 }),",
       "    margin: margin(8),",
       "    disabled: false,",
-      "    onPress: () => downloadFile(),",
-      "    onLongPress: () => showMenu(),",
+      "    onPress: () => console.log(\"download\"),",
+      "    onLongPress: () => console.log(\"menu\"),",
       "    onHover: (hover) => console.log(hover),",
       "    id: \"download-btn\"",
       "})"
@@ -286,7 +291,7 @@
       "    name: \"settings\",",
       "    size: 28,",
       "    color: colors.textSecondary,",
-      "    onPress: () => openSettings(),",
+      "    onPress: () => console.log(\"settings\"),",
       "    className: \"icon-spin\",",
       "    transition: \"transform 0.2s\",",
       "    id: \"settings-icon\"",
@@ -321,7 +326,7 @@
       "    elevation: 2,",
       "    onLoad: () => console.log(\"loaded\"),",
       "    onError: () => console.log(\"error\"),",
-      "    onPress: () => openGallery(),",
+      "    onPress: () => console.log(\"gallery\"),",
       "    id: \"hero-image\"",
       "})"
     ]
@@ -366,7 +371,7 @@
       "    online: true,",
       "    badge: \"3\",",
       "    badgeColor: colors.danger,",
-      "    onPress: () => goToProfile(),",
+      "    onPress: () => console.log(\"profile\"),",
       "    id: \"user-avatar\"",
       "})"
     ]
@@ -446,9 +451,9 @@
       "    passwordToggle: true,",
       "    showValidationMessage: true,",
       "    showValidationIcon: true,",
-      "    onChange: (val) => setUsername(val),",
+      "    onChange: (val) => console.log(val),",
       "    onValidated: (isValid, msg) => console.log(isValid, msg),",
-      "    onEnter: () => submitForm(),",
+      "    onEnter: () => console.log(\"submit\"),",
       "    id: \"username-input\"",
       "})"
     ]
@@ -491,7 +496,7 @@
       "    clearable: true,",
       "    width: 250,",
       "    portal: true,",
-      "    onChange: (val) => setStatus(val),",
+      "    onChange: (val) => console.log(val),",
       "    id: \"status-dropdown\"",
       "})"
     ]
@@ -535,8 +540,8 @@
       "    striped: true,",
       "    animatedStripes: true,",
       "    glow: true,",
-      "    onChange: (val) => updatePrice(val),",
-      "    onChangeEnd: (val) => savePrice(val),",
+      "    onChange: (val) => console.log(val),",
+      "    onChangeEnd: (val) => console.log(val),",
       "    id: \"price-slider\"",
       "})"
     ]
@@ -561,7 +566,7 @@
     "body": [
       "Checkbox({",
       "    checked: isActive,",
-      "    onCheck: (val) => setIsActive(val),",
+      "    onCheck: (val) => console.log(val),",
       "    disabled: false,",
       "    size: 24,",
       "    activeColor: colors.success,",
@@ -588,7 +593,7 @@
     "prefix": "Radio.normal",
     "description": "Make a FletBox widgets Radio.normal widget",
     "body": [
-      "Radio({ selected: option === \"a\", onSelect: () => setOption(\"a\"), label: \"Option A\" })"
+      "Radio({ selected: option === \"a\", onSelect: () => console.log(\"a\"), label: \"Option A\" })"
     ]
   },
   "FletBox widgets Radio.full": {
@@ -597,7 +602,7 @@
     "body": [
       "Radio({",
       "    selected: paymentMethod === \"card\",",
-      "    onSelect: () => setPaymentMethod(\"card\"),",
+      "    onSelect: () => console.log(\"card\"),",
       "    disabled: false,",
       "    size: 22,",
       "    activeColor: colors.primary,",
@@ -626,7 +631,7 @@
     "body": [
       "Switch({",
       "    value: darkMode,",
-      "    onToggle: (val) => setDarkMode(val),",
+      "    onToggle: (val) => console.log(val),",
       "    disabled: false,",
       "    size: \"large\",",
       "    activeColor: colors.primary,",
@@ -668,7 +673,7 @@
       "    iconActive: \"star\",",
       "    iconInactive: \"star_border\",",
       "    iconHalf: \"star_half\",",
-      "    onChange: (val) => updateRating(val),",
+      "    onChange: (val) => console.log(val),",
       "    id: \"product-rating\"",
       "})"
     ]
@@ -752,8 +757,8 @@
       "    headerPadding: \"16px 20px 8px\",",
       "    contentPadding: \"0 16px\",",
       "    actionPadding: \"12px 16px\",",
-      "    onOpen: () => fetchOptions(),",
-      "    onClose: () => reset()",
+      "    onOpen: () => console.log(\"open\"),",
+      "    onClose: () => console.log(\"close\")",
       "})"
     ]
   },
@@ -780,13 +785,13 @@
       "    message: \"This action cannot be undone.\",",
       "    confirmText: \"Delete\",",
       "    cancelText: \"Keep\",",
-      "    onConfirm: () => deletePermanently(),",
+      "    onConfirm: () => console.log(\"delete\"),",
       "    onCancel: () => console.log(\"cancelled\"),",
       "    variant: \"danger\",",
       "    showCancel: true,",
       "    width: 360,",
       "    borderRadius: 28,",
-      "    onClose: () => cleanup()",
+      "    onClose: () => console.log(\"close\")",
       "})"
     ]
   },
@@ -877,7 +882,11 @@
     "prefix": "Scaffold.normal",
     "description": "Make a FletBox widgets Scaffold.normal widget",
     "body": [
-      "Scaffold({ appBar: AppBar({ title: \"Home\" }), body: HomeScreen(), drawer: DrawerMenu() })"
+      "Scaffold({",
+      "    appBar: AppBar({ title: \"Home\" }),",
+      "    body: Column({ children: [Text({ text: \"Home\" })] }),",
+      "    drawer: Drawer({ body: [DrawerItem({ label: \"Home\", route: \"/\" })] })",
+      "})"
     ]
   },
   "FletBox widgets Scaffold.full": {
@@ -886,13 +895,13 @@
     "body": [
       "Scaffold({",
       "    appBar: AppBar({ title: \"Dashboard\", actions: [Icon({ name: \"search\" }), Icon({ name: \"more_vert\" })] }),",
-      "    body: HomeScreen(),",
+      "    body: Column({ children: [Text({ text: \"Dashboard\" })] }),",
       "    bottomBar: BottomNavigation({ items: [{ icon: \"home\", label: \"Home\", route: \"/\" }, { icon: \"person\", label: \"Profile\", route: \"/profile\" }] }),",
       "    drawer: Drawer({ header: Text({ text: \"Menu\" }), body: [DrawerItem({ label: \"Home\", route: \"/\" }), DrawerItem({ label: \"Settings\", route: \"/settings\" })] }),",
-      "    fab: FloatingActionButton({ icon: \"add\", onPress: () => addItem() }),",
-      "    leftNavBar: CollapsibleSideBar({ children: NavMenu() }),",
+      "    fab: FloatingActionButton({ icon: \"add\", onPress: () => console.log(\"add\") }),",
+      "    leftNavBar: CollapsibleSideBar({ children: Column({ children: [Text({ text: \"Menu\" })] }) }),",
       "    rightNavBar: null,",
-      "    routes: { \"/\": HomeScreen, \"/profile\": ProfileScreen, \"/settings\": SettingsScreen },",
+      "    routes: { \"/\": () => Text({ text: \"Home\" }), \"/profile\": () => Text({ text: \"Profile\" }), \"/settings\": () => Text({ text: \"Settings\" }) },",
       "    backgroundColor: colors.background,",
       "    closeDrawerOnNavigate: false",
       "})"
@@ -909,7 +918,11 @@
     "prefix": "AdaptiveScaffold.normal",
     "description": "Make a FletBox widgets AdaptiveScaffold.normal widget",
     "body": [
-      "AdaptiveScaffold({ appBar: AppBar({ title: \"Home\" }), body: HomeScreen(), leftNavBar: NavMenu() })"
+      "AdaptiveScaffold({",
+      "    appBar: AppBar({ title: \"Home\" }),",
+      "    body: Column({ children: [Text({ text: \"Home\" })] }),",
+      "    leftNavBar: Column({ children: [DrawerItem({ label: \"Home\", route: \"/\" })] })",
+      "})"
     ]
   },
   "FletBox widgets AdaptiveScaffold.full": {
@@ -918,14 +931,14 @@
     "body": [
       "AdaptiveScaffold({",
       "    appBar: AppBar({ title: \"Responsive App\", centerTitle: true }),",
-      "    body: HomeScreen(),",
+      "    body: Column({ children: [Text({ text: \"Responsive App\" })] }),",
       "    bottomBar: BottomNavigation({ items: [{ icon: \"home\", label: \"Home\", route: \"/\" }, { icon: \"person\", label: \"Profile\", route: \"/profile\" }], useRouter: true }),",
-      "    fab: FloatingActionButton({ icon: \"add\", onPress: () => addItem() }),",
-      "    leftNavBar: CollapsibleSideBar({ children: NavMenu() }),",
-      "    rightNavBar: CollapsibleSideBar({ children: WikiMenu() }),",
+      "    fab: FloatingActionButton({ icon: \"add\", onPress: () => console.log(\"add\") }),",
+      "    leftNavBar: CollapsibleSideBar({ children: Column({ children: [Text({ text: \"Menu\" })] }) }),",
+      "    rightNavBar: CollapsibleSideBar({ children: Column({ children: [Text({ text: \"Wiki\" })] }) }),",
       "    leftNavBarWidth: 280,",
       "    rightNavBarWidth: 320,",
-      "    routes: { \"/\": HomeScreen, \"/profile\": ProfileScreen },",
+      "    routes: { \"/\": () => Text({ text: \"Home\" }), \"/profile\": () => Text({ text: \"Profile\" }) },",
       "    backgroundColor: colors.background,",
       "    forceMobile: false,",
       "    forceDesktop: false",
@@ -961,7 +974,7 @@
       "    centerTitle: true,",
       "    showBackButton: true,",
       "    backButtonRoute: \"/home\",",
-      "    onBackPress: () => customBack(),",
+      "    onBackPress: () => console.log(\"back\"),",
       "    sticky: true,",
       "    hideOnScroll: true,",
       "    scrollThreshold: 50,",
@@ -993,7 +1006,7 @@
       "    body: [",
       "        DrawerItem({ icon: \"home\", label: \"Home\", route: \"/\", selectedColor: colors.primary }),",
       "        DrawerItem({ icon: \"settings\", label: \"Settings\", route: \"/settings\" }),",
-      "        DrawerItem({ icon: \"logout\", label: \"Logout\", onPress: () => logout() })",
+      "        DrawerItem({ icon: \"logout\", label: \"Logout\", onPress: () => console.log(\"logout\") })",
       "    ],",
       "    footer: Text({ text: \"v1.0.0\", size: 12, color: colors.textSecondary }),",
       "    position: \"left\",",
@@ -1059,7 +1072,12 @@
     "prefix": "Tabs.normal",
     "description": "Make a FletBox widgets Tabs.normal widget",
     "body": [
-      "Tabs({ tabs: [{ label: \"Details\", icon: \"info\" }, { label: \"Reviews\", icon: \"comment\" }], children: [DetailsTab(), ReviewsTab()], activeIndex: 0, onChange: setTab })"
+      "Tabs({",
+      "    tabs: [{ label: \"Details\", icon: \"info\" }, { label: \"Reviews\", icon: \"comment\" }],",
+      "    children: [Text({ text: \"Details\" }), Text({ text: \"Reviews\" })],",
+      "    activeIndex: 0,",
+      "    onChange: (idx) => console.log(idx)",
+      "})"
     ]
   },
   "FletBox widgets Tabs.full": {
@@ -1068,9 +1086,9 @@
     "body": [
       "Tabs({",
       "    tabs: [\"Overview\", \"Technical\", \"Support\"],",
-      "    children: [OverviewTab(), TechTab(), SupportTab()],",
+      "    children: [Text({ text: \"Overview\" }), Text({ text: \"Technical\" }), Text({ text: \"Support\" })],",
       "    activeIndex: currentTab,",
-      "    onChange: (idx) => setCurrentTab(idx),",
+      "    onChange: (idx) => console.log(idx),",
       "    variant: \"slider\",",
       "    size: \"large\",",
       "    color: colors.primary,",
@@ -1112,12 +1130,12 @@
       "    widthExpanded: 280,",
       "    widthCollapsed: 70,",
       "    iconSize: 28,",
-      "    onToggle: (exp) => setIsSidebarOpen(exp),",
+      "    onToggle: (exp) => console.log(exp),",
       "    bgColor: colors.surface,",
       "    borderRight: \"1px solid #e2e8f0\",",
       "    showTooltip: true,",
       "    tooltipDelay: 300,",
-      "    children: Column({ gap: 16, children: [Logo(), NavItems(), Footer()] })",
+      "    children: Column({ gap: 16, children: [Text({ text: \"Logo\" }), Text({ text: \"Menu\" }), Text({ text: \"Footer\" })] })",
       "})"
     ]
   },
@@ -1143,7 +1161,7 @@
       "    icon: \"settings\",",
       "    label: \"Preferences\",",
       "    route: \"/settings\",",
-      "    onPress: () => openSettings(),",
+      "    onPress: () => console.log(\"settings\"),",
       "    onSelect: () => console.log(\"selected\"),",
       "    trailingIcon: \"chevron_right\",",
       "    hintColor: colors.gray100,",
@@ -1320,9 +1338,9 @@
       "    itemSize: 120,",
       "    gap: 8,",
       "    orientation: \"vertical\",",
-      "    onEndReached: () => loadMore(),",
+      "    onEndReached: () => console.log(\"load more\"),",
       "    onEndReachedThreshold: 0.3,",
-      "    onRefresh: (done) => refreshData(done),",
+      "    onRefresh: (done) => { console.log(\"refresh\"); done(); },",
       "    refreshing: isLoading,",
       "    ListHeaderComponent: () => Text({ text: \"Top Products\" }),",
       "    ListFooterComponent: () => (hasMore ? ProgressBar({ indeterminate: true }) : null),",
@@ -1373,8 +1391,8 @@
       "    columns: 4,",
       "    spacing: 12,",
       "    itemHeight: 180,",
-      "    onEndReached: () => fetchMore(),",
-      "    onRefresh: (done) => refresh(done),",
+      "    onEndReached: () => console.log(\"load more\"),",
+      "    onRefresh: (done) => { console.log(\"refresh\"); done(); },",
       "    ListHeaderComponent: () => Text({ text: \"Gallery\" })",
       "})"
     ]
@@ -1410,7 +1428,7 @@
       "    striped: true,",
       "    hoverable: true,",
       "    bordered: true,",
-      "    onRowClick: (row, idx) => selectUser(row),",
+      "    onRowClick: (row) => console.log(row),",
       "    headerBgColor: colors.gray100,",
       "    headerTextColor: colors.text,",
       "    headerFontWeight: \"bold\",",
@@ -1637,8 +1655,8 @@
       "    poster: \"thumbnail.jpg\",",
       "    onPlay: () => console.log(\"play\"),",
       "    onPause: () => console.log(\"pause\"),",
-      "    onEnd: () => nextVideo(),",
-      "    onTimeUpdate: (sec, dur, percent) => updateProgress(percent),",
+      "    onEnd: () => console.log(\"end\"),",
+      "    onTimeUpdate: (sec, dur, percent) => console.log(percent),",
       "    ref: (video) => playerRef = video",
       "})"
     ]
@@ -1668,12 +1686,12 @@
       "    loop: false,",
       "    muted: false,",
       "    volume: 0.9,",
-      "    onPlay: () => setIsPlaying(true),",
-      "    onPause: () => setIsPlaying(false),",
-      "    onEnd: () => nextEpisode(),",
-      "    onTimeUpdate: (current, duration, percent) => updateProgress(percent),",
+      "    onPlay: () => console.log(\"play\"),",
+      "    onPause: () => console.log(\"pause\"),",
+      "    onEnd: () => console.log(\"next episode\"),",
+      "    onTimeUpdate: (current, duration, percent) => console.log(percent),",
       "    onProgress: (percent) => console.log(percent),",
-      "    onLoad: (duration) => setDuration(duration),",
+      "    onLoad: (duration) => console.log(duration),",
       "    ref: (audio) => audioRef = audio",
       "})"
     ]
@@ -1717,7 +1735,7 @@
       "    buttonIconColor: \"#fff\",",
       "    buttonSize: 40,",
       "    buttonIconSize: 24,",
-      "    onIndexChange: (idx) => setActiveSlide(idx)",
+      "    onIndexChange: (idx) => console.log(idx)",
       "})"
     ]
   },
@@ -1954,7 +1972,7 @@
     "prefix": "ThemeProvider.normal",
     "description": "Make a FletBox widgets ThemeProvider.normal widget",
     "body": [
-      "ThemeProvider({ theme: \"light\", children: MyApp({ toggle }) })"
+      "ThemeProvider({ theme: \"light\", children: Text({ text: \"Hello\" }) })"
     ]
   },
   "FletBox widgets ThemeProvider.full": {
@@ -1991,7 +2009,7 @@
       "    title: \"Advanced settings\",",
       "    children: Column({ children: [Input({ placeholder: \"API Key\" }), Slider({})] }),",
       "    expanded: true,",
-      "    onToggle: (exp) => setExpanded(exp),",
+      "    onToggle: (exp) => console.log(exp),",
       "    variant: \"contained\",",
       "    borderRadius: 16,",
       "    bgColor: colors.surface,",
@@ -2024,7 +2042,11 @@
     "prefix": "Stepper.normal",
     "description": "Make a FletBox widgets Stepper.normal widget",
     "body": [
-      "Stepper({ steps: [{ label: \"Info\", content: InfoForm() }, { label: \"Confirm\", content: ConfirmForm() }], activeStep: 0, onStepChange: setStep })"
+      "Stepper({",
+      "    steps: [{ label: \"Info\", content: Text({ text: \"Info\" }) }, { label: \"Confirm\", content: Text({ text: \"Confirm\" }) }],",
+      "    activeStep: 0,",
+      "    onStepChange: (idx) => console.log(idx)",
+      "})"
     ]
   },
   "FletBox widgets Stepper.full": {
@@ -2033,12 +2055,12 @@
     "body": [
       "Stepper({",
       "    steps: [",
-      "        { label: \"Personal\", content: PersonalForm(), icon: \"person\" },",
-      "        { label: \"Payment\", content: PaymentForm(), icon: \"credit_card\" },",
-      "        { label: \"Done\", content: SuccessMessage(), icon: \"check_circle\" }",
+      "        { label: \"Personal\", content: Text({ text: \"Personal\" }), icon: \"person\" },",
+      "        { label: \"Payment\", content: Text({ text: \"Payment\" }), icon: \"credit_card\" },",
+      "        { label: \"Done\", content: Text({ text: \"Done\" }), icon: \"check_circle\" }",
       "    ],",
       "    activeStep: step,",
-      "    onStepChange: (idx) => setStep(idx),",
+      "    onStepChange: (idx) => console.log(idx),",
       "    orientation: \"horizontal\",",
       "    variant: \"circles\",",
       "    showLabels: true,",
@@ -2046,7 +2068,7 @@
       "    nextLabel: \"Continue\",",
       "    backLabel: \"Back\",",
       "    finishLabel: \"Submit\",",
-      "    onFinish: () => submitForm(),",
+      "    onFinish: () => console.log(\"finish\"),",
       "    bgColor: colors.surface,",
       "    borderRadius: 24,",
       "    border: border(1, \"solid\", colors.border),",
@@ -2079,7 +2101,7 @@
       "    showLabels: true,",
       "    label: \"App accent color\",",
       "    disabled: false,",
-      "    onChange: (id) => saveAccentPreference(id),",
+      "    onChange: (id) => console.log(id),",
       "    gap: 12,",
       "    padding: 16,",
       "    bgColor: colors.surface,",
@@ -2091,7 +2113,7 @@
     "prefix": "Pagination.basic",
     "description": "Make a FletBox widgets Pagination.basic widget",
     "body": [
-      "Pagination({ totalItems: 100, onPageChange: (page) => loadPage(page) })"
+      "Pagination({ totalItems: 100, onPageChange: (page) => console.log(page) })"
     ]
   },
   "FletBox widgets Pagination.normal": {
@@ -2109,7 +2131,7 @@
       "    totalItems: 1000,",
       "    pageSize: 25,",
       "    currentPage: current,",
-      "    onPageChange: (page) => fetchPage(page),",
+      "    onPageChange: (page) => console.log(page),",
       "    showFirstLast: true,",
       "    showPrevNext: true,",
       "    maxButtons: 7,",
@@ -2149,7 +2171,7 @@
       "        ]},",
       "        { id: \"4\", label: \"Downloads\", badge: 3, children: [] }",
       "    ],",
-      "    onSelect: (node) => openFile(node),",
+      "    onSelect: (node) => console.log(node),",
       "    onToggle: (nodeId, expanded) => console.log(nodeId, expanded),",
       "    expandedNodes: [\"1\"],",
       "    indent: 24,",
@@ -2331,7 +2353,7 @@
     "prefix": "Chip.normal",
     "description": "Make a FletBox widgets Chip.normal widget",
     "body": [
-      "Chip({ label: \"React\", icon: \"star\", onDelete: () => removeTag() })"
+      "Chip({ label: \"React\", icon: \"star\", onDelete: () => console.log(\"remove\") })"
     ]
   },
   "FletBox widgets Chip.full": {
@@ -2341,8 +2363,8 @@
       "Chip({",
       "    label: \"FletBox\",",
       "    icon: \"rocket_launch\",",
-      "    onPress: () => filterBy(\"fletbox\"),",
-      "    onDelete: () => removeFilter(),",
+      "    onPress: () => console.log(\"fletbox\"),",
+      "    onDelete: () => console.log(\"clear filter\"),",
       "    variant: \"outlined\",",
       "    color: colors.primary,",
       "    textColor: colors.primary,",
@@ -2438,7 +2460,7 @@
     "prefix": "InstallButton.normal",
     "description": "Make a FletBox widgets InstallButton.normal widget",
     "body": [
-      "InstallButton({ text: \"Get the app\", variant: \"filled\", icon: \"get_app\", onInstalled: () => trackInstall() })"
+      "InstallButton({ text: \"Get the app\", variant: \"filled\", icon: \"get_app\", onInstalled: () => console.log(\"installed\") })"
     ]
   },
   "FletBox widgets InstallButton.full": {
@@ -2501,7 +2523,7 @@
     "prefix": "ListTile.normal",
     "description": "Make a FletBox widgets ListTile.normal widget",
     "body": [
-      "ListTile({ leftItem: Icon({ name: \"mail\" }), title: \"Inbox\", subtitle: \"3 new messages\", rightItem: Icon({ name: \"chevron_right\" }), onPress: () => openInbox() })"
+      "ListTile({ leftItem: Icon({ name: \"mail\" }), title: \"Inbox\", subtitle: \"3 new messages\", rightItem: Icon({ name: \"chevron_right\" }), onPress: () => console.log(\"inbox\") })"
     ]
   },
   "FletBox widgets ListTile.full": {
@@ -2514,7 +2536,7 @@
       "    subtitle: \"john@example.com\",",
       "    description: \"Software Engineer\",",
       "    rightItem: Icon({ name: \"chevron_right\" }),",
-      "    onPress: () => openProfile(),",
+      "    onPress: () => console.log(\"profile\"),",
       "    divider: true,",
       "    disabled: false,",
       "    paddingHorizontal: 16,",
@@ -2531,14 +2553,14 @@
     "prefix": "FloatingActionButton.basic",
     "description": "Make a FletBox widgets FloatingActionButton.basic widget",
     "body": [
-      "FloatingActionButton({ icon: \"add\", onPress: () => addItem() })"
+      "FloatingActionButton({ icon: \"add\", onPress: () => console.log(\"add\") })"
     ]
   },
   "FletBox widgets FloatingActionButton.normal": {
     "prefix": "FloatingActionButton.normal",
     "description": "Make a FletBox widgets FloatingActionButton.normal widget",
     "body": [
-      "FloatingActionButton({ icon: \"edit\", mini: false, elevation: 8, onPress: () => editItem() })"
+      "FloatingActionButton({ icon: \"edit\", mini: false, elevation: 8, onPress: () => console.log(\"edit\") })"
     ]
   },
   "FletBox widgets FloatingActionButton.full": {
@@ -2549,7 +2571,7 @@
       "    icon: \"add\",",
       "    label: \"New Task\",",
       "    extended: true,",
-      "    onPress: () => createTask(),",
+      "    onPress: () => console.log(\"create\"),",
       "    backgroundColor: colors.primary,",
       "    foregroundColor: \"#ffffff\",",
       "    elevation: 6,",
@@ -2615,7 +2637,7 @@
       "        ]",
       "    }),",
       "    acceptGroups: [\"kanban\", \"tasks\"],",
-      "    onDrop: (data, group) => moveTask(data, group),",
+      "    onDrop: (data, group) => console.log(data, group),",
       "    onDragEnter: () => console.log(\"enter\"),",
       "    onDragLeave: () => console.log(\"leave\"),",
       "    bgColor: colors.gray100,",

@@ -5276,7 +5276,7 @@
     "prefix": "onEndReached",
     "description": "Make a FletBox widgets onEndReached widget",
     "body": [
-      "onEndReached: () => fetchMore(),"
+      "onEndReached: () => console.log(\"load next page\"),"
     ]
   },
   "FletBox widgets onEndReachedThreshold": {
@@ -5290,7 +5290,7 @@
     "prefix": "onRefresh",
     "description": "Make a FletBox widgets onRefresh widget",
     "body": [
-      "onRefresh: (done) => { refresh(); done(); },"
+      "onRefresh: (done) => { console.log(\"refresh\"); done(); },"
     ]
   },
   "FletBox widgets ListHeaderComponent": {
