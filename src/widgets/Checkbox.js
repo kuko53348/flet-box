@@ -11,6 +11,7 @@ import { TAP_MINIMUM, LABEL_TEXT } from "../tools/index.js";
 export const Checkbox = (props) => {
   const {
     checked = false,
+    /** @deprecated Use `onPress` instead — it receives the same boolean. */
     onCheck,
     onPress: onPressProp,
     disabled = false,
@@ -22,8 +23,6 @@ export const Checkbox = (props) => {
     ...rest
   } = props;
 
-  /** @deprecated Use onPress instead */
-  // onCheck kept as alias for backward compatibility
   const onPress = onPressProp || onCheck;
 
   let internalChecked = checked;

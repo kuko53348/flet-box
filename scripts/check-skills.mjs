@@ -174,27 +174,58 @@ await check("every code block passes the anti-hallucination gate", async () => {
   );
 });
 
-await check("every inline `Widget({ prop: … })` names a real widget and prop", () => {
-  const callRe = /([A-Z][A-Za-z0-9]*)\(\s*\{([^{}]*)\}/g;
-  const keyRe = /(?:^|[,{\s])['"]?([A-Za-z][A-Za-z0-9]*)['"]?\s*:/g;
-  for (const name of names) {
-    // Claims about the API live in code spans and fenced blocks; prose in backticks
-    // is where the short calls are written, so scan both.
-    const code = [...readSkill(name).matchAll(/`([^`\n]*\{[^`\n]*)`/g), ...[...readSkill(name).matchAll(/```(?:js|bash)\n([\s\S]*?)```/g)]]
-      .map((m) => m[1]);
-    for (const chunk of code) {
-      for (const match of chunk.matchAll(callRe)) {
-        const widget = match[1];
-        const props = widgetProps.get(widget);
-        assert.ok(props, `${name}: "${widget}" is not an exported widget (in \`${chunk}\`)`);
-        assert.ok(exported.has(widget), `${name}: ${widget} is declared but not exported`);
-        for (const key of match[2].matchAll(keyRe)) {
-          assert.ok(
-            props.has(key[1]) || utilityNames.has(key[1]),
-            `${name}: ${widget} has no prop \`${key[1]}\``,
-          );
-        }
+/**
+ * Every `Widget({ prop: … })` a skill writes, in code spans and fenced blocks.
+ * A skill that teaches a call is teaching its props, so one scan feeds both
+ * checks below: the prop has to exist, and it has to be the name the framework
+ * still recommends rather than one it has renamed.
+ *
+ * @param {string} text
+ * @returns {Array<{ widget: string, prop: string, chunk: string }>}
+ */
+const inlineCallsIn = (text) => {
+  const calls = [];
+  const code = [
+    ...text.matchAll(/`([^`\n]*\{[^`\n]*)`/g),
+    ...text.matchAll(/```(?:js|bash)\n([\s\S]*?)```/g),
+  ].map((m) => m[1]);
+  for (const chunk of code) {
+    for (const match of chunk.matchAll(/([A-Z][A-Za-z0-9]*)\(\s*\{([^{}]*)\}/g)) {
+      for (const key of match[2].matchAll(/(?:^|[,{\s])['"]?([A-Za-z][A-Za-z0-9]*)['"]?\s*:/g)) {
+        calls.push({ widget: match[1], prop: key[1], chunk });
       }
+    }
+  }
+  return calls;
+};
+
+await check("every inline `Widget({ prop: … })` names a real widget and prop", () => {
+  for (const name of names) {
+    for (const { widget, prop, chunk } of inlineCallsIn(readSkill(name))) {
+      const props = widgetProps.get(widget);
+      assert.ok(props, `${name}: "${widget}" is not an exported widget (in \`${chunk}\`)`);
+      assert.ok(exported.has(widget), `${name}: ${widget} is declared but not exported`);
+      assert.ok(
+        props.has(prop) || utilityNames.has(prop),
+        `${name}: ${widget} has no prop \`${prop}\``,
+      );
+    }
+  }
+});
+
+await check("no skill teaches a prop the framework has deprecated", async () => {
+  // A rename never breaks a call: the old spelling keeps working and every gate
+  // stays green, so a skill that teaches it teaches it to every app built from
+  // the skill. This is how `Switch({ onToggle })` outlived its own migration.
+  const { deprecationFor } = await import("../src/widget-factory/deprecations.js");
+  for (const name of names) {
+    for (const { widget, prop } of inlineCallsIn(readSkill(name))) {
+      const rule = deprecationFor(widget, prop);
+      if (!rule) continue;
+      assert.fail(
+        `${name}: ${widget}({ ${prop}: … }) is deprecated since ${rule.since}; write ` +
+          (rule.to ? `\`${rule.to}\`` : "nothing — the key is removed"),
+      );
     }
   }
 });
@@ -254,6 +285,26 @@ await check("the number of helpers R12 quotes is the number there are", async ()
       actual,
       `${where} says ${number} helpers, src/tools/index.js exports ${actual}`,
     );
+  }
+});
+
+await check("the phone coverage matrix ships in the skill and in a new project", async () => {
+  // The matrix is the strict rule every screen is measured against, and the CLI
+  // is the only way a new app hears about it: a skill the scaffold never copies,
+  // or a generated AGENTS.md without the block, leaves the rule in one place.
+  const { agentsMd } = await import("../bin/utils/templates.js");
+  const agents = agentsMd("demo", "basic", "0.0.0");
+  for (const [where, text] of [
+    ["the design skill", readSkill("fletbox-design")],
+    ["the generated AGENTS.md", agents],
+  ]) {
+    for (const width of ["320", "360", "375", "390", "393", "412", "430"]) {
+      assert.match(
+        text,
+        new RegExp(`${width}\\s*×\\s*\\d{3}`),
+        `${where}: the phone matrix lost ${width}px`,
+      );
+    }
   }
 });
 
@@ -372,6 +423,24 @@ await check("the inline proof bites — a name it must reject", () => {
   assert.equal(found.length, 1, "the inline call scanner stopped matching");
   const props = widgetProps.get("ListView");
   assert.ok(props.has("itemSize") && !props.has("virtualise"), "ListView props read wrong");
+});
+
+await check("the deprecation proof bites — an old spelling is rejected", async () => {
+  // The rule above is only worth having if a renamed prop really is read from a
+  // skill's code and really is in the table. Both directions: `Switch.onToggle`
+  // is the old name of `onPress`, while `TreeView.onToggle` is that widget's own
+  // current vocabulary and must stay green.
+  const { deprecationFor } = await import("../src/widget-factory/deprecations.js");
+  const calls = inlineCallsIn("`Switch({ onToggle: fn })`");
+  assert.equal(calls.length, 1, "the inline call scanner stopped reading a call");
+  assert.equal(calls[0].widget, "Switch", "the inline call scanner lost the widget name");
+  const rule = deprecationFor(calls[0].widget, calls[0].prop);
+  assert.ok(rule && rule.to === "onPress", "the deprecation table lost Switch.onToggle → onPress");
+  assert.equal(
+    deprecationFor("TreeView", "onToggle"),
+    null,
+    "TreeView.onToggle is its own name, not a rename",
+  );
 });
 
 // ---------------------------------------------------------------------------

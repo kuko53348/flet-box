@@ -14,7 +14,7 @@ import { Radio } from "flet-box";
 const plan = Radio({
   label: "Monthly",
   name: "billing",
-  onSelect: (value) => console.log(value),
+  onPress: (value) => console.log(value),
 });
 ```
 
@@ -25,7 +25,8 @@ const plan = Radio({
 | Prop | Type | Description |
 | --- | --- | --- |
 | `selected` | `boolean` | Current selected state. |
-| `onSelect` | `(selected: boolean) => void` | Fired when the widget or an option is selected. |
+| `onSelect` | `(selected: boolean) => void` | Deprecated alias of `onPress`. |
+| `onPress` | `(selected: boolean) => void` | Called with the new selected state (`true` or `false`). |
 | `disabled` | `boolean` | Disables interaction and shows the non-interactive state. |
 | `size` | `number` | Overall size preset or pixel value, depending on the widget. |
 | `activeColor` | `Color` | Color used in the active state. |
@@ -92,7 +93,7 @@ Every widget also accepts these shared props — see [common props](COMMON_PROPS
 | `opacity` | `number` | Opacity from 0 (invisible) to 1 (fully opaque). |
 | `visible` | `boolean` | Whether the widget is rendered and visible. |
 | `disabled` | `boolean` | Disables interaction and shows the non-interactive state. |
-| `onPress` | `(widget: Widget) => void` | Callback fired when the widget is pressed. Alias: `onClick`. |
+| `onPress` | `(widget: Widget) => void` | Called with the new selected state (`true` or `false`). |
 | `onClick` | `(widget: Widget) => void` | Callback fired when the widget is clicked. Alias: `onPress`. |
 | `onclick` | `(widget: Widget) => void` | The `onclick` value for the widget. |
 | `alignSelf` | `AlignSelf` | Overrides the parent's `alignItems` for this child alone (CSS `align-self`). Alias: `selfAlign`. |
@@ -114,7 +115,7 @@ const monthly = Radio({
   name: "billing",
   selected: true,
   activeColor: "#2563eb",
-  onSelect: (value) => console.log("billing:", value),
+  onPress: (value) => console.log("billing:", value),
 });
 ```
 
@@ -130,7 +131,7 @@ const option = Radio({
   disabled: false,
   activeColor: "#16a34a",
   size: 24,
-  onSelect: (value) => {
+  onPress: (value) => {
     console.log("shipping changed:", value);
   },
 });
@@ -139,7 +140,7 @@ const option = Radio({
 ## Tips
 
 - Give Radios that answer the same question the same name; selecting one clears the others in that group.
-- Set selected for the initial choice and let onSelect write the change back into your own state.
+- Set selected for the initial choice and let onPress write the change back into your own state.
 
 ## Accessibility
 
@@ -147,7 +148,7 @@ const option = Radio({
 
 ## Behavior
 
-- Clicking an already-selected Radio is a no-op, so onSelect only fires when the selection actually changes.
+- Clicking an already-selected Radio is a no-op, so onPress only fires when the selection actually changes.
 - The returned element exposes select(), unselect() and isSelected() for programmatic control.
 
 ## Related widgets

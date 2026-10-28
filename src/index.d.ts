@@ -125,6 +125,14 @@ declare module 'flet-box' {
     filter?: string;
     backdropFilter?: string;
     maskImage?: string;
+    // The engine routes these four on every widget (`bgImage` → `backgroundImage`
+    // in translateProps.js). They are the only way to bias a crop: an `Image`
+    // with `fit: 'cover'` centres on its own, while a full-bleed background can
+    // be pinned to `center top` so a face stays out from under the copy.
+    bgImage?: string;
+    bgSize?: string;
+    bgPosition?: string;
+    bgRepeat?: string;
     opacity?: number;
     visible?: boolean;
     disabled?: boolean;
@@ -143,6 +151,13 @@ declare module 'flet-box' {
     className?: string;
     ref?: (widget: Widget) => void;
     disableTransform?: boolean;
+    // Every `data-*` and `aria-*` prop is forwarded to the DOM untouched —
+    // `PASSTHROUGH_PREFIXES` in translateProps.js is the engine's own list — so
+    // the type has to allow what the engine honours. An icon-only control has no
+    // other way to say what it is, and a declaration that forbids `aria-label`
+    // teaches an editor to flag the one line that makes a widget accessible.
+    [attribute: `aria-${string}`]: string | number | undefined;
+    [attribute: `data-${string}`]: string | number | boolean | undefined;
   }
 
   // =========================================================================
@@ -681,11 +696,16 @@ declare module 'flet-box' {
     update(props: Partial<SliderProps>): void;
   };
 
-  export interface AccordionProps extends CommonProps {
+  export interface AccordionProps extends Omit<CommonProps, 'onPress'> {
     title: string | Widget;
     children: Widget;
     expanded?: boolean;
+    /**
+     * @deprecated Use `onPress` instead — it receives the same boolean.
+     */
     onToggle?: (expanded: boolean) => void;
+    /** Fired with the new expanded state when a panel opens or closes. */
+    onPress?: (expanded: boolean) => void;
     variant?: 'contained' | 'outlined' | 'ghost';
     borderRadius?: number;
     bgColor?: Color;
@@ -765,9 +785,14 @@ declare module 'flet-box' {
     blur(): void;
   };
 
-  export interface RadioProps extends CommonProps {
+  export interface RadioProps extends Omit<CommonProps, 'onPress'> {
     selected?: boolean;
+    /**
+     * @deprecated Use `onPress` instead — it receives the same boolean.
+     */
     onSelect?: (selected: boolean) => void;
+    /** Fired with the new state when the radio is picked. */
+    onPress?: (selected: boolean) => void;
     disabled?: boolean;
     size?: number;
     activeColor?: Color;
@@ -780,9 +805,14 @@ declare module 'flet-box' {
     isSelected(): boolean;
   };
 
-  export interface SwitchProps extends CommonProps {
+  export interface SwitchProps extends Omit<CommonProps, 'onPress'> {
     value?: boolean;
+    /**
+     * @deprecated Use `onPress` instead — it receives the same boolean.
+     */
     onToggle?: (value: boolean) => void;
+    /** Fired with the new state when the switch is flipped. */
+    onPress?: (value: boolean) => void;
     disabled?: boolean;
     size?: 'small' | 'medium' | 'large';
     activeColor?: Color;
@@ -793,9 +823,14 @@ declare module 'flet-box' {
     getValue(): boolean;
   };
 
-  export interface CheckboxProps extends CommonProps {
+  export interface CheckboxProps extends Omit<CommonProps, 'onPress'> {
     checked?: boolean;
+    /**
+     * @deprecated Use `onPress` instead — it receives the same boolean.
+     */
     onCheck?: (checked: boolean) => void;
+    /** Fired with the new state when the box is ticked or cleared. */
+    onPress?: (checked: boolean) => void;
     disabled?: boolean;
     size?: number;
     activeColor?: Color;
@@ -813,7 +848,7 @@ declare module 'flet-box' {
   };
 
   export type DropdownOption = { label: string; value: any; icon?: string };
-  export interface DropdownProps extends CommonProps {
+  export interface DropdownProps extends Omit<CommonProps, 'onPress'> {
     options: (string | DropdownOption)[];
     value?: any;
     placeholder?: string;
@@ -830,7 +865,16 @@ declare module 'flet-box' {
     clearable?: boolean;
     width?: number | string;
     portal?: boolean;
-    onChange?: (value: any, label: string) => void;
+    /**
+     * @deprecated Use `onPress` instead — it receives the same value.
+     */
+    onChange?: (value: any) => void;
+    /**
+     * Fired when the selection changes, with the chosen value; `null` when the
+     * selection is cleared. Only the value is sent — read the label from the
+     * option that carries it.
+     */
+    onPress?: (value: any) => void;
   }
   export function Dropdown(props: DropdownProps): Widget & {
     value: any;
@@ -984,8 +1028,20 @@ declare module 'flet-box' {
     leftNavBarWidth?: number;
     rightNavBar?: Slot;
     rightNavBarWidth?: number;
+    /**
+     * @deprecated Use `leftNavBar` (or `rightNavBar`) instead.
+     */
     navSideBar?: Slot;
+    /**
+     * @deprecated Use `leftNavBarWidth` (or `rightNavBarWidth`) instead. The
+     * legacy name was accepted and then ignored — the panel kept the default
+     * width, so a width written here never reached the screen.
+     */
     navSideBarWidth?: number;
+    /**
+     * @deprecated The legacy sidebar needed this to say which side it was on.
+     * `leftNavBar` and `rightNavBar` say it with their own name.
+     */
     navSideBarPosition?: 'left' | 'right';
     routes?: Record<string, any>;
     basePath?: string;
@@ -1650,16 +1706,20 @@ declare module 'flet-box' {
   }
   export function Pagination(props: PaginationProps): Widget;
 
-  export interface TreeViewProps extends CommonProps {
-    nodes: Array<{
-      id: string;
-      label: string;
-      icon?: string;
-      iconColor?: Color;
-      children?: any[];
-      badge?: string | number;
-    }>;
-    onSelect?: (node: any) => void;
+  export interface TreeViewNode {
+    id: string;
+    label: string;
+    icon?: string;
+    iconColor?: Color;
+    children?: TreeViewNode[];
+    badge?: string | number;
+  }
+  export interface TreeViewProps extends Omit<CommonProps, 'onPress'> {
+    nodes: TreeViewNode[];
+    /** Fired with the node the reader selected. */
+    onSelect?: (node: TreeViewNode) => void;
+    /** The framework's spelling of `onSelect`, fired with the same node; `onSelect` wins when both are given. */
+    onPress?: (node: TreeViewNode) => void;
     onToggle?: (nodeId: string, expanded: boolean) => void;
     expandedNodes?: string[];
     indent?: number;
@@ -1748,6 +1808,11 @@ declare module 'flet-box' {
     size?: number;
     /** Print each family's name under its swatch. Defaults to false. */
     showLabels?: boolean;
+    /**
+     * Offer the families as themes: picking one also paints the page, the panels,
+     * the cards and the hairlines. Defaults to false — brand only.
+     */
+    surfaces?: boolean;
     /** Accessible name of the group. Defaults to `"Accent color"`. */
     label?: string;
     disabled?: boolean;
@@ -2172,12 +2237,25 @@ declare module 'flet-box' {
    * Lays an accent over the live palette and persists the choice. `null` (or an
    * unknown id) takes it back off, and the screen returns to the palette's own
    * `primary`.
+   *
+   * `{ surfaces: true }` wears it as a theme instead of only as a brand: the page,
+   * the panels, the cards and the hairlines are derived from the same ramp. The
+   * plate (`primaryBg`) keeps coming from the accent's measured wash stop either
+   * way, and the ink scale never moves.
    */
-  export function setAccent(id: string | null): Record<string, string>;
+  export function setAccent(
+    id: string | null,
+    options?: { surfaces?: boolean },
+  ): Record<string, string>;
   /** Applies an accent only when the reader has never picked one. Never persists. */
-  export function applyAccentPreference(id: string): string | null;
+  export function applyAccentPreference(
+    id: string,
+    options?: { surfaces?: boolean },
+  ): string | null;
   /** The accent on screen, or `null` when the palette's own `primary` is showing. */
   export function getAccent(): string | null;
+  /** Whether the live accent also paints the surfaces. */
+  export function getAccentSurfaces(): boolean;
   /** Every selectable accent, in registration order. */
   export function listAccents(): Accent[];
   /** The same list with each family's five stops beside it, for a swatch that shows the ramp. */
@@ -2523,7 +2601,7 @@ declare module 'flet-box' {
   }): void;
   export function injectKeyframes(name: string, keyframes: string): void;
 
-  export function border(width?: number | string, style?: string, color?: string): string;
+  export function border(width?: number | string, style?: string, color: string): string;
   export function margin(value: number | string | { all?: number; horizontal?: number; vertical?: number; top?: number; right?: number; bottom?: number; left?: number }): string;
   export function padding(value: number | string | { all?: number; horizontal?: number; vertical?: number; top?: number; right?: number; bottom?: number; left?: number }): string;
   export function gradient(type: 'linear' | 'circle' | 'conic', colors: string[], angle?: number): string;
@@ -2551,7 +2629,7 @@ declare module 'flet-box' {
 
   export const color: (value: string | ColorInstance) => ColorInstance;
   export function rgba(r: number, g: number, b: number, a?: number): string;
-  export function stackPosition(widget: Widget, props: { top?: any; right?: any; bottom?: any; left?: any }): Widget;
+  export function stackPosition(widget: Widget, props?: StackPositionProps): Widget;
   export function flex(grow: number | { grow?: number; shrink?: number; basis?: string }, shrink?: number, basis?: string): string;
   export function grid(options: { columns?: number | string; rows?: number | string; gap?: number | string | { row?: number; column?: number } }): string;
   export function transition(options: { property?: string; duration?: number; timing?: string; delay?: number } | Array<{ property?: string; duration?: number; timing?: string; delay?: number }>): string;

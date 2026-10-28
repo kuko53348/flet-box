@@ -27,7 +27,7 @@ const tag = Chip({
 | `onPress` | `() => void` | Callback fired when the widget is pressed. Alias: `onClick`. |
 | `onDelete` | `() => void` | Event handler for the `onDelete` event. |
 | `variant` | `'filled' \| 'outlined'` | Visual variation or style preset. |
-| `color` | `Color` | Foreground color, usually the text or icon color. |
+| `color` | `Color` | The chip's own tint: the plate of a `filled` chip, the ring of an `outlined` one. Default `colors.primary`. |
 | `textColor` | `Color` | Color of the button label. |
 | `borderColor` | `Color` | Color used for the border. |
 | `size` | `'small' \| 'medium' \| 'large'` | Overall size preset or pixel value, depending on the widget. |
@@ -46,9 +46,9 @@ Every widget also accepts these shared props — see [common props](COMMON_PROPS
 | `size` | `Size` | Overall size preset or pixel value, depending on the widget. |
 | `padding` | `Padding` | Space inside the widget, between its content and its border. |
 | `margin` | `Margin` | Space outside the widget, between it and its neighbors. |
-| `bgColor` | `Color` | Background color. Alias: `backgroundColor`. |
+| `bgColor` | `Color` | The plate a **filled** chip is painted with, on the pill itself; it also picks a readable ink when `textColor` is left out. An outlined chip stays transparent. Alias: `backgroundColor`. |
 | `backgroundColor` | `Color` | Background color. Alias of `bgColor`. |
-| `color` | `Color` | Foreground color, usually the text or icon color. |
+| `color` | `Color` | The chip's own tint — the default plate of a filled chip, the ring of an outlined one. |
 | `borderRadius` | `number \| string` | Rounds the corners of the widget. |
 | `elevation` | `number` | Shadow depth. Higher values lift the widget off the page. |
 | `shadow` | `string` | Raw CSS `box-shadow` value, for a custom shadow. |

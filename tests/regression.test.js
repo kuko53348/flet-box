@@ -49,7 +49,15 @@
 //     and every glyph on the screen unreadable;
 //   - an accent set at boot (or by a reader's tap) was wiped by the next
 //     `setTheme`, because the layer was painted after the palette instead of
-//     inside the one funnel every theme change already runs through.
+//     inside the one funnel every theme change already runs through;
+//   - the exported `stackPosition` — the call the docs, the snippets and the
+//     design skill tell a developer to use for an overlay — wrote its edges into
+//     `data-top`/`data-right` that nothing reads, so the widget never moved;
+//   - a Chip whose caller named `bgColor` painted that colour on the outer
+//     wrapper — the 40-unit tap target, square-cornered — so the pill sat inside
+//     a rectangle of its own plate instead of wearing it;
+//   - a Button label wrapped inside a fixed-height pill, so three lines of copy
+//     ran through the rounded ends and past the padding box.
 //
 // It publishes `window.__REGRESSION = { pass, fail, results }`.
 import * as W from "../src/widgets/index.js";
@@ -71,12 +79,14 @@ import { MatrixRain } from "../src/animations/MatrixRain.js";
 import { animate, pulse, stopAnimation } from "../src/animations/animate.js";
 import { runApp } from "../src/core/runApp.js";
 import { useState, saveState, getState } from "../src/tools/useState.js";
+import { saveRam } from "../src/services/RamStore.js";
 import { colors, palettes, setTheme, applySystemTheme } from "../src/utils/themes.js";
 import {
   registerAccent,
   setAccent,
   applyAccentPreference,
   getAccent,
+  getAccentSurfaces,
   listAccents,
   listAccentRamps,
 } from "../src/utils/themes.js";
@@ -93,6 +103,7 @@ import {
 } from "../src/tools/breakpoints.js";
 import { loadFont, fontsReady } from "../src/tools/fonts.js";
 import { ensureFieldFont, looksLikeIOS } from "../src/utils/fieldFont.js";
+import { stackPosition } from "../src/utils/stackPosition.js";
 
 const results = [];
 let pass = 0;
@@ -803,6 +814,40 @@ async function run() {
     );
   });
 
+  await t("Button: a long label stays on one line inside its fill", () => {
+    // A wrapping label outgrew a fixed-height pill: three lines of text in a
+    // 56-unit capsule, drawn through the rounded ends and past the padding box.
+    // The label is now one line with an ellipsis, so the full text stays the
+    // accessible name while the shape keeps its geometry.
+    const label =
+      "Seguir en Surgimiento y evolución de los servicios gastronómicos · paso 2 · Misión 1";
+    const btn = mount(
+      W.Button({ text: label, width: 320, height: 56, borderRadius: 999 }),
+    );
+    const textEl = [...btn.querySelectorAll("*")].find(
+      (e) => e.children.length === 0 && e.textContent === label,
+    );
+    ok(textEl, "the label element was not rendered");
+    const br = btn.getBoundingClientRect();
+    const tr = textEl.getBoundingClientRect();
+    ok(
+      getComputedStyle(textEl).whiteSpace === "nowrap",
+      `the label can wrap: white-space="${getComputedStyle(textEl).whiteSpace}"`,
+    );
+    // 56 outer units minus the button's 8+8 padding: the label must never
+    // grow past the inner box, which is where the pill's curve begins.
+    ok(
+      tr.height <= br.height - 16 + 0.5,
+      `label ${tr.height.toFixed(1)}px tall inside a ${(br.height - 16).toFixed(1)}px content box`,
+    );
+    ok(
+      textEl.scrollWidth > textEl.clientWidth,
+      "the long label was not ellipsized",
+    );
+    ok(btn.textContent.includes(label), "the full label left the accessible name");
+    btn.remove();
+  });
+
   // ------------------------------------------------------------------- Chart
   await t("Chart: all-negative data is still drawn inside the canvas", async () => {
     // `Math.max(0, minVal - padding)` inverted the range (min > max) for negative
@@ -888,6 +933,22 @@ async function run() {
     ok(tv.getSelected() === "a", `selection cleared: ${tv.getSelected()}`);
     tv.updateNodes([{ id: "a", label: "A3" }], null);
     ok(tv.getSelected() === null, "an explicit null must still clear the selection");
+  });
+
+  await t("TreeView: onPress receives the node itself, and only it", () => {
+    // index.d.ts described `onPress` as `(widget: Widget) => void` — inherited
+    // from CommonProps — while the widget calls it with the node it selected.
+    const args = [];
+    const tv = W.TreeView({
+      nodes: [{ id: "a", label: "A" }],
+      onPress: (...received) => args.push(received),
+    });
+    mount(tv);
+    tv.setSelected("a");
+    ok(args.length === 1, `onPress fired ${args.length} time(s) for one selection`);
+    ok(args[0].length === 1, `onPress received ${args[0].length} argument(s), the declaration says one`);
+    ok(args[0][0] !== tv, "onPress received the container element, not the node");
+    ok(args[0][0]?.id === "a", `onPress received ${JSON.stringify(args[0][0])}, expected the node`);
   });
 
   // ------------------------------------------------------------------- Image
@@ -1094,6 +1155,23 @@ async function run() {
     setSel("b");
     await wait(40);
     ok(seen.length === echoed, `an unchanged value fired onChange ${seen.length - echoed} time(s)`);
+  });
+
+  await t("Dropdown: onPress receives the value alone", async () => {
+    // The declaration promised `(value, label)` and the runtime only ever sent
+    // the value, so a handler reading `label` got `undefined` and a second
+    // parameter was a promise nothing kept.
+    const args = [];
+    const dd = W.Dropdown({
+      options: ["a", "b"],
+      onPress: (...received) => args.push(received),
+    });
+    mount(dd);
+    dd.update({ value: "b" });
+    await wait(20);
+    ok(args.length === 1, `onPress fired ${args.length} time(s) for one change`);
+    ok(args[0].length === 1, `onPress received ${args[0].length} argument(s), the declaration says one`);
+    ok(args[0][0] === "b", `onPress received ${JSON.stringify(args[0][0])}, expected "b"`);
   });
 
   // ------------------------------------------------------------ Scaffold/Drawer
@@ -1662,6 +1740,60 @@ async function run() {
     } finally {
       console.group = originalGroup;
     }
+  });
+
+  await t("useState: a null value is seeded once, not on every render", async () => {
+    // `getRam` answers `null` for a missing key AND for a key whose value is
+    // null, so a `null` initial state looked uninitialized on every
+    // construction: each render re-saved it, the save re-rendered the component
+    // that read it structurally, and the app looped — a lesson screen rebuilt
+    // itself 150 times in half a second because one of its panes starts null.
+    let renders = 0;
+    let rerender = null;
+    const root = document.createElement("div");
+    root.id = "null-state-root";
+    document.body.appendChild(root);
+    const App = () => {
+      renders++;
+      const [pick] = useState("nullStatePick", null);
+      const [tick, setTick] = useState("nullStateTick", 0);
+      rerender = () => setTick(tick.valueOf() + 1);
+      // Both reads are structural: what turned the redundant save into a loop.
+      return W.Text({ text: (pick.valueOf() === null ? "SIN ELECCIÓN" : String(pick)) + " " + tick.valueOf() });
+    };
+    runApp(App, "null-state-root");
+    await wait(120);
+    const before = renders;
+
+    rerender(); // one legitimate change; before the fix it never stopped
+    await wait(300);
+
+    ok(root.textContent.includes("SIN ELECCIÓN 1"), `content: "${root.textContent}"`);
+    ok(renders - before <= 2, `a null state kept the app re-rendering: ${renders - before} renders after one change`);
+  });
+
+  await t("useState: saving the value a key already holds does not re-render", async () => {
+    // The seeding path talks to RamStore directly, so the dispatcher has to
+    // ignore an identical write: a "change" notification for a value that did
+    // not change patched every bound widget and re-ran the structural render.
+    let renders = 0;
+    const root = document.createElement("div");
+    root.id = "same-value-root";
+    document.body.appendChild(root);
+    const App = () => {
+      renders++;
+      const [n] = useState("sameValueN", 7);
+      return W.Text({ text: n.valueOf() > 99 ? "ALTO" : "BAJO" });
+    };
+    runApp(App, "same-value-root");
+    await wait(120);
+    const before = renders;
+
+    saveRam("sameValueN", 7);
+    await wait(150);
+
+    ok(renders === before, `an identical save re-rendered the app ${renders - before} time(s)`);
+    ok(root.textContent.includes("BAJO"), `content: "${root.textContent}"`);
   });
 
   await t("useState: unmounting releases the binding (no updates to detached nodes)", async () => {
@@ -2257,6 +2389,118 @@ async function run() {
       ok(failures.length === 0, `${failures.length} failing job(s): ${failures.slice(0, 6).join(" | ")}`);
     } finally {
       setAccent(savedAccent);
+      if (savedTheme) setTheme(savedTheme);
+      else {
+        localStorage.removeItem("fletbox-theme");
+        applySystemTheme();
+      }
+    }
+  });
+
+  // ------------------------------------------------- An accent worn as a theme
+  // `setAccent(id, { surfaces: true })` paints the page, the panels, the cards and
+  // the hairlines from the same ramp. Two things have to stay true while it does:
+  // every ink still reads on every surface it now sits on, and nothing but the
+  // surfaces moves — the words, the brand and the plate keep the palette's own
+  // values, which is what makes a tinted theme unable to make itself unreadable.
+  await t("an accent worn as a theme keeps every ink on the surfaces it paints", async () => {
+    const savedTheme = localStorage.getItem("fletbox-theme");
+    const savedAccent = getAccent();
+    const savedSurfaces = getAccentSurfaces();
+    const failures = [];
+    let jobs = 0;
+
+    const check = (label, value, minimum, maximum) => {
+      jobs++;
+      if (value < minimum || (maximum !== undefined && value > maximum)) {
+        failures.push(`${label}: ${value.toFixed(3)} outside [${minimum}, ${maximum ?? "∞"}]`);
+      }
+    };
+
+    // Tokens the surface layer must never touch, compared against the *same
+    // accent* painted as a brand: an accent always moves `primary`, `onPrimary`
+    // and `primaryBg`, and `primaryBg` is on the list because the plate comes from
+    // the stop the family was measured against — a theme that re-derived it would
+    // be re-deriving a vetted number.
+    const FROZEN = [
+      "text",
+      "textSecondary",
+      "textDisabled",
+      "primary",
+      "onPrimary",
+      "primaryBg",
+      "success",
+      "danger",
+      "focusRing",
+    ];
+
+    try {
+      for (const theme of ["light", "dark"]) {
+        setTheme(theme);
+        for (const family of ACCENT_FAMILIES) {
+          const id = `${family.id}/${theme}`;
+          setAccent(family.id);
+          const brand = FROZEN.map((token) => hexOf(colors[token]));
+          setAccent(family.id, { surfaces: true });
+
+          FROZEN.forEach((token, i) => {
+            jobs++;
+            if (hexOf(colors[token]) !== brand[i]) {
+              failures.push(`${id}: ${token} moved from ${brand[i]} to ${colors[token]}`);
+            }
+          });
+
+          const { background, surface, card, border, text, textSecondary, focusRing } = colors;
+          const accent = colors.primary;
+
+          check(`${id} page ink on the page`, contrast(text, background), 4.5);
+          check(`${id} page ink on a panel`, contrast(text, surface), 4.5);
+          check(`${id} page ink on a card`, contrast(text, card), 4.5);
+          check(`${id} secondary ink on the page`, contrast(textSecondary, background), 4.5);
+          check(`${id} secondary ink on a panel`, contrast(textSecondary, surface), 4.5);
+          check(`${id} secondary ink on a card`, contrast(textSecondary, card), 4.5);
+          check(`${id} accent as words on the page`, contrast(accent, background), 4.5);
+          check(`${id} accent as words on a card`, contrast(accent, card), 4.5);
+          check(`${id} accent as a glyph on a panel`, contrast(accent, surface), 3);
+          check(`${id} focus ring on the page`, contrast(focusRing, background), 3);
+          check(`${id} focus ring on a panel`, contrast(focusRing, surface), 3);
+          check(`${id} focus ring on a card`, contrast(focusRing, card), 3);
+
+          // Three layers must read as three layers, and a hairline must be seen on
+          // both of the boxes it rims.
+          check(`${id} panel above the page`, contrast(surface, background), 1.03, 1.6);
+          check(`${id} card above the panel`, contrast(card, surface), 1.03, 1.6);
+          check(`${id} card above the page`, contrast(card, background), 1.03, 1.6);
+          check(`${id} hairline on a card`, contrast(border, card), 1.1, 2.2);
+          check(`${id} hairline on a panel`, contrast(border, surface), 1.05, 2.2);
+        }
+      }
+
+      // Surfaces are a theme, so the choice has to come back with the color.
+      setAccent("teal", { surfaces: true });
+      jobs++;
+      if (localStorage.getItem("fletbox-accent") !== "teal+surfaces") {
+        failures.push(`stored ${localStorage.getItem("fletbox-accent")}, expected teal+surfaces`);
+      }
+      check("teal surfaces on", getAccentSurfaces() ? 1 : 0, 1);
+      setAccent("teal");
+      check("teal surfaces off", getAccentSurfaces() ? 0 : 1, 1);
+      jobs++;
+      if (localStorage.getItem("fletbox-accent") !== "teal") {
+        failures.push(`a brand-only tap stored ${localStorage.getItem("fletbox-accent")}`);
+      }
+      setTheme("light");
+      jobs++;
+      if (hexOf(colors.background) !== hexOf(palettes.light.background)) {
+        failures.push(`a brand-only accent still painted ${colors.background}`);
+      }
+
+      const expected =
+        ACCENT_FAMILIES.length * 2 * (FROZEN.length + 17) + 5;
+      ok(jobs === expected, `ran ${jobs} jobs, expected ${expected} — a family or a check is missing`);
+      ok(failures.length === 0, `${failures.length} failing job(s): ${failures.slice(0, 6).join(" | ")}`);
+    } finally {
+      setAccent(savedAccent, { surfaces: savedSurfaces });
       if (savedTheme) setTheme(savedTheme);
       else {
         localStorage.removeItem("fletbox-theme");
@@ -4213,6 +4457,65 @@ async function run() {
     ok(
       both.style.transform === "translateX(-50%) translateY(-50%)",
       `centerX+centerY produced "${both.style.transform}"`,
+    );
+  });
+
+  await t("stackPosition: the exported helper moves the widget, not just its dataset", () => {
+    // The docs, the snippet library and the design skill all tell a developer to
+    // call `stackPosition(badge, { top: 8, right: 8 })`. The exported helper took
+    // the edges and wrote them as `data-top`/`data-right` attributes that nothing
+    // in the framework ever reads, so the overlay stayed exactly where the flow
+    // put it and the call looked like it worked.
+    const badge = mount(WidgetFactory({ tag: "div" }));
+    stackPosition(badge, { top: 8, right: 8 });
+    ok(
+      badge.style.position === "absolute",
+      `position is "${badge.style.position}" after stackPosition`,
+    );
+    ok(badge.style.top === "0.5rem", `top is "${badge.style.top}", not the rem contract`);
+    ok(badge.style.right === "0.5rem", `right is "${badge.style.right}"`);
+  });
+
+  await t("stackPosition: the exported helper takes the centring shorthands", () => {
+    const chip = mount(WidgetFactory({ tag: "div" }));
+    stackPosition(chip, { centerX: true, top: 4 });
+    ok(chip.style.left === "50%", `centerX left is "${chip.style.left}"`);
+    ok(
+      chip.style.transform === "translateX(-50%)",
+      `centerX transform is "${chip.style.transform}"`,
+    );
+    ok(chip.style.top === "0.25rem", `top is "${chip.style.top}"`);
+  });
+
+  await t("Chip: the named background paints the pill, not a plate behind it", () => {
+    // `Chip`'s docs list `bgColor` as "Background color", but the filled variant
+    // took its plate from `color` and let `bgColor` fall through the `...rest`
+    // spread onto the outer wrapper — which is 40 units tall and square-cornered.
+    // The result was a rectangle of the named colour with a gold pill drawn over
+    // it, and the app could not ask for a tinted chip at all.
+    const chip = mount(W.Chip({ label: "12 XP", bgColor: "#123456" }));
+    const pill = chip.firstElementChild;
+    ok(pill, "Chip rendered no inner pill");
+    ok(
+      chip.style.backgroundColor !== "rgb(18, 52, 86)",
+      "bgColor still reaches the wrapper: the rectangle is back",
+    );
+    ok(
+      pill.style.backgroundColor === "rgb(18, 52, 86)",
+      `pill background is "${pill.style.backgroundColor}", not the named bgColor`,
+    );
+    ok(pill.style.borderRadius !== "", `pill radius is "${pill.style.borderRadius}"`);
+  });
+
+  await t("Chip: an outlined chip stays transparent on both layers", () => {
+    const outlined = mount(W.Chip({ label: "draft", variant: "outlined", bgColor: "#123456" }));
+    ok(
+      outlined.firstElementChild.style.backgroundColor === "transparent",
+      `outlined pill filled with "${outlined.firstElementChild.style.backgroundColor}"`,
+    );
+    ok(
+      outlined.style.backgroundColor !== "rgb(18, 52, 86)",
+      "an outlined chip painted its wrapper: the plate is back",
     );
   });
 

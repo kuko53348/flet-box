@@ -43,8 +43,8 @@ const volume = Slider({
 | `animatedStripes` | `boolean` | Animates the stripes on the bar. |
 | `stripeColor` | `string` | Color used for the stripe. |
 | `glow` | `boolean` | Adds a glow around the widget. |
-| `onPress` | `(value: number) => void` | Callback fired when the widget is pressed. Alias: `onClick`. |
-| `onChanged` | `(value: number) => void` | Event handler for the `onChanged` event. |
+| `onPress` | `(value: number) => void` | Called with the new value while the thumb moves. |
+| `onChanged` | `(value: number) => void` | Deprecated alias of `onPress`. |
 | `onChangeEnd` | `(value: number) => void` | Event handler for the `onChangeEnd` event. |
 
 ### Common props
@@ -107,7 +107,7 @@ Every widget also accepts these shared props — see [common props](COMMON_PROPS
 | `opacity` | `number` | Opacity from 0 (invisible) to 1 (fully opaque). |
 | `visible` | `boolean` | Whether the widget is rendered and visible. |
 | `disabled` | `boolean` | Disables interaction and shows the non-interactive state. |
-| `onPress` | `(widget: Widget) => void` | Callback fired when the widget is pressed. Alias: `onClick`. |
+| `onPress` | `(widget: Widget) => void` | Called with the new value while the thumb moves. |
 | `onClick` | `(widget: Widget) => void` | Callback fired when the widget is clicked. Alias: `onPress`. |
 | `onclick` | `(widget: Widget) => void` | The `onclick` value for the widget. |
 | `alignSelf` | `AlignSelf` | Overrides the parent's `alignItems` for this child alone (CSS `align-self`). Alias: `selfAlign`. |
@@ -129,7 +129,7 @@ const volume = Slider({
   min: 0,
   max: 100,
   step: 5,
-  onChanged: (value) => console.log("volume:", value),
+  onPress: (value) => console.log("volume:", value),
 });
 ```
 
@@ -154,14 +154,14 @@ const price = Slider({
     { value: 500, label: "$500" },
     { value: 1000, label: "$1000" },
   ],
-  onChanged: (value) => console.log("price:", value),
+  onPress: (value) => console.log("price:", value),
   onChangeEnd: (value) => console.log("final:", value),
 });
 ```
 
 ## Tips
 
-- onChanged fires continuously while dragging; use onChangeEnd for the value to commit, such as a filter request.
+- onPress fires continuously while dragging; use onChangeEnd for the value to commit, such as a filter request.
 - Set step to snap to meaningful increments instead of every integer.
 - On a vertical slider, width is the rail's length and height its thickness.
 
@@ -171,7 +171,7 @@ const price = Slider({
 
 ## Behavior
 
-- Dragging the track or thumb updates the value and fires onChanged; releasing fires onChangeEnd once.
+- Dragging the track or thumb updates the value and fires onPress; releasing fires onChangeEnd once.
 - The returned element exposes value, min, max, step, setValue() and getValue(), and disconnects its ResizeObserver on unmount.
 - During a drag the fill follows the pointer with no easing; the 0.1s ease belongs to a value that changes by itself, from a key press or setValue().
 

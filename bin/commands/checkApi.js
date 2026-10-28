@@ -37,6 +37,7 @@ import {
 import { c, banner, section } from "../utils/colors.js";
 import { neutralise } from "../utils/neutralise.js";
 import { resolveLocalModule, readModuleExports } from "../utils/moduleExports.js";
+import { deprecationFor } from "../../src/widget-factory/deprecations.js";
 
 const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -538,7 +539,7 @@ const ERROR_CODES = new Set([
   "MISSING_EXPORT",
 ]);
 
-const SEVERITY = {
+export const SEVERITY = {
   WRONG_STACK: "error",
   UNKNOWN_EXPORT: "error",
   UNKNOWN_PROP: "error",
@@ -600,7 +601,7 @@ const entry = (prop, info, api) => {
  * @param {string} projectRoot
  * @returns {string} written path
  */
-const emitCheatsheet = (api, projectRoot) => {
+export const emitCheatsheet = (api, projectRoot) => {
   const widgetNames = api.exports
     .filter((name) => /^[A-Z]/.test(name) && api.interfaces.has(`${name}Props`))
     .sort();
@@ -614,6 +615,10 @@ const emitCheatsheet = (api, projectRoot) => {
       `Regenerate with \`flet-box check-api --emit-api\`.`,
   );
   out.push(`Widgets: ${widgetNames.length} · engine props: ${api.ALL_PROPS.length}`);
+  out.push(
+    `A prop marked \`(deprecated → x)\` still works and is not the name to write; ` +
+      `\`npm run fix\` renames the call it can prove.`,
+  );
   out.push(``);
   out.push(`## Common props (every widget)`);
   out.push(
@@ -629,7 +634,13 @@ const emitCheatsheet = (api, projectRoot) => {
       [...own]
         .map(([prop, info]) => {
           const type = info.type.length > 46 ? `${info.type.slice(0, 43)}…` : info.type;
-          return `${prop}${info.optional ? "?" : ""}: ${type}`;
+          // The cheatsheet is the first file an agent reads, so a renamed prop has
+          // to say so here. Without the marker `onPress` and `onToggle` look like
+          // two equally good names, and half the calls built from this file carry
+          // the one the framework is trying to retire.
+          const rule = deprecationFor(name, prop);
+          const mark = rule ? ` (deprecated → ${rule.to ?? "removed"})` : "";
+          return `${prop}${info.optional ? "?" : ""}: ${type}${mark}`;
         })
         .join(" · "),
     );

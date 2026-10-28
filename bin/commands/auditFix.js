@@ -1,15 +1,17 @@
 /**
  * `flet-box audit-fix` — write what `check-api` only reports.
  *
- * Two repairs, both anchored to spans the gate already knows how to find:
+ * Three repairs, all anchored to spans the gate already knows how to find:
  *
- *   imports  a relative path that does not resolve, a name the target module
- *            never exports, a default import from a module without a default,
- *            and identifiers used with no import at all (a flet-box export, or
- *            a Node builtin used as `path.join(…)`).
- *   props    a key inside `Widget({ … })` that neither the widget's declared
- *            props, the structural props, nor the engine registry knows —
- *            `chilldren` → `children`, `postion` → `position`.
+ *   imports    a relative path that does not resolve, a name the target module
+ *              never exports, a default import from a module without a default,
+ *              and identifiers used with no import at all (a flet-box export, or
+ *              a Node builtin used as `path.join(…)`).
+ *   props      a key inside `Widget({ … })` that neither the widget's declared
+ *              props, the structural props, nor the engine registry knows —
+ *              `chilldren` → `children`, `postion` → `position`.
+ *   migrations a key inside `Widget({ … })` that the widget still honours but no
+ *              longer recommends — `Radio({ onSelect })` → `Radio({ onPress })`.
  *
  * A rewrite only happens when the intended name is unambiguous: one candidate,
  * edit distance small enough that no real name could collide with it. Anything
@@ -23,6 +25,7 @@ import { c, banner, section } from "../utils/colors.js";
 import { neutralise } from "../utils/neutralise.js";
 import { resolveLocalModule, readModuleExports } from "../utils/moduleExports.js";
 import { resolveInterfaceProps } from "../utils/dtsProps.js";
+import { deprecationFor } from "../../src/widget-factory/deprecations.js";
 import {
   STRUCTURAL_PROPS,
   collectSources,
@@ -252,9 +255,13 @@ const strictMatch = (wanted, candidates) => {
 /**
  * Top-level keys of an object literal, with their spans.
  *
+ * `entryEnd` is where the whole entry ends — the key *and* its value — which
+ * is what a removal has to take, since deleting a key without its value would
+ * leave the value behind.
+ *
  * @param {string} code comment/string-free source
  * @param {number} open index of `{`
- * @returns {{ keys: Array<{ name: string, start: number, end: number }>, opaque: boolean }}
+ * @returns {{ keys: Array<{ name: string, start: number, end: number, entryEnd: number }>, opaque: boolean }}
  */
 const literalKeySpans = (code, open) => {
   const keys = [];
@@ -268,6 +275,7 @@ const literalKeySpans = (code, open) => {
     const at = entryStart + (text ? lead : 0);
     current = "";
     if (!text) return;
+    const entryEnd = at + text.length;
     if (text.startsWith("...")) {
       opaque = true;
       return;
@@ -275,9 +283,9 @@ const literalKeySpans = (code, open) => {
     const key = /^(?:async\s+)?['"]?([A-Za-z_$][\w$]*)['"]?\s*:/.exec(text);
     if (key) {
       const start = at + text.indexOf(key[1]);
-      keys.push({ name: key[1], start, end: start + key[1].length });
+      keys.push({ name: key[1], start, end: start + key[1].length, entryEnd });
     } else if (/^[A-Za-z_$][\w$]*$/.test(text)) {
-      keys.push({ name: text, start: at, end: at + text.length });
+      keys.push({ name: text, start: at, end: at + text.length, entryEnd });
     }
   };
   for (let i = open; i < code.length; i++) {
@@ -518,20 +526,15 @@ const planImports = (file, code, api, allSources) => {
 };
 
 /**
- * Plan the prop-key rewrites for one file.
+ * The widgets an app imported from flet-box, as `local name → exported name`.
  *
- * @param {string} file
- * @param {string} code
- * @param {object} api
- * @returns {{ edits: Edit[], skipped: string[] }}
+ * Only capitalised exports are widgets; the rest of the barrel is functions
+ * and tools, and a call to one of those never carries a props object.
+ *
+ * @param {string} withStrings Neutralised source, strings kept.
+ * @returns {Map<string, string>}
  */
-const planProps = (file, code, api) => {
-  const edits = [];
-  const skipped = [];
-  const rel = path.relative(api.root, file);
-  const withStrings = neutralise(code, { keepStrings: true });
-  const body = neutralise(code);
-
+const fletWidgetImports = (withStrings) => {
   const localToWidget = new Map();
   for (const match of withStrings.matchAll(IMPORT_RE)) {
     if (match[2] !== "flet-box") continue;
@@ -546,6 +549,54 @@ const planProps = (file, code, api) => {
       if (/^[A-Z]/.test(exported)) localToWidget.set(local, exported);
     }
   }
+  return localToWidget;
+};
+
+/**
+ * The value written after a key of an object literal, or null.
+ *
+ * @param {string} code Source with the strings kept — a neutralised string
+ *   keeps its quotes but loses its content, and the content is the value.
+ * @param {{ end: number }} key The key's span.
+ * @returns {string|null}
+ */
+const keyValue = (code, key) => {
+  const match = /^\s*:\s*['"]?([^'"\s,}]+)/.exec(code.slice(key.end, key.end + 80));
+  return match ? match[1] : null;
+};
+
+/**
+ * The span that removes one entry of an object literal, comma included.
+ *
+ * @param {Array<{ start: number, end: number, entryEnd: number }>} keys
+ * @param {number} index The entry to remove.
+ * @returns {{ start: number, end: number }}
+ */
+const removalSpan = (keys, index) => {
+  const key = keys[index];
+  const next = keys[index + 1];
+  if (next) return { start: key.start, end: next.start };
+  const prev = keys[index - 1];
+  if (prev) return { start: prev.entryEnd, end: key.entryEnd };
+  return { start: key.start, end: key.entryEnd };
+};
+
+/**
+ * Plan the prop-key rewrites for one file.
+ *
+ * @param {string} file
+ * @param {string} code
+ * @param {object} api
+ * @returns {{ edits: Edit[], skipped: string[] }}
+ */
+const planProps = (file, code, api) => {
+  const edits = [];
+  const skipped = [];
+  const rel = path.relative(api.root, file);
+  const withStrings = neutralise(code, { keepStrings: true });
+  const body = neutralise(code);
+
+  const localToWidget = fletWidgetImports(withStrings);
 
   for (const [local, exported] of localToWidget) {
     const iface = `${exported}Props`;
@@ -571,6 +622,103 @@ const planProps = (file, code, api) => {
           text: real,
           note: `${exported}({ ${c("brightRed", key.name)} }) → ${c("brightGreen", real)}`,
           kind: "prop",
+        });
+      }
+    }
+  }
+
+  return { edits, skipped };
+};
+
+/**
+ * Plan the renames an app can make without touching a line by hand.
+ *
+ * A prop the framework still honours but no longer recommends is not broken
+ * code, so `check-api` has nothing to say about it — but every screen that
+ * keeps the old name keeps an old spelling forever. The table in
+ * `src/widget-factory/deprecations.js` is the list, and it is per widget
+ * because the same name means different things in different widgets.
+ *
+ * The rewrite only happens when it is provably the same call: the widget has to
+ * declare the old name, it has to declare the new one, and the call must not
+ * already carry the new one (two callbacks for one event is a decision, not a
+ * rename).
+ *
+ * A row with no target (`to: null`) is a prop nobody reads any more: the key
+ * is removed, together with the comma that held it.
+ *
+ * @param {string} file
+ * @param {string} code
+ * @param {object} api
+ * @returns {{ edits: Edit[], skipped: string[] }}
+ */
+const planMigrations = (file, code, api) => {
+  const edits = [];
+  const skipped = [];
+  const rel = path.relative(api.root, file);
+  const withStrings = neutralise(code, { keepStrings: true });
+  const body = neutralise(code);
+
+  for (const [local, exported] of fletWidgetImports(withStrings)) {
+    const iface = `${exported}Props`;
+    if (!api.interfaces.has(iface)) continue;
+    const declared = resolveInterfaceProps(api.interfaces, iface);
+    const callRe = new RegExp(`\\b${escapeRe(local)}\\s*\\(\\s*\\{`, "g");
+    let call;
+    while ((call = callRe.exec(body))) {
+      const open = call.index + call[0].length - 1;
+      const { keys, opaque } = literalKeySpans(body, open);
+      if (opaque) continue;
+      const byName = new Map(keys.map((entry) => [entry.name, entry]));
+
+      for (const key of keys) {
+        const rule = deprecationFor(exported, key.name);
+        if (!rule || !rule.to) continue;
+        if (!declared.has(rule.from) || !declared.has(rule.to)) {
+          skipped.push(`${rel}: ${exported}({ ${key.name} }) — the widget does not declare the pair`);
+          continue;
+        }
+        const inert = (rule.guard || []).find((name) => byName.has(name));
+        if (inert) {
+          skipped.push(
+            `${rel}: ${exported}({ ${key.name} }) — ${inert} is already there, so the old name does nothing`,
+          );
+          continue;
+        }
+        let target = rule.to;
+        if (rule.alternate) {
+          const side = byName.get(rule.alternate.prop);
+          if (side && keyValue(withStrings, side) === rule.alternate.value) {
+            target = rule.alternate.to;
+          }
+        }
+        if (byName.has(target)) {
+          skipped.push(
+            `${rel}: ${exported}({ ${key.name} }) — ${target} is already there; two callbacks for one event is your call`,
+          );
+          continue;
+        }
+        edits.push({
+          start: key.start,
+          end: key.end,
+          text: target,
+          note: `${exported}({ ${c("brightRed", key.name)} }) → ${c("brightGreen", target)}`,
+          kind: "migration",
+        });
+      }
+
+      // The removals run after the renames: a prop that only meant something
+      // next to another one goes away with it.
+      for (let index = 0; index < keys.length; index++) {
+        const key = keys[index];
+        const rule = deprecationFor(exported, key.name);
+        if (!rule || rule.to) continue;
+        if (!declared.has(rule.from)) continue;
+        edits.push({
+          ...removalSpan(keys, index),
+          text: "",
+          note: `${exported}({ ${c("brightRed", key.name)} }) → ${c("brightGreen", "removed")}`,
+          kind: "migration",
         });
       }
     }
@@ -615,13 +763,14 @@ export const auditFix = async (argv = [], io = {}) => {
     return i >= 0 && argv[i + 1] ? path.resolve(argv[i + 1]) : process.cwd();
   })();
   const onlyFlag = argv.includes("--only") ? argv[argv.indexOf("--only") + 1] : null;
-  if (onlyFlag && !["imports", "props"].includes(onlyFlag)) {
-    print(c("red", `--only expects "imports" or "props", got "${onlyFlag}"`));
+  if (onlyFlag && !["imports", "props", "migrations"].includes(onlyFlag)) {
+    print(c("red", `--only expects "imports", "props" or "migrations", got "${onlyFlag}"`));
     return { exitCode: 1, changed: [], untouched: [] };
   }
   const only = {
     imports: !onlyFlag || onlyFlag === "imports",
     props: !onlyFlag || onlyFlag === "props",
+    migrations: !onlyFlag || onlyFlag === "migrations",
   };
 
   let api;
@@ -637,7 +786,11 @@ export const auditFix = async (argv = [], io = {}) => {
   const files = collectSources(root);
   const changed = [];
   const untouched = [];
-  const passes = [only.imports && "imports", only.props && "props"].filter(Boolean);
+  const passes = [
+    only.imports && "imports",
+    only.props && "props",
+    only.migrations && "migrations",
+  ].filter(Boolean);
 
   print(banner("🔧 FletBox audit fix", `${files.length} file(s) · ${passes.join(" + ")}`));
 
@@ -651,6 +804,7 @@ export const auditFix = async (argv = [], io = {}) => {
     const runs = [];
     if (only.imports) runs.push(() => planImports(file, text, api, files));
     if (only.props) runs.push(() => planProps(file, text, api));
+    if (only.migrations) runs.push(() => planMigrations(file, text, api));
     for (const run of runs) {
       const plan = run();
       untouched.push(...plan.skipped);
@@ -673,7 +827,7 @@ export const auditFix = async (argv = [], io = {}) => {
 
   print(
     changed.length
-      ? `\n${c("brightGreen", `${changed.length} file(s) rewritten`)} ${c("gray", "— run npm run check to confirm, and git diff to review.")}`
+      ? `\n${c("brightGreen", `${changed.length} file(s) rewritten`)} ${c("gray", "— run npm run verify to confirm, and git diff to review.")}`
       : c("gray", "\nNothing to rewrite — every import resolves and every prop is known."),
   );
   return { exitCode: 0, changed, untouched };

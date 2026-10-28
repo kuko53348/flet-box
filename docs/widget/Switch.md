@@ -23,7 +23,8 @@ const darkMode = Switch({
 | Prop | Type | Description |
 | --- | --- | --- |
 | `value` | `boolean` | Current value controlled by the widget. |
-| `onToggle` | `(value: boolean) => void` | Fired with the new toggled state. |
+| `onToggle` | `(value: boolean) => void` | Deprecated alias of `onPress`. |
+| `onPress` | `(value: boolean) => void` | Called with the new toggled state (`true` or `false`). |
 | `disabled` | `boolean` | Disables interaction and shows the non-interactive state. |
 | `size` | `'small' \| 'medium' \| 'large'` | Overall size preset or pixel value, depending on the widget. |
 | `activeColor` | `Color` | Color used in the active state. |
@@ -89,7 +90,7 @@ Every widget also accepts these shared props — see [common props](COMMON_PROPS
 | `opacity` | `number` | Opacity from 0 (invisible) to 1 (fully opaque). |
 | `visible` | `boolean` | Whether the widget is rendered and visible. |
 | `disabled` | `boolean` | Disables interaction and shows the non-interactive state. |
-| `onPress` | `(widget: Widget) => void` | Callback fired when the widget is pressed. Alias: `onClick`. |
+| `onPress` | `(widget: Widget) => void` | Called with the new toggled state (`true` or `false`). |
 | `onClick` | `(widget: Widget) => void` | Callback fired when the widget is clicked. Alias: `onPress`. |
 | `onclick` | `(widget: Widget) => void` | The `onclick` value for the widget. |
 | `alignSelf` | `AlignSelf` | Overrides the parent's `alignItems` for this child alone (CSS `align-self`). Alias: `selfAlign`. |
@@ -110,7 +111,7 @@ const notifications = Switch({
   value: true,
   label: "Notifications",
   activeColor: "#16a34a",
-  onToggle: (value) => console.log("notifications:", value),
+  onPress: (value) => console.log("notifications:", value),
 });
 ```
 
@@ -125,7 +126,7 @@ const wifi = Switch({
   size: "large",
   activeColor: "#2563eb",
   disabled: false,
-  onToggle: (value) => {
+  onPress: (value) => {
     console.log("wifi toggled:", value);
   },
 });
@@ -134,7 +135,7 @@ const wifi = Switch({
 ## Tips
 
 - Reserve Switch for immediate settings and use Checkbox when the choice is part of a form you submit.
-- onToggle receives the new boolean, so you can store it directly in your state.
+- onPress receives the new boolean, so you can store it directly in your state.
 
 ## Accessibility
 
@@ -142,7 +143,7 @@ const wifi = Switch({
 
 ## Behavior
 
-- Switch works uncontrolled when value is omitted: clicking toggles the internal state and fires onToggle.
+- Switch works uncontrolled when value is omitted: clicking toggles the internal state and fires onPress.
 - The returned element exposes getValue() and updateValue(v) to read or set the state without a click.
 
 ## Related widgets

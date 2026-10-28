@@ -25,7 +25,7 @@ const tip = Tooltip({
 | --- | --- | --- |
 | `text` | `string` | Visible text content. |
 | `child` | `Widget` | A single child widget. Alias: `children` for a list. |
-| `position` | `'top' \| 'bottom' \| 'left' \| 'right'` | CSS `position` value, or `stack` for centered stacking. |
+| `position` | `'top' \| 'bottom' \| 'left' \| 'right'` | Side of the child the bubble appears on. |
 | `delay` | `number` | Milliseconds the pointer has to stay on the widget before the tooltip appears. |
 | `tooltipDelay` | `number` | Deprecated alias of `delay`. |
 | `bgColor` | `Color` | Background color. Alias: `backgroundColor`. |
@@ -128,7 +128,7 @@ const tip = Tooltip({
 - The tooltip hides itself on window scroll or resize and removes its body portal plus listeners on unmount.
 - The wrapped child gains showTooltip, hideTooltip, updateContent, and updatePosition helpers for imperative control.
 - A pointer that leaves before the wait is over never shows the bubble: leaving clears the timer.
-- tooltipDelay is the old name of delay. When both are given, delay wins.
+- tooltipDelay is the old name of delay and is deprecated: write delay. When both are given, delay wins.
 - The requested position is a preference, not a promise: when the bubble would not fit between the trigger and the safe-area edge it is placed on the opposite side, and the arrow follows it.
 
 ## Related widgets

@@ -16,6 +16,9 @@ This directory is the **conceptual index** of FletBox: how to build apps, set up
 - **[Accessibility](accessibility.md)** — Chapter 13 · the focus ring, the
   keyboard pass over every press, the roles and states the widgets declare, and
   the overlays that hold the keyboard.
+- **[Migrate an app to a newer FletBox](migration.md)** — Chapter 14 · what
+  changed between releases, the "de X a Y" table, and the codemod that writes
+  the new names for you.
 - **[Widget structure](widget-structure.md)** — the canonical, modular shape every widget follows (and how new ones are added).
 
 ## Appendices (Advanced — for shipping)

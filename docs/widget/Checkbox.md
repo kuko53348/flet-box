@@ -23,7 +23,8 @@ const terms = Checkbox({
 | Prop | Type | Description |
 | --- | --- | --- |
 | `checked` | `boolean` | Current checked state. |
-| `onCheck` | `(checked: boolean) => void` | Fired with the new checked state. |
+| `onCheck` | `(checked: boolean) => void` | Deprecated alias of `onPress`. |
+| `onPress` | `(checked: boolean) => void` | Called with the new checked state (`true` or `false`). |
 | `disabled` | `boolean` | Disables interaction and shows the non-interactive state. |
 | `size` | `number` | Overall size preset or pixel value, depending on the widget. |
 | `activeColor` | `Color` | Color used in the active state. |
@@ -90,7 +91,7 @@ Every widget also accepts these shared props — see [common props](COMMON_PROPS
 | `opacity` | `number` | Opacity from 0 (invisible) to 1 (fully opaque). |
 | `visible` | `boolean` | Whether the widget is rendered and visible. |
 | `disabled` | `boolean` | Disables interaction and shows the non-interactive state. |
-| `onPress` | `(widget: Widget) => void` | Callback fired when the widget is pressed. Alias: `onClick`. |
+| `onPress` | `(widget: Widget) => void` | Called with the new checked state (`true` or `false`). |
 | `onClick` | `(widget: Widget) => void` | Callback fired when the widget is clicked. Alias: `onPress`. |
 | `onclick` | `(widget: Widget) => void` | The `onclick` value for the widget. |
 | `alignSelf` | `AlignSelf` | Overrides the parent's `alignItems` for this child alone (CSS `align-self`). Alias: `selfAlign`. |
@@ -111,7 +112,7 @@ const remember = Checkbox({
   checked: true,
   label: "Remember me",
   activeColor: "#2563eb",
-  onCheck: (checked) => console.log("remember:", checked),
+  onPress: (checked) => console.log("remember:", checked),
 });
 ```
 
@@ -127,7 +128,7 @@ const updates = Checkbox({
   activeColor: "#7c3aed",
   variant: "filled",
   disabled: false,
-  onCheck: (checked) => {
+  onPress: (checked) => {
     console.log("updates:", checked);
   },
 });
@@ -136,7 +137,7 @@ const updates = Checkbox({
 ## Tips
 
 - Use Checkbox inside forms where several options may be true together; use Switch for one immediate on/off setting.
-- onCheck fires with the new boolean, so write it straight into your state.
+- onPress fires with the new boolean, so write it straight into your state.
 - A filled checkbox needs no second color: `activeColor` is the plate and the tick reads itself on it.
 
 ## Accessibility
@@ -145,7 +146,7 @@ const updates = Checkbox({
 
 ## Behavior
 
-- Uncontrolled when checked is omitted; the widget tracks its own state and reports changes through onCheck.
+- Uncontrolled when checked is omitted; the widget tracks its own state and reports changes through onPress.
 - The returned element exposes setChecked(value) and getChecked() for programmatic control.
 - `size` is the edge of the drawn box; the press target around it stays 40 units and does not shrink with it.
 - The box carries a step of the radius scale (4 by default, 8 from `size: 28`), and a `borderRadius` rounds the box rather than the invisible target around it.

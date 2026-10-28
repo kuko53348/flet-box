@@ -26,7 +26,8 @@ const faq = Accordion({
 | `title` | `string \| Widget` | Title text shown in the header. |
 | `children` | `Widget` | An array of child widgets. Alias: `child` for a single child. |
 | `expanded` | `boolean` | The `expanded` value for the widget. |
-| `onToggle` | `(expanded: boolean) => void` | Fired with the new toggled state. |
+| `onToggle` | `(expanded: boolean) => void` | Deprecated alias of `onPress`. |
+| `onPress` | `(expanded: boolean) => void` | Called with the new expanded state (`true` or `false`). |
 | `variant` | `'contained' \| 'outlined' \| 'ghost'` | Visual variation or style preset. |
 | `borderRadius` | `number` | Rounds the corners of the widget. |
 | `bgColor` | `Color` | Background color. Alias: `backgroundColor`. |
@@ -69,7 +70,7 @@ Every widget also accepts these shared props — see [common props](COMMON_PROPS
 | `opacity` | `number` | Opacity from 0 (invisible) to 1 (fully opaque). |
 | `visible` | `boolean` | Whether the widget is rendered and visible. |
 | `disabled` | `boolean` | Disables interaction and shows the non-interactive state. |
-| `onPress` | `(widget: Widget) => void` | Callback fired when the widget is pressed. Alias: `onClick`. |
+| `onPress` | `(widget: Widget) => void` | Called with the new expanded state (`true` or `false`). |
 | `onClick` | `(widget: Widget) => void` | Callback fired when the widget is clicked. Alias: `onPress`. |
 | `id` | `string` | DOM `id` for the rendered element. |
 | `className` | `string` | CSS class names applied to the rendered element. |
@@ -86,7 +87,7 @@ import { Accordion, Text } from "flet-box";
 const faq = Accordion({
   title: "Shipping options",
   expanded: false,
-  onToggle: (expanded) => console.log(expanded),
+  onPress: (expanded) => console.log(expanded),
   children: Text({ text: "Free shipping over $50." }),
 });
 ```
@@ -112,7 +113,7 @@ const faq = Accordion({
   divider: true,
   animate: true,
   animationDuration: 250,
-  onToggle: (expanded) => console.log(expanded),
+  onPress: (expanded) => console.log(expanded),
   children: Text({ text: "We accept cards, PayPal, and bank transfer." }),
 });
 ```
@@ -128,7 +129,7 @@ const faq = Accordion({
 
 ## Behavior
 
-- onToggle receives the new expanded boolean whenever the header is activated.
+- onPress receives the new expanded boolean whenever the header is activated.
 - disabled blocks toggling, and animate: false skips the open/close transition.
 - A shut panel still shows its edge: the header keeps the divider and the
 - 'contained' variant paints the raised plate, so it never reads as plain text.

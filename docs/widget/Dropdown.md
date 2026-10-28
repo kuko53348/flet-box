@@ -39,7 +39,8 @@ const city = Dropdown({
 | `clearable` | `boolean` | Shows a button that clears the field. |
 | `width` | `number \| string` | Width of the widget. A number is pixels; a string uses any CSS unit. |
 | `portal` | `boolean` | Renders the dropdown menu in a portal above the page. |
-| `onChange` | `(value: any, label: string) => void` | Fired when the value changes. |
+| `onChange` | `(value: any) => void` | Deprecated alias of `onPress`. |
+| `onPress` | `(value: any) => void` | Called with the chosen value. |
 
 ### Common props
 
@@ -98,10 +99,14 @@ Every widget also accepts these shared props — see [common props](COMMON_PROPS
 | `filter` | `string` | Raw CSS `filter` value applied to the widget itself, e.g. `blur(4px)`. |
 | `backdropFilter` | `string` | Raw CSS `backdrop-filter` value: what sits behind the widget is blurred through it, which is what makes a translucent card frosted glass. |
 | `maskImage` | `string` | Raw CSS `mask-image` value, used to fade a widget out at its edges instead of cutting it. |
+| `bgImage` | `string` | The `bgImage` value for the widget. |
+| `bgSize` | `string` | Size of the bg. |
+| `bgPosition` | `string` | Position of the bg. |
+| `bgRepeat` | `string` | The `bgRepeat` value for the widget. |
 | `opacity` | `number` | Opacity from 0 (invisible) to 1 (fully opaque). |
 | `visible` | `boolean` | Whether the widget is rendered and visible. |
 | `disabled` | `boolean` | Disables interaction and shows the non-interactive state. |
-| `onPress` | `(widget: Widget) => void` | Callback fired when the widget is pressed. Alias: `onClick`. |
+| `onPress` | `(widget: Widget) => void` | Called with the chosen value. |
 | `onClick` | `(widget: Widget) => void` | Callback fired when the widget is clicked. Alias: `onPress`. |
 | `onclick` | `(widget: Widget) => void` | The `onclick` value for the widget. |
 | `alignSelf` | `AlignSelf` | Overrides the parent's `alignItems` for this child alone (CSS `align-self`). Alias: `selfAlign`. |
@@ -122,7 +127,7 @@ const role = Dropdown({
   label: "Role",
   options: ["Admin", "Editor", "Viewer"],
   value: "Editor",
-  onChange: (value) => console.log("role:", value),
+  onPress: (value) => console.log("role:", value),
 });
 ```
 
@@ -146,15 +151,15 @@ const country = Dropdown({
   borderRadius: 10,
   bgColor: "#ffffff",
   textColor: "#0f172a",
-  onChange: (value, label) => {
-    console.log("selected:", value, label);
+  onPress: (value) => {
+    console.log("selected:", value);
   },
 });
 ```
 
 ## Tips
 
-- Pass objects with value/label when the value sent to onChange must differ from the text shown, such as an id versus a name.
+- Pass objects with value/label when the value sent to onPress must differ from the text shown, such as an id versus a name.
 - Set clearable: true to give users an explicit way back to no selection.
 - Bind a useState value to `value` to move the selection from code, such as auto-picking a default after a lookup; pass `''` to clear it back to the placeholder.
 
@@ -166,7 +171,7 @@ const country = Dropdown({
 
 - The option menu is portaled to document.body by default and repositions on scroll/resize; set portal: false to keep it inline.
 - The returned element exposes value, open(), close() and update(), and removes its listeners on unmount.
-- A value applied from outside — a bound state change or `dropdown.value = x` — re-fires onChange when it differs from the current selection, and is ignored when it is the same, so a state → value → onChange → state loop settles after one pass.
+- A value applied from outside — a bound state change or `dropdown.value = x` — re-fires onPress when it differs from the current selection, and is ignored when it is the same, so a state → value → onPress → state loop settles after one pass.
 
 ## Related widgets
 

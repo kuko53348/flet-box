@@ -232,7 +232,7 @@ const chooseMotion = (on) => {
 };
 
 // A settings screen hands the decision to the reader, and the engine applies it.
-Switch({ label: 'Reduce motion', value: getMotionMode() === 'reduce', onToggle: chooseMotion });
+Switch({ label: 'Reduce motion', value: getMotionMode() === 'reduce', onPress: chooseMotion });
 ```
 
 Build the screen so it reads with zero animation anyway. Motion is a decision you
