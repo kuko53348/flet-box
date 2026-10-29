@@ -24,8 +24,8 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync, readFileSync, existsSync
 import os from "os";
 import path from "path";
 import { fileURLToPath } from "url";
-import { absoluteShareTags, buildBundleConfig, collectAssets, declaredUpdateUrl, isPlaceholderUpdateUrl, resolveUpdateUrl, SHARE_TAGS } from "../bin/utils/bundleConfig.js";
-import { indexHtml } from "../bin/utils/templates.js";
+import { absoluteShareTags, buildBundleConfig, collectAssets, declaredUpdateUrl, isPlaceholderUpdateUrl, resolveAssetPatterns, resolveUpdateUrl, SHARE_TAGS } from "../bin/utils/bundleConfig.js";
+import { fletboxConfig, indexHtml } from "../bin/utils/templates.js";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -95,6 +95,43 @@ try {
   );
 } finally {
   rmSync(fixture, { recursive: true, force: true });
+}
+
+// ---- The pictures `flet-box create` invites a project to keep --------------
+// The scaffold creates an `assets/` folder next to `src/` and writes
+// `assets/logo.png` into it, so that is where an app puts its own pictures.
+// `createBundle` copies `src/assets` (icons, fonts) on its own, but it never
+// looked at that folder: a freshly created app built clean and served every
+// screen with a broken image, while `npm run dev` — which serves the project
+// root — looked perfect, so the defect only appeared after a bundle or an APK
+// existed. The generated config now declares those pictures as release assets.
+const assetsFixture = mkdtempSync(path.join(os.tmpdir(), "fletbox-create-assets-"));
+try {
+  const pictures = {
+    "assets/logo.png": "logo\n",
+    "assets/hero.jpg": "hero\n",
+    "assets/web/cover.webp": "cover\n",
+    "assets/book.pdf": "source document, never served\n",
+  };
+  for (const [rel, body] of Object.entries(pictures)) {
+    const target = path.join(assetsFixture, rel);
+    mkdirSync(path.dirname(target), { recursive: true });
+    writeFileSync(target, body);
+  }
+  writeFileSync(path.join(assetsFixture, "package.json"), JSON.stringify({ name: "fixture", version: "1.0.0" }));
+  writeFileSync(path.join(assetsFixture, "fletbox.config.json"), fletboxConfig());
+
+  const declared = resolveAssetPatterns(assetsFixture);
+  check("the created app's config declares its own pictures", declared.length > 0, true);
+  const copied = collectAssets(assetsFixture, declared).map((a) => a.path);
+  check(
+    "a created app's bundle carries assets/ (root and nested, png/jpg/webp)",
+    copied,
+    ["assets/hero.jpg", "assets/logo.png", "assets/web/cover.webp"],
+  );
+  check("a source file kept in assets/ never ships in the bundle", copied.includes("assets/book.pdf"), false);
+} finally {
+  rmSync(assetsFixture, { recursive: true, force: true });
 }
 
 const loader = readFileSync(path.join(repoRoot, "bin", "ota", "loader.js"), "utf8");

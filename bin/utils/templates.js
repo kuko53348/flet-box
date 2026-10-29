@@ -981,6 +981,22 @@ export const capacitorConfig = (appName, appId) => `${JSON.stringify(
 // The user replaces TU-USUARIO/TU-REPO with their real public GitHub names.
 export const OTA_PLACEHOLDER_URL = "https://TU-USUARIO.github.io/TU-REPO/";
 
+// The pictures a created app keeps in `assets/`. `flet-box create` makes that
+// folder and writes `assets/logo.png` into it, so it is where an app's own
+// images live — but `createBundle` copies only `src/assets` (icons, fonts) by
+// itself. Undeclared, every bundled build served those screens with broken
+// images while `npm run dev`, which serves the project root, looked perfect.
+// One glob per extension: the asset matcher understands `*`, `**` and `?`,
+// not braces. Images only — a source document parked in `assets/` (the PDF a
+// catalogue was written from) must stay out of the bundle.
+const PROJECT_ASSET_PATTERNS = [
+  "assets/**/*.png",
+  "assets/**/*.jpg",
+  "assets/**/*.jpeg",
+  "assets/**/*.svg",
+  "assets/**/*.webp",
+];
+
 // OTA manifest written to every generated project. The loader (www/loader.js)
 // reads `update.url` via www/config.json to know where to fetch updates.
 export const fletboxConfig = (url = OTA_PLACEHOLDER_URL) => `${JSON.stringify(
@@ -992,6 +1008,7 @@ export const fletboxConfig = (url = OTA_PLACEHOLDER_URL) => `${JSON.stringify(
       mandatory: false,
       minNativeVersion: "0.0.0",
       notes: "",
+      assets: PROJECT_ASSET_PATTERNS,
     },
   },
   null,
