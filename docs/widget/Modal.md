@@ -34,7 +34,7 @@ const dialog = Modal({
 | `maxHeight` | `number \| string` | Maximum height the widget may grow to. |
 | `backgroundColor` | `Color` | Background color. Alias of `bgColor`. |
 | `borderRadius` | `number \| string` | Rounds the corners of the widget. |
-| `border` | `string` | The `border` value for the widget. |
+| `border` | `string` | CSS `border` shorthand for all four edges: width, style and color in one string. |
 | `borderColor` | `Color` | Color used for the border. |
 | `borderWidth` | `number` | Width of the border. |
 | `shadow` | `string` | Raw CSS `box-shadow` value, for a custom shadow. |
@@ -53,7 +53,7 @@ const dialog = Modal({
 | `footerElevation` | `number` | Elevation (shadow depth) of the footer. |
 | `overlayColor` | `Color` | Color of the dimmed backdrop behind the overlay. |
 | `showCloseButton` | `boolean` | Shows a close button in the header. |
-| `zIndex` | `number` | Index used for the z. |
+| `zIndex` | `number` | Stacking order: a widget with a higher value paints above lower ones. |
 | `onOpen` | `() => void` | Fired when the overlay opens. |
 | `onClose` | `() => void` | Fired when the overlay closes. |
 

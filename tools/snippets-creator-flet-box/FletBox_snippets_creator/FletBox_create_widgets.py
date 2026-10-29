@@ -99,7 +99,12 @@ Column({
     ]
 })''',
 
-'Stack.basic': 'Stack({ children: [Box(), Box()] })',
+'Stack.basic': '''Stack({
+    children: [
+        Container({ width: 120, height: 120, bgColor: colors.primary, borderRadius: 12 }),
+        Text({ text: "On top", color: "#ffffff" })
+    ]
+})''',
 'Stack.normal': '''Stack({
     position: "relative",
     children: [
@@ -142,7 +147,7 @@ Column({
 })''',
 
 'Button.basic': 'Button({ text: "Click" })',
-'Button.normal': 'Button({ text: "Submit", variant: "filled", onPress: () => submit() })',
+'Button.normal': 'Button({ text: "Submit", variant: "filled", onPress: () => console.log("submit") })',
 'Button.full': '''Button({
     text: "Download",
     variant: "outlined",
@@ -157,8 +162,8 @@ Column({
     padding: padding({ horizontal: 24, vertical: 12 }),
     margin: margin(8),
     disabled: false,
-    onPress: () => downloadFile(),
-    onLongPress: () => showMenu(),
+    onPress: () => console.log("download"),
+    onLongPress: () => console.log("menu"),
     onHover: (hover) => console.log(hover),
     id: "download-btn"
 })''',
@@ -169,7 +174,7 @@ Column({
     name: "settings",
     size: 28,
     color: colors.textSecondary,
-    onPress: () => openSettings(),
+    onPress: () => console.log("settings"),
     className: "icon-spin",
     transition: "transform 0.2s",
     id: "settings-icon"
@@ -187,7 +192,7 @@ Column({
     elevation: 2,
     onLoad: () => console.log("loaded"),
     onError: () => console.log("error"),
-    onPress: () => openGallery(),
+    onPress: () => console.log("gallery"),
     id: "hero-image"
 })''',
 'Image.download': '''Image({
@@ -209,7 +214,7 @@ Column({
     online: true,
     badge: "3",
     badgeColor: colors.danger,
-    onPress: () => goToProfile(),
+    onPress: () => console.log("profile"),
     id: "user-avatar"
 })''',
 
@@ -255,9 +260,9 @@ Column({
     passwordToggle: true,
     showValidationMessage: true,
     showValidationIcon: true,
-    onChange: (val) => setUsername(val),
+    onChange: (val) => console.log(val),
     onValidated: (isValid, msg) => console.log(isValid, msg),
-    onEnter: () => submitForm(),
+    onEnter: () => console.log("submit"),
     id: "username-input"
 })''',
 
@@ -283,7 +288,7 @@ Column({
     clearable: true,
     width: 250,
     portal: true,
-    onChange: (val) => setStatus(val),
+    onChange: (val) => console.log(val),
     id: "status-dropdown"
 })''',
 
@@ -310,8 +315,8 @@ Column({
     striped: true,
     animatedStripes: true,
     glow: true,
-    onChange: (val) => updatePrice(val),
-    onChangeEnd: (val) => savePrice(val),
+    onChange: (val) => console.log(val),
+    onChangeEnd: (val) => console.log(val),
     id: "price-slider"
 })''',
 
@@ -319,7 +324,7 @@ Column({
 'Checkbox.normal': 'Checkbox({ checked: agreed, onCheck: setAgreed, label: "I agree" })',
 'Checkbox.full': '''Checkbox({
     checked: isActive,
-    onCheck: (val) => setIsActive(val),
+    onCheck: (val) => console.log(val),
     disabled: false,
     size: 24,
     activeColor: colors.success,
@@ -330,10 +335,10 @@ Column({
 'Checkbox.filled': 'Checkbox({ checked: true, variant: "filled", activeColor: colors.primary, label: "Solid plate" })',
 
 'Radio.basic': 'Radio({})',
-'Radio.normal': 'Radio({ selected: option === "a", onSelect: () => setOption("a"), label: "Option A" })',
+'Radio.normal': 'Radio({ selected: option === "a", onSelect: () => console.log("a"), label: "Option A" })',
 'Radio.full': '''Radio({
     selected: paymentMethod === "card",
-    onSelect: () => setPaymentMethod("card"),
+    onSelect: () => console.log("card"),
     disabled: false,
     size: 22,
     activeColor: colors.primary,
@@ -345,7 +350,7 @@ Column({
 'Switch.normal': 'Switch({ value: isEnabled, onToggle: setIsEnabled, label: "Notifications" })',
 'Switch.full': '''Switch({
     value: darkMode,
-    onToggle: (val) => setDarkMode(val),
+    onToggle: (val) => console.log(val),
     disabled: false,
     size: "large",
     activeColor: colors.primary,
@@ -370,7 +375,7 @@ Column({
     iconActive: "star",
     iconInactive: "star_border",
     iconHalf: "star_half",
-    onChange: (val) => updateRating(val),
+    onChange: (val) => console.log(val),
     id: "product-rating"
 })''',
 
@@ -420,8 +425,8 @@ Column({
     headerPadding: "16px 20px 8px",
     contentPadding: "0 16px",
     actionPadding: "12px 16px",
-    onOpen: () => fetchOptions(),
-    onClose: () => reset()
+    onOpen: () => console.log("open"),
+    onClose: () => console.log("close")
 })''',
 
 'AlertDialog.basic': 'AlertDialog({ title: "Alert", message: "Something happened" })',
@@ -431,13 +436,13 @@ Column({
     message: "This action cannot be undone.",
     confirmText: "Delete",
     cancelText: "Keep",
-    onConfirm: () => deletePermanently(),
+    onConfirm: () => console.log("delete"),
     onCancel: () => console.log("cancelled"),
     variant: "danger",
     showCancel: true,
     width: 360,
     borderRadius: 28,
-    onClose: () => cleanup()
+    onClose: () => console.log("close")
 })''',
 
 'SnackBar.basic': 'SnackBar({ message: "Hello" })',
@@ -483,32 +488,40 @@ Column({
 })''',
 
 'Scaffold.basic': 'Scaffold({ body: Text({ text: "Hello" }) })',
-'Scaffold.normal': 'Scaffold({ appBar: AppBar({ title: "Home" }), body: HomeScreen(), drawer: DrawerMenu() })',
+'Scaffold.normal': '''Scaffold({
+    appBar: AppBar({ title: "Home" }),
+    body: Column({ children: [Text({ text: "Home" })] }),
+    drawer: Drawer({ body: [DrawerItem({ label: "Home", route: "/" })] })
+})''',
 'Scaffold.full': '''Scaffold({
     appBar: AppBar({ title: "Dashboard", actions: [Icon({ name: "search" }), Icon({ name: "more_vert" })] }),
-    body: HomeScreen(),
+    body: Column({ children: [Text({ text: "Dashboard" })] }),
     bottomBar: BottomNavigation({ items: [{ icon: "home", label: "Home", route: "/" }, { icon: "person", label: "Profile", route: "/profile" }] }),
     drawer: Drawer({ header: Text({ text: "Menu" }), body: [DrawerItem({ label: "Home", route: "/" }), DrawerItem({ label: "Settings", route: "/settings" })] }),
-    fab: FloatingActionButton({ icon: "add", onPress: () => addItem() }),
-    leftNavBar: CollapsibleSideBar({ children: NavMenu() }),
+    fab: FloatingActionButton({ icon: "add", onPress: () => console.log("add") }),
+    leftNavBar: CollapsibleSideBar({ children: Column({ children: [Text({ text: "Menu" })] }) }),
     rightNavBar: null,
-    routes: { "/": HomeScreen, "/profile": ProfileScreen, "/settings": SettingsScreen },
+    routes: { "/": () => Text({ text: "Home" }), "/profile": () => Text({ text: "Profile" }), "/settings": () => Text({ text: "Settings" }) },
     backgroundColor: colors.background,
     closeDrawerOnNavigate: false
 })''',
 
 'AdaptiveScaffold.basic': 'AdaptiveScaffold({ body: Text({ text: "Hello" }) })',
-'AdaptiveScaffold.normal': 'AdaptiveScaffold({ appBar: AppBar({ title: "Home" }), body: HomeScreen(), leftNavBar: NavMenu() })',
+'AdaptiveScaffold.normal': '''AdaptiveScaffold({
+    appBar: AppBar({ title: "Home" }),
+    body: Column({ children: [Text({ text: "Home" })] }),
+    leftNavBar: Column({ children: [DrawerItem({ label: "Home", route: "/" })] })
+})''',
 'AdaptiveScaffold.full': '''AdaptiveScaffold({
     appBar: AppBar({ title: "Responsive App", centerTitle: true }),
-    body: HomeScreen(),
+    body: Column({ children: [Text({ text: "Responsive App" })] }),
     bottomBar: BottomNavigation({ items: [{ icon: "home", label: "Home", route: "/" }, { icon: "person", label: "Profile", route: "/profile" }], useRouter: true }),
-    fab: FloatingActionButton({ icon: "add", onPress: () => addItem() }),
-    leftNavBar: CollapsibleSideBar({ children: NavMenu() }),
-    rightNavBar: CollapsibleSideBar({ children: WikiMenu() }),
+    fab: FloatingActionButton({ icon: "add", onPress: () => console.log("add") }),
+    leftNavBar: CollapsibleSideBar({ children: Column({ children: [Text({ text: "Menu" })] }) }),
+    rightNavBar: CollapsibleSideBar({ children: Column({ children: [Text({ text: "Wiki" })] }) }),
     leftNavBarWidth: 280,
     rightNavBarWidth: 320,
-    routes: { "/": HomeScreen, "/profile": ProfileScreen },
+    routes: { "/": () => Text({ text: "Home" }), "/profile": () => Text({ text: "Profile" }) },
     backgroundColor: colors.background,
     forceMobile: false,
     forceDesktop: false
@@ -527,7 +540,7 @@ Column({
     centerTitle: true,
     showBackButton: true,
     backButtonRoute: "/home",
-    onBackPress: () => customBack(),
+    onBackPress: () => console.log("back"),
     sticky: true,
     hideOnScroll: true,
     scrollThreshold: 50,
@@ -542,7 +555,7 @@ Column({
     body: [
         DrawerItem({ icon: "home", label: "Home", route: "/", selectedColor: colors.primary }),
         DrawerItem({ icon: "settings", label: "Settings", route: "/settings" }),
-        DrawerItem({ icon: "logout", label: "Logout", onPress: () => logout() })
+        DrawerItem({ icon: "logout", label: "Logout", onPress: () => console.log("logout") })
     ],
     footer: Text({ text: "v1.0.0", size: 12, color: colors.textSecondary }),
     position: "left",
@@ -580,12 +593,17 @@ Column({
 })''',
 
 'Tabs.basic': 'Tabs({ tabs: ["Tab1", "Tab2"], children: [Text({ text: "Content1" }), Text({ text: "Content2" })] })',
-'Tabs.normal': 'Tabs({ tabs: [{ label: "Details", icon: "info" }, { label: "Reviews", icon: "comment" }], children: [DetailsTab(), ReviewsTab()], activeIndex: 0, onChange: setTab })',
+'Tabs.normal': '''Tabs({
+    tabs: [{ label: "Details", icon: "info" }, { label: "Reviews", icon: "comment" }],
+    children: [Text({ text: "Details" }), Text({ text: "Reviews" })],
+    activeIndex: 0,
+    onChange: (idx) => console.log(idx)
+})''',
 'Tabs.full': '''Tabs({
     tabs: ["Overview", "Technical", "Support"],
-    children: [OverviewTab(), TechTab(), SupportTab()],
+    children: [Text({ text: "Overview" }), Text({ text: "Technical" }), Text({ text: "Support" })],
     activeIndex: currentTab,
-    onChange: (idx) => setCurrentTab(idx),
+    onChange: (idx) => console.log(idx),
     variant: "slider",
     size: "large",
     color: colors.primary,
@@ -610,12 +628,12 @@ Column({
     widthExpanded: 280,
     widthCollapsed: 70,
     iconSize: 28,
-    onToggle: (exp) => setIsSidebarOpen(exp),
+    onToggle: (exp) => console.log(exp),
     bgColor: colors.surface,
     borderRight: "1px solid #e2e8f0",
     showTooltip: true,
     tooltipDelay: 300,
-    children: Column({ gap: 16, children: [Logo(), NavItems(), Footer()] })
+    children: Column({ gap: 16, children: [Text({ text: "Logo" }), Text({ text: "Menu" }), Text({ text: "Footer" })] })
 })''',
 
 'DrawerItem.basic': 'DrawerItem({ label: "Home" })',
@@ -624,7 +642,7 @@ Column({
     icon: "settings",
     label: "Preferences",
     route: "/settings",
-    onPress: () => openSettings(),
+    onPress: () => console.log("settings"),
     onSelect: () => console.log("selected"),
     trailingIcon: "chevron_right",
     hintColor: colors.gray100,
@@ -670,9 +688,9 @@ ListView({
     itemSize: 120,
     gap: 8,
     orientation: "vertical",
-    onEndReached: () => loadMore(),
+    onEndReached: () => console.log("load more"),
     onEndReachedThreshold: 0.3,
-    onRefresh: (done) => refreshData(done),
+    onRefresh: (done) => { console.log("refresh"); done(); },
     refreshing: isLoading,
     ListHeaderComponent: () => Text({ text: "Top Products" }),
     ListFooterComponent: () => (hasMore ? ProgressBar({ indeterminate: true }) : null),
@@ -699,8 +717,8 @@ GridView({
     columns: 4,
     spacing: 12,
     itemHeight: 180,
-    onEndReached: () => fetchMore(),
-    onRefresh: (done) => refresh(done),
+    onEndReached: () => console.log("load more"),
+    onRefresh: (done) => { console.log("refresh"); done(); },
     ListHeaderComponent: () => Text({ text: "Gallery" })
 })''',
 
@@ -718,7 +736,7 @@ DataTable({
     striped: true,
     hoverable: true,
     bordered: true,
-    onRowClick: (row, idx) => selectUser(row),
+    onRowClick: (row) => console.log(row),
     headerBgColor: colors.gray100,
     headerTextColor: colors.text,
     headerFontWeight: "bold",
@@ -859,8 +877,8 @@ map.setFollowUser(true);''',
     poster: "thumbnail.jpg",
     onPlay: () => console.log("play"),
     onPause: () => console.log("pause"),
-    onEnd: () => nextVideo(),
-    onTimeUpdate: (sec, dur, percent) => updateProgress(percent),
+    onEnd: () => console.log("end"),
+    onTimeUpdate: (sec, dur, percent) => console.log(percent),
     ref: (video) => playerRef = video
 })''',
 
@@ -873,12 +891,12 @@ map.setFollowUser(true);''',
     loop: false,
     muted: false,
     volume: 0.9,
-    onPlay: () => setIsPlaying(true),
-    onPause: () => setIsPlaying(false),
-    onEnd: () => nextEpisode(),
-    onTimeUpdate: (current, duration, percent) => updateProgress(percent),
+    onPlay: () => console.log("play"),
+    onPause: () => console.log("pause"),
+    onEnd: () => console.log("next episode"),
+    onTimeUpdate: (current, duration, percent) => console.log(percent),
     onProgress: (percent) => console.log(percent),
-    onLoad: (duration) => setDuration(duration),
+    onLoad: (duration) => console.log(duration),
     ref: (audio) => audioRef = audio
 })''',
 
@@ -905,7 +923,7 @@ map.setFollowUser(true);''',
     buttonIconColor: "#fff",
     buttonSize: 40,
     buttonIconSize: 24,
-    onIndexChange: (idx) => setActiveSlide(idx)
+    onIndexChange: (idx) => console.log(idx)
 })''',
 
 'AnimatedBox.basic': 'AnimatedBox({ animations: [{ effect: "scale", from: 1, to: 1.2 }], child: Text({ text: "Animate" }) })',
@@ -995,7 +1013,7 @@ map.setFollowUser(true);''',
     'httpRequest': 'const res = await httpRequest("POST", "/api/users", { body: { name: "John" } })',
     'useTheme': 'const { colors, toggleTheme } = useTheme()',
     'ThemeProvider.basic': 'ThemeProvider({ theme: "dark", children: App() })',
-    'ThemeProvider.normal': 'ThemeProvider({ theme: "light", children: MyApp({ toggle }) })',
+    'ThemeProvider.normal': 'ThemeProvider({ theme: "light", children: Text({ text: "Hello" }) })',
     'ThemeProvider.full': '''ThemeProvider({
     theme: "dark",
     children: Container({
@@ -1009,7 +1027,7 @@ map.setFollowUser(true);''',
     title: "Advanced settings",
     children: Column({ children: [Input({ placeholder: "API Key" }), Slider({})] }),
     expanded: true,
-    onToggle: (exp) => setExpanded(exp),
+    onToggle: (exp) => console.log(exp),
     variant: "contained",
     borderRadius: 16,
     bgColor: colors.surface,
@@ -1031,15 +1049,19 @@ map.setFollowUser(true);''',
 })''',
 
 'Stepper.basic': 'Stepper({ steps: [{ label: "Step 1", content: Text({ text: "Content" }) }] })',
-'Stepper.normal': 'Stepper({ steps: [{ label: "Info", content: InfoForm() }, { label: "Confirm", content: ConfirmForm() }], activeStep: 0, onStepChange: setStep })',
+'Stepper.normal': '''Stepper({
+    steps: [{ label: "Info", content: Text({ text: "Info" }) }, { label: "Confirm", content: Text({ text: "Confirm" }) }],
+    activeStep: 0,
+    onStepChange: (idx) => console.log(idx)
+})''',
 'Stepper.full': '''Stepper({
     steps: [
-        { label: "Personal", content: PersonalForm(), icon: "person" },
-        { label: "Payment", content: PaymentForm(), icon: "credit_card" },
-        { label: "Done", content: SuccessMessage(), icon: "check_circle" }
+        { label: "Personal", content: Text({ text: "Personal" }), icon: "person" },
+        { label: "Payment", content: Text({ text: "Payment" }), icon: "credit_card" },
+        { label: "Done", content: Text({ text: "Done" }), icon: "check_circle" }
     ],
     activeStep: step,
-    onStepChange: (idx) => setStep(idx),
+    onStepChange: (idx) => console.log(idx),
     orientation: "horizontal",
     variant: "circles",
     showLabels: true,
@@ -1047,7 +1069,7 @@ map.setFollowUser(true);''',
     nextLabel: "Continue",
     backLabel: "Back",
     finishLabel: "Submit",
-    onFinish: () => submitForm(),
+    onFinish: () => console.log("finish"),
     bgColor: colors.surface,
     borderRadius: 24,
     border: border(1, "solid", colors.border),
@@ -1055,13 +1077,28 @@ map.setFollowUser(true);''',
     width: "100%"
 })''',
 
-'Pagination.basic': 'Pagination({ totalItems: 100, onPageChange: (page) => loadPage(page) })',
+'ThemePicker.basic': 'ThemePicker({})',
+'ThemePicker.normal': 'ThemePicker({ size: 48, showLabels: true, onChange: (id) => console.log("accent:", id) })',
+'ThemePicker.full': '''ThemePicker({
+    accents: listAccents().filter((a) => ["blue", "teal", "green", "orange"].includes(a.id)),
+    size: 48,
+    showLabels: true,
+    label: "App accent color",
+    disabled: false,
+    onChange: (id) => console.log(id),
+    gap: 12,
+    padding: 16,
+    bgColor: colors.surface,
+    borderRadius: 16
+})''',
+
+'Pagination.basic': 'Pagination({ totalItems: 100, onPageChange: (page) => console.log(page) })',
 'Pagination.normal': 'Pagination({ totalItems: 500, pageSize: 20, currentPage: 1, onPageChange: setPage, showTotal: true })',
 'Pagination.full': '''Pagination({
     totalItems: 1000,
     pageSize: 25,
     currentPage: current,
-    onPageChange: (page) => fetchPage(page),
+    onPageChange: (page) => console.log(page),
     showFirstLast: true,
     showPrevNext: true,
     maxButtons: 7,
@@ -1083,7 +1120,7 @@ map.setFollowUser(true);''',
         ]},
         { id: "4", label: "Downloads", badge: 3, children: [] }
     ],
-    onSelect: (node) => openFile(node),
+    onSelect: (node) => console.log(node),
     onToggle: (nodeId, expanded) => console.log(nodeId, expanded),
     expandedNodes: ["1"],
     indent: 24,
@@ -1186,12 +1223,12 @@ map.setFollowUser(true);''',
 'Divider.full': 'Divider({ orientation: "horizontal", thickness: 2, margin: { top: 8, bottom: 8 }, color: "#e2e8f0", opacity: 0.8 })',
 
 'Chip.basic': 'Chip({ label: "Tag" })',
-'Chip.normal': 'Chip({ label: "React", icon: "star", onDelete: () => removeTag() })',
+'Chip.normal': 'Chip({ label: "React", icon: "star", onDelete: () => console.log("remove") })',
 'Chip.full': '''Chip({
     label: "FletBox",
     icon: "rocket_launch",
-    onPress: () => filterBy("fletbox"),
-    onDelete: () => removeFilter(),
+    onPress: () => console.log("fletbox"),
+    onDelete: () => console.log("clear filter"),
     variant: "outlined",
     color: colors.primary,
     textColor: colors.primary,
@@ -1239,7 +1276,7 @@ console.log("code block");
 'Inspector.full': '// inspectWidget walks the tree and logs every node.\nconst panel = Column({ children: [Text({ text: "Hello" })] });\ninspectWidget(panel);',
 
 'InstallButton.basic': 'InstallButton({ text: "Install", icon: "get_app" })',
-'InstallButton.normal': 'InstallButton({ text: "Get the app", variant: "filled", icon: "get_app", onInstalled: () => trackInstall() })',
+'InstallButton.normal': 'InstallButton({ text: "Get the app", variant: "filled", icon: "get_app", onInstalled: () => console.log("installed") })',
 'InstallButton.full': '''InstallButton({
     text: "Install FletBox App",
     variant: "filled",
@@ -1267,14 +1304,14 @@ console.log("code block");
 })''',
 
 'ListTile.basic': 'ListTile({ title: "Home", subtitle: "Go to home" })',
-'ListTile.normal': 'ListTile({ leftItem: Icon({ name: "mail" }), title: "Inbox", subtitle: "3 new messages", rightItem: Icon({ name: "chevron_right" }), onPress: () => openInbox() })',
+'ListTile.normal': 'ListTile({ leftItem: Icon({ name: "mail" }), title: "Inbox", subtitle: "3 new messages", rightItem: Icon({ name: "chevron_right" }), onPress: () => console.log("inbox") })',
 'ListTile.full': '''ListTile({
     leftItem: Avatar({ name: "JD" }),
     title: "John Doe",
     subtitle: "john@example.com",
     description: "Software Engineer",
     rightItem: Icon({ name: "chevron_right" }),
-    onPress: () => openProfile(),
+    onPress: () => console.log("profile"),
     divider: true,
     disabled: false,
     paddingHorizontal: 16,
@@ -1286,13 +1323,13 @@ console.log("code block");
     borderRadius: 12
 })''',
 
-'FloatingActionButton.basic': 'FloatingActionButton({ icon: "add", onPress: () => addItem() })',
-'FloatingActionButton.normal': 'FloatingActionButton({ icon: "edit", mini: false, elevation: 8, onPress: () => editItem() })',
+'FloatingActionButton.basic': 'FloatingActionButton({ icon: "add", onPress: () => console.log("add") })',
+'FloatingActionButton.normal': 'FloatingActionButton({ icon: "edit", mini: false, elevation: 8, onPress: () => console.log("edit") })',
 'FloatingActionButton.full': '''FloatingActionButton({
     icon: "add",
     label: "New Task",
     extended: true,
-    onPress: () => createTask(),
+    onPress: () => console.log("create"),
     backgroundColor: colors.primary,
     foregroundColor: "#ffffff",
     elevation: 6,
@@ -1324,7 +1361,7 @@ console.log("code block");
         ]
     }),
     acceptGroups: ["kanban", "tasks"],
-    onDrop: (data, group) => moveTask(data, group),
+    onDrop: (data, group) => console.log(data, group),
     onDragEnter: () => console.log("enter"),
     onDragLeave: () => console.log("leave"),
     bgColor: colors.gray100,

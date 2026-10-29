@@ -776,6 +776,39 @@ const run = () => {
     scaffoldDrawer.destroy?.();
   }
 
+  // An app that already names the menu in its own language must keep that name.
+  // The shell's "Open menu" is a fallback for an unnamed icon, not a rename: an
+  // app cannot fix the overwrite from outside, because the shell owns the glyph
+  // after it wires the drawer to it.
+  const localizedDrawer = Drawer({ body: [Button({ text: "Dentro" })] });
+  const localizedScaffold = mount(
+    Scaffold({
+      appBar: AppBar({
+        leading: Icon({
+          name: "menu",
+          "aria-label": "Abrir el menú",
+          onclick: () => {},
+        }),
+      }),
+      drawer: localizedDrawer,
+      body: Text({ text: "Body" }),
+    }),
+  );
+  const localizedMenu = [
+    ...localizedScaffold.querySelectorAll(".material-icons"),
+  ].find((el) => el.textContent.trim() === "menu");
+  record(
+    "an app's own aria-label on the menu icon survives Scaffold's drawer wiring",
+    !!localizedMenu &&
+      localizedMenu.getAttribute("aria-label") === "Abrir el menú" &&
+      localizedMenu.getAttribute("role") === "button" &&
+      localizedMenu.tabIndex === 0,
+    localizedMenu
+      ? `label=${localizedMenu.getAttribute("aria-label")} role=${localizedMenu.getAttribute("role")} tabindex=${localizedMenu.getAttribute("tabindex")}`
+      : "no menu glyph found in the Scaffold's app bar",
+  );
+  localizedDrawer.destroy?.();
+
   // ============================================================
   // 14. AN INVALID FIELD SAYS SO OUT LOUD
   // ============================================================

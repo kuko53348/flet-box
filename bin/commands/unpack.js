@@ -28,6 +28,7 @@ import { c, banner, section } from "../utils/colors.js";
 import { neutralise } from "../utils/neutralise.js";
 import { membersOf, propsInterfaceFor, resolveInterfaceProps } from "../utils/dtsProps.js";
 import { STRUCTURAL_PROPS, loadApi, nearest } from "./checkApi.js";
+import { deprecationFor } from "../../src/widget-factory/deprecations.js";
 
 /**
  * Index of the character closing the bracket opened at `open`, or -1.
@@ -59,7 +60,7 @@ const matchPair = (text, open) => {
  * @param {string} packageDir Installed package root.
  * @returns {Map<string, string>} name → absolute file
  */
-const definitionIndex = (packageDir) => {
+export const definitionIndex = (packageDir) => {
   const index = new Map();
   const reexports = [];
   const src = path.join(packageDir, "src");
@@ -213,6 +214,11 @@ const readProps = (file) => {
     spread,
     child: /\bchild\b/.test(code),
     children: /\bchildren\b/.test(code),
+    // Every identifier the file mentions. A prop can be read somewhere other
+    // than the destructuring — `ThemeProvider` takes `theme` as a direct
+    // parameter, `Inspector` reads `widget` inside the view it delegates to —
+    // and a prop the file never mentions at all is the only honest "dead".
+    identifiers: new Set(code.match(/\b[A-Za-z_$][\w$]*\b/g) || []),
   };
 };
 
@@ -318,7 +324,7 @@ const INLINE = "(inline)";
  * @param {string} name
  * @returns {string|null} interface name, `INLINE`, or null
  */
-const propsSource = (api, name) => {
+export const propsSource = (api, name) => {
   const iface = propsInterfaceFor(api.interfaces, name);
   if (iface) return iface;
   const first = api.signatures?.get(name)?.params?.[0];
@@ -333,7 +339,7 @@ const propsSource = (api, name) => {
  * @param {Map<string, string>} definitions
  * @returns {object|null} null when the package has no such export
  */
-const unpackWidget = (api, name, definitions) => {
+export const unpackWidget = (api, name, definitions) => {
   const typedBy = propsSource(api, name);
   const ifaceName = typedBy && typedBy !== INLINE ? typedBy : `${name}Props`;
   const file = definitions.get(name);
@@ -353,7 +359,9 @@ const unpackWidget = (api, name, definitions) => {
         ? api.interfaces.get(ifaceName).props
         : new Map();
   const aliases = aliasGroups(api);
-  const source = file ? readProps(file) : { read: new Map(), spread: false, child: false, children: false };
+  const source = file
+    ? readProps(file)
+    : { read: new Map(), spread: false, child: false, children: false, identifiers: new Set() };
 
   const props = [];
   const names = new Set([...declared.keys(), ...source.read.keys()]);
@@ -380,8 +388,16 @@ const unpackWidget = (api, name, definitions) => {
     props.push(entry);
   }
 
+  // Dead means nobody mentions it: a prop can be read outside the
+  // destructuring — as a direct parameter, or inside a view the widget
+  // delegates to — and a name the file never mentions is the honest case.
   const dead = props.filter(
-    (c_) => c_.declared && !c_.engine && !c_.read && !c_.structural,
+    (c_) =>
+      c_.declared &&
+      !c_.engine &&
+      !c_.read &&
+      !c_.structural &&
+      !source.identifiers.has(c_.prop),
   );
   const invented = props.filter(
     (c_) => !c_.declared && !c_.engine && c_.read && !c_.structural,
@@ -567,8 +583,8 @@ const renderWidget = (data, api) => {
 const renderDiff = (data) => {
   const { dead, invented, hidden, docOnly, codeOnly } = data.gaps;
   const rows = [
-    ["DEAD", dead.map((p) => p.prop), "in index.d.ts, handled by nothing"],
-    ["INVENTED", invented.map((p) => p.prop), "read by the widget, absent from every type"],
+    ["DEAD", dead.map((p) => p.prop), "in index.d.ts, handled by nothing — wire it in the widget or drop it from the declaration"],
+    ["INVENTED", invented.map((p) => p.prop), `read by the widget, absent from every type — declare it in ${data.interface || `${data.name}Props`}`],
     ["UNDOCUMENTED", hidden.map((p) => p.prop), "the engine routes it, the interface hides it"],
     ["DOC-ONLY", docOnly, "the doc page promises it, the code has never heard of it"],
     ["CODE-ONLY", codeOnly, "the code accepts it, the doc page omits it"],
@@ -838,14 +854,19 @@ const exampleValue = (p, api) => {
 };
 
 const RANK = ["text", "label", "title", "placeholder", "value", "data", "items", "options", "rows", "src", "name"];
-/** Boilerplate a pasted example never needs to demonstrate. */
-const SKIP = new Set(["ref", "key", "id", "className", "style"]);
+/**
+ * Props a pasted example never needs to demonstrate: identity and style plumbing,
+ * and the two sizes. A number sampled blind collapses the widget it is pasted
+ * into — `Switch({ width: 16 })` is 16 units wide over a 24-unit knob — so the
+ * canonical call lets each widget's own default size it.
+ */
+const SKIP = new Set(["ref", "key", "id", "className", "style", "width", "height"]);
 
 /**
  * The order an example should demonstrate props in: what it says, what it does,
  * how it looks. Props outside these groups come last.
  */
-const GROUPS = [RANK, ["width", "height", "padding", "margin", "gap", "bgColor", "color", "borderRadius"]];
+const GROUPS = [RANK, ["padding", "margin", "gap", "bgColor", "color", "borderRadius"]];
 
 /** Within the callback group a renderer says more than a hook, a hook more than an option. */
 const callbackRank = (name) => (name.startsWith("render") ? 0 : name.startsWith("on") ? 1 : 2);
@@ -868,6 +889,9 @@ const buildExample = (data, api) => {
     (p) =>
       !p.structural &&
       (required(p) || ((p.read || p.engine) && !dead.has(p.prop))) &&
+      // The example is the call an app pastes, so it carries the current spelling
+      // only: `{ onPress, onToggle }` in one call teaches the retired name.
+      !deprecationFor(data.name, p.prop) &&
       !SKIP.has(p.prop),
   );
   const groupOf = (p) => {
@@ -891,7 +915,11 @@ const buildExample = (data, api) => {
     (p.optional === false ? -100000 : 0) +
     groupOf(p) * 1000 +
     within(p) * 10 +
-    (p.own ? 0 : 5);
+    (p.own ? 0 : 5) +
+    // When two declared names reach one target the camelCase one wins: `onclick`
+    // is a deliberate alias, but the example is what gets pasted, and the name
+    // every page of the docs uses is `onClick`.
+    (p.prop === p.prop.toLowerCase() ? 1 : 0);
   // One prop per engine target: `text`, `label`, `title` and `caption` all write
   // textContent, so an example carrying two of them is noise, not a demo.
   const seen = new Set();

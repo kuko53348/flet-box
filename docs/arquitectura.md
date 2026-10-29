@@ -161,4 +161,4 @@ and strips dev warnings from the shipped output. See
 - [Routing](guides/router.md)
 - [Utilities](guides/utilities.md)
 - [Frontend services](guides/frontend-services.md)
-- [Contributing](CONTRIBUTING.md)
+- [Contributing](../CONTRIBUTING.md)

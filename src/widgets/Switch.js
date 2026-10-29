@@ -11,6 +11,7 @@ import { PILL, TAP_MINIMUM, LABEL_TEXT } from "../tools/index.js";
 export const Switch = (props) => {
   const {
     value = false,
+    /** @deprecated Use `onPress` instead — it receives the same boolean. */
     onToggle,
     onPress: onPressProp,
     disabled = false,
@@ -20,8 +21,6 @@ export const Switch = (props) => {
     ...rest
   } = props;
 
-  /** @deprecated Use onPress instead */
-  // onToggle kept as alias for backward compatibility
   const onPress = onPressProp || onToggle;
 
   // Sizes. Track height is knob + 2 x pad, so the knob can never be asked to sit

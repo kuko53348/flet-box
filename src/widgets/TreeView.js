@@ -13,7 +13,8 @@ export const TreeView = (props) => {
     nodes = [],
     onSelect,
     onToggle,
-    /** @deprecated Use onPress instead */
+    // The tree's own name for the selection callback. `onPress` is the
+    // framework-wide spelling and works here too — it receives the node.
     onPress: onPressProp,
     expandedNodes = [],
     indent = 16,

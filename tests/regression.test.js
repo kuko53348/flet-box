@@ -39,7 +39,25 @@
 //   - a shut Accordion drew nothing at all: its 'contained' plate was the card's
 //     own color and its divider only existed once the panel was open;
 //   - a CircularChart donut filled its own hole with `gray200`, so the ring sat on
-//     a pale disc instead of the page.
+//     a pale disc instead of the page;
+//   - a Markdown code fence carried one dark ink map for every theme, so a light
+//     page painted its comments and keywords in One Dark and nothing in the fence
+//     was readable — while the JS tokens inside the same fence already were;
+//   - an accent picker could hand a reader a mid-tone hue (`#3b82f6`, `#eab308`)
+//     that no palette rule allows: white words on that plate measured 3.15:1 and
+//     the accent used as text on its own page 1.88:1, so one tap made every button
+//     and every glyph on the screen unreadable;
+//   - an accent set at boot (or by a reader's tap) was wiped by the next
+//     `setTheme`, because the layer was painted after the palette instead of
+//     inside the one funnel every theme change already runs through;
+//   - the exported `stackPosition` — the call the docs, the snippets and the
+//     design skill tell a developer to use for an overlay — wrote its edges into
+//     `data-top`/`data-right` that nothing reads, so the widget never moved;
+//   - a Chip whose caller named `bgColor` painted that colour on the outer
+//     wrapper — the 40-unit tap target, square-cornered — so the pill sat inside
+//     a rectangle of its own plate instead of wearing it;
+//   - a Button label wrapped inside a fixed-height pill, so three lines of copy
+//     ran through the rounded ends and past the padding box.
 //
 // It publishes `window.__REGRESSION = { pass, fail, results }`.
 import * as W from "../src/widgets/index.js";
@@ -61,7 +79,18 @@ import { MatrixRain } from "../src/animations/MatrixRain.js";
 import { animate, pulse, stopAnimation } from "../src/animations/animate.js";
 import { runApp } from "../src/core/runApp.js";
 import { useState, saveState, getState } from "../src/tools/useState.js";
+import { saveRam } from "../src/services/RamStore.js";
 import { colors, palettes, setTheme, applySystemTheme } from "../src/utils/themes.js";
+import {
+  registerAccent,
+  setAccent,
+  applyAccentPreference,
+  getAccent,
+  getAccentSurfaces,
+  listAccents,
+  listAccentRamps,
+} from "../src/utils/themes.js";
+import { ACCENT_FAMILIES } from "../src/utils/colors.js";
 import { color } from "../src/tools/color.js";
 import { TAP_MINIMUM } from "../src/tools/scale.js";
 import {
@@ -74,6 +103,7 @@ import {
 } from "../src/tools/breakpoints.js";
 import { loadFont, fontsReady } from "../src/tools/fonts.js";
 import { ensureFieldFont, looksLikeIOS } from "../src/utils/fieldFont.js";
+import { stackPosition } from "../src/utils/stackPosition.js";
 
 const results = [];
 let pass = 0;
@@ -345,6 +375,102 @@ async function run() {
       if (saved) setTheme(saved);
       else applySystemTheme();
     }
+  });
+
+  // ----------------------------------------------------------------- Markdown
+  await t("Markdown: every code-fence ink reads on the plate it is painted on", () => {
+    // The fence highlighter shipped ONE dark ink map for every theme, so a light
+    // page painted `bash`/`python`/`css`/`html`/`json` tokens in One Dark — the
+    // `#c678dd` keyword measured 1.93:1 on the light plate and the `#5c6370`
+    // comment 2.46:1 on a dark one. The JS branch was already plate-aware, so the
+    // two highlighters disagreed about what "a dark code block" means.
+    const source = [
+      "```bash",
+      "# a comment somebody has to read",
+      'git commit -m "ship it"',
+      "```",
+      "",
+      "```py",
+      "def add(a, b=2):",
+      "    return a + b  # sum",
+      "```",
+      "",
+      "```js",
+      "const ratio = color('#cf222e').contrastRatio('#ffffff');",
+      "```",
+    ].join("\n");
+
+    /** Alpha-blend `fg` over `bg` the way the browser paints it, as a hex string. */
+    const blend = (fg, bg) => {
+      const f = color(fg);
+      const b = color(bg);
+      const mix = (x, y) => Math.round(f.a * x + (1 - f.a) * y);
+      return color(`rgb(${mix(f.r, b.r)}, ${mix(f.g, b.g)}, ${mix(f.b, b.b)})`).hex();
+    };
+
+    /** The colour the element's text actually sits on, compositing every alpha layer. */
+    const plateUnder = (el) => {
+      const chain = [];
+      for (let n = el; n; n = n.parentElement) chain.push(n);
+      let bg = "#ffffff";
+      for (const n of chain.reverse()) {
+        const c = color(getComputedStyle(n).backgroundColor);
+        if (c.a >= 1) bg = c.hex();
+        else if (c.a > 0) bg = blend(c.rgba(), bg);
+      }
+      return bg;
+    };
+
+    const assertReadable = (label, node, plate) => {
+      const ink = getComputedStyle(node).color;
+      const ratio = color(ink).contrastRatio(plate);
+      ok(ratio >= 4.5, `${label}: ${ink} on ${plate} is ${ratio.toFixed(2)}:1`);
+    };
+
+    withBothThemes((theme) => {
+      const md = mount(W.Markdown({ text: source }));
+      try {
+        const tokens = [...md.querySelectorAll("pre code span")].filter(
+          (s) => s.getAttribute("style"),
+        );
+        ok(tokens.length >= 20, `${theme}: only ${tokens.length} coloured fence tokens`);
+        // a fence is a pane of its own, so each token is read on the plate under it
+        for (const span of tokens)
+          assertReadable(`${theme} token "${span.textContent}"`, span, plateUnder(span));
+        // The header band shades the plate by 18 % black, so the label and the
+        // copy button are read against a stricter surface than the tokens are.
+        for (const sel of [".md-lang-label", ".md-copy-btn"]) {
+          const node = md.querySelector(sel);
+          ok(node, `${theme}: fence header has no ${sel}`);
+          assertReadable(`${theme} ${sel}`, node, plateUnder(node));
+        }
+      } finally {
+        md.remove();
+      }
+    });
+
+    // One plate, one answer: a dark pane on the light page must get the dark inks,
+    // so the mapping follows `preBgColor` and never the reader's theme.
+    withBothThemes((theme) => {
+      for (const [preBgColor, label] of [["#0f172a", "dark pane"], ["#f8fafc", "light pane"]]) {
+        const md = mount(W.Markdown({ text: source, preBgColor }));
+        try {
+          const plate = plateUnder(md.querySelector(".md-lang-label"));
+          ok(
+            color(plate).isDark() === (preBgColor === "#0f172a"),
+            `${theme} ${label}: a ${preBgColor} pane composited to ${plate}`,
+          );
+          for (const sel of [".md-lang-label", ".md-copy-btn"])
+            assertReadable(`${theme} ${label} ${sel}`, md.querySelector(sel), plate);
+          const spans = [...md.querySelectorAll("pre code span")].filter((s) => s.getAttribute("style"));
+          ok(spans.length >= 20, `${theme} ${label}: only ${spans.length} coloured tokens`);
+          for (const span of spans)
+            assertReadable(`${theme} ${label} "${span.textContent}"`, span, plateUnder(span));
+        } finally {
+          md.remove();
+        }
+      }
+    });
   });
 
   // ------------------------------------------------------------- AnimatedBox
@@ -688,6 +814,40 @@ async function run() {
     );
   });
 
+  await t("Button: a long label stays on one line inside its fill", () => {
+    // A wrapping label outgrew a fixed-height pill: three lines of text in a
+    // 56-unit capsule, drawn through the rounded ends and past the padding box.
+    // The label is now one line with an ellipsis, so the full text stays the
+    // accessible name while the shape keeps its geometry.
+    const label =
+      "Seguir en Surgimiento y evolución de los servicios gastronómicos · paso 2 · Misión 1";
+    const btn = mount(
+      W.Button({ text: label, width: 320, height: 56, borderRadius: 999 }),
+    );
+    const textEl = [...btn.querySelectorAll("*")].find(
+      (e) => e.children.length === 0 && e.textContent === label,
+    );
+    ok(textEl, "the label element was not rendered");
+    const br = btn.getBoundingClientRect();
+    const tr = textEl.getBoundingClientRect();
+    ok(
+      getComputedStyle(textEl).whiteSpace === "nowrap",
+      `the label can wrap: white-space="${getComputedStyle(textEl).whiteSpace}"`,
+    );
+    // 56 outer units minus the button's 8+8 padding: the label must never
+    // grow past the inner box, which is where the pill's curve begins.
+    ok(
+      tr.height <= br.height - 16 + 0.5,
+      `label ${tr.height.toFixed(1)}px tall inside a ${(br.height - 16).toFixed(1)}px content box`,
+    );
+    ok(
+      textEl.scrollWidth > textEl.clientWidth,
+      "the long label was not ellipsized",
+    );
+    ok(btn.textContent.includes(label), "the full label left the accessible name");
+    btn.remove();
+  });
+
   // ------------------------------------------------------------------- Chart
   await t("Chart: all-negative data is still drawn inside the canvas", async () => {
     // `Math.max(0, minVal - padding)` inverted the range (min > max) for negative
@@ -773,6 +933,22 @@ async function run() {
     ok(tv.getSelected() === "a", `selection cleared: ${tv.getSelected()}`);
     tv.updateNodes([{ id: "a", label: "A3" }], null);
     ok(tv.getSelected() === null, "an explicit null must still clear the selection");
+  });
+
+  await t("TreeView: onPress receives the node itself, and only it", () => {
+    // index.d.ts described `onPress` as `(widget: Widget) => void` — inherited
+    // from CommonProps — while the widget calls it with the node it selected.
+    const args = [];
+    const tv = W.TreeView({
+      nodes: [{ id: "a", label: "A" }],
+      onPress: (...received) => args.push(received),
+    });
+    mount(tv);
+    tv.setSelected("a");
+    ok(args.length === 1, `onPress fired ${args.length} time(s) for one selection`);
+    ok(args[0].length === 1, `onPress received ${args[0].length} argument(s), the declaration says one`);
+    ok(args[0][0] !== tv, "onPress received the container element, not the node");
+    ok(args[0][0]?.id === "a", `onPress received ${JSON.stringify(args[0][0])}, expected the node`);
   });
 
   // ------------------------------------------------------------------- Image
@@ -979,6 +1155,23 @@ async function run() {
     setSel("b");
     await wait(40);
     ok(seen.length === echoed, `an unchanged value fired onChange ${seen.length - echoed} time(s)`);
+  });
+
+  await t("Dropdown: onPress receives the value alone", async () => {
+    // The declaration promised `(value, label)` and the runtime only ever sent
+    // the value, so a handler reading `label` got `undefined` and a second
+    // parameter was a promise nothing kept.
+    const args = [];
+    const dd = W.Dropdown({
+      options: ["a", "b"],
+      onPress: (...received) => args.push(received),
+    });
+    mount(dd);
+    dd.update({ value: "b" });
+    await wait(20);
+    ok(args.length === 1, `onPress fired ${args.length} time(s) for one change`);
+    ok(args[0].length === 1, `onPress received ${args[0].length} argument(s), the declaration says one`);
+    ok(args[0][0] === "b", `onPress received ${JSON.stringify(args[0][0])}, expected "b"`);
   });
 
   // ------------------------------------------------------------ Scaffold/Drawer
@@ -1549,6 +1742,60 @@ async function run() {
     }
   });
 
+  await t("useState: a null value is seeded once, not on every render", async () => {
+    // `getRam` answers `null` for a missing key AND for a key whose value is
+    // null, so a `null` initial state looked uninitialized on every
+    // construction: each render re-saved it, the save re-rendered the component
+    // that read it structurally, and the app looped — a lesson screen rebuilt
+    // itself 150 times in half a second because one of its panes starts null.
+    let renders = 0;
+    let rerender = null;
+    const root = document.createElement("div");
+    root.id = "null-state-root";
+    document.body.appendChild(root);
+    const App = () => {
+      renders++;
+      const [pick] = useState("nullStatePick", null);
+      const [tick, setTick] = useState("nullStateTick", 0);
+      rerender = () => setTick(tick.valueOf() + 1);
+      // Both reads are structural: what turned the redundant save into a loop.
+      return W.Text({ text: (pick.valueOf() === null ? "SIN ELECCIÓN" : String(pick)) + " " + tick.valueOf() });
+    };
+    runApp(App, "null-state-root");
+    await wait(120);
+    const before = renders;
+
+    rerender(); // one legitimate change; before the fix it never stopped
+    await wait(300);
+
+    ok(root.textContent.includes("SIN ELECCIÓN 1"), `content: "${root.textContent}"`);
+    ok(renders - before <= 2, `a null state kept the app re-rendering: ${renders - before} renders after one change`);
+  });
+
+  await t("useState: saving the value a key already holds does not re-render", async () => {
+    // The seeding path talks to RamStore directly, so the dispatcher has to
+    // ignore an identical write: a "change" notification for a value that did
+    // not change patched every bound widget and re-ran the structural render.
+    let renders = 0;
+    const root = document.createElement("div");
+    root.id = "same-value-root";
+    document.body.appendChild(root);
+    const App = () => {
+      renders++;
+      const [n] = useState("sameValueN", 7);
+      return W.Text({ text: n.valueOf() > 99 ? "ALTO" : "BAJO" });
+    };
+    runApp(App, "same-value-root");
+    await wait(120);
+    const before = renders;
+
+    saveRam("sameValueN", 7);
+    await wait(150);
+
+    ok(renders === before, `an identical save re-rendered the app ${renders - before} time(s)`);
+    ok(root.textContent.includes("BAJO"), `content: "${root.textContent}"`);
+  });
+
   await t("useState: unmounting releases the binding (no updates to detached nodes)", async () => {
     // The binding used to be released by monkey-patching `_cleanup`, which the
     // lifecycle observer never calls — so a detached widget stayed registered and
@@ -2039,6 +2286,455 @@ async function run() {
     } finally {
       document.documentElement.style.colorScheme = savedScheme;
       if (savedPref) setTheme(savedPref);
+      else {
+        localStorage.removeItem("fletbox-theme");
+        applySystemTheme();
+      }
+    }
+  });
+
+  // ------------------------------------------------------- Accent families
+  // A reader who taps a ThemePicker square is trusting the framework to keep the
+  // screen readable, so a family is not data until these seven numbers hold for
+  // the tokens the engine actually paints. They are why the accent is a stop on a
+  // ramp and never the middle of one: `#3b82f6` fails job 1 (white words on it
+  // measure 3.15:1) and `#eab308` fails job 2 (it reads on white at 1.88:1).
+  //
+  // Measured off the live `colors` object, not off `src/utils/colors.js`, so a
+  // change to `accentTokens`, `onAccent` or the stop indices fails here instead of
+  // in someone's app.
+  const accentStopOf = (id, theme) => {
+    const family = ACCENT_FAMILIES.find((f) => f.id === id);
+    return family[theme][theme === "light" ? 0 : 1];
+  };
+  const contrast = (a, b) => color(a).contrastRatio(b);
+  const hexOf = (value) => color(value).hex();
+  // Chrome serializes a hex inside a `background` shorthand as `rgb(...)`, so a
+  // paint assertion has to speak the browser's dialect rather than the source's.
+  const rgbOf = (hex) => {
+    const c = color(hex);
+    return `rgb(${Math.round(c.r)}, ${Math.round(c.g)}, ${Math.round(c.b)})`;
+  };
+  const rimOf = (cell) => getComputedStyle(cell.firstElementChild).borderTopColor;
+
+  await t("every shipped accent family clears its seven numbers in both themes", async () => {
+    const savedTheme = localStorage.getItem("fletbox-theme");
+    const savedAccent = getAccent();
+    const failures = [];
+    let jobs = 0;
+
+    // `wash` is the plate `primaryBg` paints: a titled banner, a selected row.
+    // Nothing in the framework uses a wash as a text color, so its only contract
+    // is to sit just off the page — lift enough to read as a plate, faint enough
+    // that the accent still dominates.
+    const check = (label, value, minimum) => {
+      jobs++;
+      if (!(value >= minimum)) failures.push(`${label}: ${value.toFixed(2)} < ${minimum}`);
+    };
+
+    try {
+      for (const theme of ["light", "dark"]) {
+        setTheme(theme);
+        for (const family of ACCENT_FAMILIES) {
+          setAccent(family.id);
+          const id = `${family.id}/${theme}`;
+          const accent = colors.primary;
+          const wash = colors.primaryBg;
+
+          // The stop the engine painted is the stop the ramp names.
+          jobs++;
+          const stop = theme === "light" ? 0 : 1;
+          if (accent !== family[theme][stop]) {
+            failures.push(`${id}: painted ${accent}, ramp stop ${stop} is ${family[theme][stop]}`);
+          }
+
+          check(`${id} label on accent`, contrast(colors.onPrimary, accent), 4.5);
+          check(`${id} accent as text on the page`, contrast(accent, colors.background), 4.5);
+          check(`${id} accent as glyph on a card`, contrast(accent, colors.card), 3);
+          check(`${id} page ink on the wash`, contrast(colors.text, wash), 4.5);
+          check(`${id} secondary ink on the wash`, contrast(colors.textSecondary, wash), 4.5);
+          check(`${id} accent on its own wash`, contrast(accent, wash), 4.5);
+
+          jobs++;
+          const lift = contrast(wash, colors.background);
+          if (!(lift >= 1.04 && lift <= 1.5)) {
+            failures.push(`${id} wash vs page ${lift.toFixed(3)} is outside [1.04, 1.5]`);
+          }
+        }
+      }
+
+      // The ramp must run one way. A stop out of order means the accent and its
+      // wash were read off a family that is not a gradient, which is how a "darker
+      // than the accent" wash happens.
+      for (const family of listAccentRamps()) {
+        for (const theme of ["light", "dark"]) {
+          const stops = family[theme];
+          const lum = stops.map((hex) => color(hex).luminance());
+          for (let i = 0; i + 1 < lum.length; i++) {
+            jobs++;
+            const forward = theme === "light" ? lum[i] < lum[i + 1] : lum[i] > lum[i + 1];
+            if (!forward) {
+              failures.push(
+                `${family.id}/${theme}: stop ${i} (${stops[i]}) and stop ${i + 1} (${stops[i + 1]}) are out of order`,
+              );
+            }
+          }
+        }
+      }
+
+      // A family that quietly disappeared from the engine would make this loop
+      // green on fewer rows, so the count is asserted too.
+      const expected = ACCENT_FAMILIES.length * 2 * 8 + listAccentRamps().length * 2 * 4;
+      ok(jobs === expected, `ran ${jobs} jobs, expected ${expected} — a family or a stop is missing`);
+      ok(failures.length === 0, `${failures.length} failing job(s): ${failures.slice(0, 6).join(" | ")}`);
+    } finally {
+      setAccent(savedAccent);
+      if (savedTheme) setTheme(savedTheme);
+      else {
+        localStorage.removeItem("fletbox-theme");
+        applySystemTheme();
+      }
+    }
+  });
+
+  // ------------------------------------------------- An accent worn as a theme
+  // `setAccent(id, { surfaces: true })` paints the page, the panels, the cards and
+  // the hairlines from the same ramp. Two things have to stay true while it does:
+  // every ink still reads on every surface it now sits on, and nothing but the
+  // surfaces moves — the words, the brand and the plate keep the palette's own
+  // values, which is what makes a tinted theme unable to make itself unreadable.
+  await t("an accent worn as a theme keeps every ink on the surfaces it paints", async () => {
+    const savedTheme = localStorage.getItem("fletbox-theme");
+    const savedAccent = getAccent();
+    const savedSurfaces = getAccentSurfaces();
+    const failures = [];
+    let jobs = 0;
+
+    const check = (label, value, minimum, maximum) => {
+      jobs++;
+      if (value < minimum || (maximum !== undefined && value > maximum)) {
+        failures.push(`${label}: ${value.toFixed(3)} outside [${minimum}, ${maximum ?? "∞"}]`);
+      }
+    };
+
+    // Tokens the surface layer must never touch, compared against the *same
+    // accent* painted as a brand: an accent always moves `primary`, `onPrimary`
+    // and `primaryBg`, and `primaryBg` is on the list because the plate comes from
+    // the stop the family was measured against — a theme that re-derived it would
+    // be re-deriving a vetted number.
+    const FROZEN = [
+      "text",
+      "textSecondary",
+      "textDisabled",
+      "primary",
+      "onPrimary",
+      "primaryBg",
+      "success",
+      "danger",
+      "focusRing",
+    ];
+
+    try {
+      for (const theme of ["light", "dark"]) {
+        setTheme(theme);
+        for (const family of ACCENT_FAMILIES) {
+          const id = `${family.id}/${theme}`;
+          setAccent(family.id);
+          const brand = FROZEN.map((token) => hexOf(colors[token]));
+          setAccent(family.id, { surfaces: true });
+
+          FROZEN.forEach((token, i) => {
+            jobs++;
+            if (hexOf(colors[token]) !== brand[i]) {
+              failures.push(`${id}: ${token} moved from ${brand[i]} to ${colors[token]}`);
+            }
+          });
+
+          const { background, surface, card, border, text, textSecondary, focusRing } = colors;
+          const accent = colors.primary;
+
+          check(`${id} page ink on the page`, contrast(text, background), 4.5);
+          check(`${id} page ink on a panel`, contrast(text, surface), 4.5);
+          check(`${id} page ink on a card`, contrast(text, card), 4.5);
+          check(`${id} secondary ink on the page`, contrast(textSecondary, background), 4.5);
+          check(`${id} secondary ink on a panel`, contrast(textSecondary, surface), 4.5);
+          check(`${id} secondary ink on a card`, contrast(textSecondary, card), 4.5);
+          check(`${id} accent as words on the page`, contrast(accent, background), 4.5);
+          check(`${id} accent as words on a card`, contrast(accent, card), 4.5);
+          check(`${id} accent as a glyph on a panel`, contrast(accent, surface), 3);
+          check(`${id} focus ring on the page`, contrast(focusRing, background), 3);
+          check(`${id} focus ring on a panel`, contrast(focusRing, surface), 3);
+          check(`${id} focus ring on a card`, contrast(focusRing, card), 3);
+
+          // Three layers must read as three layers, and a hairline must be seen on
+          // both of the boxes it rims.
+          check(`${id} panel above the page`, contrast(surface, background), 1.03, 1.6);
+          check(`${id} card above the panel`, contrast(card, surface), 1.03, 1.6);
+          check(`${id} card above the page`, contrast(card, background), 1.03, 1.6);
+          check(`${id} hairline on a card`, contrast(border, card), 1.1, 2.2);
+          check(`${id} hairline on a panel`, contrast(border, surface), 1.05, 2.2);
+        }
+      }
+
+      // Surfaces are a theme, so the choice has to come back with the color.
+      setAccent("teal", { surfaces: true });
+      jobs++;
+      if (localStorage.getItem("fletbox-accent") !== "teal+surfaces") {
+        failures.push(`stored ${localStorage.getItem("fletbox-accent")}, expected teal+surfaces`);
+      }
+      check("teal surfaces on", getAccentSurfaces() ? 1 : 0, 1);
+      setAccent("teal");
+      check("teal surfaces off", getAccentSurfaces() ? 0 : 1, 1);
+      jobs++;
+      if (localStorage.getItem("fletbox-accent") !== "teal") {
+        failures.push(`a brand-only tap stored ${localStorage.getItem("fletbox-accent")}`);
+      }
+      setTheme("light");
+      jobs++;
+      if (hexOf(colors.background) !== hexOf(palettes.light.background)) {
+        failures.push(`a brand-only accent still painted ${colors.background}`);
+      }
+
+      const expected =
+        ACCENT_FAMILIES.length * 2 * (FROZEN.length + 17) + 5;
+      ok(jobs === expected, `ran ${jobs} jobs, expected ${expected} — a family or a check is missing`);
+      ok(failures.length === 0, `${failures.length} failing job(s): ${failures.slice(0, 6).join(" | ")}`);
+    } finally {
+      setAccent(savedAccent, { surfaces: savedSurfaces });
+      if (savedTheme) setTheme(savedTheme);
+      else {
+        localStorage.removeItem("fletbox-theme");
+        applySystemTheme();
+      }
+    }
+  });
+
+  await t("the accent layer paints inside the palette funnel and survives a theme change", async () => {
+    // The layer used to be a second repaint bolted after `applyPalette`, so the
+    // next `setTheme` — a toggle, an OS flip, a boot — wrote the palette's own
+    // `primary` back over the reader's choice. It is now merged in that one
+    // funnel, which is also what keeps `--color-primary` and the PWA bars moving
+    // with it.
+    const savedTheme = localStorage.getItem("fletbox-theme");
+    const savedAccent = getAccent();
+    const savedStored = localStorage.getItem("fletbox-accent");
+    try {
+      setAccent(null);
+      setTheme("light");
+      const brandPrimary = colors.primary;
+      ok(brandPrimary === palettes.light.primary, "no accent must leave the palette's own brand alone");
+
+      setAccent("teal");
+      ok(getAccent() === "teal", `setAccent did not remember the choice (${getAccent()})`);
+      const painted = hexOf(colors.primary);
+      ok(painted !== hexOf(brandPrimary), "the accent never reached colors.primary");
+      ok(
+        localStorage.getItem("fletbox-accent") === "teal",
+        "a tap that persists nothing is lost on the next reload",
+      );
+      ok(
+        hexOf(document.documentElement.style.getPropertyValue("--color-primary")) === painted,
+        `--color-primary kept "${document.documentElement.style.getPropertyValue("--color-primary")}", so a stylesheet reading the token disagreed with the JS one`,
+      );
+
+      for (const theme of ["dark", "light"]) {
+        setTheme(theme);
+        ok(
+          hexOf(colors.primary) === accentStopOf("teal", theme),
+          `setTheme("${theme}") wiped the accent (${colors.primary})`,
+        );
+        ok(getAccent() === "teal", "setTheme dropped the stored accent id");
+        ok(
+          ["#ffffff", "#09090b"].includes(hexOf(colors.onPrimary)),
+          `onPrimary is not one of the two inks (${colors.onPrimary})`,
+        );
+        ok(
+          contrast(colors.onPrimary, colors.primary) >= 4.5,
+          `words on the ${theme} teal plate measure ${contrast(colors.onPrimary, colors.primary).toFixed(2)} (${colors.onPrimary} on ${colors.primary})`,
+        );
+      }
+
+      // An unknown id is a no-op rather than a paint of `undefined`.
+      setAccent("not-a-family");
+      ok(getAccent() === "teal", "an unknown accent id changed the active accent");
+      ok(hexOf(colors.primary) === accentStopOf("teal", "light"), "an unknown accent id repainted the page");
+
+      // Back off: the app's own brand, and the preference cleared with it.
+      setAccent(null);
+      ok(colors.primary === palettes.light.primary, "setAccent(null) did not give the palette its brand back");
+      ok(localStorage.getItem("fletbox-accent") === null, "setAccent(null) left the choice stored");
+
+      // A bare hex still gets a derived wash and ink, and re-registering the
+      // family that is on screen repaints instead of waiting for the next theme
+      // change. A private id keeps the shipped families — and the picker test
+      // beside it — reading the ramps the framework actually ships.
+      registerAccent({ id: "regression-brand", label: "Regression brand", light: "#1d4ed8", dark: "#60a5fa" });
+      setAccent("regression-brand");
+      ok(hexOf(colors.primary) === "#1d4ed8", `a hex-only accent painted ${colors.primary}`);
+      ok(contrast(colors.primaryBg, colors.background) >= 1.04, "a derived wash was invisible on the page");
+      ok(hexOf(colors.onPrimary) === "#ffffff", `white or black: ${colors.onPrimary} on ${colors.primary}`);
+      registerAccent({
+        id: "regression-brand",
+        label: "Regression brand",
+        light: ["#134e4a", "#14b8a6", "#99f6e4", "#ccfbf1", "#f0fdfa"],
+        dark: ["#99f6e4", "#2dd4bf", "#14b8a6", "#0f766e", "#042f2e"],
+      });
+      ok(
+        hexOf(colors.primary) === "#134e4a",
+        `re-registering the active accent did not repaint (${colors.primary})`,
+      );
+      ok(
+        hexOf(colors.primaryBg) === "#ccfbf1",
+        `the re-registered ramp's wash stop did not reach the page (${colors.primaryBg})`,
+      );
+
+      // The boot default an app sets for its brand must not become the reader's
+      // preference, or the picker opens with a square ticked the reader never chose.
+      setAccent(null);
+      localStorage.removeItem("fletbox-accent");
+      applyAccentPreference("blue");
+      ok(getAccent() === "blue", "applyAccentPreference did not paint the app's brand");
+      ok(localStorage.getItem("fletbox-accent") === null, "applyAccentPreference wrote the reader's preference");
+      setAccent("red");
+      applyAccentPreference("blue");
+      ok(getAccent() === "red", "a stored choice lost to the app's brand default");
+    } finally {
+      setAccent(savedAccent);
+      if (savedStored) localStorage.setItem("fletbox-accent", savedStored);
+      else localStorage.removeItem("fletbox-accent");
+      if (savedTheme) setTheme(savedTheme);
+      else {
+        localStorage.removeItem("fletbox-theme");
+        applySystemTheme();
+      }
+    }
+  });
+
+  await t("ThemePicker: named radios, a two-tone square each, and a tap that moves the accent", async () => {
+    const savedAccent = getAccent();
+    const savedTheme = localStorage.getItem("fletbox-theme");
+    const savedStored = localStorage.getItem("fletbox-accent");
+    try {
+      setAccent(null);
+      const picked = [];
+      const picker = mount(W.ThemePicker({ onChange: (id) => picked.push(id) }));
+      await wait(20);
+
+      ok(picker.getAttribute("role") === "radiogroup", `group role is "${picker.getAttribute("role")}"`);
+      ok(picker.getAttribute("aria-label") === "Accent color", "the group has no name to read out");
+      const cells = [...picker.children];
+      const options = listAccents();
+      ok(cells.length === options.length, `${cells.length} swatches for ${options.length} accents`);
+      // Every family the framework ships must have a square, even if an app has
+      // registered a private one on top of them.
+      const labels = cells.map((c) => c.getAttribute("aria-label"));
+      ok(
+        ACCENT_FAMILIES.every((f) => labels.includes(f.label)),
+        `a shipped family has no square in the default picker (${labels.join(", ")})`,
+      );
+      ok(
+        cells.every((c) => c.getAttribute("role") === "radio" && c.getAttribute("aria-label")),
+        "a swatch is an unnamed radio — nothing tells a reader which hue it is",
+      );
+      ok(
+        cells.every((c) => c.getAttribute("aria-checked") === "false"),
+        "a picker with no stored choice opened with something already selected",
+      );
+
+      // The square shows the *pair*: one half is the family's light stop, the
+      // other its dark stop. A square that paints only the current theme cannot
+      // be compared with what the app will look like in the other one.
+      const pair = options.find((a) => a.id === "teal");
+      const teal = cells.find((c) => c.getAttribute("aria-label") === pair.label);
+      const paint = getComputedStyle(teal.firstElementChild).backgroundImage;
+      ok(
+        /linear-gradient/.test(paint) &&
+          paint.includes(rgbOf(pair.light)) &&
+          paint.includes(rgbOf(pair.dark)),
+        `the teal square painted "${paint}", expected both ${pair.light} and ${pair.dark}`,
+      );
+
+      // Unselected rim: `colors.border` measures 1.3:1 on white and 1.2:1 on a
+      // dark card, so an empty swatch wears the same gray `Checkbox` uses.
+      const offRim = rgbOf(colors.gray500);
+      ok(rimOf(teal) === offRim, `an unselected swatch rimmed "${rimOf(teal)}", expected ${offRim}`);
+      ok(
+        rimOf(teal) !== rgbOf(colors.border),
+        "the rim that says nothing is picked is the palette's hairline border — invisible on both surfaces",
+      );
+
+      teal.click();
+      // The swatch eases `border-color 0.2s`, so a rim read 20ms after the tap is
+      // the interpolated color, not the answer: mid-flight it measured
+      // rgb(123,123,131) — neither the resting gray nor the ink.
+      await wait(300);
+      ok(getAccent() === "teal", `the tap set ${getAccent()}`);
+      ok(picked.join(",") === "teal", `onChange fired ${JSON.stringify(picked)}`);
+      ok(teal.getAttribute("aria-checked") === "true", "the tapped cell is not checked");
+      ok(
+        cells.filter((c) => c.getAttribute("aria-checked") === "true").length === 1,
+        "two cells report checked — a radio group must have one answer",
+      );
+      ok(
+        rimOf(teal) === rgbOf(colors.text),
+        `the selected cell rimmed "${rimOf(teal)}", expected the page's own ink ${rgbOf(colors.text)}`,
+      );
+
+      // The selection is the theme's state, not this widget's: a toggle somewhere
+      // else on the screen repaints what is checked here.
+      setTheme("dark");
+      await wait(300);
+      ok(teal.getAttribute("aria-checked") === "true", "a theme change lost the selection");
+      ok(rimOf(teal) === rgbOf(colors.text), "after a theme change the selection rim did not follow the new ink");
+
+      // Re-tapping the answer already given is not a new event.
+      teal.click();
+      ok(picked.length === 1, `re-tapping the selection fired onChange again (${picked})`);
+
+      // A disabled picker is inert and says so.
+      const off = mount(W.ThemePicker({ disabled: true, accents: listAccents().slice(0, 3) }));
+      await wait(20);
+      ok(off.children.length === 3, "the accents prop did not reach the grid");
+      off.children[0].click();
+      ok(getAccent() === "teal", "a disabled picker changed the accent");
+      ok(
+        [...off.children].every((c) => c.getAttribute("aria-disabled") === "true"),
+        "a disabled cell is not announced as disabled",
+      );
+
+      // `update()` can hand the grid a different list without leaving ghosts, and
+      // a caption does not make the words scale under the finger.
+      off.update({ accents: listAccents().slice(0, 1) });
+      await wait(20);
+      ok(off.children.length === 1, `after update the grid still held ${off.children.length} cells`);
+
+      const labelled = mount(W.ThemePicker({ showLabels: true, accents: listAccents().slice(0, 2) }));
+      await wait(20);
+      const labelledCells = [...labelled.children];
+      ok(
+        labelledCells.length === 2,
+        `a labelled picker built ${labelledCells.length} cells for 2 accents`,
+      );
+      ok(
+        labelledCells.every((c) => c.children.length === 2),
+        "showLabels painted no caption under the swatches",
+      );
+      // The caption is the cell's own text. `textContent` would also read the
+      // tick's ligature ("check"), which is `aria-hidden` markup rather than a name.
+      const captioned = labelledCells.map((c) => c.lastElementChild.textContent.trim());
+      ok(
+        captioned.join(",") === listAccents().slice(0, 2).map((a) => a.label).join(","),
+        `the captions read "${captioned.join(", ")}" for accents named "${listAccents().slice(0, 2).map((a) => a.label).join(", ")}"`,
+      );
+
+      picker.remove();
+      off.remove();
+      labelled.remove();
+    } finally {
+      setAccent(savedAccent);
+      if (savedStored) localStorage.setItem("fletbox-accent", savedStored);
+      else localStorage.removeItem("fletbox-accent");
+      if (savedTheme) setTheme(savedTheme);
       else {
         localStorage.removeItem("fletbox-theme");
         applySystemTheme();
@@ -3764,6 +4460,65 @@ async function run() {
     );
   });
 
+  await t("stackPosition: the exported helper moves the widget, not just its dataset", () => {
+    // The docs, the snippet library and the design skill all tell a developer to
+    // call `stackPosition(badge, { top: 8, right: 8 })`. The exported helper took
+    // the edges and wrote them as `data-top`/`data-right` attributes that nothing
+    // in the framework ever reads, so the overlay stayed exactly where the flow
+    // put it and the call looked like it worked.
+    const badge = mount(WidgetFactory({ tag: "div" }));
+    stackPosition(badge, { top: 8, right: 8 });
+    ok(
+      badge.style.position === "absolute",
+      `position is "${badge.style.position}" after stackPosition`,
+    );
+    ok(badge.style.top === "0.5rem", `top is "${badge.style.top}", not the rem contract`);
+    ok(badge.style.right === "0.5rem", `right is "${badge.style.right}"`);
+  });
+
+  await t("stackPosition: the exported helper takes the centring shorthands", () => {
+    const chip = mount(WidgetFactory({ tag: "div" }));
+    stackPosition(chip, { centerX: true, top: 4 });
+    ok(chip.style.left === "50%", `centerX left is "${chip.style.left}"`);
+    ok(
+      chip.style.transform === "translateX(-50%)",
+      `centerX transform is "${chip.style.transform}"`,
+    );
+    ok(chip.style.top === "0.25rem", `top is "${chip.style.top}"`);
+  });
+
+  await t("Chip: the named background paints the pill, not a plate behind it", () => {
+    // `Chip`'s docs list `bgColor` as "Background color", but the filled variant
+    // took its plate from `color` and let `bgColor` fall through the `...rest`
+    // spread onto the outer wrapper — which is 40 units tall and square-cornered.
+    // The result was a rectangle of the named colour with a gold pill drawn over
+    // it, and the app could not ask for a tinted chip at all.
+    const chip = mount(W.Chip({ label: "12 XP", bgColor: "#123456" }));
+    const pill = chip.firstElementChild;
+    ok(pill, "Chip rendered no inner pill");
+    ok(
+      chip.style.backgroundColor !== "rgb(18, 52, 86)",
+      "bgColor still reaches the wrapper: the rectangle is back",
+    );
+    ok(
+      pill.style.backgroundColor === "rgb(18, 52, 86)",
+      `pill background is "${pill.style.backgroundColor}", not the named bgColor`,
+    );
+    ok(pill.style.borderRadius !== "", `pill radius is "${pill.style.borderRadius}"`);
+  });
+
+  await t("Chip: an outlined chip stays transparent on both layers", () => {
+    const outlined = mount(W.Chip({ label: "draft", variant: "outlined", bgColor: "#123456" }));
+    ok(
+      outlined.firstElementChild.style.backgroundColor === "transparent",
+      `outlined pill filled with "${outlined.firstElementChild.style.backgroundColor}"`,
+    );
+    ok(
+      outlined.style.backgroundColor !== "rgb(18, 52, 86)",
+      "an outlined chip painted its wrapper: the plate is back",
+    );
+  });
+
   await t("Inspector: the documented props object returns a widget that shows the dump", () => {
     // The doc page and InspectorProps both describe `Inspector({ widget, indent })`,
     // but the implementation only ever took a node, so the documented call fell
@@ -3822,6 +4577,46 @@ async function run() {
     );
     shell._cleanup();
     shell.remove();
+  });
+
+  await t("Scaffold: navSideBarWidth reaches whichever side navSideBar picked", () => {
+    // The legacy pair was read for its position and not its width, so a
+    // documented `navSideBarWidth: 320` still painted 260 and narrowed the body
+    // by 260 — the prop was accepted, documented and ignored.
+    for (const position of ["left", "right"]) {
+      const shell = mount(
+        Scaffold({
+          navSideBar: W.Text({ text: "legacy-bar" }),
+          navSideBarPosition: position,
+          navSideBarWidth: 320,
+          body: W.Text({ text: "body" }),
+        })
+      );
+      const row = shell.children[1];
+      const bar = position === "left" ? row.children[0] : row.children[row.children.length - 1];
+      ok(bar, `${position}: Scaffold built no bar container`);
+      ok(bar.textContent.includes("legacy-bar"), `${position}: the legacy bar is empty`);
+      ok(
+        bar.style.width === "20rem",
+        `${position}: bar width is ${bar.style.width || "unset"}, expected 20rem (320 / 16)`
+      );
+      const content = position === "left" ? row.children[1] : row.children[0];
+      // The left bar also writes the body's width; the right one lets the body's
+      // `flex: 1` take the rest, so only the left side has a number to read.
+      if (position === "left") {
+        ok(
+          content.style.width === "calc(100% - 20rem)",
+          `${position}: the body is narrowed by ${content.style.width || "nothing"}`
+        );
+      } else {
+        ok(
+          getComputedStyle(content).flexGrow === "1",
+          `${position}: the body no longer takes the space the bar leaves`
+        );
+      }
+      shell._cleanup();
+      shell.remove();
+    }
   });
 
   await t("Tabs: iconPosition puts the icon after, above or below the label", () => {

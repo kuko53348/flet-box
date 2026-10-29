@@ -237,6 +237,45 @@ def prop_table(props: list[tuple[str, str]], widget: str = "") -> str:
     return "\n".join(lines)
 
 
+def tables_for(source: str, name: str) -> tuple[str, str | None]:
+    """The two tables a page carries, ready to be spliced into an existing page."""
+    props = extract_props(source, f"{name}Props") or SPECIAL_PROPS.get(name, [])
+    common = extract_props(source, "CommonProps")
+    has_common = extends_common_chain(source, f"{name}Props")
+    return prop_table(props, name), (prop_table(common, name) if has_common else None)
+
+
+def replace_table(text: str, heading: str, table: str | None) -> tuple[str, str]:
+    """Swap the first table after `heading`, leaving every other byte alone.
+
+    Returns the text and one of "same", "changed" or "absent" — "absent" is what
+    tells `--check` that a page has no table where one belongs, instead of
+    reporting it as current because nothing matched.
+    """
+    if table is None:
+        return text, "same"
+    lines = text.splitlines()
+    start = next((i for i, line in enumerate(lines) if line.strip() == heading), None)
+    first = None
+    if start is not None:
+        first = next((i for i in range(start + 1, len(lines)) if lines[i].startswith("|")), None)
+    if first is None:
+        return text, "absent"
+    last = first
+    while last < len(lines) and lines[last].startswith("|"):
+        last += 1
+    if lines[first:last] == table.splitlines():
+        return text, "same"
+    merged = lines[:first] + table.splitlines() + lines[last:]
+    return "\n".join(merged) + "\n", "changed"
+
+
+def prose_only(text: str) -> str:
+    """Everything a page says that is not its prop tables."""
+    return "\n".join(line for line in text.splitlines() if not line.startswith("|"))
+
+
+
 def reading_path() -> dict[str, dict]:
     info: dict[str, dict] = {}
     flat: list[str] = []
@@ -322,18 +361,16 @@ def extends_common_chain(source: str, name: str) -> bool:
 
 def render_widget_doc(source: str, name: str) -> str:
     data = WIDGET_DOCS[name]
-    props = extract_props(source, f"{name}Props") or SPECIAL_PROPS.get(name, [])
-    common = extract_props(source, "CommonProps")
-    has_common = extends_common_chain(source, f"{name}Props")
+    props_table, common_table = tables_for(source, name)
 
     common_section = ""
-    if has_common:
+    if common_table:
         common_section = f"""
 ### Common props
 
 Every widget also accepts these shared props — see [common props](COMMON_PROPS.md) for the full rules and aliases.
 
-{prop_table(common, name)}
+{common_table}
 """
 
     return f"""# {name}
@@ -352,7 +389,7 @@ Every widget also accepts these shared props — see [common props](COMMON_PROPS
 
 ## Props
 
-{prop_table(props, name)}
+{props_table}
 {common_section}
 ## Examples
 
@@ -432,6 +469,11 @@ def render_index() -> str:
         "",
         "Related guides: [Build your first FletBox app](../guides/app-templates.md) · "
         "[Routing with FletBox](../guides/router.md) · [FletBox CLI](../cli/README.md).",
+        "",
+        "Every page here has a live twin: **[the widget gallery]"
+        "(https://kuko53348.github.io/flet-box-widgets-exemples/)** renders each example "
+        "in the browser and prints the call that made it under the result, so you can read "
+        "a property table and see the same prop move something.",
         "",
         "## The reading path",
         "",
@@ -534,24 +576,138 @@ You are reading **Chapter N · Title** (i of m).
 """
 
 
+USAGE = """Generate docs/widget/*.md for FletBox.
+
+  python3 scripts/generate_widget_docs.py                 full page for every widget
+  python3 scripts/generate_widget_docs.py --tables-only   only the two prop tables
+  python3 scripts/generate_widget_docs.py --check         report stale tables and prose, exit 1
+  python3 scripts/generate_widget_docs.py --page Icon     one full page, prose included
+
+Every page is generated from `scripts/_docdata/`, which is the prose source: an
+edit to a page is lost on the next run, so write it in `_docdata` instead.
+`--check` is the gate `npm test` runs — it fails when a page and its data entry
+have drifted apart, in either direction.
+`--tables-only` is the safe refresh: it rewrites the `## Props` and
+`### Common props` tables from `src/index.d.ts` and leaves every other line
+byte for byte.
+"""
+
+FLAGS = {"--tables-only", "--check", "--help", "-h"}
+
+
+def prose_drift(source: str) -> list[str]:
+    """Pages whose prose is not what `_docdata` renders."""
+    stale: list[str] = []
+    for name in sorted(WIDGET_DOCS):
+        path = DOCS_DIR / f"{name}.md"
+        if not path.exists():
+            continue
+        if prose_only(path.read_text(encoding="utf-8")) != prose_only(render_widget_doc(source, name)):
+            stale.append(name)
+    return stale
+
+
+def write_tables_only(source: str, check: bool) -> None:
+    stale: list[str] = []
+    absent: list[str] = []
+    for name in sorted(WIDGET_DOCS):
+        path = DOCS_DIR / f"{name}.md"
+        if not path.exists():
+            absent.append(f"{name}.md (no page)")
+            continue
+        props_table, common_table = tables_for(source, name)
+        text = path.read_text(encoding="utf-8")
+        merged, props_state = replace_table(text, "## Props", props_table)
+        merged, common_state = replace_table(merged, "### Common props", common_table)
+        states = {props_state, common_state}
+        if states == {"same"}:
+            continue
+        stale.append(name)
+        if "absent" in states:
+            absent.append(f"{name}.md (no table under its heading)")
+        if not check:
+            path.write_text(merged, encoding="utf-8")
+
+    if check:
+        for line in absent:
+            print(f"missing: docs/widget/{line}")
+        for name in stale:
+            if f"{name}.md (no table under its heading)" not in absent:
+                print(f"stale:   docs/widget/{name}.md")
+        drift = prose_drift(source)
+        for name in drift:
+            print(f"prose:   docs/widget/{name}.md")
+        if stale:
+            print(f"\n{len(stale)} page(s) out of date — run "
+                  "`python3 scripts/generate_widget_docs.py --tables-only`")
+        if drift:
+            print(f"\n{len(drift)} page(s) whose prose is not what scripts/_docdata/ renders — "
+                  "run `python3 scripts/generate_widget_docs.py`, and put the edit you were "
+                  "writing in `_docdata` instead: docs/widget/ is generated.")
+        if stale or drift:
+            raise SystemExit(1)
+        print(f"generator: all {len(WIDGET_DOCS)} pages, tables and prose, are current")
+        return
+
+    print(f"Refreshed {len(stale)} prop table(s) from src/index.d.ts; every other line untouched.")
+    for line in absent:
+        print(f"  could not refresh: {line}")
+
+
 def main() -> None:
+    args = sys.argv[1:]
+    if "--help" in args or "-h" in args:
+        print(USAGE)
+        return
+
+    pages: list[str] = []
+    rest: list[str] = []
+    pending = list(args)
+    while pending:
+        arg = pending.pop(0)
+        if arg == "--page":
+            pages.append(pending.pop(0) if pending else "")
+        elif arg.startswith("--page="):
+            pages.append(arg.split("=", 1)[1])
+        else:
+            rest.append(arg)
+
+    unknown = [a for a in rest if a not in FLAGS]
+    if unknown:
+        print(f"unknown option(s): {', '.join(unknown)}\n\n{USAGE}")
+        raise SystemExit(2)
+    if pages and ("--tables-only" in rest or "--check" in rest):
+        print("--page writes a whole page; it does not combine with --tables-only or --check.")
+        raise SystemExit(2)
+    bad = [name for name in pages if name not in WIDGET_DOCS]
+    if bad:
+        print(f"no such widget page: {', '.join(bad)}")
+        raise SystemExit(2)
+
     DOCS_DIR.mkdir(parents=True, exist_ok=True)
     source = TYPE_DECLARATIONS.read_text(encoding="utf-8")
+
+    if "--tables-only" in rest or "--check" in rest:
+        write_tables_only(source, check="--check" in rest)
+        return
 
     missing = [name for name in WIDGET_DOCS if not extract_props(source, f"{name}Props")
                and name not in SPECIAL_PROPS]
     if missing:
         print(f"warning: no interface props found for: {', '.join(missing)}")
 
+    targets = pages or sorted(WIDGET_DOCS)
     written = 0
-    for name in sorted(WIDGET_DOCS):
-        doc = render_widget_doc(source, name)
-        (DOCS_DIR / f"{name}.md").write_text(doc, encoding="utf-8")
+    for name in targets:
+        (DOCS_DIR / f"{name}.md").write_text(render_widget_doc(source, name), encoding="utf-8")
         written += 1
 
-    (DOCS_DIR / "README.md").write_text(render_index() + "\n", encoding="utf-8")
-    (DOCS_DIR / "_template.md").write_text(TEMPLATE, encoding="utf-8")
-    print(f"Generated {written} widget pages and the book index.")
+    if not pages:
+        (DOCS_DIR / "README.md").write_text(render_index() + "\n", encoding="utf-8")
+        (DOCS_DIR / "_template.md").write_text(TEMPLATE, encoding="utf-8")
+        print(f"Generated {written} widget pages and the book index.")
+    else:
+        print(f"Generated {written} page(s): {', '.join(f'docs/widget/{n}.md' for n in pages)}")
 
 
 if __name__ == "__main__":

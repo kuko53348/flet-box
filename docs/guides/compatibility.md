@@ -33,7 +33,7 @@ Private browsing, sandboxed iframes, and strict browser policies may disable som
 
 ### Node.js
 
-Node.js 18 or newer is required for the CLI and build tooling. FletBox widgets themselves are browser-oriented and should not be rendered directly in a Node process without a DOM environment.
+Node.js 20.9 or newer is required for the CLI and build tooling — the floor `package.json` declares in `engines`. FletBox widgets themselves are browser-oriented and should not be rendered directly in a Node process without a DOM environment.
 
 ## Build targets
 

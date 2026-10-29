@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>flet-box — visual baseline</title>
+    <link rel="stylesheet" href="../src/fonts/icons.css" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      /* The gallery is a measuring instrument, so its own type must not vary
+         with the machine. Blink resolves the `medium` keyword against the
+         font-family of each element, so an element that inherits its size
+         takes the standard size of the font that happens to be installed —
+         13px for a monospace face, 16px for the system one. Pinning the root
+         size turns that into one inherited value, and the family below is the
+         metric-compatible pair Arial/Liberation Sans, whose line boxes are
+         the same on macOS and on the CI runner. */
+      html {
+        font-size: 16px;
+      }
+      body {
+        background: var(--color-background);
+        color: var(--color-text);
+        font-family:
+          Arial,
+          "Liberation Sans",
+          Helvetica,
+          sans-serif;
+        /* A unitless line-height is a pure function of the font-size, so the
+           line box is the same height on every platform. Left as `normal`,
+           the height of a text row follows the metrics of the font that
+           happens to be installed. */
+        line-height: 1.15;
+      }
+      #host {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 16px;
+        width: 420px;
+        box-sizing: border-box;
+      }
+      /* Every widget gets the same row, so a widget that grows takes its
+         neighbours with it and the fingerprint shows where the growth was. */
+      .row {
+        width: 388px;
+        box-sizing: border-box;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="host"></div>
+    <script type="module">
+      import {
+        Accordion,
+        Avatar,
+        Badge,
+        Button,
+        Card,
+        Checkbox,
+        Chip,
+        CircularBar,
+        Divider,
+        FloatingActionButton,
+        Icon,
+        Input,
+        ListTile,
+        Pagination,
+        ProgressBar,
+        QRCode,
+        Radio,
+        Rating,
+        Slider,
+        Skeleton,
+        Switch,
+        Tabs,
+        Text,
+        setTheme,
+      } from "../src/index.js";
+
+      const params = new URLSearchParams(location.search);
+      const theme = params.get("theme") === "dark" ? "dark" : "light";
+      setTheme(theme);
+
+      /**
+       * The gallery: one row per widget, in its **default** state. A widget
+       * that only shows its default is the one a regression hits first, and
+       * the labels are one word long so no row wraps differently on another
+       * machine's font.
+       *
+       * `box: true` marks a widget whose size the framework pins (an icon, a
+       * switch, a code) — its width is worth comparing exactly, because it
+       * does not depend on how wide a word is in the local font. A widget that
+       * carries a **label** is not one of them: `Checkbox` and `Radio` are
+       * as wide as their label, so their width belongs to the font, not to
+       * the framework, and comparing it would fail on a machine whose font is
+       * not the one the baseline was written with.
+       *
+       * `text: true` marks a widget whose root is an **inline** box. Its
+       * height is the height of the glyphs, which belongs to the font that
+       * the machine has installed — the type itself is already compared
+       * exactly in `font`, so the height of a line of text is the one number
+       * that would fail for a reason that is not the framework's.
+       */
+      const GALLERY = [
+        { name: "Text", make: () => Text({ text: "Text" }), text: true },
+        { name: "Button", make: () => Button({ text: "Button" }) },
+        { name: "Button.outlined", make: () => Button({ text: "Outlined", variant: "outlined" }) },
+        { name: "Button.text", make: () => Button({ text: "Text", variant: "text" }) },
+        { name: "Input", make: () => Input({ label: "Label", placeholder: "Placeholder" }) },
+        { name: "Checkbox", make: () => Checkbox({ label: "Check" }) },
+        { name: "Radio", make: () => Radio({ label: "Radio", name: "gallery" }) },
+        { name: "Switch", make: () => Switch({ label: "Switch", value: true }), box: true },
+        { name: "Chip", make: () => Chip({ label: "Chip" }) },
+        { name: "Badge", make: () => Badge({ value: 3, child: Text({ text: "New" }) }) },
+        { name: "Avatar", make: () => Avatar({ name: "A" }), box: true },
+        { name: "Icon", make: () => Icon({ name: "home" }), box: true },
+        { name: "Card", make: () => Card({ child: Text({ text: "Card" }) }) },
+        { name: "ListTile", make: () => ListTile({ title: "Title", subtitle: "Subtitle" }) },
+        { name: "ProgressBar", make: () => ProgressBar({ value: 60 }), box: true },
+        { name: "Rating", make: () => Rating({ value: 3 }) },
+        { name: "Slider", make: () => Slider({ value: 5, min: 0, max: 10 }) },
+        { name: "Divider", make: () => Divider() },
+        { name: "Tabs", make: () => Tabs({ tabs: ["One", "Two"] }) },
+        { name: "FloatingActionButton", make: () => FloatingActionButton({}), box: true },
+        { name: "CircularBar", make: () => CircularBar({ value: 40 }), box: true },
+        { name: "Pagination", make: () =>
+          Pagination({
+            totalItems: 57,
+            pageSize: 10,
+            currentPage: 1,
+            onPageChange: () => {},
+          }),
+        },
+        { name: "Skeleton", make: () => Skeleton({}), box: true },
+        { name: "Accordion", make: () =>
+          Accordion({ title: "Title", children: [Text({ text: "Body" })] }),
+        },
+        { name: "QRCode", make: () => QRCode({ value: "flet-box" }), box: true },
+      ];
+
+      const host = document.getElementById("host");
+      for (const item of GALLERY) {
+        const row = document.createElement("div");
+        row.className = "row";
+        const el = item.make();
+        el.setAttribute("data-fb-v", item.name);
+        if (item.box) el.setAttribute("data-fb-v-box", "1");
+        if (item.text) el.setAttribute("data-fb-v-text", "1");
+        row.appendChild(el);
+        host.appendChild(row);
+      }
+
+      /* ------------------------------------------------------------ measure */
+
+      const round2 = (n) => Math.round(n * 2) / 2;
+
+      /**
+       * The colour actually painted behind an element: its own background when
+       * it has one, otherwise the closest ancestor that does.
+       *
+       * @param {HTMLElement} el
+       * @returns {string} An `rgb(r, g, b)` string.
+       */
+      const effectiveBackground = (el) => {
+        let node = el;
+        while (node && node.nodeType === 1) {
+          const bg = getComputedStyle(node).backgroundColor;
+          if (bg && bg !== "transparent" && !/rgba\(0, 0, 0, 0\)/.test(bg)) return bg;
+          node = node.parentElement;
+        }
+        return getComputedStyle(document.body).backgroundColor || "rgb(255, 255, 255)";
+      };
+
+      /**
+       * The WCAG contrast ratio between two `rgb()` strings.
+       *
+       * @param {string} a
+       * @param {string} b
+       * @returns {number}
+       */
+      const contrast = (a, b) => {
+        const parse = (value) => {
+          const m = /rgba?\(([^)]+)\)/.exec(value || "");
+          if (!m) return [0, 0, 0];
+          const [r, g, bl] = m[1].split(",").map((n) => parseFloat(n));
+          return [r, g, bl];
+        };
+        const lum = (rgb) =>
+          rgb
+            .map((c) => {
+              const s = c / 255;
+              return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+            })
+            .reduce((acc, c, i) => acc + c * [0.2126, 0.7152, 0.0722][i], 0);
+        const l1 = lum(parse(a));
+        const l2 = lum(parse(b));
+        const ratio = (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+        return Math.round(ratio * 100) / 100;
+      };
+
+      /**
+       * The fingerprint of one widget: what it looks like, in numbers.
+       *
+       * Colours are exact — a token that changed is a defect. Heights carry a
+       * tolerance when they are compared (the driver's business), because a
+       * font's line box differs a little between machines.
+       *
+       * @param {HTMLElement} el
+       * @returns {object}
+       */
+      const measure = (el) => {
+        const cs = getComputedStyle(el);
+        const rect = el.getBoundingClientRect();
+        const out = {
+          bg: cs.backgroundColor,
+          fg: cs.color,
+          border: `${cs.borderTopWidth} ${cs.borderTopStyle} ${cs.borderTopColor}`,
+          radius: cs.borderRadius,
+          font: `${cs.fontSize} ${cs.fontWeight} ${cs.lineHeight}`,
+          pad: cs.padding,
+          h: round2(rect.height),
+          contrast: contrast(cs.color, effectiveBackground(el)),
+        };
+        if (el.getAttribute("data-fb-v-box")) out.w = round2(rect.width);
+        // The height of an inline box is the height of the glyphs it paints.
+        if (el.getAttribute("data-fb-v-text")) delete out.h;
+        return out;
+      };
+
+      const publish = async () => {
+        // The icon font changes the metrics of every icon row: measuring
+        // before it lands would record a fallback's width forever.
+        if (document.fonts && document.fonts.ready) await document.fonts.ready;
+        await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+        const items = {};
+        for (const el of document.querySelectorAll("[data-fb-v]")) {
+          items[el.getAttribute("data-fb-v")] = measure(el);
+        }
+        window.__VISUAL = { theme, items };
+        document.title = "flet-box — visual baseline ready";
+      };
+
+      publish();
+    </script>
+  </body>
+</html>

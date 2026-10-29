@@ -1,0 +1,520 @@
+{
+  "light": {
+    "Text": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "fg": "rgb(82, 82, 91)",
+      "border": "0px none rgb(82, 82, 91)",
+      "radius": "0px",
+      "font": "16px 400 18.4px",
+      "pad": "0px",
+      "contrast": 7.73
+    },
+    "Button": {
+      "bg": "rgb(250, 250, 250)",
+      "fg": "rgb(9, 9, 11)",
+      "border": "1px solid rgb(228, 228, 231)",
+      "radius": "16px",
+      "font": "13.3333px 400 normal",
+      "pad": "8px 16px",
+      "h": 40,
+      "contrast": 19.06
+    },
+    "Button.outlined": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "fg": "rgb(9, 9, 11)",
+      "border": "2px solid rgb(9, 9, 11)",
+      "radius": "16px",
+      "font": "13.3333px 400 normal",
+      "pad": "8px 16px",
+      "h": 40,
+      "contrast": 19.9
+    },
+    "Button.text": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "fg": "rgb(9, 9, 11)",
+      "border": "0px none rgb(9, 9, 11)",
+      "radius": "16px",
+      "font": "13.3333px 400 normal",
+      "pad": "8px 16px",
+      "h": 40,
+      "contrast": 19.9
+    },
+    "Input": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "fg": "rgb(9, 9, 11)",
+      "border": "0px none rgb(9, 9, 11)",
+      "radius": "0px",
+      "font": "16px 400 18.4px",
+      "pad": "0px",
+      "h": 64,
+      "contrast": 19.9
+    },
+    "Checkbox": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "fg": "rgb(9, 9, 11)",
+      "border": "0px none rgb(9, 9, 11)",
+      "radius": "0px",
+      "font": "16px 400 18.4px",
+      "pad": "0px",
+      "h": 40,
+      "contrast": 19.9
+    },
+    "Radio": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "fg": "rgb(9, 9, 11)",
+      "border": "0px none rgb(9, 9, 11)",
+      "radius": "0px",
+      "font": "16px 400 18.4px",
+      "pad": "0px",
+      "h": 40,
+      "contrast": 19.9
+    },
+    "Switch": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "fg": "rgb(9, 9, 11)",
+      "border": "0px none rgb(9, 9, 11)",
+      "radius": "0px",
+      "font": "16px 400 18.4px",
+      "pad": "0px",
+      "h": 40,
+      "contrast": 19.9,
+      "w": 388
+    },
+    "Chip": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "fg": "rgb(9, 9, 11)",
+      "border": "0px none rgb(9, 9, 11)",
+      "radius": "0px",
+      "font": "16px 400 18.4px",
+      "pad": "0px",
+      "h": 22,
+      "contrast": 19.9
+    },
+    "Badge": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "fg": "rgb(9, 9, 11)",
+      "border": "0px none rgb(9, 9, 11)",
+      "radius": "0px",
+      "font": "16px 400 18.4px",
+      "pad": "0px",
+      "h": 18.5,
+      "contrast": 19.9
+    },
+    "Avatar": {
+      "bg": "rgb(24, 24, 27)",
+      "fg": "rgb(255, 255, 255)",
+      "border": "0px none rgb(255, 255, 255)",
+      "radius": "50%",
+      "font": "16px 500 18.4px",
+      "pad": "0px",
+      "h": 40,
+      "contrast": 17.72,
+      "w": 40
+    },
+    "Icon": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "fg": "rgb(82, 82, 91)",
+      "border": "0px none rgb(82, 82, 91)",
+      "radius": "0px",
+      "font": "24px 400 24px",
+      "pad": "0px",
+      "h": 24,
+      "contrast": 7.73,
+      "w": 24
+    },
+    "Card": {
+      "bg": "rgb(250, 250, 250)",
+      "fg": "rgb(9, 9, 11)",
+      "border": "1px solid rgb(228, 228, 231)",
+      "radius": "12px",
+      "font": "16px 400 18.4px",
+      "pad": "16px",
+      "h": 52.5,
+      "contrast": 19.06
+    },
+    "ListTile": {
+      "bg": "rgb(250, 250, 250)",
+      "fg": "rgb(9, 9, 11)",
+      "border": "0px none rgb(9, 9, 11)",
+      "radius": "0px",
+      "font": "16px 400 18.4px",
+      "pad": "0px",
+      "h": 62.5,
+      "contrast": 19.06
+    },
+    "ProgressBar": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "fg": "rgb(9, 9, 11)",
+      "border": "0px none rgb(9, 9, 11)",
+      "radius": "0px",
+      "font": "16px 400 18.4px",
+      "pad": "0px",
+      "h": 8,
+      "contrast": 19.9,
+      "w": 388
+    },
+    "Rating": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "fg": "rgb(9, 9, 11)",
+      "border": "0px none rgb(9, 9, 11)",
+      "radius": "0px",
+      "font": "16px 400 18.4px",
+      "pad": "0px",
+      "h": 40,
+      "contrast": 19.9
+    },
+    "Slider": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "fg": "rgb(9, 9, 11)",
+      "border": "0px none rgb(9, 9, 11)",
+      "radius": "0px",
+      "font": "16px 400 18.4px",
+      "pad": "0px",
+      "h": 40,
+      "contrast": 19.9
+    },
+    "Divider": {
+      "bg": "rgb(250, 250, 250)",
+      "fg": "rgb(9, 9, 11)",
+      "border": "0px none rgb(9, 9, 11)",
+      "radius": "0px",
+      "font": "16px 400 18.4px",
+      "pad": "0px",
+      "h": 1,
+      "contrast": 19.06
+    },
+    "Tabs": {
+      "bg": "rgb(250, 250, 250)",
+      "fg": "rgb(9, 9, 11)",
+      "border": "0px none rgb(9, 9, 11)",
+      "radius": "0px",
+      "font": "16px 400 18.4px",
+      "pad": "0px",
+      "h": 73,
+      "contrast": 19.06
+    },
+    "FloatingActionButton": {
+      "bg": "rgb(24, 24, 27)",
+      "fg": "rgb(255, 255, 255)",
+      "border": "0px none rgb(255, 255, 255)",
+      "radius": "50%",
+      "font": "16px 400 18.4px",
+      "pad": "0px",
+      "h": 48,
+      "contrast": 17.72,
+      "w": 48
+    },
+    "CircularBar": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "fg": "rgb(9, 9, 11)",
+      "border": "0px none rgb(9, 9, 11)",
+      "radius": "0px",
+      "font": "16px 400 18.4px",
+      "pad": "0px",
+      "h": 388,
+      "contrast": 19.9,
+      "w": 388
+    },
+    "Pagination": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "fg": "rgb(9, 9, 11)",
+      "border": "0px none rgb(9, 9, 11)",
+      "radius": "0px",
+      "font": "16px 400 18.4px",
+      "pad": "0px",
+      "h": 86,
+      "contrast": 19.9
+    },
+    "Skeleton": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "fg": "rgb(9, 9, 11)",
+      "border": "0px none rgb(9, 9, 11)",
+      "radius": "0px",
+      "font": "16px 400 18.4px",
+      "pad": "0px",
+      "h": 16,
+      "contrast": 19.9,
+      "w": 388
+    },
+    "Accordion": {
+      "bg": "rgb(244, 244, 245)",
+      "fg": "rgb(9, 9, 11)",
+      "border": "0px none rgb(9, 9, 11)",
+      "radius": "8px",
+      "font": "16px 400 18.4px",
+      "pad": "0px",
+      "h": 45,
+      "contrast": 18.1
+    },
+    "QRCode": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "fg": "rgb(9, 9, 11)",
+      "border": "0px none rgb(9, 9, 11)",
+      "radius": "0px",
+      "font": "16px 400 18.4px",
+      "pad": "0px",
+      "h": 200,
+      "contrast": 19.9,
+      "w": 200
+    }
+  },
+  "dark": {
+    "Text": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "fg": "rgb(161, 161, 170)",
+      "border": "0px none rgb(161, 161, 170)",
+      "radius": "0px",
+      "font": "16px 400 18.4px",
+      "pad": "0px",
+      "contrast": 7.76
+    },
+    "Button": {
+      "bg": "rgb(24, 24, 27)",
+      "fg": "rgb(250, 250, 250)",
+      "border": "1px solid rgb(39, 39, 42)",
+      "radius": "16px",
+      "font": "13.3333px 400 normal",
+      "pad": "8px 16px",
+      "h": 40,
+      "contrast": 16.97
+    },
+    "Button.outlined": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "fg": "rgb(250, 250, 250)",
+      "border": "2px solid rgb(250, 250, 250)",
+      "radius": "16px",
+      "font": "13.3333px 400 normal",
+      "pad": "8px 16px",
+      "h": 40,
+      "contrast": 19.06
+    },
+    "Button.text": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "fg": "rgb(250, 250, 250)",
+      "border": "0px none rgb(250, 250, 250)",
+      "radius": "16px",
+      "font": "13.3333px 400 normal",
+      "pad": "8px 16px",
+      "h": 40,
+      "contrast": 19.06
+    },
+    "Input": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "fg": "rgb(250, 250, 250)",
+      "border": "0px none rgb(250, 250, 250)",
+      "radius": "0px",
+      "font": "16px 400 18.4px",
+      "pad": "0px",
+      "h": 64,
+      "contrast": 19.06
+    },
+    "Checkbox": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "fg": "rgb(250, 250, 250)",
+      "border": "0px none rgb(250, 250, 250)",
+      "radius": "0px",
+      "font": "16px 400 18.4px",
+      "pad": "0px",
+      "h": 40,
+      "contrast": 19.06
+    },
+    "Radio": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "fg": "rgb(250, 250, 250)",
+      "border": "0px none rgb(250, 250, 250)",
+      "radius": "0px",
+      "font": "16px 400 18.4px",
+      "pad": "0px",
+      "h": 40,
+      "contrast": 19.06
+    },
+    "Switch": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "fg": "rgb(250, 250, 250)",
+      "border": "0px none rgb(250, 250, 250)",
+      "radius": "0px",
+      "font": "16px 400 18.4px",
+      "pad": "0px",
+      "h": 40,
+      "contrast": 19.06,
+      "w": 388
+    },
+    "Chip": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "fg": "rgb(250, 250, 250)",
+      "border": "0px none rgb(250, 250, 250)",
+      "radius": "0px",
+      "font": "16px 400 18.4px",
+      "pad": "0px",
+      "h": 22,
+      "contrast": 19.06
+    },
+    "Badge": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "fg": "rgb(250, 250, 250)",
+      "border": "0px none rgb(250, 250, 250)",
+      "radius": "0px",
+      "font": "16px 400 18.4px",
+      "pad": "0px",
+      "h": 18.5,
+      "contrast": 19.06
+    },
+    "Avatar": {
+      "bg": "rgb(250, 250, 250)",
+      "fg": "rgb(9, 9, 11)",
+      "border": "0px none rgb(9, 9, 11)",
+      "radius": "50%",
+      "font": "16px 500 18.4px",
+      "pad": "0px",
+      "h": 40,
+      "contrast": 19.06,
+      "w": 40
+    },
+    "Icon": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "fg": "rgb(161, 161, 170)",
+      "border": "0px none rgb(161, 161, 170)",
+      "radius": "0px",
+      "font": "24px 400 24px",
+      "pad": "0px",
+      "h": 24,
+      "contrast": 7.76,
+      "w": 24
+    },
+    "Card": {
+      "bg": "rgb(24, 24, 27)",
+      "fg": "rgb(250, 250, 250)",
+      "border": "1px solid rgb(39, 39, 42)",
+      "radius": "12px",
+      "font": "16px 400 18.4px",
+      "pad": "16px",
+      "h": 52.5,
+      "contrast": 16.97
+    },
+    "ListTile": {
+      "bg": "rgb(24, 24, 27)",
+      "fg": "rgb(250, 250, 250)",
+      "border": "0px none rgb(250, 250, 250)",
+      "radius": "0px",
+      "font": "16px 400 18.4px",
+      "pad": "0px",
+      "h": 62.5,
+      "contrast": 16.97
+    },
+    "ProgressBar": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "fg": "rgb(250, 250, 250)",
+      "border": "0px none rgb(250, 250, 250)",
+      "radius": "0px",
+      "font": "16px 400 18.4px",
+      "pad": "0px",
+      "h": 8,
+      "contrast": 19.06,
+      "w": 388
+    },
+    "Rating": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "fg": "rgb(250, 250, 250)",
+      "border": "0px none rgb(250, 250, 250)",
+      "radius": "0px",
+      "font": "16px 400 18.4px",
+      "pad": "0px",
+      "h": 40,
+      "contrast": 19.06
+    },
+    "Slider": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "fg": "rgb(250, 250, 250)",
+      "border": "0px none rgb(250, 250, 250)",
+      "radius": "0px",
+      "font": "16px 400 18.4px",
+      "pad": "0px",
+      "h": 40,
+      "contrast": 19.06
+    },
+    "Divider": {
+      "bg": "rgb(24, 24, 27)",
+      "fg": "rgb(250, 250, 250)",
+      "border": "0px none rgb(250, 250, 250)",
+      "radius": "0px",
+      "font": "16px 400 18.4px",
+      "pad": "0px",
+      "h": 1,
+      "contrast": 16.97
+    },
+    "Tabs": {
+      "bg": "rgb(24, 24, 27)",
+      "fg": "rgb(250, 250, 250)",
+      "border": "0px none rgb(250, 250, 250)",
+      "radius": "0px",
+      "font": "16px 400 18.4px",
+      "pad": "0px",
+      "h": 73,
+      "contrast": 16.97
+    },
+    "FloatingActionButton": {
+      "bg": "rgb(250, 250, 250)",
+      "fg": "rgb(9, 9, 11)",
+      "border": "0px none rgb(9, 9, 11)",
+      "radius": "50%",
+      "font": "16px 400 18.4px",
+      "pad": "0px",
+      "h": 48,
+      "contrast": 19.06,
+      "w": 48
+    },
+    "CircularBar": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "fg": "rgb(250, 250, 250)",
+      "border": "0px none rgb(250, 250, 250)",
+      "radius": "0px",
+      "font": "16px 400 18.4px",
+      "pad": "0px",
+      "h": 388,
+      "contrast": 19.06,
+      "w": 388
+    },
+    "Pagination": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "fg": "rgb(250, 250, 250)",
+      "border": "0px none rgb(250, 250, 250)",
+      "radius": "0px",
+      "font": "16px 400 18.4px",
+      "pad": "0px",
+      "h": 86,
+      "contrast": 19.06
+    },
+    "Skeleton": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "fg": "rgb(250, 250, 250)",
+      "border": "0px none rgb(250, 250, 250)",
+      "radius": "0px",
+      "font": "16px 400 18.4px",
+      "pad": "0px",
+      "h": 16,
+      "contrast": 19.06,
+      "w": 388
+    },
+    "Accordion": {
+      "bg": "rgb(39, 39, 42)",
+      "fg": "rgb(250, 250, 250)",
+      "border": "0px none rgb(250, 250, 250)",
+      "radius": "8px",
+      "font": "16px 400 18.4px",
+      "pad": "0px",
+      "h": 45,
+      "contrast": 14.27
+    },
+    "QRCode": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "fg": "rgb(250, 250, 250)",
+      "border": "0px none rgb(250, 250, 250)",
+      "radius": "0px",
+      "font": "16px 400 18.4px",
+      "pad": "0px",
+      "h": 200,
+      "contrast": 19.06,
+      "w": 200
+    }
+  }
+}

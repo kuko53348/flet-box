@@ -10,6 +10,7 @@ import { TAP_MINIMUM, LABEL_TEXT } from "../tools/index.js";
 export const Radio = (props) => {
   const {
     selected = false,
+    /** @deprecated Use `onPress` instead — it receives the same boolean. */
     onSelect,
     onPress: onPressProp,
     disabled = false,
@@ -20,8 +21,6 @@ export const Radio = (props) => {
     ...rest
   } = props;
 
-  /** @deprecated Use onPress instead */
-  // onSelect kept as alias for backward compatibility
   const onPress = onPressProp || onSelect;
 
   let internalSelected = selected;

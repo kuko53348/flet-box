@@ -60,8 +60,8 @@ export const Dropdown = (inputProps = {}) => {
   const {
     options = [],
     value = null,
+    /** @deprecated Use `onPress` instead — it receives the same value. */
     onChange,
-    /** @deprecated Use onPress instead */
     onPress: onPressProp,
     placeholder = "Select...",
     disabled = false,

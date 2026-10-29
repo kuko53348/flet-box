@@ -36,6 +36,23 @@ export const indexHtml = (appName = "FletBox App") => `<!DOCTYPE html>
     <meta property="og:title" content="${appName}">
     <meta property="og:description" content="${appName} built with Flet-Box.">
     <meta property="og:type" content="website">
+    <meta property="og:url" content="./">
+    <meta property="og:image" content="./src/assets/icon-512.png">
+    <meta property="og:image:alt" content="${appName}">
+
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="${appName}">
+    <meta name="twitter:description" content="${appName} built with Flet-Box.">
+    <meta name="twitter:url" content="./">
+    <meta name="twitter:image" content="./src/assets/icon-512.png">
+    <meta name="twitter:image:alt" content="${appName}">
+
+    <!-- The share tags stay relative on purpose: this one file runs on :8000,
+         through a tunnel and on Pages. 'flet-box build' rewrites og:image,
+         og:url, twitter:image and twitter:url to absolute URLs at the site
+         origin in the copy it publishes, because a scraper does not resolve
+         a relative path the way a browser does. Replace the icon with a real
+         cover if you have one: a square icon is what a 'summary' card expects. -->
 
     <meta name="theme-color" content="${SHELL_BRAND}">
 
@@ -344,6 +361,7 @@ import {
     Slider,
     Divider,
     Tooltip,
+    ThemePicker,
     Icon,
     SnackBar,
     AlertDialog,
@@ -353,7 +371,8 @@ import {
     setTheme,
     getTheme,
     setBaseFontSize,
-    getBaseFontSize
+    getBaseFontSize,
+    listAccents
 } from 'flet-box';
 
 // Key-based RAM keeps a value across re-renders and hot reloads; localStorage is
@@ -450,6 +469,28 @@ export const AboutScreen = () => {
                     value: isDark,
                     activeColor: colors.primary,
                     onPress: (value) => setTheme(value ? 'dark' : 'light')
+                }),
+                // The accent is the reader's answer, not the build's. This app opens on
+                // neutral (themes.js applies it at boot) and this row is how they leave it:
+                // one square per family, split diagonally into what the hue wears on a light
+                // page and what it wears on a dark one, with the tick already on the family
+                // painted. A tap repaints every widget on screen and stores the choice, so
+                // this does not wait for the Save button below — that keeps the profile.
+                // Five squares is a decision; \`listAccents()\` has twelve, so the filter is
+                // the brand's answer to what this app is willing to look like.
+                Column({
+                    gap: 8,
+                    children: [
+                        Text({ text: 'Accent color', size: 16, weight: 'bold', color: colors.text }),
+                        ThemePicker({
+                            label: 'Accent color',
+                            accents: listAccents().filter((family) =>
+                                ['neutral', 'blue', 'teal', 'rose', 'orange'].includes(family.id)
+                            ),
+                            onChange: (id) =>
+                                SnackBar({ message: 'Accent: ' + id, type: 'success' }).show()
+                        })
+                    ]
                 }),
                 Column({
                     gap: 8,
@@ -591,12 +632,15 @@ export const themesJs = () => `// database/themes.js
 // framework's own \`color().contrastRatio()\` against the surface it is written on:
 // the number sits next to the pair that needs it, because a token that cannot
 // carry AA text is decoration, not a color.
-import { registerPalette } from 'flet-box';
+import { applyAccentPreference, registerPalette } from 'flet-box';
 
 export const lightColors = {
-    // #6366f1 put white on 4.47:1 — a hair under AA. Two units darker measures
-    // 4.55:1, the same indigo, and every brand button passes.
-    primary: '#6165ef',
+    // The brand a new app shows is neutral: no hue, the page's own ink. White on
+    // this fill measures 17.85:1 and the fill as words on this page measures the
+    // same, so a button, an active tab and a link all pass in both directions
+    // before anyone has chosen a color. The reader changes it on the Preferences
+    // screen (\`ThemePicker\`), which paints a hue and remembers it.
+    primary: '#0f172a',
     secondary: '#8b5cf6',
     success: '#10b981',
     warning: '#f59e0b',
@@ -629,10 +673,14 @@ export const lightColors = {
     border: '#e2e8f0',
     overlay: 'rgba(0, 0, 0, 0.5)',
     shadow: 'rgba(0, 0, 0, 0.1)',
-    // What to write on a brand fill, and the soft tints that replace
-    // \`colors.primary + '15'\`.
+    // What to write on a brand fill, and the soft plate that replaces
+    // \`colors.primary + '15'\`. The plate is a lifted gray rather than a tint of
+    // a hue, because the brand has no hue: the page ink sits on it at 14.56:1, and
+    // since the neutral brand *is* that ink a chip written in \`colors.primary\`
+    // measures the same. One limit: \`textSecondary\` below (#64748b) on this plate
+    // is 3.88:1, so a caption inside a \`primaryBg\` area uses \`colors.text\`.
     onPrimary: '#ffffff',
-    primaryBg: '#eef2ff',
+    primaryBg: '#e7e8ea',
     // The translucent surface for a card with \`backdropFilter\`. A token, so the
     // app never hand-writes an \`rgba()\` the clean-UI gate would reject.
     glass: 'rgba(255, 255, 255, 0.66)',
@@ -647,7 +695,10 @@ export const lightColors = {
 };
 
 export const darkColors = {
-    primary: '#818cf8',
+    // The other half of the same neutral: here the brand is the page's near-white
+    // ink. It reads 12.02:1 on this background and 9.85:1 on a card, so it is
+    // legal as words and as a glyph, and it carries its own label below.
+    primary: '#cbd5e1',
     secondary: '#a78bfa',
     success: '#34d399',
     warning: '#fbbf24',
@@ -677,9 +728,14 @@ export const darkColors = {
     border: '#334155',
     overlay: 'rgba(0, 0, 0, 0.6)',
     shadow: 'rgba(0, 0, 0, 0.3)',
-    // #818cf8 is a light fill: white on it is 2.98:1, the page's own ink is 5.98:1.
-    onPrimary: '#0f172a',
-    primaryBg: '#1e1b4b',
+    // #cbd5e1 is a light fill: white on it is 1.48:1, so its words are the page's
+    // own near-black and measure 13.40:1. The plate sits one step off the page
+    // (1.18:1) and one very quiet step off a card (1.03:1), which is what a brand
+    // with no hue costs: a tinted banner works on the background, and on a card
+    // the mark is \`colors.border\` or the ink itself. Ink on the plate: 13.81:1,
+    // secondary ink 5.90:1, the brand 10.19:1.
+    onPrimary: '#09090b',
+    primaryBg: '#252629',
     glass: 'rgba(30, 41, 59, 0.66)',
     glassBorder: 'rgba(226, 232, 240, 0.22)',
     error: '#f87171',
@@ -697,6 +753,21 @@ export const darkColors = {
 // the reader's answer (\`setTheme\`, \`toggleTheme\`), not the designer's.
 registerPalette('light', lightColors);
 registerPalette('dark', darkColors);
+
+// The palette above answers what a theme *is*; the accent layer is what the reader
+// picks, and it owns exactly three tokens: \`primary\`, \`onPrimary\` and
+// \`primaryBg\`. A new app opens on \`neutral\` — the same three values the palettes
+// carry, so the two layers agree and nothing repaints a frame after boot.
+//
+// \`applyAccentPreference\` is the app's verb, not the reader's: it paints only when
+// nobody has chosen yet and writes no preference down, so the Preferences screen's
+// \`ThemePicker\` opens with the neutral square marked as the answer, and a hue
+// picked on a previous visit still wins over this line. \`setAccent\` would answer
+// for the reader and overwrite their choice on every load.
+//
+// An app with a brand of its own keeps the three tokens above and changes the id
+// here to a family it registers with \`registerAccent\`.
+applyAccentPreference('neutral');
 `;
 
 export const runSh = () => `#!/bin/bash
@@ -858,10 +929,13 @@ export const packageJson = (name) => `{
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "predev": "flet-box check-api --emit-api && flet-box unpack --all --md",
     "dev": "bash run.sh",
+    "verify": "flet-box verify",
     "check": "node scripts/check-app.mjs",
     "ui": "node scripts/check-ui.mjs",
     "fix": "flet-box audit-fix",
+    "metrics": "flet-box metrics",
     "api": "flet-box unpack --all --md",
     "build": "flet-box createBundle www",
     "start": "npm run dev",
@@ -907,6 +981,22 @@ export const capacitorConfig = (appName, appId) => `${JSON.stringify(
 // The user replaces TU-USUARIO/TU-REPO with their real public GitHub names.
 export const OTA_PLACEHOLDER_URL = "https://TU-USUARIO.github.io/TU-REPO/";
 
+// The pictures a created app keeps in `assets/`. `flet-box create` makes that
+// folder and writes `assets/logo.png` into it, so it is where an app's own
+// images live — but `createBundle` copies only `src/assets` (icons, fonts) by
+// itself. Undeclared, every bundled build served those screens with broken
+// images while `npm run dev`, which serves the project root, looked perfect.
+// One glob per extension: the asset matcher understands `*`, `**` and `?`,
+// not braces. Images only — a source document parked in `assets/` (the PDF a
+// catalogue was written from) must stay out of the bundle.
+const PROJECT_ASSET_PATTERNS = [
+  "assets/**/*.png",
+  "assets/**/*.jpg",
+  "assets/**/*.jpeg",
+  "assets/**/*.svg",
+  "assets/**/*.webp",
+];
+
 // OTA manifest written to every generated project. The loader (www/loader.js)
 // reads `update.url` via www/config.json to know where to fetch updates.
 export const fletboxConfig = (url = OTA_PLACEHOLDER_URL) => `${JSON.stringify(
@@ -918,6 +1008,7 @@ export const fletboxConfig = (url = OTA_PLACEHOLDER_URL) => `${JSON.stringify(
       mandatory: false,
       minNativeVersion: "0.0.0",
       notes: "",
+      assets: PROJECT_ASSET_PATTERNS,
     },
   },
   null,
@@ -1672,6 +1763,8 @@ framework from scratch:
   Claude Code and Cursor.
 - \`.fletbox/api/cheatsheet.md\` — every widget and its real props, generated from the
   installed package. This is the lookup an agent reads instead of the framework.
+  A prop marked \`(deprecated → x)\` still works, but it is the name being retired;
+  write \`x\`. The old spelling will not fail — nothing else will tell you.
 - \`.fletbox/api/api.json\` — the same surface as data: per prop its engine target,
   default, aliases and a \`sample\` value the types prove works. Write calls from this.
 - \`.fletbox/memory/\` — notes the agent keeps between sessions, so it does not
@@ -1687,7 +1780,8 @@ npm run ui                         # clean-UI gate: tokens, scale, tap targets, 
                                    # contrast — each finding cites the rule it broke
 npm run ui -- --tokens             # measured contrast of every token, on both surfaces
 npm run ui -- --strict             # warnings (a one-off tint, an image with no alt) fail too
-npm run fix                        # rewrite typos it can prove (imports, prop keys)
+npm run fix                        # rewrite what it can prove: imports, prop typos,
+                                   # renamed props
 npm run api                        # regenerate .fletbox/api/api.json and api.md
 flet-box unpack Button             # each prop, where it really goes, and what is dead
 flet-box unpack Button --example   # a paste-ready call using only verified props
@@ -2078,10 +2172,12 @@ export const AppBarComponent = ({ title, isMobile = false, showBack = false, onB
                 size: 24,
                 height: 40,
                 color: colors.text,
+                'aria-label': 'Open the menu',
                 onclick: () => openDrawer()
             })
         }) : null,
-        // An icon-only control still needs a name: the Tooltip is what says so.
+        // An icon-only control still needs a name, and a Tooltip is a description
+        // (aria-describedby), not a name: the aria-label is what a screen reader says.
         actions: [
             Tooltip({
                 text: isDark ? 'Switch to light' : 'Switch to dark',
@@ -2091,6 +2187,7 @@ export const AppBarComponent = ({ title, isMobile = false, showBack = false, onB
                     size: 24,
                     height: 40,
                     color: colors.text,
+                    'aria-label': isDark ? 'Switch to light' : 'Switch to dark',
                     onclick: () => toggleTheme()
                 })
             })
@@ -2433,6 +2530,13 @@ export const agentsMd = (appName, template, version) =>
     'fixes every size and color you may use, and the checker in section 5',
     'proves you right or wrong in seconds.',
     '',
+    'If you are an agent **writing code** in this app rather than reading it,',
+    '[AGENTS_FOR_CODE_GEN.md](AGENTS_FOR_CODE_GEN.md) is the shorter contract:',
+    'the golden rule (a prop that is not in the cheatsheet does not exist), what',
+    'may never be written, the ten design rules that survive a review, what gets',
+    'rejected and why, and the verification protocol. Read that one first; this',
+    'file is its long form.',
+    '',
     '## 0. Start here — the skills folder',
     '',
     'Everything this framework knows about building a professional screen is grouped',
@@ -2488,7 +2592,7 @@ export const agentsMd = (appName, template, version) =>
     '// Correct',
     "Text({ text: 'Hello', size: 18, color: colors.primary })",
     "Button({ text: 'Save', onPress: save, bgColor: colors.primary })",
-    'Box({ child: Text({ text: count }), padding: 12 })',
+    'Container({ child: Text({ text: count }), padding: 12 })',
     '```',
     '',
     '```js',
@@ -2506,7 +2610,7 @@ export const agentsMd = (appName, template, version) =>
     '  at runtime and nothing fetches a CDN.',
     '- No `.jsx`, `.tsx`, `.vue` or `.svelte` files. Plain `.js`, ESM imports with a',
     '  explicit `.js` extension.',
-    '- Styling is props (`bgColor`, `radius`, `padding`), not class strings or',
+    '- Styling is props (`bgColor`, `borderRadius`, `padding`), not class strings or',
     '  `styled-components`.',
     '- `child` takes one widget; `children` takes an array or string. Swapping them',
     '  is the most common silent bug.',
@@ -2611,6 +2715,11 @@ export const agentsMd = (appName, template, version) =>
     '',
     '- A screen uses **one** brand color. Two accent colors competing on one view',
     '  means one of them is wrong.',
+    '- The brand is an **accent**, not a value on the screen: this app opens on the',
+    '  \`neutral\` family (\`applyAccentPreference\` at the bottom of',
+    '  \`src/database/themes.js\`) and the reader can move it on the Preferences',
+    '  screen, where \`ThemePicker\` lives. To ship a hue, change that id or register',
+    '  a family with \`registerAccent\` — never write the hex into a screen.',
     '- Never type a hex or `rgb()` literal. If a token is missing, add it to a',
     '  `theme.js` in this app that re-exports `colors` — do not scatter the value.',
     '- A frosted surface is `colors.glass` with `colors.glassBorder` plus a',
@@ -2628,7 +2737,7 @@ export const agentsMd = (appName, template, version) =>
     '',
     '**Space and type: an 8-based scale.** Use these numbers and nothing between',
     'them. They are plain props (`padding`, `gap`, `margin`, `width`, `height`,',
-    '`size`, `radius`) — the factory takes the number, no unit and no `px` string.',
+    '`size`, `borderRadius`) — the factory takes the number, no unit and no `px` string.',
     '',
     '```',
     'spacing   4  ·  hairline, icon inset',
@@ -2656,28 +2765,69 @@ export const agentsMd = (appName, template, version) =>
     '- `useState` bindings, `flex` and `gap` do the layout. Reach for an absolute',
     '  offset only for overlays, and use `stackPosition` rather than raw coordinates.',
     '',
+    '**The phone range is the test device — strict.** Every phone is `xs` in the',
+    'breakpoint table, so nothing in the shell changes between 320 and 430; the',
+    'layout has to. Compose at `360×640` and prove the screen at `320×568` (the',
+    'floor), `375×667`, `390×844`, `393×852`, `412×915` and `430×932` (the',
+    'ceiling), in portrait. At 320 nothing overflows or clips: no horizontal',
+    'scroll, no label cut because its row ran out of room. A heading whose text',
+    'the app does not control — a lesson name, a chapter, a user title — is `24`',
+    'on a phone and `32` only from `atLeast("md")`: at 360 a long name at `32` is',
+    'four lines and pushes the controls under it off the first screen. Fixed',
+    'chrome is inside the 320 budget: an app bar title plus its actions, a tab',
+    'strip, a labeled bottom bar. If one needs more than 320, shorten what it',
+    'says — never let it scroll sideways.',
+    '',
     '## 5. Verification loop (required)',
     '',
     'After every edit, before you say a task is done:',
     '',
     '```bash',
+    'npm run verify        # parses first, then every gate, then your test scripts',
+    '                       # — one report, one exit code; this is the command to',
+    '                       # run after every edit',
+    'npm run verify -- --fix   # the same, after the mechanical repair: it rewrites',
+    '                       # a mistyped prop or a wrong relative path first, so a',
+    '                       # typo never reaches you as work to do',
     'npm run check          # static gate: invented widgets/props, positional args,',
     '                       # foreign imports, and broken imports between your own',
     '                       # modules (a name a file never exports)',
     'npm run ui             # clean-UI gate: the tokens and the scale above, 40px',
     '                       # targets, labels, contrast — every finding cites the',
     '                       # rule number it broke',
+    'npm run metrics        # the north metric: how much code passed the gate with',
+    '                       # no correction, and which failures keep coming back',
     'npm run dev            # serve on :8000 — check the UI actually renders',
     '```',
     '',
-    'Both gates read the installed package, so they are always in sync with what',
+    '`npm run verify` parses every module first (`node --check`, the parser the',
+    'runtime uses: a missing `)` comes back as `file:line:column` with a caret',
+    'under the character and a hint), then runs those two gates, the structural',
+    'gate (a cycle between two of your own modules, a module outside the project',
+    'folders, markup written by hand) and the prop contract in parallel, and',
+    'prints one report: the gate that failed, the file at `line:column`, and what',
+    'to do about it. A project that declares its own test scripts gets those run',
+    'too; a created app declares none.',
+    'All of them read the installed package, so they are always in sync with what',
     'runs. They exit non-zero on a real error: fix the code, not the checker. A',
     'warning is allowed to stay only when you can justify it in one sentence.',
+    '',
+    'Fix what the report names, and nothing else. Every finding carries a file and',
+    'a line: change that line. Do not rewrite the file to make it pass, and do not',
+    'reformat or rename a line the report did not name. If the same error survives',
+    'two attempts, the diagnosis was wrong: revert and hand the report back.',
     '',
     '`npm run ui` proves what is *written*; the rules it cites are the numbered ones',
     'in [skills/fletbox-design/SKILL.md](skills/fletbox-design/SKILL.md),',
     'and that file is the part a checker cannot do — hierarchy, copy, whether the',
     'screen solves the problem. Read it before writing a screen, not after.',
+    '',
+    'Every `npm run verify` also appends a row to',
+    '`.fletbox/metrics/generations.md` — green or not — and `npm run metrics`',
+    'reads those rows: the share of code that passed the gate with no correction',
+    'at all, plus the failures that recur most often. When the same code comes',
+    'back a third time with no rule behind it, the command fails: that is the',
+    'signal to write the rule, not to fix the same line again.',
     '',
     'When the error is a mistyped name, `npm run fix` rewrites it for you — a',
     'relative path that does not resolve, a name the target module never exports,',
@@ -2708,8 +2858,10 @@ export const agentsMd = (appName, template, version) =>
     '| Command | What it does |',
     '| --- | --- |',
     '| `npm run dev` | static dev server on port 8000 |',
+    '| `npm run verify` | parses every module, then every gate, then your test scripts: one report, one exit code |',
     '| `npm run check` | anti-hallucination gate over `src/` |',
     '| `npm run fix` | rewrite mistyped imports and prop names it can prove |',
+    '| `npm run metrics` | the north metric: how much code passed the gate with no correction |',
     '| `npm run check -- --props Button` | print the real props of a widget |',
     '| `flet-box unpack Button` | everything Button accepts **and that actually works** |',
     '| `flet-box unpack Button --example` | a paste-ready call using only live props |',
@@ -2827,6 +2979,30 @@ export const memoryStatusMd = (appName, template) => {
     '',
   ].join('\n');
 };
+
+export const metricsLogMd = () =>
+  [
+    '# Generations',
+    '',
+    'The log of every `npm run verify` run in this app, newest last. One row per',
+    'run: when it happened, whether the gates were green, which gates failed and',
+    'which codes they reported.',
+    '',
+    'A **generation** is a run of consecutive failing rows that ends at the first',
+    'green one — the rows before it are the corrections that were needed. A green',
+    'row that follows a green row is a generation that needed none.',
+    '',
+    '**The north metric** is the share of generations whose *first* run was green:',
+    'the code that passed the gate with no correction at all. It is measured by',
+    '`npm run metrics`, which also prints the three failures that recurred most',
+    'often and the rule each one should belong to. That list is the loop: a code',
+    'that keeps coming back and has no rule behind it is a rule that has not been',
+    'written yet.',
+    '',
+    '| When | Project | Result | Gates | Codes |',
+    '| --- | --- | --- | --- | --- |',
+    '',
+  ].join('\n');
 
 export const memoryIndexMd = (appName) =>
   [

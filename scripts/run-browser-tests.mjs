@@ -29,11 +29,10 @@
  *   node scripts/run-browser-tests.mjs smoke      # run harnesses matching "smoke"
  */
 
-import { createServer } from "node:http";
-import { readFile, stat } from "node:fs/promises";
 import { existsSync } from "node:fs";
-import { join, dirname, extname, normalize } from "node:path";
+import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { startStaticServer } from "./lib/staticServer.mjs";
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const root = join(scriptDir, "..");
@@ -47,6 +46,7 @@ const HARNESSES = [
   { page: "tests/smoke.html", global: "__SMOKE", label: "smoke (every widget instantiates)" },
   { page: "tests/regression.html", global: "__REGRESSION", label: "regression guards (audit fixes)" },
   { page: "tests/a11y.html", global: "__A11Y", label: "accessibility contract (ring, roles, trap)" },
+  { page: "tests/errorboundary.html", global: "__ERRORBOUNDARY", label: "error boundary (a broken widget survives)" },
   { page: "tests/motion.html", global: "__MOTION", label: "motion contract (transitions, curves, reduced motion)" },
   { page: "tests/index.html", global: "__TESTS", label: "widget-factory contract" },
   { page: "tests/widget-contract.html", global: "__CONTRACT", label: "widget runtime contract" },
@@ -54,43 +54,6 @@ const HARNESSES = [
   { page: "tests/doccheck-all.html", global: "__DOCCHECK", label: "documented behavior (ch. 3-7)" },
   { page: "tests/doccheck.html", global: "__DOCCHECK", label: "documented behavior (ch. 1-2)" },
 ];
-
-const MIME = {
-  ".html": "text/html; charset=utf-8",
-  ".js": "text/javascript; charset=utf-8",
-  ".mjs": "text/javascript; charset=utf-8",
-  ".css": "text/css; charset=utf-8",
-  ".json": "application/json; charset=utf-8",
-  ".png": "image/png",
-  ".jpg": "image/jpeg",
-  ".svg": "image/svg+xml",
-  ".woff2": "font/woff2",
-  ".woff": "font/woff",
-  ".map": "application/json; charset=utf-8",
-};
-
-/** Minimal static server rooted at the repo, so `/tests/x.html` resolves. */
-const startServer = () =>
-  new Promise((resolve) => {
-    const server = createServer(async (req, res) => {
-      try {
-        const urlPath = decodeURIComponent((req.url || "/").split("?")[0]);
-        const target = join(root, normalize(urlPath).replace(/^(\.\.[/\\])+/, ""));
-        if (!target.startsWith(root)) {
-          res.writeHead(403).end("forbidden");
-          return;
-        }
-        const info = await stat(target);
-        const file = info.isDirectory() ? join(target, "index.html") : target;
-        const body = await readFile(file);
-        res.writeHead(200, { "Content-Type": MIME[extname(file)] || "application/octet-stream" });
-        res.end(body);
-      } catch {
-        res.writeHead(404, { "Content-Type": "text/plain" }).end("not found");
-      }
-    });
-    server.listen(0, "127.0.0.1", () => resolve(server));
-  });
 
 /** Finds the puppeteer package, or null when it is not available. */
 const resolvePuppeteer = () => {
@@ -130,8 +93,8 @@ if (!puppeteerPath || !chromePath) {
 
 const { default: puppeteer } = await import(join(puppeteerPath, "lib", "esm", "puppeteer", "puppeteer.js"));
 
-const server = await startServer();
-const base = `http://127.0.0.1:${server.address().port}`;
+const { port, close } = await startStaticServer(root);
+const base = `http://127.0.0.1:${port}`;
 
 const browser = await puppeteer.launch({
   executablePath: chromePath,
@@ -188,8 +151,7 @@ for (const harness of targets) {
 }
 
 await browser.close();
-server.close();
-
+close();
 console.log(
   `\nTotal: ${totalPass} OK · ${totalFail} fallos` +
     (failedHarnesses.length ? ` · ${failedHarnesses.length} harness(es) con problemas\n` : "  ✔\n"),

@@ -20,11 +20,12 @@
  */
 import crypto from "crypto";
 import { execFileSync } from "child_process";
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync, readFileSync } from "fs";
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync, readFileSync, existsSync } from "fs";
 import os from "os";
 import path from "path";
 import { fileURLToPath } from "url";
-import { absoluteShareTags, buildBundleConfig, collectAssets, declaredUpdateUrl, isPlaceholderUpdateUrl, resolveUpdateUrl } from "../bin/utils/bundleConfig.js";
+import { absoluteShareTags, buildBundleConfig, collectAssets, declaredUpdateUrl, isPlaceholderUpdateUrl, resolveAssetPatterns, resolveUpdateUrl, SHARE_TAGS } from "../bin/utils/bundleConfig.js";
+import { fletboxConfig, indexHtml } from "../bin/utils/templates.js";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -96,6 +97,43 @@ try {
   rmSync(fixture, { recursive: true, force: true });
 }
 
+// ---- The pictures `flet-box create` invites a project to keep --------------
+// The scaffold creates an `assets/` folder next to `src/` and writes
+// `assets/logo.png` into it, so that is where an app puts its own pictures.
+// `createBundle` copies `src/assets` (icons, fonts) on its own, but it never
+// looked at that folder: a freshly created app built clean and served every
+// screen with a broken image, while `npm run dev` — which serves the project
+// root — looked perfect, so the defect only appeared after a bundle or an APK
+// existed. The generated config now declares those pictures as release assets.
+const assetsFixture = mkdtempSync(path.join(os.tmpdir(), "fletbox-create-assets-"));
+try {
+  const pictures = {
+    "assets/logo.png": "logo\n",
+    "assets/hero.jpg": "hero\n",
+    "assets/web/cover.webp": "cover\n",
+    "assets/book.pdf": "source document, never served\n",
+  };
+  for (const [rel, body] of Object.entries(pictures)) {
+    const target = path.join(assetsFixture, rel);
+    mkdirSync(path.dirname(target), { recursive: true });
+    writeFileSync(target, body);
+  }
+  writeFileSync(path.join(assetsFixture, "package.json"), JSON.stringify({ name: "fixture", version: "1.0.0" }));
+  writeFileSync(path.join(assetsFixture, "fletbox.config.json"), fletboxConfig());
+
+  const declared = resolveAssetPatterns(assetsFixture);
+  check("the created app's config declares its own pictures", declared.length > 0, true);
+  const copied = collectAssets(assetsFixture, declared).map((a) => a.path);
+  check(
+    "a created app's bundle carries assets/ (root and nested, png/jpg/webp)",
+    copied,
+    ["assets/hero.jpg", "assets/logo.png", "assets/web/cover.webp"],
+  );
+  check("a source file kept in assets/ never ships in the bundle", copied.includes("assets/book.pdf"), false);
+} finally {
+  rmSync(assetsFixture, { recursive: true, force: true });
+}
+
 const loader = readFileSync(path.join(repoRoot, "bin", "ota", "loader.js"), "utf8");
 check("the loader publishes the asset helper the app calls", loader.includes("__FLETBOX_OTA_ASSET__"), true);
 check("the loader reads the manifest asset list", /assets/.test(loader), true);
@@ -128,6 +166,64 @@ check("an already-absolute share image is not prefixed again", stamped.includes(
 check("the tags a scraper does not resolve for images stay untouched", stamped.includes('content="Walk through the blue door."') && stamped.includes('content="Guantanamera"'), true);
 check("no base URL means no rewrite (a local bundle keeps its relative paths)", absoluteShareTags(card, null), card);
 check("building twice over the same output cannot double-prefix", absoluteShareTags(stamped, "https://user.github.io/repo/"), stamped);
+
+// ---- The card every created app starts with -------------------------------
+// The stamper can only absolutise a tag the project's own index.html carries,
+// and a missing one fails silently: the share renders as a headline with no
+// picture while the site looks perfect. So `flet-box create` ships every tag
+// the stamper knows, each pointing at a file the bundle actually serves.
+const metaContent = (html, key) => {
+  const tag = html
+    .match(/<meta\b[^>]*>/gi)
+    ?.find((t) => new RegExp(`\\b(?:property|name)\\s*=\\s*["']${key}["']`, "i").test(t));
+  return tag?.match(/\bcontent\s*=\s*(["'])([^"']*)\1/i)?.[2] ?? null;
+};
+const templateHtml = indexHtml("Guantanamera");
+const stampedTemplate = absoluteShareTags(templateHtml, "https://user.github.io/repo/");
+for (const tag of SHARE_TAGS) {
+  check(`the created app carries ${tag}`, metaContent(templateHtml, tag) !== null, true);
+  check(
+    `${tag} is absolute in the built bundle`,
+    /^https:\/\/user\.github\.io\/repo\//.test(metaContent(stampedTemplate, tag) ?? ""),
+    true,
+  );
+}
+check("the card declares its shape before X will show an image", metaContent(templateHtml, "twitter:card"), "summary");
+check("the default picture is the icon the template ships", metaContent(templateHtml, "og:image"), "./src/assets/icon-512.png");
+const createSource = readFileSync(path.join(repoRoot, "bin", "commands", "create.js"), "utf8");
+check(
+  "the picture the card names is a file `flet-box create` copies into every app",
+  createSource.includes('"icon-512.png"'),
+  true,
+);
+
+// ---- And the card this repository's own demo serves ------------------------
+// The root `index.html` is the other card the stamper reads: `npm run build` and
+// `flet-box cloudflare` serve a bundle built from it, so a share of the demo is a
+// share of the framework. It carried a title and a description with no picture
+// and no URL — a scraper shows exactly the headline it is given, so the card was
+// silent about what FletBox looks like. The rule is the template's: the file in
+// the repo stays host-agnostic and names relative paths, the built copy is
+// stamped, and the picture it names is a file the bundle copies.
+const demoHtml = readFileSync(path.join(repoRoot, "index.html"), "utf8");
+const stampedDemo = absoluteShareTags(demoHtml, "https://user.github.io/repo/");
+for (const tag of SHARE_TAGS) {
+  check(`the demo carries ${tag}`, metaContent(demoHtml, tag) !== null, true);
+  check(
+    `${tag} is absolute in the demo's built copy`,
+    /^https:\/\/user\.github\.io\/repo\//.test(metaContent(stampedDemo, tag) ?? ""),
+    true,
+  );
+}
+check("the demo's card declares its shape", metaContent(demoHtml, "twitter:card"), "summary");
+for (const tag of ["og:image", "twitter:image"]) {
+  const picture = metaContent(demoHtml, tag) ?? "";
+  check(
+    `${tag} names a file in the checkout`,
+    existsSync(path.join(repoRoot, picture.replace(/^\.?\//, ""))),
+    true,
+  );
+}
 
 // ---- The update URL, which is the half that decides whether OTA exists at all --
 //

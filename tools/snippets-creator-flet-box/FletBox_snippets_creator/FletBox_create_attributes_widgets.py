@@ -220,6 +220,21 @@ attrs_all_placeholders_complete = {
     'watchSystemTheme': 'watchSystemTheme()',
     'getColor': 'getColor("primary", 0.8)',
 
+    # ---------- ACCENTS ----------
+    # An accent is a pair: the stop one hue wears in the light theme and the stop
+    # it wears in the dark one. `null` gives the palette's own brand back.
+    'setAccent': 'setAccent("teal")',
+    # The same call with `surfaces` is a different promise: the family paints the
+    # page, the panels and the hairlines too, not only the brand controls.
+    'setAccentTheme': 'setAccent("teal", { surfaces: true })',
+    'resetAccent': 'setAccent(null)',
+    'getAccent': 'getAccent()',
+    'getAccentSurfaces': 'const paintedAsTheme = getAccentSurfaces()',
+    'listAccents': 'const options = listAccents()',
+    'listAccentRamps': 'const ramps = listAccentRamps()',
+    'registerAccent': 'registerAccent({ id: "brand", label: "Brand", light: "#1d4ed8", dark: "#60a5fa" })',
+    'applyAccentPreference': 'applyAccentPreference("teal")',
+
     # ---------- HTTP ----------
     'httpGet': 'const data = await httpGet("https://api.example.com/users")',
     'httpPost': 'const newUser = await httpPost("https://api.example.com/users", { body: { name: "flet-box" } })',
@@ -949,9 +964,9 @@ attrs_all_placeholders_complete = {
     'showsScrollIndicator': 'showsScrollIndicator: true,',
     'wrapItems': 'wrapItems: true,',
     'crossAxisCount': 'crossAxisCount: 2,',
-    'onEndReached': 'onEndReached: () => fetchMore(),',
+    'onEndReached': 'onEndReached: () => console.log("load next page"),',
     'onEndReachedThreshold': 'onEndReachedThreshold: 0.5,',
-    'onRefresh': 'onRefresh: (done) => { refresh(); done(); },',
+    'onRefresh': 'onRefresh: (done) => { console.log("refresh"); done(); },',
     'ListHeaderComponent': 'ListHeaderComponent: () => Text({ text: "Header" }),',
     'ListFooterComponent': 'ListFooterComponent: () => Text({ text: "Footer" }),',
     'ListEmptyComponent': 'ListEmptyComponent: () => Text({ text: "No data" }),',
@@ -1140,15 +1155,16 @@ attrs_all_placeholders_complete = {
     'onTouchMove': 'onTouchMove: (e) => console.log(e.touches[0].clientY),',
     'onTouchEnd': 'onTouchEnd: (e) => console.log(e.changedTouches[0].clientX),',
 
-    # ---------- Posicionamiento dentro de un Stack ----------
-    # `stackPosition` sólo actúa cuando el padre declara position: "stack".
-    'stackStart': 'start: 16, // parent Stack needs position: "stack"',
-    'stackEnd': 'end: 16, // parent Stack needs position: "stack"',
-    'stackCenterX': 'centerX: true, // parent Stack needs position: "stack"',
-    'stackCenterY': 'centerY: true, // parent Stack needs position: "stack"',
-    'stackCenter': 'center: true, // parent Stack needs position: "stack"',
-    'stackFullHeight': 'fullHeight: true, // parent Stack needs position: "stack"',
-    'stackFull': 'full: true, // parent Stack needs position: "stack"',
+    # ---------- Posicionamiento absoluto ----------
+    # El motor sólo aplica estos desplazamientos cuando el propio widget declara
+    # position: "stack"; dentro de un `Stack` el CSS ya flota a los hijos.
+    'stackStart': 'start: 16, // needs position: "stack" on this widget',
+    'stackEnd': 'end: 16, // needs position: "stack" on this widget',
+    'stackCenterX': 'centerX: true, // needs position: "stack" on this widget',
+    'stackCenterY': 'centerY: true, // needs position: "stack" on this widget',
+    'stackCenter': 'center: true, // needs position: "stack" on this widget',
+    'stackFullHeight': 'fullHeight: true, // needs position: "stack" on this widget',
+    'stackFull': 'full: true, // needs position: "stack" on this widget',
 
     # ---------- Despliegue ----------
     'basePath': 'basePath: "/flet-box-docs",',
@@ -1237,7 +1253,7 @@ attrs_all_placeholders_complete = {
     'applyIndeterminate': 'const track = Container({ height: 4 });\napplyIndeterminate(track, { duration: "1.5s", width: "50%" });',
     'applyPulse': 'const dot = Icon({ name: "circle" });\napplyPulse(dot, { scale: 1.05, duration: "0.3s" });',
     'injectKeyframes': 'injectKeyframes("float", "0% { transform: translateY(0); } 100% { transform: translateY(-8px); }");',
-    'stackPosition': '// The public helper only records the offsets on the dataset; the parent Stack reads them.\nconst badge = Text({ text: "3" });\nstackPosition(badge, { top: 8, right: 8 });',
+    'stackPosition': '// Ancla el widget sobre su ancestro posicionado: posición absoluta + offsets en rem.\nconst badge = Text({ text: "3" });\nstackPosition(badge, { top: 8, right: 8 });',
 
     # ---------- Animaciones ----------
     'stopAnimation': 'const box = Container({ width: 100, height: 100 });\nanimate(box, "opacity", 1, 0.2, 400);\nstopAnimation(box, "opacity");',

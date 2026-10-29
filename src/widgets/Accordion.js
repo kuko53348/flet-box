@@ -38,7 +38,7 @@ const ACCORDION_PROP_KEYS = [
  * @param {HTMLElement|HTMLElement[]} props.children - Content rendered inside the expanded panel.
  * @param {boolean} [props.expanded=false] - Whether the accordion starts in the expanded state.
  * @param {Function} [props.onPress] - Callback fired when the expanded state changes. Receives `(isExpanded: boolean)`.
- * @param {Function} [props.onToggle] - @deprecated Use `onPress` instead. Kept as alias for backward compatibility.
+ * @param {Function} [props.onToggle] - @deprecated Use `onPress` instead.
  * @param {'contained'|'outlined'|'ghost'} [props.variant='contained'] - Visual style variant.
  * @param {number} [props.borderRadius=8] - Corner radius in pixels.
  * @param {string} [props.bgColor=colors.primaryBg] - Background color of the container (used in 'contained' variant).
@@ -70,6 +70,7 @@ export const Accordion = (props) => {
     title,
     children,
     expanded = false,
+    /** @deprecated Use `onPress` instead — it receives the same boolean. */
     onToggle,
     onPress,
     variant = "contained", // 'contained', 'outlined', 'ghost'
@@ -323,7 +324,7 @@ export const Accordion = (props) => {
         setHeight("auto", true);
         contentWrapper.style.overflow = "visible";
         isAnimating = false;
-        const expandCb = onToggle || onPress;
+        const expandCb = onPress || onToggle;
         if (triggerCallback && expandCb) expandCb(true);
         updateUI();
       }, currentAnimationDuration);
@@ -359,7 +360,7 @@ export const Accordion = (props) => {
         contentWrapper.style.overflow = "";
         contentInner.style.display = "";
         isAnimating = false;
-        const collapseCb = onToggle || onPress;
+        const collapseCb = onPress || onToggle;
         if (triggerCallback && collapseCb) collapseCb(false);
         updateUI();
       }, currentAnimationDuration);

@@ -1,17 +1,31 @@
 # Themes
 
 ## Overview
-FletBox ships a built-in color system: `colors` is the palette of the current theme, `palettes` holds all named palettes, and the theme functions switch between light and dark, subscribe to changes, and follow the system preference. A `ThemeProvider` and the `useTheme()` hook wrap them for component-based apps.
+FletBox ships a built-in color system: `colors` is the palette of the current theme, `palettes` holds all named palettes, and the theme functions switch between light and dark, subscribe to changes, and follow the system preference. On top of that sit the accent presets — selectable hue families that paint `colors.primary`, its ink and its wash over whichever palette is active — and the theme functions carry them too. A `ThemeProvider` and the `useTheme()` hook wrap all of it for component-based apps.
 
 ## When to use
 - Style widgets with semantic tokens (`colors.surface`, `colors.primary`, `colors.error`) instead of hard-coded hex values.
 - Add a light/dark toggle that re-colors the whole app instantly.
 - Follow the OS dark/light setting automatically.
+- Let the reader pick the app's color — buttons, icons and plates and all — with [`ThemePicker`](../widget/ThemePicker.md) and `setAccent`.
 
 ## Import
 
 ```javascript
-import { colors, setTheme, registerPalette, toggleTheme, subscribeTheme, ThemeProvider } from "flet-box";
+import {
+  colors,
+  setTheme,
+  registerPalette,
+  toggleTheme,
+  subscribeTheme,
+  ThemeProvider,
+  registerAccent,
+  setAccent,
+  applyAccentPreference,
+  getAccent,
+  getAccentSurfaces,
+  listAccents,
+} from "flet-box";
 ```
 
 ## Functions
@@ -20,6 +34,13 @@ import { colors, setTheme, registerPalette, toggleTheme, subscribeTheme, ThemePr
 | --- | --- | --- | --- |
 | `setTheme` | `setTheme('light' \| 'dark')` | `Record<string, string>` | Switch the active palette. |
 | `registerPalette` | `registerPalette(themeName, palette)` | `Record<string, string>` | Merge brand tokens into a named palette and repaint the page. |
+| `registerAccent` | `registerAccent({ id, label?, light, dark })` | `Accent \| null` | Add or replace one selectable accent. Each end of the pair is a hex or a five-stop ramp; `null` means the argument was unusable. |
+| `setAccent` | `setAccent(id \| null, { surfaces? })` | `Record<string, string>` | Lay an accent over the live palette and store the choice. `surfaces: true` paints the page and its panels from the same ramp. `null`, or an id nothing registered, takes it back off. |
+| `applyAccentPreference` | `applyAccentPreference(id, { surfaces? })` | `string \| null` | Paint the app's own brand at boot, and only when the reader has never picked one. Never stores anything. |
+| `getAccent` | `getAccent()` | `string \| null` | The accent id on screen, or `null` while the palette's own `primary` shows. |
+| `getAccentSurfaces` | `getAccentSurfaces()` | `boolean` | Whether the live accent also paints the surfaces, or only the brand. |
+| `listAccents` | `listAccents()` | `Accent[]` | Every selectable family, in registration order — `{ id, label, light, dark }`. |
+| `listAccentRamps` | `listAccentRamps()` | `Array` | The same families with all five stops of each theme beside them, for a swatch that shows the whole ramp. |
 | `getTheme` | `getTheme()` | `string` | The active theme name. |
 | `toggleTheme` | `toggleTheme()` | `string` | Flip light/dark and return the new name. |
 | `getColor` | `getColor(name, opacity?)` | `string` | Resolve a token (optionally with alpha). |
@@ -27,7 +48,7 @@ import { colors, setTheme, registerPalette, toggleTheme, subscribeTheme, ThemePr
 | `applySystemTheme` | `applySystemTheme()` | `string` | Apply light/dark from the OS preference. |
 | `watchSystemTheme` | `watchSystemTheme()` | `() => void` | Follow the OS preference live; returns an unsubscribe function. |
 | `ThemeProvider` | `ThemeProvider({ children, theme? })` | `Widget` | Provide a theme (defaults to system) for a subtree. |
-| `useTheme` | `useTheme()` | object | `{ colors, setTheme, getTheme, toggleTheme, getColor, applySystemTheme }`. |
+| `useTheme` | `useTheme()` | object | `{ colors, setTheme, getTheme, toggleTheme, getColor, applySystemTheme, setAccent, getAccent, listAccents }`. |
 
 Plus the constants: `colors` (current palette) and `palettes` (all named palettes, keyed by name).
 
@@ -36,9 +57,10 @@ Plus the constants: `colors` (current palette) and `palettes` (all named palette
 Every token is available on `colors`:
 
 - **Brand:** `primary`, `secondary`, `info`, `success`, `warning`, `danger`, `error`.
+- **On a fill:** `onPrimary` — the ink the theme puts on a `primary` plate. Ask the theme for it; a literal `#ffffff` is a bug the moment the reader picks a pale accent.
 - **Surfaces:** `background`, `surface`, `card`, `overlay`.
 - **Text:** `text`, `textSecondary`, `textDisabled`, `divider`, `border`, `shadow`.
-- **Tints:** `gray50` … `gray900`, plus the soft backgrounds `errorBg`, `successBg`, `warningBg`, `infoBg`.
+- **Tints:** `gray50` … `gray900`, plus the soft backgrounds `primaryBg`, `errorBg`, `successBg`, `warningBg`, `infoBg`.
 - **Glass:** `glass` (the translucent surface) and `glassBorder` (its rim), meant to pair with `backdropFilter`. Light is white glass, dark is a slate pane with a light rim.
 
 The `dark` palette overrides the surface/text tokens; `gray*` and brand colors also shift to keep contrast. Read [the palette walkthrough](../guides/utilities.md) for usage patterns.
@@ -79,6 +101,118 @@ Run it once, at startup, before the first screen renders. The generated app does
 it at the bottom of `src/database/themes.js` — the same file that declares
 `lightColors` and `darkColors` — so a project that edits its brand colors is
 already correct without touching `src/app.js`.
+
+## Accent presets: `setAccent`
+
+`registerPalette` says what a theme is. An **accent** is what the reader picks
+inside it: one hue family painted over the palette's `primary`, its ink and its
+wash, so every button, icon and selected plate on the screen moves together.
+Twelve families ship (`listAccents()`), and each is a *pair* — the stop that hue
+wears on a light page and the stop it wears on a dark one — which is why a
+[`ThemePicker`](../widget/ThemePicker.md) swatch is split down the middle.
+Worn with `surfaces: true`, the same family paints the page and its panels too,
+and the picker is choosing a **theme** rather than a brand color; see
+[Worn as a theme](#worn-as-a-theme) below.
+
+```javascript
+import { ThemePicker, applyAccentPreference, listAccents } from "flet-box";
+
+// At boot: the app's own brand, and only if the reader has never chosen.
+applyAccentPreference("teal");
+
+// In a settings sheet: the reader's choice, which paints and persists.
+ThemePicker({
+  accents: listAccents().filter((a) => ["teal", "blue", "rose", "orange"].includes(a.id)),
+  size: 48,
+  onChange: (id) => console.log("accent:", id),
+});
+```
+
+What it does:
+
+- **It is a layer, not a second palette.** The one repaint funnel lays the
+  accent's `primary`, `onPrimary` and `primaryBg` over the theme's own tokens, so
+  a toggle, an OS flip or a `setTheme` from anywhere keeps the choice instead of
+  writing the brand back over it. The `--color-*` properties and the PWA status
+  bar move with it because they read the same tokens. Worn with `surfaces: true`
+  the same funnel lays five more tokens down — `background`, `surface`, `card`,
+  `border`, `divider` — and nothing else changes hands.
+- **`setAccent` is the reader's verb, `applyAccentPreference` is the app's.** The
+  first stores `"fletbox-accent"`, so the picker opens on the answer the reader
+  gave; the second paints without storing, so it is a default the reader can
+  overrule and never a choice written into their name. An unknown id changes
+  nothing, and `setAccent(null)` gives the palette its own brand back.
+- **A created app opens on `neutral`.** `flet-box create` writes
+  `applyAccentPreference("neutral")` at the bottom of `src/database/themes.js`,
+  beside the `registerPalette` calls that carry the same three values, so a new
+  project reads as paper and type rather than as somebody else's brand: the
+  accent is the page's own ink, near-black on a light page and near-white on a
+  dark one. The first thing a designer changes is that id — and the Preferences
+  screen already ships a `ThemePicker`, so a reader can change it without them.
+- **A family is measured before it ships.** Each pair clears the numbers a
+  hand-built palette has to as well: white or near-black words on the accent at
+  4.5:1, the accent as text on the page at 4.5:1 and as a glyph on a card at 3:1,
+  page ink, secondary ink and the accent itself on its wash at 4.5:1, and the
+  wash lifting off the background by 1.04 to 1.5. `#3b82f6` fails the first one —
+  white words measure 3.15:1 on it — which is why an accent is a stop on a ramp
+  and never the middle of one.
+- **A brand the list lacks is registered, not typed.**
+  `registerAccent` takes an `id`, a `label` and a `light`/`dark` pair: one hex
+  each, and the wash and `colors.onPrimary` are derived, or a five-stop ramp whose
+  stop 0 (light) and stop 1 (dark) are the ones painted. The call belongs in
+  `src/database/themes.js`, beside the palette it feeds.
+
+### Worn as a theme
+
+`setAccent(id, { surfaces: true })` is how an app lets the reader pick the color
+of the *page* and not only of its buttons. Five more tokens arrive off the same
+five stops the swatch paints, in the order a designer would build them by hand:
+
+| Token | Light, from the ramp | Dark, from the ramp |
+| --- | --- | --- |
+| `background` | `ramp[4]` — the palest stop | `ramp[3]` scaled to 10% |
+| `surface` | `ramp[3]` — the measured wash stop | `ramp[3]` scaled to 18% |
+| `card` | `#ffffff`, the way it lifts off `#fafafa` today | `ramp[3]` scaled to 28% |
+| `border`, `divider` | `ramp[3]` darkened 6% | `ramp[3]` scaled to 45% |
+
+Teal, measured: a light page `#f0fdfa` with `#ccfbf1` panels, white cards and
+`#c0ece3` hairlines; a dark page `#010c0b` with `#031514` panels, `#04211f`
+cards and `#073531` hairlines. `applyAccentPreference("teal", { surfaces: true })`
+boots an app in that theme for a reader who has never chosen.
+
+Three rules the derivation keeps, and every one of them is measured by
+`tests/regression.test.js` ("an accent worn as a theme keeps every ink on the
+surfaces it paints") for all twelve families in both themes:
+
+- **Only the surfaces move.** `text`, `textSecondary`, `textDisabled`, the brand
+  trio and every semantic signal — `success`, `danger`, their plates and alert
+  tints — answer the same values they had worn as a brand-only accent. The neutral
+  ink scale was measured against a near-white and a near-black page, and a tinted
+  stop of a saturated family sits within a few percent of both, so the text needs
+  re-measuring rather than re-deriving; and a tinted theme still has to be able to
+  say "this failed" in a hue that is not its own.
+- **Dark scales toward black, never toward white.** Multiplying a channel keeps the
+  hue exactly; mixing toward white washes it out, and `#042f2e` stops reading as
+  teal at all. The steps also have to be *visible*, and a WCAG ratio cannot see
+  them — near black, every pair compresses to about 1.0 — so the three dark depths
+  are separated in CIELAB `L*`: blue's land at 2.3, 4.5 and 8.6, which is the range
+  the shipped neutral dark palette already occupies (`#09090b` at 2.5, `#18181b` at
+  8.4).
+- **The plate keeps its own stop.** `primaryBg` still comes from the wash stop the
+  family was measured against, and on a light page that is now also the panel. A
+  selected row inside a panel is therefore the same color as its container, exactly
+  as it is in the neutral palette, where `#f4f4f5` sits on `#fafafa` at 1.05 — the
+  one place a tinted theme buys its tint by spending a layer.
+
+An accent registered as a bare pair of hexes has no lightness to walk, so it paints
+brand only: `{ surfaces: true }` is accepted and ignored, and the surfaces keep the
+palette's own values.
+
+The choice rides in one stored string — `"teal"` for a brand, `"teal+surfaces"`
+for a theme — which is why `getAccent()` and `getAccentSurfaces()` answer together.
+A bare id is what every app wrote before surfaces existed, so it still parses; and
+a picker needs both answers, because the family already on screen means two
+different things and moving between them is a repaint, not a no-op.
 
 ## Examples
 
@@ -131,6 +265,7 @@ runApp(ThemeProvider({ children: ThemedApp() }), "root");
 - [Device & environment](device.md) — previous chapter.
 - [Markdown, code & HTML](markdown.md) — next chapter.
 - [Colors and utilities guide](../guides/utilities.md) — palette walkthrough.
+- [ThemePicker](../widget/ThemePicker.md) — the swatch grid that calls `setAccent`.
 
 ---
 

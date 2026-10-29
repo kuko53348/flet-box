@@ -54,8 +54,13 @@ export const addChildren = (parent, children, options = {}) => {
 };
 
 /**
- * Removes all children that were previously appended via props (i.e. tracked in
- * `PROP_CHILDREN`).
+ * Removes the children that were previously appended via props (i.e. tracked in
+ * `PROP_CHILDREN`) and **returns them**, so a caller can put them back.
+ *
+ * The return value is the point: an update that swaps the content takes the old
+ * content out first, so if attaching the new content throws, the widget would
+ * be left empty — a hole where the content used to be. Keeping the nodes lets
+ * the caller restore them.
  *
  * Handles two cases:
  * 1. **Normal path** – the node is still a direct child of `parent`. The
@@ -69,14 +74,14 @@ export const addChildren = (parent, children, options = {}) => {
  *
  * @param {HTMLElement} parent - The parent widget whose prop-children should be
  *   removed.
- * @returns {HTMLElement} The parent widget (for chaining).
+ * @returns {Array<Node>} The nodes that were taken out.
  */
-export const removePropChildren = (parent) => {
-  const toRemove = Array.from(parent.childNodes).filter((child) =>
-    PROP_CHILDREN.has(child)
-  );
+export const takePropChildren = (parent) => {
+  const taken = [];
 
-  toRemove.forEach((child) => {
+  Array.from(parent.childNodes).forEach((child) => {
+    if (!PROP_CHILDREN.has(child)) return;
+
     if (child.parentNode === parent) {
       // Normal path: removeChild override also cleans up _children.
       parent.removeChild(child);
@@ -87,10 +92,12 @@ export const removePropChildren = (parent) => {
       if (child._isWidget) child.parent = null;
     }
     PROP_CHILDREN.delete(child);
+    taken.push(child);
   });
 
-  return parent;
+  return taken;
 };
+
 
 /**
  * Removes ALL children from a parent widget, regardless of whether they were
@@ -111,4 +118,4 @@ export const clearChildren = (parent) => {
   return parent;
 };
 
-export default { addChildren, removePropChildren, clearChildren };
+export default { addChildren, takePropChildren, clearChildren };

@@ -417,6 +417,35 @@ waiting, remembering (p.099).
 - Break a convention only when the measurement says the convention is wrong here,
   and write that measurement down.
 
+### The phone range is the test device — strict
+
+"Fine on my phone" is not a measurement. Every phone is `xs` in the breakpoint
+table, so nothing in the shell changes between 320 and 430; the layout has to.
+Compose at 360 and prove the screen at each width below, in portrait:
+
+| Width × height | Device | What that width judges |
+| --- | --- | --- |
+| 320 × 568 | iPhone SE 1 / small Android | **the floor** — nothing overflows or clips |
+| 360 × 640 | Android baseline | **compose here first**, the cramped common case |
+| 375 × 667 | iPhone SE 2/3 | narrow and tall |
+| 390 × 844 | iPhone 12/13/14 | the modern default |
+| 393 × 852 | iPhone 14 Pro / 15 / 16 | notch and home indicator |
+| 412 × 915 | Pixel 7 | large Android |
+| 430 × 932 | iPhone 14/15 Pro Max | **the ceiling** — no measure so wide it loses the eye |
+
+- At 320 nothing overflows or clips: `scrollWidth <= clientWidth` on the page
+  and on every bar, and no label ellipsized because its row ran out of room.
+- A heading whose text the app does not control — a lesson name, a chapter, a
+  user's title — is `24` on a phone and `32` only where the layout is wide
+  (`atLeast("md")`). At 360 a 55-character name at `32` is four lines, and the
+  tab strip under it leaves the first screen. The size steps down; the copy is
+  never cut to fit it.
+- Fixed chrome is inside the 320 budget, not outside it: an app bar title plus
+  its actions, a tab strip, a labeled bottom bar. If a bar needs more than 320,
+  shorten what it says — never let it scroll sideways.
+- Verify by resizing the viewport at each width and reading the layout that
+  results, not by scaling a 1440 composition down.
+
 ## 17 Composition starts as a sentence
 
 Before the first widget, write four lines: what this screen decides for the
@@ -588,7 +617,7 @@ Both are worth more read than copied. The parts that do not survive measurement:
 ```bash
 npm run check
 npm run ui
-npm run dev        # look at the screen, at 375px and at 1440px
+npm run dev        # look at the screen at 320, 430 and 1440px
 ```
 
 Fix the code, not the checker. Then make the rule reusable: if the fix was right
@@ -701,6 +730,28 @@ that made it findable.
   bloom over a light page is indistinguishable from a smudge:
   `CircularBar({ glow: true, glowColor: colors.primary })`, or a tinted `shadow`
   string on the CTA. One glowing element per screen.
+- A reader's choice does not raise the budget. `ThemePicker` lets them pick the
+  hue; the three placements stay the only places it is spent. The picker marks
+  the chosen square with the page's ink and a tick, never with the accent — a
+  swatch selected in its own color says nothing the square does not already say,
+  and rule 28 forbids spending the accent on the control that hands it out.
+- A hue may also be worn as a **theme**, which is a different thing from spending
+  it: `ThemePicker({ surfaces: true })` and `setAccent("teal", { surfaces: true })`
+  derive the page, the panels, the cards and the hairlines from the same ramp, so
+  the screen is tinted teal while the accent itself stays on its three placements.
+  Only those five surface tokens move — the ink scale, `primaryBg` and every
+  semantic signal keep the palette's values, which is what lets a tinted theme
+  still say "this failed" in red — and `getAccentSurfaces()` answers which of the
+  two the reader is wearing. Offer it when 27's paper archetype is the app's look;
+  offer brand-only when the page is meant to stay neutral.
+- An app that ships a brand color sets it at boot with
+  `applyAccentPreference("teal")`, never with `setAccent`: the first paints a
+  default without writing a preference down, so a reader who has already chosen
+  still opens on their own hue; the second answers for them and stores it, which
+  is the app overwriting a person on every load. A created app ships `neutral` —
+  no hue, the page's own ink — so the picker opens with that square ticked and
+  the reader leaves it, rather than choosing between twelve colors on a first
+  visit.
 
 ## 29 The number is the hero
 
@@ -741,6 +792,14 @@ Column({ gap: 4, children: [
 
 - Controls are pills: `borderRadius` = half the height. Cards are 16-24. Inner
   thumbnails and tiles are 12-16, one step below their card.
+- **A pill is a one-line shape.** `borderRadius: 999` reads as a control only
+  while its height is about one line of its label: a label that wraps turns the
+  fill into an egg and the capsule's rounded ends cut into the words. `Button`
+  holds its label on one line and ellipsizes what does not fit, so a CTA that
+  needs three lines is a copy bug wearing a pill. Keep the label a verb and its
+  object — "Seguir la misión 1" — and leave the lesson title to the heading
+  (rule 04). If the action genuinely needs a sentence, the control is a card or
+  a list tile, not a button (rule 32).
 - **The nesting rule**, as arithmetic: `outer = inner + padding`. A 16-radius
   tile inside 8 of padding needs a 24-radius card. Equal radii at both levels is
   the failure — the inner corner and the outer corner curve on the same radius,
@@ -807,6 +866,7 @@ Stack({ alignment: "bottom-left", height: 420, children: [
 | switch 2 views of one object | segmented pill with a sliding plate | `Tabs({ variant: "pills", tabs, activeIndex, activeTextColor, buttonColor })` |
 | choose 1 of N with a preview | selection **tile**, not a radio list | `ListTile({ selected, selectedBgColor })`, or a 2-up `Row` of `Card`s |
 | pick a color/size | dot row, selected gets a ring | `Avatar({ shape: "circle", size: 28 })` row, ring via `borderColor` + `borderWidth` |
+| pick the app's accent | two-tone square per hue family | `ThemePicker({ size: 48, showLabels: true })` — it repaints the screen and remembers the choice; hand-built swatches do neither |
 | count then buy | stepper merged into the CTA | one `Row` of `Button`s inside the add-to-cart bar, not two actions |
 | navigate the app | bottom bar, active = accent + label | `BottomNavigation({ items, currentIndex, selectedColor, unselectedColor, showLabels: true })` |
 | a badge on an icon | dot, never a word | `Badge({ value, size, offset, borderColor: colors.background })` |
@@ -878,7 +938,31 @@ ink      white or near-white, and its opacity tiers
 - **Ramp, not swatch.** A family is 5-7 stops (base → tint → accent → shadow).
   Build it as a ramp so a card, a tile and a plate can be three steps of one hue
   instead of three hues — which is the only way 27's surface discipline is
-  possible without breaking 25's one-accent law.
+  possible without breaking 25's one-accent law. The framework already does this
+  arithmetic for a reader who asks for a colored app: `setAccent(id,
+  { surfaces: true })` takes the five stops it ships and writes `background`,
+  `surface`, `card`, `border` and `divider` off them (palest → wash → white card →
+  wash darkened, light; the deep stop scaled toward black in four steps, dark), so
+  a tinted theme is a call, not a hand-mixed set of hexes.
+- **A preset beats a mid-tone.** An app that has no ramp of its own does not pick
+  a blue and hope: it takes one of the twelve families the framework ships
+  (`listAccents()`, `listAccentRamps()` to see the stops) and paints a **stop** of
+  that ramp, so `colors.primary` and `colors.primaryBg` are two steps of one
+  gradient and never a hue plus a guess. Each pair is bought with seven measured
+  numbers per theme: the accent carries its own label at 4.5:1, reads as text on
+  the page at 4.5:1 and as a glyph on a card at 3:1, its wash holds page ink,
+  secondary ink and the accent at 4.5:1, and the wash lifts off the background by
+  1.04-1.5. That is why `#3b82f6` is not a brand color — white words on it
+  measure 3.15:1 — and why a hue the list lacks is registered instead of
+  invented: `registerAccent` takes an `id`, a `label` and a `light`/`dark` pair —
+  one hex each, or a five-stop ramp, whose stop 0 (light) and stop 1 (dark) are
+  the ones painted and whose wash is a stop further along the same direction.
+  Run a ramp the other way and the plate lands *under* the accent instead of just
+  off the page. It belongs in `src/database/themes.js` beside the palette it
+  feeds (rule 03), and a registered pair answers to the same veto as a hand-built
+  one. What `flet-box create` boots is the `neutral` family — the accent is the
+  page's own ink, so an unfinished app reads as paper and type rather than as
+  somebody else's brand — and the first change a designer makes is that id.
 - **The light/dark pair rule**: for the same hue in both palettes, lift the
   lightness and drop the saturation going dark. That is why this framework's dark
   `dangerStrong` is `#fca5a5` where the light one is `#b91c1c` — the readable red

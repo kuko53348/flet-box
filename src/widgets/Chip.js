@@ -10,6 +10,7 @@ import { Row } from "./Row.js";
 import { Text } from "./Text.js";
 import { Icon } from "./Icon.js";
 import { colors } from "../utils/themes.js";
+import { readableInk } from "../utils/readableInk.js";
 import { PILL, TAP_MINIMUM } from "../tools/index.js";
 
 /**
@@ -40,6 +41,12 @@ export const Chip = (props) => {
     onDelete,
     variant = "filled",
     color = colors.primary,
+    // The chip's own plate. It has to be taken out of `props` here: left in, it
+    // travels through `...rest` onto the outer wrapper — and the wrapper is the
+    // 40-unit tap target with no radius, so a chip that named its background
+    // painted a rectangle of it behind the pill.
+    bgColor,
+    backgroundColor,
     textColor,
     borderColor,
     borderRadius = PILL,
@@ -67,19 +74,25 @@ export const Chip = (props) => {
         ? { paddingVertical: padding, paddingHorizontal: padding * 2 }
         : { padding };
 
-  // Derive background, text, and border colors from the variant
-  let bgColor, txtColor, brdColor;
+  // Derive background, text, and border colors from the variant. A filled chip
+  // takes the plate its caller named; an outlined one keeps the variant's
+  // contract and stays transparent, the same answer `Button` gives when a
+  // `bgColor` is handed to `variant: "outlined"`. Either way the name is consumed
+  // here, so it never reaches the wrapper and paints a square plate.
+  const plate = bgColor || backgroundColor;
+  let pillColor, txtColor, brdColor;
 
   if (variant === "outlined") {
-    bgColor = "transparent";
+    pillColor = "transparent";
     txtColor = textColor || color;
     brdColor = borderColor || color;
   } else {
-    bgColor = color;
-    // The label sits on the primary plate, so its ink is the theme's, not a
-    // literal white: in dark mode a primary chip is near-white and white words
-    // would vanish.
-    txtColor = textColor || colors.onPrimary;
+    pillColor = plate || color;
+    // The label sits on the plate, so its ink follows the plate. On the default
+    // primary that is the theme's ink — in dark mode a primary chip is near-white
+    // and white words would vanish — and once the caller names a pale plate,
+    // picking the readable ink is what stops the label disappearing again.
+    txtColor = textColor || (plate ? readableInk(plate, colors.text) : colors.onPrimary);
     brdColor = "transparent";
   }
 
@@ -131,7 +144,7 @@ export const Chip = (props) => {
   const chipContent = Row({
     alignItems: "center",
     gap: gap,
-    backgroundColor: bgColor,
+    backgroundColor: pillColor,
     border: variant === "outlined" ? `1px solid ${brdColor}` : "none",
     borderRadius: borderRadius,
     ...chipPadding,
@@ -175,7 +188,8 @@ export const Chip = (props) => {
       if (variant === "filled") {
         chip.style.opacity = "1";
       } else if (chipContent) {
-        chipContent.style.backgroundColor = "transparent";
+        // Leaving restores the chip's own plate, which is not always transparent.
+        chipContent.style.backgroundColor = pillColor;
       }
     });
   }

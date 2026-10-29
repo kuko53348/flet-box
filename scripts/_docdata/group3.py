@@ -5,26 +5,26 @@ WIDGET_DOCS = {
         "related": ["Switch", "Checkbox", "Dropdown"],
         "tips": [
             "Give Radios that answer the same question the same name; selecting one clears the others in that group.",
-            "Set selected for the initial choice and let onSelect write the change back into your own state.",
+            "Set selected for the initial choice and let onPress write the change back into your own state.",
         ],
         "accessibility": [
             "The `label` prop renders the words beside the ring inside the same pressable row; never rely on color alone to convey the selection.",
         ],
         "behavior": [
-            "Clicking an already-selected Radio is a no-op, so onSelect only fires when the selection actually changes.",
+            "Clicking an already-selected Radio is a no-op, so onPress only fires when the selection actually changes.",
             "The returned element exposes select(), unselect() and isSelected() for programmatic control.",
         ],
         "basic": '''const plan = Radio({
   label: "Monthly",
   name: "billing",
-  onSelect: (value) => console.log(value),
+  onPress: (value) => console.log(value),
 });''',
         "normal": '''const monthly = Radio({
   label: "Monthly plan",
   name: "billing",
   selected: true,
   activeColor: "#2563eb",
-  onSelect: (value) => console.log("billing:", value),
+  onPress: (value) => console.log("billing:", value),
 });''',
         "full": '''const option = Radio({
   label: "Express shipping",
@@ -33,7 +33,7 @@ WIDGET_DOCS = {
   disabled: false,
   activeColor: "#16a34a",
   size: 24,
-  onSelect: (value) => {
+  onPress: (value) => {
     console.log("shipping changed:", value);
   },
 });''',
@@ -44,13 +44,13 @@ WIDGET_DOCS = {
         "related": ["Checkbox", "Radio", "ListTile"],
         "tips": [
             "Reserve Switch for immediate settings and use Checkbox when the choice is part of a form you submit.",
-            "onToggle receives the new boolean, so you can store it directly in your state.",
+            "onPress receives the new boolean, so you can store it directly in your state.",
         ],
         "accessibility": [
             "Pair the switch with a nearby text label and expose the boolean state; do not encode on/off with color only.",
         ],
         "behavior": [
-            "Switch works uncontrolled when value is omitted: clicking toggles the internal state and fires onToggle.",
+            "Switch works uncontrolled when value is omitted: clicking toggles the internal state and fires onPress.",
             "The returned element exposes getValue() and updateValue(v) to read or set the state without a click.",
         ],
         "basic": '''const darkMode = Switch({
@@ -60,7 +60,7 @@ WIDGET_DOCS = {
   value: true,
   label: "Notifications",
   activeColor: "#16a34a",
-  onToggle: (value) => console.log("notifications:", value),
+  onPress: (value) => console.log("notifications:", value),
 });''',
         "full": '''const wifi = Switch({
   value: false,
@@ -68,7 +68,7 @@ WIDGET_DOCS = {
   size: "large",
   activeColor: "#2563eb",
   disabled: false,
-  onToggle: (value) => {
+  onPress: (value) => {
     console.log("wifi toggled:", value);
   },
 });''',
@@ -79,14 +79,14 @@ WIDGET_DOCS = {
         "related": ["Switch", "Radio", "ListTile"],
         "tips": [
             "Use Checkbox inside forms where several options may be true together; use Switch for one immediate on/off setting.",
-            "onCheck fires with the new boolean, so write it straight into your state.",
+            "onPress fires with the new boolean, so write it straight into your state.",
             "A filled checkbox needs no second color: `activeColor` is the plate and the tick reads itself on it.",
         ],
         "accessibility": [
             "The check box needs an adjacent visible label; assistive tech cannot infer meaning from the tick glyph alone.",
         ],
         "behavior": [
-            "Uncontrolled when checked is omitted; the widget tracks its own state and reports changes through onCheck.",
+            "Uncontrolled when checked is omitted; the widget tracks its own state and reports changes through onPress.",
             "The returned element exposes setChecked(value) and getChecked() for programmatic control.",
             "`size` is the edge of the drawn box; the press target around it stays 40 units and does not shrink with it.",
             "The box carries a step of the radius scale (4 by default, 8 from `size: 28`), and a `borderRadius` rounds the box rather than the invisible target around it.",
@@ -99,7 +99,7 @@ WIDGET_DOCS = {
   checked: true,
   label: "Remember me",
   activeColor: "#2563eb",
-  onCheck: (checked) => console.log("remember:", checked),
+  onPress: (checked) => console.log("remember:", checked),
 });''',
         "full": '''const updates = Checkbox({
   checked: true,
@@ -108,9 +108,75 @@ WIDGET_DOCS = {
   activeColor: "#7c3aed",
   variant: "filled",
   disabled: false,
-  onCheck: (checked) => {
+  onPress: (checked) => {
     console.log("updates:", checked);
   },
+});''',
+    },
+    "ThemePicker": {
+        "summary": "A row of two-tone squares, one per accent family, that picks the color "
+                   "the screen paints its buttons, icons and plates with.",
+        "when": "Use it wherever the reader is allowed to choose the app's color — a settings "
+                "screen or a preferences sheet. It picks the accent, not the theme: light and "
+                "dark stay the reader's own decision.",
+        "related": ["Radio", "Switch", "BottomSheet"],
+        "tips": [
+            "The tap is not decoration: it calls `setAccent(id)`, which repaints every widget "
+            "already on screen and stores the choice, so the next visit opens the same color.",
+            "An app sets its own brand at boot with `applyAccentPreference(id)`, never with "
+            "`setAccent`: the first leaves the picker blank on a reader's first visit, the "
+            "second answers for them before they have chosen.",
+            "Twelve squares is a color survey; four is a decision. Cut the list to what the "
+            "brand allows with `accents: listAccents().filter((a) => [...].includes(a.id))`.",
+            "Each half of a square is the same hue in one theme: the upper-left is what it "
+            "wears on a light page, the lower-right what it wears on a dark one. Only one of "
+            "the two is on screen at a time, and showing both is what makes the choice safe.",
+            "`surfaces: true` makes the same tap a theme instead of a brand color: the page, "
+            "the panels, the cards and the hairlines are read off the family's ramp, from its "
+            "palest stop down. The words never change color with it — the ink scale is the "
+            "palette's own — so a tinted theme cannot make itself unreadable.",
+        ],
+        "accessibility": [
+            "The row is a `radiogroup` named by `label` and every square is a `radio` that "
+            "carries its family's name and `aria-checked`, so the answer is read and not only "
+            "seen. Tab reaches the squares and Enter or Space picks one.",
+            "The selected state is the page's own ink plus a tick badge, never color alone; an "
+            "empty square rims in the same 3:1 gray a `Checkbox` uses for an unchecked box.",
+        ],
+        "behavior": [
+            "`onChange(id)` fires after the screen is repainted, and re-tapping the square "
+            "already chosen fires nothing.",
+            "The picker subscribes to the theme, so a toggle anywhere else on the screen moves "
+            "the tick here without a prop change; the subscription is released on unmount.",
+            "`update({ accents, showLabels, surfaces, label, disabled })` rebuilds the grid. "
+            "Any other key goes to the factory and styles the row itself.",
+            "`size` is the edge of the square and defaults to the 40-unit tap minimum; the tick "
+            "and its badge scale with it.",
+            "Every shipped family is measured, not eyeballed: the accent carries white or dark "
+            "words at 4.5:1, reads as text on the page and as a glyph on a card, and its wash "
+            "sits just off the background. `tests/regression.test.js` re-measures all of it in "
+            "both themes.",
+        ],
+        "basic": '''const accents = ThemePicker({});''',
+        "normal": '''const accentRow = ThemePicker({
+  size: 48,
+  showLabels: true,
+  onChange: (id) => console.log("accent:", id),
+});''',
+        "full": '''const preferences = BottomSheet({
+  content: Column({
+    gap: 16,
+    children: [
+      Text({ text: "Accent color", size: 18, fontWeight: 600 }),
+      ThemePicker({
+        accents: listAccents().filter((a) => ["teal", "blue", "rose", "orange"].includes(a.id)),
+        size: 44,
+        showLabels: true,
+        label: "Choose the color of the app",
+        onChange: (id) => console.log("picked:", id),
+      }),
+    ],
+  }),
 });''',
     },
     "Dropdown": {
@@ -118,7 +184,7 @@ WIDGET_DOCS = {
         "when": "Use Dropdown when the option list is long enough that radios would crowd the page.",
         "related": ["Radio", "Checkbox", "Input"],
         "tips": [
-            "Pass objects with value/label when the value sent to onChange must differ from the text shown, such as an id versus a name.",
+            "Pass objects with value/label when the value sent to onPress must differ from the text shown, such as an id versus a name.",
             "Set clearable: true to give users an explicit way back to no selection.",
             "Bind a useState value to `value` to move the selection from code, such as auto-picking a default after a lookup; pass `''` to clear it back to the placeholder.",
         ],
@@ -128,7 +194,7 @@ WIDGET_DOCS = {
         "behavior": [
             "The option menu is portaled to document.body by default and repositions on scroll/resize; set portal: false to keep it inline.",
             "The returned element exposes value, open(), close() and update(), and removes its listeners on unmount.",
-            "A value applied from outside — a bound state change or `dropdown.value = x` — re-fires onChange when it differs from the current selection, and is ignored when it is the same, so a state → value → onChange → state loop settles after one pass.",
+            "A value applied from outside — a bound state change or `dropdown.value = x` — re-fires onPress when it differs from the current selection, and is ignored when it is the same, so a state → value → onPress → state loop settles after one pass.",
         ],
         "basic": '''const city = Dropdown({
   options: ["Berlin", "Paris", "Tokyo"],
@@ -138,7 +204,7 @@ WIDGET_DOCS = {
   label: "Role",
   options: ["Admin", "Editor", "Viewer"],
   value: "Editor",
-  onChange: (value) => console.log("role:", value),
+  onPress: (value) => console.log("role:", value),
 });''',
         "full": '''const country = Dropdown({
   label: "Country",
@@ -155,8 +221,8 @@ WIDGET_DOCS = {
   borderRadius: 10,
   bgColor: "#ffffff",
   textColor: "#0f172a",
-  onChange: (value, label) => {
-    console.log("selected:", value, label);
+  onPress: (value) => {
+    console.log("selected:", value);
   },
 });''',
     },
@@ -165,7 +231,7 @@ WIDGET_DOCS = {
         "when": "Use Slider when a value benefits from direct manipulation, such as volume, price or opacity.",
         "related": ["Rating", "ProgressBar", "Input"],
         "tips": [
-            "onChanged fires continuously while dragging; use onChangeEnd for the value to commit, such as a filter request.",
+            "onPress fires continuously while dragging; use onChangeEnd for the value to commit, such as a filter request.",
             "Set step to snap to meaningful increments instead of every integer.",
             "On a vertical slider, width is the rail's length and height its thickness.",
         ],
@@ -173,7 +239,7 @@ WIDGET_DOCS = {
             "A slider needs a visible label or value text; showValue displays the current value so it is not conveyed by thumb position alone.",
         ],
         "behavior": [
-            "Dragging the track or thumb updates the value and fires onChanged; releasing fires onChangeEnd once.",
+            "Dragging the track or thumb updates the value and fires onPress; releasing fires onChangeEnd once.",
             "The returned element exposes value, min, max, step, setValue() and getValue(), and disconnects its ResizeObserver on unmount.",
             "During a drag the fill follows the pointer with no easing; the 0.1s ease belongs to a value that changes by itself, from a key press or setValue().",
         ],
@@ -185,7 +251,7 @@ WIDGET_DOCS = {
   min: 0,
   max: 100,
   step: 5,
-  onChanged: (value) => console.log("volume:", value),
+  onPress: (value) => console.log("volume:", value),
 });''',
         "full": '''const price = Slider({
   value: 250,
@@ -203,7 +269,7 @@ WIDGET_DOCS = {
     { value: 500, label: "$500" },
     { value: 1000, label: "$1000" },
   ],
-  onChanged: (value) => console.log("price:", value),
+  onPress: (value) => console.log("price:", value),
   onChangeEnd: (value) => console.log("final:", value),
 });''',
     },

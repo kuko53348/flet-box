@@ -15,6 +15,8 @@ import path from "path";
 import { createProject } from "./commands/create.js";
 import { checkApi } from "./commands/checkApi.js";
 import { checkUi } from "./commands/checkUi.js";
+import { verify, watchVerify, formatReport } from "./commands/verify.js";
+import { metrics } from "./commands/metrics.js";
 import { auditFix } from "./commands/auditFix.js";
 import { toPng } from "./commands/toPng.js";
 import { images } from "./commands/images.js";
@@ -91,8 +93,16 @@ ${cmd("check-ui", "Clean-UI gate: tokens, 8-based scale, tap targets, WCAG contr
 ${cmd("   └─ --tokens", "print the measured contrast of every color token")}
 ${cmd("   └─ --strict", "fail on contrast warnings too")}
 ${cmd("   └─ alias", "ui | checkUi")}
+${cmd("verify", "Every gate at once: one report, one exit code")}
+${cmd("   └─ --only <gate>", "run one gate: api | ui | structure | surface")}
+${cmd("   └─ --no-tests", "the static gates only; the project's suites run alone")}
+${cmd("   └─ --fix", "the mechanical repair first, then the gates")}
+${cmd("   └─ --json", "the report as data")}
+${cmd("   └─ alias", "check-all")}
+${cmd("metrics", "The north metric: code that passed with no correction")}
+${cmd("   └─ --log <file>", "read another project's log")}
 ${cmd("audit-fix", "Rewrite broken imports, missing imports and misspelled props")}
-${cmd("   └─ --only imports|props", "run one repair instead of both")}
+${cmd("   └─ --only imports|props|migrations", "run one repair instead of the others")}
 ${cmd("   └─ alias", "fix-imports | fix-path-imports | auditFix")}
 ${cmd("to-png [dir]", "Convert JPEG/BMP/GIF images to PNG, no dependencies")}
 ${cmd("   └─ --replace", "remove each source after its PNG was written and read back")}
@@ -124,6 +134,7 @@ ${cmd("--version | --help", "Version and this help")}
 ${section("⚙️", "OPTIONS")}
 ${opt("--port <n>, -p <n>", "Port (default 8000) — asked if not provided")}
 ${opt("--hot", "Hot reload with run")}
+${opt("--verify", "Run the gates on every edit while the server runs")}
 ${opt("--quiet", "No request logging")}
 ${opt("--dry-run | --list", "kill-server: just list, do not kill")}
 
@@ -167,6 +178,7 @@ const parseFlags = () => {
     logRequests: true,
     hot: false,
     dryRun: false,
+    verify: false,
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -187,6 +199,8 @@ const parseFlags = () => {
       flags.logRequests = false;
     } else if (arg === "--hot" || arg === "--hot-reload") {
       flags.hot = true;
+    } else if (arg === "--verify") {
+      flags.verify = true;
     } else if (arg === "--dry-run" || arg === "--list" || arg === "--check") {
       flags.dryRun = true;
     }
@@ -328,6 +342,19 @@ async function main() {
         break;
       }
 
+      case "verify":
+      case "check-all": {
+        const { exitCode } = await verify(args.slice(1));
+        if (exitCode) process.exit(exitCode);
+        break;
+      }
+
+      case "metrics": {
+        const { exitCode } = await metrics(args.slice(1));
+        if (exitCode) process.exit(exitCode);
+        break;
+      }
+
       case "audit-fix":
       case "auditFix":
       case "fix-imports":
@@ -410,6 +437,19 @@ async function main() {
         // which are devDependencies: a consumer installing `flet-box` from npm
         // has neither, so loading them at module scope would break every CLI
         // command for them. Import them when a server is actually started.
+        if (flags.verify) {
+          console.log(
+            c("dim", "🔎 verify is watching src/ — every edit is checked against the gates"),
+          );
+          watchVerify({
+            root: process.cwd(),
+            onReport: (report) => {
+              console.log("");
+              for (const line of formatReport(report)) console.log(line);
+              console.log("");
+            },
+          });
+        }
         await (await import("./commands/runServer.js")).runDevServer({
           spaMode: false,
           hotReload: flags.hot,

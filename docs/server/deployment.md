@@ -99,7 +99,7 @@ Queues also require Redis to coordinate jobs between workers.
 
 ## Production checklist
 
-- Use Node.js 18 or newer.
+- Use Node.js 22 or newer — the floor `flet-box-server` declares in `engines` (the FletBox CLI itself needs 20.9).
 - Run `npm ci --omit=dev` in deployment.
 - Set a strong `JWT_SECRET`.
 - Remove hardcoded admin credentials.

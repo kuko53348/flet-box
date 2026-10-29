@@ -378,6 +378,17 @@ console.log(
       .map(([k, v]) => `${k}=${v}`)
       .join(" "),
 );
-// DOC_NOT_DECLARED is a generator/authoring mistake the docs pipeline can heal by
-// re-running the generator, so it warns; the runtime-facing classes block the test.
-process.exit(counts.DEAD + counts.BOOL_STYLE ? 1 : 0);
+// DOC_NOT_DECLARED is a page promising a prop the widget never had, and
+// DECLARED_NOT_DOC is the reverse: the type offers it and the book never mentions
+// it. Both are drift the generator heals — but a count nobody acts on is how the
+// book fell ~50 shared props behind the engine in the first place, so the failure
+// names the command that fixes it. DEAD and BOOL_STYLE are runtime defects and
+// stay blocking on their own.
+const blocked = counts.DEAD + counts.BOOL_STYLE + counts.DOC_NOT_DECLARED + counts.DECLARED_NOT_DOC;
+if (!asJson && (counts.DOC_NOT_DECLARED || counts.DECLARED_NOT_DOC)) {
+  console.log(
+    "\n→ the prop tables are stale: run `python3 scripts/generate_widget_docs.py --tables-only`\n" +
+      "  (a page whose prose no longer matches its _docdata entry: `--page <Widget>`)",
+  );
+}
+process.exit(blocked ? 1 : 0);

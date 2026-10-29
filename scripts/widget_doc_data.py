@@ -23,7 +23,7 @@ BOOK = [
     ),
     (
         "Chapter 2 · Interaction basics",
-        ["Button", "Input", "Checkbox", "Radio", "Switch", "Slider", "Dropdown", "Rating"],
+        ["Button", "Input", "Checkbox", "Radio", "Switch", "Slider", "Dropdown", "Rating", "ThemePicker"],
     ),
     (
         "Chapter 3 · Layout, cards and lists",
@@ -125,6 +125,38 @@ DESC = {
     "spacing": "Space between grid items.",
     "columns": "Number of grid columns.",
     "itemHeight": "Height of each grid cell.",
+    # The box model and the background, routed on every widget
+    "boxSizing": "Which box `width` and `height` measure: `border-box` keeps the size you asked for and pushes padding inward.",
+    "border": "CSS `border` shorthand for all four edges: width, style and color in one string.",
+    "borderTop": "The top edge of the border alone, for a widget whose rim differs per side.",
+    "borderBottom": "The bottom edge of the border alone, for a widget whose rim differs per side.",
+    "borderLeft": "The left edge of the border alone, for a widget whose rim differs per side.",
+    "borderRight": "The right edge of the border alone, for a widget whose rim differs per side.",
+    "cursor": "CSS `cursor` value: what the pointer becomes over the widget (`pointer`, `grab`, `not-allowed`).",
+    "flexDirection": "Main axis of a flex container: `row` places children side by side, `column` stacks them.",
+    "flexGrow": "Share of the leftover space this child takes, relative to its siblings.",
+    "flexShrink": "How readily the child gives space back when the row overflows; `0` keeps its size.",
+    "paddingTop": "Space inside the widget, on the top edge only.",
+    "paddingRight": "Space inside the widget, on the right edge only.",
+    "paddingBottom": "Space inside the widget, on the bottom edge only.",
+    "paddingLeft": "Space inside the widget, on the left edge only.",
+    "pt": "Alias of `paddingTop`.",
+    "pr": "Alias of `paddingRight`.",
+    "pb": "Alias of `paddingBottom`.",
+    "pl": "Alias of `paddingLeft`.",
+    "marginTop": "Space outside the widget, on the top edge only.",
+    "marginRight": "Space outside the widget, on the right edge only.",
+    "marginBottom": "Space outside the widget, on the bottom edge only.",
+    "marginLeft": "Space outside the widget, on the left edge only.",
+    "mt": "Alias of `marginTop`.",
+    "mr": "Alias of `marginRight`.",
+    "mb": "Alias of `marginBottom`.",
+    "ml": "Alias of `marginLeft`.",
+    "bgImage": "Image painted behind the widget's content (CSS `background-image`), placed with `bgSize` and `bgPosition`.",
+    "bgSize": "How the background image fills its box (`cover`, `contain`, or a length).",
+    "bgPosition": "Where the background image is anchored (`center`, `top`, `50% 20%`).",
+    "bgRepeat": "Whether the background image tiles; `no-repeat` for a single cover.",
+    "onclick": "Lowercase alias of `onClick`, kept because the shipped templates and the HTML habit write it.",
     # ListView / GridView
     "data": "Array of items rendered by the list.",
     "renderItem": "Builds one child from an item: `(item, index) => Widget`.",
@@ -388,6 +420,10 @@ DESC = {
     "onMarkerClick": "Fired with the clicked marker.",
     "onMoveEnd": "Fired with `{ center, zoom, bounds }` once the view stops changing.",
     "onUserUpdate": "Fired with `{ lat, lng, accuracy }` on each position the watcher reports.",
+    # Theme accents (ThemePicker). `accents` names nothing else in the library,
+    # so it belongs in DESC; the picker's `label`, `showLabels` and `onChange`
+    # are shared names and live in WIDGET_DESC.
+    "accents": "The families on offer, as `listAccents()` returns them: `{ id, label, light, dark }`. Defaults to every registered family — an app that ships one brand color filters the list rather than registering fewer.",
 }
 
 # Pattern fallbacks were removed; use DESC and the automatic humanizer instead.
@@ -398,6 +434,49 @@ DESCRIPTION_FALLBACKS = []
 # shared name needs the page that disagrees to say so here — otherwise writing
 # one widget's row silently rewrites every other page that uses the name.
 WIDGET_DESC = {
+    # The controls that report a value answer with `onPress` — the framework-wide
+    # name — and keep their old spelling as a deprecated alias. `DESC`'s `onPress`
+    # promises the widget itself, which is what every other widget receives, so
+    # these six pages have to say what their callback actually carries.
+    "Radio": {
+        "onPress": "Called with the new selected state (`true` or `false`).",
+        "onSelect": "Deprecated alias of `onPress`.",
+        # `name` means three different things on three pages: a glyph on `Icon`,
+        # a person on `Avatar`, the submitted value on `Radio`.
+        "name": "Value this option submits when it is the selected one.",
+    },
+    "Icon": {
+        "name": "Name of the Material icon to draw. Alias: `icon`.",
+    },
+    "Avatar": {
+        "name": "Name of the person, used for the initials when there is no `src`.",
+    },
+    "Checkbox": {
+        "onPress": "Called with the new checked state (`true` or `false`).",
+        "onCheck": "Deprecated alias of `onPress`.",
+        # DESC's `variant` is the generic "style preset" blurb. On a checkbox it
+        # decides how the *checked* state is painted, and the plate color is not
+        # a new knob — it is the `activeColor` the control already carries.
+        "variant": "How the checked state reads: `outlined` keeps the box hollow with the tick in `activeColor`, `filled` turns the box into an `activeColor` plate and takes the tick to whichever ink reads on it.",
+    },
+    "Switch": {
+        "onPress": "Called with the new toggled state (`true` or `false`).",
+        "onToggle": "Deprecated alias of `onPress`.",
+    },
+    "Accordion": {
+        "onPress": "Called with the new expanded state (`true` or `false`).",
+        "onToggle": "Deprecated alias of `onPress`.",
+    },
+    "Dropdown": {
+        "onPress": "Called with the chosen value.",
+        "onChange": "Deprecated alias of `onPress`.",
+    },
+    "Slider": {
+        "onPress": "Called with the new value while the thumb moves.",
+        "onChanged": "Deprecated alias of `onPress`.",
+    },
+    # `Scaffold` is not here: its page is hand-written (chapter 8), so the
+    # generator never reads a blurb for it.
     "Maps": {
         "center": "View centre as `[lat, lng]`, `{lat, lng}` or `{latitude, longitude}`.",
         "markers": "Pins to draw: bare positions or `{position, label, color, id, rotation, clickable, data}` records.",
@@ -426,10 +505,17 @@ WIDGET_DESC = {
     "GridView": {
         "children": "The cells themselves, laid out `columns` per row. The same contract as `data` + `renderItem` read the other way round: pass built widgets here, or the items plus a builder. `data` wins when both are given.",
     },
-    # DESC's `variant` is the generic "style preset" blurb. On a checkbox it decides
-    # how the *checked* state is painted, and the plate color is not a new knob — it
-    # is the `activeColor` the control already carries.
-    "Checkbox": {
-        "variant": "How the checked state reads: `outlined` keeps the box hollow with the tick in `activeColor`, `filled` turns the box into an `activeColor` plate and takes the tick to whichever ink reads on it.",
+    # DESC's `label` is a caption painted near a control and `showLabels` is a
+    # chart switch. On the picker nothing is painted by `label` — it names the
+    # radiogroup for a screen reader — and `showLabels` prints the family names
+    # under the swatches, so both generic blurbs would describe a different widget.
+    "ThemePicker": {
+        "label": "Accessible name of the color group. Nothing is painted from it; a screen reader announces the row as one question with this wording.",
+        "showLabels": "Print each family's name under its swatch. Off by default, because the two-tone square is the answer and twelve captions is a color survey.",
+        "onChange": "Called with the chosen family id after the accent has already been applied to the screen, so the app only has to remember the choice.",
+        "size": "Edge of one swatch, in framework units. Defaults to 40 — the tap minimum — and the tick badge scales with it.",
+        # `surfaces` is not a paint switch on the picker: it changes what the tap
+        # calls, so the row has to say which tokens move with it.
+        "surfaces": "Offer each family as a theme rather than only as a brand: the tap also paints the page, the panels, the cards and the hairlines from that family's own ramp. Off by default, because a tinted page is a bigger promise than a button color.",
     },
 }

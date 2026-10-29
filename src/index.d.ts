@@ -99,7 +99,30 @@ declare module 'flet-box' {
     // The engine routes `display` untouched; `Stack` sets it internally and an
     // app that overrides it is doing something the type must not forbid.
     display?: string;
+    // The rest of the layout and border styles the engine already routes on
+    // every widget (`translateProps.js`). Declaring them only on `Container`
+    // made `Column({ flexDirection: "row", flexGrow: 1 })` — the recipe the
+    // layout skill teaches — a false error in a JS editor.
+    boxSizing?: 'border-box' | 'content-box';
+    flexDirection?: 'row' | 'column' | 'row-reverse' | 'column-reverse';
+    flexGrow?: number;
+    flexShrink?: number;
+    gap?: number | string;
+    fontSize?: number;
+    borderColor?: Color;
+    borderWidth?: number;
     padding?: Padding;
+    // The engine routes each padding side, and the `pt/pr/pb/pl` aliases, as rem
+    // lengths on every widget, exactly like the margins below: `AppBar` reads
+    // the top one to keep its title clear of a notch.
+    paddingTop?: Size;
+    paddingRight?: Size;
+    paddingBottom?: Size;
+    paddingLeft?: Size;
+    pt?: Size;
+    pr?: Size;
+    pb?: Size;
+    pl?: Size;
     margin?: Margin;
     // The engine routes each margin side, and the `mt/mr/mb/ml` aliases, as rem
     // lengths on every widget: `Text({ marginTop: 4 })` is legal at runtime.
@@ -125,14 +148,28 @@ declare module 'flet-box' {
     filter?: string;
     backdropFilter?: string;
     maskImage?: string;
+    // The engine routes these four on every widget (`bgImage` → `backgroundImage`
+    // in translateProps.js). They are the only way to bias a crop: an `Image`
+    // with `fit: 'cover'` centres on its own, while a full-bleed background can
+    // be pinned to `center top` so a face stays out from under the copy.
+    bgImage?: string;
+    bgSize?: string;
+    bgPosition?: string;
+    bgRepeat?: string;
     opacity?: number;
     visible?: boolean;
     disabled?: boolean;
-    onPress?: (widget: Widget) => void;
-    onClick?: (widget: Widget) => void;
+    // The handler receives a DOM Event on every widget that forwards the click
+    // through the engine (Container, Row, Column, Text, Button, Icon, Image,
+    // Avatar, Card, ListTile). A widget that answers with a value declares its
+    // own: Switch/Checkbox/Radio pass the new boolean, Accordion the expanded
+    // state. `(widget: Widget)` named an argument no call site ever received,
+    // so a correct `onPress: (checked: boolean) => ...` was underlined.
+    onPress?: (event?: Event) => void;
+    onClick?: (event?: Event) => void;
     // The lowercase alias the engine also routes (`{ prop: "onclick" }` in
     // translateProps); the generated AppBar reaches for it.
-    onclick?: (widget: Widget) => void;
+    onclick?: (event?: Event) => void;
     // A child's own cross-axis answer to its parent's `alignItems`. It belongs on
     // `CommonProps` rather than on the layouts because the widget that needs it is
     // the *child* — a chip centred inside a row whose other children stretch.
@@ -143,6 +180,13 @@ declare module 'flet-box' {
     className?: string;
     ref?: (widget: Widget) => void;
     disableTransform?: boolean;
+    // Every `data-*` and `aria-*` prop is forwarded to the DOM untouched —
+    // `PASSTHROUGH_PREFIXES` in translateProps.js is the engine's own list — so
+    // the type has to allow what the engine honours. An icon-only control has no
+    // other way to say what it is, and a declaration that forbids `aria-label`
+    // teaches an editor to flag the one line that makes a widget accessible.
+    [attribute: `aria-${string}`]: string | number | undefined;
+    [attribute: `data-${string}`]: string | number | boolean | undefined;
   }
 
   // =========================================================================
@@ -314,7 +358,7 @@ declare module 'flet-box' {
     alignItems?: ContainerProps['alignItems'];
     wrap?: boolean | 'wrap' | 'nowrap' | 'wrap-reverse';
     children?: Widget[];
-    onPress?: (widget: Widget) => void;
+    onPress?: (event?: Event) => void;
   }
   export function Row(props: RowProps): Widget;
 
@@ -323,7 +367,7 @@ declare module 'flet-box' {
     justifyContent?: ContainerProps['justifyContent'];
     alignItems?: ContainerProps['alignItems'];
     children?: Widget[];
-    onPress?: (widget: Widget) => void;
+    onPress?: (event?: Event) => void;
   }
   export function Column(props: ColumnProps): Widget;
 
@@ -403,7 +447,7 @@ declare module 'flet-box' {
     letterSpacing?: number | string;
     type?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'p';
     styles?: Array<'bold' | 'italic' | 'underline' | 'strikethrough' | 'mark' | 'small' | 'code'>;
-    onPress?: (widget: Widget) => void;
+    onPress?: (event?: Event) => void;
   }
   export function Text(props: TextProps): Widget;
 
@@ -431,10 +475,13 @@ declare module 'flet-box' {
   export function Button(props: ButtonProps): Widget;
 
   export interface IconProps extends CommonProps {
-    name: string;
+    // `icon` is the runtime alias the widget reads first (`icon || name`), so
+    // both spellings describe a glyph and neither is the odd one out.
+    name?: string;
+    icon?: string;
     size?: number;
     color?: Color;
-    onPress?: (widget: Widget) => void;
+    onPress?: (event?: Event) => void;
   }
   export function Icon(props: IconProps): Widget;
 
@@ -449,7 +496,7 @@ declare module 'flet-box' {
     downloadFileName?: string;
     onLoad?: (widget: Widget) => void;
     onError?: (widget: Widget) => void;
-    onPress?: (widget: Widget) => void;
+    onPress?: (event?: Event) => void;
   }
   export function Image(props: ImageProps): Widget;
 
@@ -463,7 +510,7 @@ declare module 'flet-box' {
     shape?: 'circle' | 'rounded' | 'square';
     online?: boolean;
     badgeColor?: Color;
-    onPress?: (widget: Widget) => void;
+    onPress?: (event?: Event) => void;
   }
   export function Avatar(props: AvatarProps): Widget & {
     updateContent(newProps: Partial<AvatarProps>): void;
@@ -479,7 +526,7 @@ declare module 'flet-box' {
     borderWidth?: number;
     borderStyle?: 'solid' | 'dashed' | 'dotted';
     borderColor?: Color;
-    onPress?: (widget: Widget) => void;
+    onPress?: (event?: Event) => void;
   }
   export function Card(props: CardProps): Widget;
 
@@ -495,7 +542,9 @@ declare module 'flet-box' {
     /** Text props merged into the description line. */
     descriptionProps?: Partial<TextProps>;
     rightItem?: Widget;
-    onPress?: (widget: Widget) => void;
+    /** Space between the left item, the text column and the right item. */
+    gap?: number;
+    onPress?: (event?: Event) => void;
     selected?: boolean;
     disabled?: boolean;
     divider?: boolean;
@@ -653,6 +702,8 @@ declare module 'flet-box' {
     height?: number;
     thumbSize?: number;
     color?: Color;
+    /** Colour of the knob alone, when it must differ from the filled track. */
+    thumbColor?: Color;
     trackColor?: Color;
     orientation?: 'horizontal' | 'vertical';
     inverted?: boolean;
@@ -681,16 +732,23 @@ declare module 'flet-box' {
     update(props: Partial<SliderProps>): void;
   };
 
-  export interface AccordionProps extends CommonProps {
+  export interface AccordionProps extends Omit<CommonProps, 'onPress'> {
     title: string | Widget;
     children: Widget;
     expanded?: boolean;
+    /**
+     * @deprecated Use `onPress` instead — it receives the same boolean.
+     */
     onToggle?: (expanded: boolean) => void;
+    /** Fired with the new expanded state when a panel opens or closes. */
+    onPress?: (expanded: boolean) => void;
     variant?: 'contained' | 'outlined' | 'ghost';
     borderRadius?: number;
     bgColor?: Color;
     expandedColor?: Color;
     titleColor?: Color;
+    /** Colour of the rule between the header and the panel. */
+    dividerColor?: Color;
     titleSize?: number;
     titleWeight?: string;
     titlePadding?: string;
@@ -765,9 +823,14 @@ declare module 'flet-box' {
     blur(): void;
   };
 
-  export interface RadioProps extends CommonProps {
+  export interface RadioProps extends Omit<CommonProps, 'onPress'> {
     selected?: boolean;
+    /**
+     * @deprecated Use `onPress` instead — it receives the same boolean.
+     */
     onSelect?: (selected: boolean) => void;
+    /** Fired with the new state when the radio is picked. */
+    onPress?: (selected: boolean) => void;
     disabled?: boolean;
     size?: number;
     activeColor?: Color;
@@ -780,9 +843,14 @@ declare module 'flet-box' {
     isSelected(): boolean;
   };
 
-  export interface SwitchProps extends CommonProps {
+  export interface SwitchProps extends Omit<CommonProps, 'onPress'> {
     value?: boolean;
+    /**
+     * @deprecated Use `onPress` instead — it receives the same boolean.
+     */
     onToggle?: (value: boolean) => void;
+    /** Fired with the new state when the switch is flipped. */
+    onPress?: (value: boolean) => void;
     disabled?: boolean;
     size?: 'small' | 'medium' | 'large';
     activeColor?: Color;
@@ -793,9 +861,14 @@ declare module 'flet-box' {
     getValue(): boolean;
   };
 
-  export interface CheckboxProps extends CommonProps {
+  export interface CheckboxProps extends Omit<CommonProps, 'onPress'> {
     checked?: boolean;
+    /**
+     * @deprecated Use `onPress` instead — it receives the same boolean.
+     */
     onCheck?: (checked: boolean) => void;
+    /** Fired with the new state when the box is ticked or cleared. */
+    onPress?: (checked: boolean) => void;
     disabled?: boolean;
     size?: number;
     activeColor?: Color;
@@ -813,7 +886,7 @@ declare module 'flet-box' {
   };
 
   export type DropdownOption = { label: string; value: any; icon?: string };
-  export interface DropdownProps extends CommonProps {
+  export interface DropdownProps extends Omit<CommonProps, 'onPress'> {
     options: (string | DropdownOption)[];
     value?: any;
     placeholder?: string;
@@ -830,7 +903,16 @@ declare module 'flet-box' {
     clearable?: boolean;
     width?: number | string;
     portal?: boolean;
-    onChange?: (value: any, label: string) => void;
+    /**
+     * @deprecated Use `onPress` instead — it receives the same value.
+     */
+    onChange?: (value: any) => void;
+    /**
+     * Fired when the selection changes, with the chosen value; `null` when the
+     * selection is cleared. Only the value is sent — read the label from the
+     * option that carries it.
+     */
+    onPress?: (value: any) => void;
   }
   export function Dropdown(props: DropdownProps): Widget & {
     value: any;
@@ -984,8 +1066,20 @@ declare module 'flet-box' {
     leftNavBarWidth?: number;
     rightNavBar?: Slot;
     rightNavBarWidth?: number;
+    /**
+     * @deprecated Use `leftNavBar` (or `rightNavBar`) instead.
+     */
     navSideBar?: Slot;
+    /**
+     * @deprecated Use `leftNavBarWidth` (or `rightNavBarWidth`) instead. The
+     * legacy name was accepted and then ignored — the panel kept the default
+     * width, so a width written here never reached the screen.
+     */
     navSideBarWidth?: number;
+    /**
+     * @deprecated The legacy sidebar needed this to say which side it was on.
+     * `leftNavBar` and `rightNavBar` say it with their own name.
+     */
     navSideBarPosition?: 'left' | 'right';
     routes?: Record<string, any>;
     basePath?: string;
@@ -1060,6 +1154,8 @@ declare module 'flet-box' {
     icon?: string;
     label: string;
     route?: string;
+    /** Space between the icon, the label and the trailing icon. */
+    gap?: number;
     onPress?: () => void;
     onSelect?: () => void;
     trailingIcon?: string;
@@ -1650,16 +1746,20 @@ declare module 'flet-box' {
   }
   export function Pagination(props: PaginationProps): Widget;
 
-  export interface TreeViewProps extends CommonProps {
-    nodes: Array<{
-      id: string;
-      label: string;
-      icon?: string;
-      iconColor?: Color;
-      children?: any[];
-      badge?: string | number;
-    }>;
-    onSelect?: (node: any) => void;
+  export interface TreeViewNode {
+    id: string;
+    label: string;
+    icon?: string;
+    iconColor?: Color;
+    children?: TreeViewNode[];
+    badge?: string | number;
+  }
+  export interface TreeViewProps extends Omit<CommonProps, 'onPress'> {
+    nodes: TreeViewNode[];
+    /** Fired with the node the reader selected. */
+    onSelect?: (node: TreeViewNode) => void;
+    /** The framework's spelling of `onSelect`, fired with the same node; `onSelect` wins when both are given. */
+    onPress?: (node: TreeViewNode) => void;
     onToggle?: (nodeId: string, expanded: boolean) => void;
     expandedNodes?: string[];
     indent?: number;
@@ -1727,6 +1827,39 @@ declare module 'flet-box' {
     back(): void;
     getActiveStep(): number;
   };
+
+  /**
+   * One selectable accent: the two stops a single hue wears, one per theme.
+   * `light` is the deep end (it carries white words on a light page) and `dark`
+   * the lifted end (it carries a dark page's own ink). A swatch paints both
+   * because an accent is the pair, never one of them.
+   */
+  export interface Accent {
+    id: string;
+    label: string;
+    light: string;
+    dark: string;
+  }
+
+  export interface ThemePickerProps extends CommonProps {
+    /** Families to offer. Defaults to `listAccents()`, i.e. everything registered. */
+    accents?: Accent[];
+    /** Edge of one swatch, in framework units. Defaults to 40 — the tap minimum. */
+    size?: number;
+    /** Print each family's name under its swatch. Defaults to false. */
+    showLabels?: boolean;
+    /**
+     * Offer the families as themes: picking one also paints the page, the panels,
+     * the cards and the hairlines. Defaults to false — brand only.
+     */
+    surfaces?: boolean;
+    /** Accessible name of the group. Defaults to `"Accent color"`. */
+    label?: string;
+    disabled?: boolean;
+    /** Called with the id after the accent has been applied to the screen. */
+    onChange?: (id: string) => void;
+  }
+  export function ThemePicker(props?: ThemePickerProps): Widget;
 
   export interface SkeletonProps extends CommonProps {
     variant?: 'text' | 'circular' | 'avatar' | 'image' | 'card' | 'listTile' | 'button';
@@ -2129,6 +2262,49 @@ declare module 'flet-box' {
     themeName: string,
     palette: Record<string, string>
   ): Record<string, string>;
+  /**
+   * Adds or replaces one selectable accent. Each end of the pair may be a single
+   * hex or a five-stop ramp, in which case the accent and its wash are read off
+   * the stops the shipped families use. Repaints only when that id is on screen.
+   */
+  export function registerAccent(accent: {
+    id: string;
+    label?: string;
+    light: string | string[];
+    dark: string | string[];
+  }): Accent | null;
+  /**
+   * Lays an accent over the live palette and persists the choice. `null` (or an
+   * unknown id) takes it back off, and the screen returns to the palette's own
+   * `primary`.
+   *
+   * `{ surfaces: true }` wears it as a theme instead of only as a brand: the page,
+   * the panels, the cards and the hairlines are derived from the same ramp. The
+   * plate (`primaryBg`) keeps coming from the accent's measured wash stop either
+   * way, and the ink scale never moves.
+   */
+  export function setAccent(
+    id: string | null,
+    options?: { surfaces?: boolean },
+  ): Record<string, string>;
+  /** Applies an accent only when the reader has never picked one. Never persists. */
+  export function applyAccentPreference(
+    id: string,
+    options?: { surfaces?: boolean },
+  ): string | null;
+  /** The accent on screen, or `null` when the palette's own `primary` is showing. */
+  export function getAccent(): string | null;
+  /** Whether the live accent also paints the surfaces. */
+  export function getAccentSurfaces(): boolean;
+  /** Every selectable accent, in registration order. */
+  export function listAccents(): Accent[];
+  /** The same list with each family's five stops beside it, for a swatch that shows the ramp. */
+  export function listAccentRamps(): Array<{
+    id: string;
+    label: string;
+    light: string[];
+    dark: string[];
+  }>;
   export function getTheme(): string;
   export function toggleTheme(): string;
   export function getColor(colorName: string, opacity?: number): string;
@@ -2143,6 +2319,9 @@ declare module 'flet-box' {
     toggleTheme: typeof toggleTheme;
     getColor: typeof getColor;
     applySystemTheme: typeof applySystemTheme;
+    setAccent: typeof setAccent;
+    getAccent: typeof getAccent;
+    listAccents: typeof listAccents;
   };
 
   export const clipboard: {
@@ -2462,7 +2641,7 @@ declare module 'flet-box' {
   }): void;
   export function injectKeyframes(name: string, keyframes: string): void;
 
-  export function border(width?: number | string, style?: string, color?: string): string;
+  export function border(width?: number | string, style?: string, color: string): string;
   export function margin(value: number | string | { all?: number; horizontal?: number; vertical?: number; top?: number; right?: number; bottom?: number; left?: number }): string;
   export function padding(value: number | string | { all?: number; horizontal?: number; vertical?: number; top?: number; right?: number; bottom?: number; left?: number }): string;
   export function gradient(type: 'linear' | 'circle' | 'conic', colors: string[], angle?: number): string;
@@ -2490,7 +2669,7 @@ declare module 'flet-box' {
 
   export const color: (value: string | ColorInstance) => ColorInstance;
   export function rgba(r: number, g: number, b: number, a?: number): string;
-  export function stackPosition(widget: Widget, props: { top?: any; right?: any; bottom?: any; left?: any }): Widget;
+  export function stackPosition(widget: Widget, props?: StackPositionProps): Widget;
   export function flex(grow: number | { grow?: number; shrink?: number; basis?: string }, shrink?: number, basis?: string): string;
   export function grid(options: { columns?: number | string; rows?: number | string; gap?: number | string | { row?: number; column?: number } }): string;
   export function transition(options: { property?: string; duration?: number; timing?: string; delay?: number } | Array<{ property?: string; duration?: number; timing?: string; delay?: number }>): string;

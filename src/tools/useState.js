@@ -1,5 +1,5 @@
 // src/tools/useState.js
-import { saveRam, getRam, subscribeRam } from "../services/RamStore.js";
+import { saveRam, getRam, subscribeRam, hasRam } from "../services/RamStore.js";
 import {
   createReactiveValue,
   isStructuralRead,
@@ -57,6 +57,10 @@ const ensureRamDispatcher = () => {
   ramDispatcherReady = true;
 
   subscribeRam((changedKey, newValue, oldValue) => {
+    // A save that stores the value the key already had is not a change. Patching
+    // every bound widget and re-running a structural render for it is how a
+    // redundant `saveRam(key, same)` became an endless rebuild loop.
+    if (changedKey !== null && newValue === oldValue) return;
     const callbacks = subscribers.get(changedKey);
     // A key nobody ever passed to `useState` has no listeners: ignore it.
     if (!callbacks) return;
@@ -157,9 +161,12 @@ export const registerWidget = (key, widget, propName) => {
  * onCount((newVal) => console.log('Counter changed to', newVal));
  */
 export const useState = (key, initialState, widget = null, propName = null) => {
-  // Initialize the state in RamStore if it does not exist yet
-  const existing = getRam(key);
-  if (existing === undefined || existing === null) {
+  // Initialize the state in RamStore if it does not exist yet. `hasRam` is the
+  // test, not `getRam`: that reader answers `null` both for a missing key and
+  // for a key whose value IS null, so a `null` state was re-seeded on every
+  // construction — and when the component had read it structurally, the save
+  // re-rendered the app, which re-seeded it again, forever.
+  if (!hasRam(key)) {
     saveRam(
       key,
       typeof initialState === "function" ? initialState() : initialState,

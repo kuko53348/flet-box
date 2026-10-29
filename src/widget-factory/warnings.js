@@ -13,7 +13,6 @@ let propNames = [];
 // the cost of a known prop. Because `update()` re-applies every original prop, one
 // unknown prop slowed that widget for its whole lifetime.
 const warnedProps = new Set();
-const warnedDeprecated = new Set();
 
 export function setPropNames(names) {
   propNames = names;
@@ -240,30 +239,6 @@ export function warnUnknownProp(propName, context = {}) {
   console.groupEnd();
 }
 
-export function warnDeprecatedProp(propName, replacement = null, context = {}) {
-  if (!IS_DEV) return;
-  // Same reasoning as `warnUnknownProp`: one report per prop/replacement pair.
-  const deprecatedKey = `${propName}\u0000${replacement || ""}`;
-  if (warnedDeprecated.has(deprecatedKey)) return;
-  warnedDeprecated.add(deprecatedKey);
-
-  const location = getCallLocation();
-
-  printHeader("DEPRECATED PROP");
-  printProp(propName, "is deprecated");
-  if (replacement) {
-    console.log(
-      `  %c🔄 Use:   %c"${replacement}"%c  instead`,
-      "color: #94a3b8; font-size: 13px;",
-      "color: #34d399; font-weight: 700; font-size: 16px;",
-      "color: #94a3b8; font-size: 13px;",
-    );
-  }
-  printLocation(location);
-  printWidget(context.widgetName);
-  console.groupEnd();
-}
-
 export function warnInvalidPropType(propName, expected, actual, context = {}) {
   if (!IS_DEV) return;
 
@@ -292,7 +267,6 @@ export function clearSuggestionCache() {
 
 export default {
   warnUnknownProp,
-  warnDeprecatedProp,
   warnInvalidPropType,
   clearSuggestionCache,
   setPropNames,

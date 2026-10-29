@@ -212,6 +212,8 @@ Declare those files in `fletbox.config.json` and they become part of every relea
 
 Globs are relative to the project root and support `**`, `*` and `?`. At build time `flet-box createBundle` copies each match into `www/` at the same path, hashes it, and lists it in the manifest's `assets` array — which is also what your CI publishes to GitHub Pages.
 
+A project created by `flet-box create` already declares its own pictures. The scaffold creates `assets/` and puts `assets/logo.png` there, so that folder is where an app keeps its images; the generated `fletbox.config.json` lists `assets/**/*.png`, `.jpg`, `.jpeg`, `.svg` and `.webp`. Without that entry the bundle copied `src/assets` (icons and fonts) and nothing else: the built app served every screen with a broken picture while `npm run dev` — which serves the project root — looked perfect. Other formats, or a file kept outside `assets/`, still need their own glob; a source document parked in `assets/` (the PDF a catalogue was written from) is deliberately not matched.
+
 The app then reads them through the loader instead of `fetch`:
 
 ```js

@@ -7,9 +7,16 @@ import { makeReactive } from "./reactivity.js";
 import { processProps } from "./processProps.js";
 import { assignProps } from "./assignProps.js";
 import { stackPosition } from "./stackPosition.js";
-import { addChildren, removePropChildren } from "./addChildren.js";
+import { addChildren, takePropChildren } from "./addChildren.js";
 import { reactiveKeyOf } from "./reactiveValue.js";
 import { registerWidget } from "../tools/useState.js";
+import {
+  FAILURE_ATTR,
+  clearFailure,
+  paintFailure,
+  renderFailure,
+  reportFailure,
+} from "../utils/errorBoundary.js";
 
 /**
  * Auto-binds reactive props to their state key.
@@ -117,22 +124,29 @@ export function WidgetFactory(tag, customProps = {}) {
   // ============================================================
   // 4. APPLY INITIAL PROPS
   // ============================================================
-  const initialProps = processProps(finalProps, finalTag, widgetName);
-  assignProps(widget, initialProps);
-  bindReactiveProps(widget, finalProps);
-  stackPosition(widget, finalProps);
+  // A throw inside a widget must not take the screen with it. The widget
+  // paints a placeholder in its own place — the rest of the tree keeps
+  // working — and the error is reported with this widget's name.
+  try {
+    const initialProps = processProps(finalProps, finalTag, widgetName);
+    assignProps(widget, initialProps);
+    bindReactiveProps(widget, finalProps);
+    stackPosition(widget, finalProps);
 
-  if (finalProps.child !== undefined) {
-    addChildren(widget, finalProps.child);
-  }
-  if (finalProps.children !== undefined) {
-    addChildren(widget, finalProps.children);
-  }
+    if (finalProps.child !== undefined) {
+      addChildren(widget, finalProps.child);
+    }
+    if (finalProps.children !== undefined) {
+      addChildren(widget, finalProps.children);
+    }
 
-  applyEffects(widget);
+    applyEffects(widget);
 
-  if (finalProps.ref && typeof finalProps.ref === "function") {
-    finalProps.ref(widget);
+    if (finalProps.ref && typeof finalProps.ref === "function") {
+      finalProps.ref(widget);
+    }
+  } catch (error) {
+    renderFailure(widget, error, { widgetName, phase: "render" });
   }
 
   // ============================================================
@@ -160,6 +174,12 @@ export function WidgetFactory(tag, customProps = {}) {
 
     updateDepth++;
     try {
+      // A previous failure painted a placeholder. This update may be the retry
+      // that fixes it, so the placeholder goes before the real content comes
+      // back.
+      const hadFailure = Boolean(widget._failureBox);
+      clearFailure(widget);
+
       // Normalize: never allow child AND children simultaneously
       const normalized = { ...newProps };
       // Reserved: `widgetName` labels the widget for Inspector and must never
@@ -190,15 +210,37 @@ export function WidgetFactory(tag, customProps = {}) {
       stackPosition(widget, merged);
 
       if (hasChild || hasChildren) {
-        removePropChildren(widget);
-        if (hasChild) addChildren(widget, newProps.child);
-        if (hasChildren) addChildren(widget, newProps.children);
+        // The old content comes out first, but it is kept: if attaching the new
+        // content throws, the widget goes back to what it had instead of being
+        // left empty.
+        const previous = takePropChildren(widget);
+        try {
+          if (hasChild) addChildren(widget, newProps.child);
+          if (hasChildren) addChildren(widget, newProps.children);
+        } catch (error) {
+          addChildren(widget, previous);
+          throw error;
+        }
+      } else if (hadFailure) {
+        // The build failed before the children were attached, so this update is
+        // the retry: they go in now.
+        if (merged.child !== undefined) addChildren(widget, merged.child);
+        if (merged.children !== undefined) addChildren(widget, merged.children);
       }
 
       applyEffects(widget);
 
       if (newProps.ref && typeof newProps.ref === "function") {
         newProps.ref(widget);
+      }
+    } catch (error) {
+      // The widget keeps the content it had: a failed refresh is stale, not
+      // empty, and the screen must not blank over it.
+      const failure = reportFailure(error, { widgetName, phase: "update" });
+      widget.setAttribute(FAILURE_ATTR, "update");
+      // A widget with nothing in it is a hole; one that says it failed is not.
+      if (!widget.firstChild) {
+        paintFailure(widget, failure, { widgetName, phase: "update" });
       }
     } finally {
       updateDepth--;

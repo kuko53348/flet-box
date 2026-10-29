@@ -46,7 +46,7 @@ const sheet = BottomSheet({
 | `dragHandleWidth` | `number` | Width of the drag handle. |
 | `dragHandleHeight` | `number` | Height of the drag handle. |
 | `animationDuration` | `number` | Duration for the animation, in milliseconds. |
-| `zIndex` | `number` | Index used for the z. |
+| `zIndex` | `number` | Stacking order: a widget with a higher value paints above lower ones. |
 | `overlayZIndex` | `number` | Index used for the overlay z. |
 | `onOpen` | `() => void` | Fired when the overlay opens. |
 | `onClose` | `() => void` | Fired when the overlay closes. |

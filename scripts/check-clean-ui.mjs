@@ -22,6 +22,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { checkUi } from "../bin/commands/checkUi.js";
+import { formatReport, runGates } from "../bin/commands/verify.js";
 
 const scratch = fs.mkdtempSync(path.join(os.tmpdir(), "fletbox-clean-ui-"));
 const target = path.join(scratch, "src", "screens");
@@ -588,6 +589,90 @@ await check("both themes carry the same token names", async () => {
     assert.ok(name in palettes.light, `the light theme has no ${name} for the gate to suggest`);
     assert.ok(name in colors, `the boot palette has no ${name} either`);
   }
+});
+
+// 6 — an accepted finding is a decision, and only the framework gets to make it.
+//
+// The framework runs this gate over its own `src/`, and two of its findings are a
+// rule written for a screen applied to a module that is not one;
+// `scripts/framework-ui-baseline.json` records them, each with its reason, and
+// `check-framework-ui.mjs` has always honoured it. `flet-box verify` did not, so
+// every run printed the same two entries under "what to review" — and a list that
+// never changes is a list an agent learns to skip, which is exactly the finding
+// that matters. Both directions are proven here: the framework checkout
+// suppresses what it wrote down (even a code that is an error elsewhere, which is
+// what the written reason is for), and an app holding the same finding is still
+// told about it, because an app has no baseline to appeal to.
+const VERIFY_SOURCE = `import { Container, ListView, Text } from "flet-box";
+const screen = () =>
+  Container({
+    padding: 13,
+    children: [Text({ text: "Inbox" }), ListView({ children: [Text({ text: "one" })] })],
+  });
+`;
+
+/**
+ * A project holding one off-scale padding and one list with no state.
+ *
+ * Both carry the baseline file, because the question is not whether the file
+ * exists but who the project is. `asFramework` gives it the shape
+ * `isFrameworkProject` recognises — a manifest whose `bin` points at a file that
+ * exists — which is the only thing that may turn a finding into a decision.
+ *
+ * @param {string} name
+ * @param {boolean} asFramework
+ * @returns {string} the project root
+ */
+const verifyProject = (name, asFramework) => {
+  const dir = path.join(scratch, name);
+  fs.mkdirSync(path.join(dir, "src", "screens"), { recursive: true });
+  fs.writeFileSync(path.join(dir, "src", "screens", "S.js"), VERIFY_SOURCE, "utf8");
+  fs.mkdirSync(path.join(dir, "scripts"), { recursive: true });
+  fs.writeFileSync(
+    path.join(dir, "scripts", "framework-ui-baseline.json"),
+    JSON.stringify({
+      "src/screens/S.js:OFF_SCALE_SPACING": "the fixture made this decision",
+      "src/screens/S.js:LIST_WITHOUT_STATE": "the fixture made this decision",
+    }),
+    "utf8",
+  );
+  if (!asFramework) return dir;
+  fs.mkdirSync(path.join(dir, "bin"), { recursive: true });
+  fs.writeFileSync(path.join(dir, "bin", "cli.js"), "", "utf8");
+  fs.writeFileSync(
+    path.join(dir, "package.json"),
+    JSON.stringify({ name: "flet-box", version: "1.1.2", bin: { "flet-box": "bin/cli.js" } }),
+    "utf8",
+  );
+  return dir;
+};
+
+await check("verify stops re-reporting a finding the framework accepted", async () => {
+  const report = await runGates(verifyProject("as-framework", true), ["ui"]);
+  const ui = report.steps[0];
+  assert.deepEqual(
+    ui.findings.map((item) => item.code),
+    [],
+    "verify re-reported a finding its own baseline has decided",
+  );
+  assert.equal(ui.accepted.length, 2, "the accepted findings were not counted");
+  assert.ok(
+    ui.accepted.every((item) => item.why),
+    "an accepted finding lost the reason that accepted it",
+  );
+  assert.equal(ui.exitCode, 0, "an accepted error code still failed the run");
+  const text = formatReport(report).join("\n").replace(/\u001b\[[0-9;]*m/g, "");
+  assert.match(text, /2 accepted/, "the report did not say how many findings were accepted");
+});
+
+await check("verify still reports the same finding inside an app", async () => {
+  const report = await runGates(verifyProject("as-app", false), ["ui"]);
+  const ui = report.steps[0];
+  const codes = ui.findings.map((item) => item.code);
+  assert.ok(codes.includes("OFF_SCALE_SPACING"), "an app lost the off-scale spacing finding");
+  assert.ok(codes.includes("LIST_WITHOUT_STATE"), "an app lost the list-without-state finding");
+  assert.equal(ui.accepted.length, 0, "an app's findings were accepted against the framework's baseline");
+  assert.equal(ui.exitCode, 1, "an app's off-scale spacing did not fail the run");
 });
 
 console.log(

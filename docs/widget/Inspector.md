@@ -56,14 +56,14 @@ const debug = Inspector({
       Button({ text: "Save" }),
     ],
   }),
-  indent: 24,
+  indent: 2,
 });
 ```
 
 ## Tips
 
 - Pass the widget instance you want to examine to widget; the tree follows its current children.
-- Increase indent to make deep nesting easier to scan.
+- Increase indent shifts the whole printout right; it is a depth count, not a pixel gap.
 - Remove Inspector from production screens since it is a diagnostic tool.
 
 ## Accessibility

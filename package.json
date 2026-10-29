@@ -16,11 +16,15 @@
     "flet-box": "bin/cli.js"
   },
   "scripts": {
+    "predev": "node bin/cli.js check-api --emit-api --root . && node bin/cli.js unpack --all --md --root .",
     "dev": "node bin/cli.js run --hot",
+    "verify": "node scripts/verify.mjs",
+    "metrics": "node bin/cli.js metrics",
     "build": "node bin/cli.js createBundle",
     "release": "node bin/cli.js release",
-    "test": "node scripts/check-widgets.mjs && node scripts/check-widget-scale.mjs && node scripts/check-shared-helpers.mjs && node scripts/check-a11y.mjs && node scripts/check-prop-registry.mjs && node scripts/check-docs-props.mjs && node scripts/check-api-surface.mjs && node scripts/check-api-propscan.mjs && node scripts/check-time-helpers.mjs && node scripts/check-router-base.mjs && node scripts/check-clean-ui.mjs && node scripts/check-framework-ui.mjs && node scripts/check-skills.mjs && node scripts/check-app-types.mjs && node scripts/check-ota-assets.mjs && node scripts/check-pwa-shell.mjs && node scripts/check-cli-install.mjs && python3 tools/snippets-creator-flet-box/build_snippets.py --check && node scripts/check-snippets.mjs",
-    "test:browser": "node scripts/run-browser-tests.mjs"
+    "test": "node scripts/check-widgets.mjs && node scripts/check-widget-scale.mjs && node scripts/check-shared-helpers.mjs && node scripts/check-a11y.mjs && node scripts/check-error-boundary.mjs && node scripts/check-prop-registry.mjs && node scripts/check-docs-props.mjs && python3 scripts/generate_widget_docs.py --check && node scripts/check-api-contract.mjs && node scripts/check-api-surface.mjs && node scripts/check-bundle-size.mjs && node scripts/check-api-propscan.mjs && node scripts/check-time-helpers.mjs && node scripts/check-router-base.mjs && node scripts/check-clean-ui.mjs && node scripts/check-framework-ui.mjs && node scripts/check-structure.mjs && node scripts/check-ui-rules.mjs && node scripts/check-syntax.mjs && node scripts/check-metrics.mjs && node scripts/check-skills.mjs && node scripts/check-app-types.mjs && node scripts/check-codegen-contract.mjs && node scripts/check-migrations.mjs && node scripts/check-ota-assets.mjs && node scripts/check-pwa-shell.mjs && node scripts/check-image-convert.mjs && node scripts/check-images-cli.mjs && node scripts/check-cli-install.mjs && python3 tools/snippets-creator-flet-box/build_snippets.py --check && node scripts/check-snippets.mjs",
+    "test:browser": "node scripts/run-browser-tests.mjs",
+    "test:visual": "node scripts/check-visual.mjs"
   },
   "keywords": [
     "fletbox",
@@ -55,6 +59,8 @@
     "src/",
     "docs/",
     "skills/",
+    "AGENTS_FOR_CODE_GEN.md",
+    "CONTRIBUTING.md",
     "README.md",
     "LICENSE"
   ],

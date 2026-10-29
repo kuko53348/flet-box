@@ -6,7 +6,11 @@
 import { WidgetFactory } from "../widget-factory/index.js";
 import { colors } from "../utils/themes.js";
 import { composeUpdate } from "../utils/composeUpdate.js";
-import { generateHighlightedHtml } from "../utils/syntaxHighlight.js";
+import {
+  generateHighlightedHtml,
+  highlightColors,
+  syntaxPaletteFor,
+} from "../utils/syntaxHighlight.js";
 import { escapeHtml } from "../helpers/html.js";
 import { toREM } from "../utils/units.js";
 
@@ -79,12 +83,23 @@ const sanitizeMarkdown = (html) => {
 // has a single import boundary and the parsers are never pulled into unrelated
 // dependency graphs.
 
-/** One dark–inspired palette shared by every language highlighter. */
-const SH = {
-  keyword: "#c678dd",
+/**
+ * The two ink maps the per-language highlighters paint with, one per code-plate
+ * lightness. `muted`, `ink` and `hairline` are the fence header's chrome (the
+ * language label, the copy button and its border), which sits on a band that
+ * shades the plate by 18 % black — a stricter background than the plate itself.
+ *
+ * Every value is the ratio it ships, measured on the plate it lands on: the
+ * framework's own `colors.gray100` (#fafafa light / #27272a dark) for the tokens
+ * and that plate under the header band for the chrome. The dark comment used to
+ * be One Dark's `#5c6370` — 2.46:1 on a dark card, and a comment is still a
+ * sentence someone has to read.
+ */
+const SH_DARK = {
+  keyword: "#c678dd", // 5.06:1 on #1b2740, 5.33:1 on #27272a
   string: "#98c379",
   number: "#d19a66",
-  comment: "#5c6370",
+  comment: "#8b949e", // 4.85:1 on #1b2740 — the grey GitHub paints comments with
   tag: "#e06c75",
   attr: "#d19a66",
   selector: "#e06c75",
@@ -95,6 +110,46 @@ const SH = {
   punctuation: "#abb2bf",
   operator: "#56b6c2",
   variable: "#e5c07b",
+  muted: "#c9d1d9", // 10.2:1 on the header band
+  ink: "#ffffff",
+  hairline: "rgba(255, 255, 255, 0.15)",
+  hairlineHover: "rgba(255, 255, 255, 0.4)",
+};
+
+/** The same roles for a light plate — every one is 4.7:1 or better on #eef2f7. */
+const SH_LIGHT = {
+  keyword: "#cf222e", // 4.75:1
+  string: "#0a3069", // 11.32:1
+  number: "#0550ae", // 6.73:1
+  comment: "#57606a", // 5.65:1
+  tag: "#116329", // 6.53:1
+  attr: "#953800", // 6.54:1
+  selector: "#116329",
+  property: "#0550ae",
+  value: "#0a3069",
+  function: "#6f42c1", // 5.76:1
+  builtin: "#0e7490", // 4.74:1
+  punctuation: "#57606a",
+  operator: "#cf222e",
+  variable: "#953800",
+  muted: "#24292f", // 8.6:1 on the header band
+  ink: "#0d1117",
+  hairline: "rgba(36, 41, 47, 0.25)",
+  hairlineHover: "rgba(36, 41, 47, 0.55)",
+};
+
+/**
+ * The two colour maps one code plate gets: the JS tokenizer's own, and the role
+ * map for the other languages. `highlightColors` is `syntaxHighlight.js`'s dark
+ * map, so identity with it is the same lightness question the JS branch already
+ * answered — one plate, one answer, and the two highlighters cannot disagree
+ * about what "a dark code block" means.
+ *
+ * @param {string} background - The fence's own `preBgColor`.
+ */
+const syntaxFor = (background) => {
+  const js = syntaxPaletteFor(background);
+  return { js, sh: js === highlightColors ? SH_DARK : SH_LIGHT };
 };
 
 /**
@@ -136,99 +191,105 @@ const applyRules = (line, rules) => {
 };
 
 // ── Per-language rule tables ─────────────────────────────────────────────────
+//
+// Patterns are keyed by *role*, never by colour: a regex rebuilt per line throws
+// away the engine's own compilation cache, and a colour baked into the table is
+// exactly how this widget came to read a light page with dark-theme ink.
+const PATTERNS = {
+  python: [
+    [/(#.*)$/, "comment"],
+    [/("""[\s\S]*?"""|'''[\s\S]*?'''|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/, "string"],
+    [/\b(def|class|if|elif|else|for|while|try|except|finally|with|as|import|from|return|yield|pass|break|continue|raise|lambda|not|and|or|in|is|None|True|False|async|await|global|nonlocal|del)\b/, "keyword"],
+    [/\b(print|len|range|type|str|int|float|bool|list|dict|tuple|set|enumerate|zip|map|filter|sorted|reversed|open|super|self|cls)\b/, "builtin"],
+    [/\b([0-9]+(?:\.[0-9]+)?)\b/, "number"],
+    [/([+\-*/=<>!&|^~%]+)/, "operator"],
+  ],
+  css: [
+    [/(\/\*[\s\S]*?\*\/)/, "comment"],
+    [/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/, "string"],
+    [/(#[0-9a-fA-F]{3,8})\b/, "value"],
+    [/\b([0-9]+(?:\.[0-9]+)?(?:px|em|rem|%|vh|vw|vmin|vmax|pt|cm|mm|deg|s|ms)?)\b/, "number"],
+    [/(:[a-zA-Z-]+\(|:[a-zA-Z-]+\b|::[a-zA-Z-]+)/, "selector"],
+    [/([.#]?[a-zA-Z][a-zA-Z0-9_-]*)(?=\s*\{)/, "selector"],
+    [/\b(animation|background|border|color|display|flex|font|gap|grid|height|justify|margin|max|min|opacity|overflow|padding|position|text|transform|transition|width|z-index|align|content|cursor|float|outline|pointer|shadow|top|bottom|left|right)\b/, "property"],
+    [/\b(inherit|initial|none|auto|normal|bold|italic|relative|absolute|fixed|sticky|block|inline|flex|grid|center|left|right|top|bottom|middle|start|end|solid|dashed|dotted|transparent|var)\b/, "keyword"],
+    [/([{}:;,])/, "punctuation"],
+  ],
+  html: [
+    [/(<!--[\s\S]*?-->)/, "comment"],
+    [/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/, "string"],
+    [/(<\/?)([a-zA-Z][a-zA-Z0-9-]*)/, "tag"],   // tag name
+    [/\b([a-zA-Z:][a-zA-Z0-9_:-]*)(?=\s*=)/, "attr"],  // attribute name
+    [/([<>/=])/, "punctuation"],
+  ],
+  bash: [
+    [/(#.*)$/, "comment"],
+    [/("(?:[^"\\$]|\\.|\$[^{(]|\$\{[^}]*\}|\$\([^)]*\))*"|'[^']*')/, "string"],
+    [/\b(if|then|else|elif|fi|for|while|do|done|case|esac|in|function|return|exit|local|export|readonly|declare|source|echo|cd|ls|mkdir|rm|mv|cp|cat|grep|sed|awk|find|curl|wget|git|npm|node|python|pip|sudo|chmod|chown|eval|exec|trap|set|unset|shift|read|printf|test)\b/, "keyword"],
+    [/(\$\{[^}]*\}|\$[A-Za-z_][A-Za-z0-9_]*|\$[0-9@#*!?$-])/, "variable"],
+    [/\b([0-9]+)\b/, "number"],
+    [/([|&;<>(){}[\]])/, "operator"],
+  ],
+  json: [
+    [/("(?:[^"\\]|\\.)*")(?=\s*:)/, "property"],
+    [/("(?:[^"\\]|\\.)*")/, "string"],
+    [/\b(true|false|null)\b/, "keyword"],
+    [/(-?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?)/, "number"],
+    [/([{}[\]:,])/, "punctuation"],
+  ],
+};
 
-const RULES_PYTHON = [
-  [/(#.*)$/, SH.comment],
-  [/("""[\s\S]*?"""|'''[\s\S]*?'''|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/, SH.string],
-  [/\b(def|class|if|elif|else|for|while|try|except|finally|with|as|import|from|return|yield|pass|break|continue|raise|lambda|not|and|or|in|is|None|True|False|async|await|global|nonlocal|del)\b/, SH.keyword],
-  [/\b(print|len|range|type|str|int|float|bool|list|dict|tuple|set|enumerate|zip|map|filter|sorted|reversed|open|super|self|cls)\b/, SH.builtin],
-  [/\b([0-9]+(?:\.[0-9]+)?)\b/, SH.number],
-  [/([+\-*/=<>!&|^~%]+)/, SH.operator],
-];
-
-const RULES_CSS = [
-  [/(\/\*[\s\S]*?\*\/)/, SH.comment],
-  [/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/, SH.string],
-  [/(#[0-9a-fA-F]{3,8})\b/, SH.value],
-  [/\b([0-9]+(?:\.[0-9]+)?(?:px|em|rem|%|vh|vw|vmin|vmax|pt|cm|mm|deg|s|ms)?)\b/, SH.number],
-  [/(:[a-zA-Z-]+\(|:[a-zA-Z-]+\b|::[a-zA-Z-]+)/, SH.selector],
-  [/([.#]?[a-zA-Z][a-zA-Z0-9_-]*)(?=\s*\{)/, SH.selector],
-  [/\b(animation|background|border|color|display|flex|font|gap|grid|height|justify|margin|max|min|opacity|overflow|padding|position|text|transform|transition|width|z-index|align|content|cursor|float|outline|pointer|shadow|top|bottom|left|right)\b/, SH.property],
-  [/\b(inherit|initial|none|auto|normal|bold|italic|relative|absolute|fixed|sticky|block|inline|flex|grid|center|left|right|top|bottom|middle|start|end|solid|dashed|dotted|transparent|var)\b/, SH.keyword],
-  [/([{}:;,])/, SH.punctuation],
-];
-
-const RULES_HTML = [
-  [/(<!--[\s\S]*?-->)/, SH.comment],
-  [/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/, SH.string],
-  [/(<\/?)([a-zA-Z][a-zA-Z0-9-]*)/, SH.tag],   // tag name
-  [/\b([a-zA-Z:][a-zA-Z0-9_:-]*)(?=\s*=)/, SH.attr],  // attribute name
-  [/([<>/=])/, SH.punctuation],
-];
-
-const RULES_BASH = [
-  [/(#.*)$/, SH.comment],
-  [/("(?:[^"\\$]|\\.|\$[^{(]|\$\{[^}]*\}|\$\([^)]*\))*"|'[^']*')/, SH.string],
-  [/\b(if|then|else|elif|fi|for|while|do|done|case|esac|in|function|return|exit|local|export|readonly|declare|source|echo|cd|ls|mkdir|rm|mv|cp|cat|grep|sed|awk|find|curl|wget|git|npm|node|python|pip|sudo|chmod|chown|eval|exec|trap|set|unset|shift|read|printf|test)\b/, SH.keyword],
-  [/(\$\{[^}]*\}|\$[A-Za-z_][A-Za-z0-9_]*|\$[0-9@#*!?$-])/, SH.variable],
-  [/\b([0-9]+)\b/, SH.number],
-  [/([|&;<>(){}[\]])/, SH.operator],
-];
-
-const RULES_JSON = [
-  [/("(?:[^"\\]|\\.)*")(?=\s*:)/, SH.property],
-  [/("(?:[^"\\]|\\.)*")/, SH.string],
-  [/\b(true|false|null)\b/, SH.keyword],
-  [/(-?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?)/, SH.number],
-  [/([{}[\]:,])/, SH.punctuation],
-];
+/** @type {Map<object, Record<string, Array<[RegExp, string]>>>} Coloured tables, one per palette. */
+const ruleTables = new Map();
 
 /**
- * Highlights one source line using the appropriate language highlighter.
- * Falls through to plain HTML-escaped text for unknown languages.
+ * The `[pattern, colour]` rules for one language on one code plate, built once
+ * per palette so the regexes themselves are never recompiled.
  *
- * @param {string} line  - One line of source code (no trailing newline).
- * @param {string} lang  - Normalised language identifier (lower-case).
+ * @param {string} lang - Normalised language identifier (lower-case).
+ * @param {Record<string, string>} sh - The role map the plate chose.
+ * @returns {Array<[RegExp, string]> | null} `null` for a language with no rules.
+ */
+const rulesFor = (lang, sh) => {
+  if (!PATTERNS[lang]) return null;
+  let table = ruleTables.get(sh);
+  if (!table) {
+    table = {};
+    for (const [name, rows] of Object.entries(PATTERNS)) {
+      table[name] = rows.map(([pattern, role]) => [pattern, sh[role]]);
+    }
+    ruleTables.set(sh, table);
+  }
+  return table[lang];
+};
+
+
+/** Language aliases a fence's info string may use, mapped to a `PATTERNS` key. */
+const LANGUAGES = {
+  py: "python", python: "python",
+  css: "css", scss: "css", less: "css",
+  html: "html", xml: "html", svg: "html",
+  sh: "bash", bash: "bash", shell: "bash", zsh: "bash",
+  json: "json", jsonc: "json",
+};
+
+/** The languages the shared tokenizer owns; everything else uses `PATTERNS`. */
+const TOKENISED = new Set(["js", "jsx", "javascript", "ts", "tsx", "typescript"]);
+
+/**
+ * Highlights one source line with the highlighter that speaks its language,
+ * using the colours the code plate asked for. Unknown languages are escaped and
+ * left plain: a wrong guess is worse than no highlighting.
+ *
+ * @param {string} line    - One line of source code (no trailing newline).
+ * @param {string} lang    - Normalised language identifier (lower-case).
+ * @param {{js: object, sh: object}} syntax - The plate's two colour maps.
  * @returns {string} HTML fragment.
  */
-const highlightLine = (line, lang) => {
-  switch (lang) {
-    case "js":
-    case "jsx":
-    case "javascript":
-    case "ts":
-    case "tsx":
-    case "typescript":
-      // Delegate to the existing FletBox tokenizer for JS/TS.
-      return generateHighlightedHtml(line);
-
-    case "py":
-    case "python":
-      return applyRules(line, RULES_PYTHON);
-
-    case "css":
-    case "scss":
-    case "less":
-      return applyRules(line, RULES_CSS);
-
-    case "html":
-    case "xml":
-    case "svg":
-      return applyRules(line, RULES_HTML);
-
-    case "sh":
-    case "bash":
-    case "shell":
-    case "zsh":
-      return applyRules(line, RULES_BASH);
-
-    case "json":
-    case "jsonc":
-      return applyRules(line, RULES_JSON);
-
-    default:
-      return escapeHtml(line);
-  }
+const highlightLine = (line, lang, syntax) => {
+  if (TOKENISED.has(lang)) return generateHighlightedHtml(line, syntax.js);
+  const key = LANGUAGES[lang];
+  return key ? applyRules(line, rulesFor(key, syntax.sh)) : escapeHtml(line);
 };
 
 /**
@@ -275,9 +336,10 @@ const legacyCopy = (text) => {
  * content node after mount (see the Markdown body).
  *
  * @param {{ lang: string, code: string }} block
+ * @param {{js: object, sh: object}} syntax - The plate's two colour maps.
  * @returns {string} HTML fragment.
  */
-const renderFencedBlock = (block) => {
+const renderFencedBlock = (block, syntax) => {
   const lang = block.lang.replace(/[^A-Za-z0-9#+._-]/g, "").toLowerCase();
   const cls = lang ? ` class="language-${lang}"` : "";
   const label = lang ? `<span class="md-lang-label">${escapeHtml(lang)}</span>` : "";
@@ -287,7 +349,7 @@ const renderFencedBlock = (block) => {
   // doubling the visual gap regardless of line-height.
   const lines = block.code.split("\n");
   const highlighted = lines
-    .map((line) => highlightLine(line, lang))
+    .map((line) => highlightLine(line, lang, syntax))
     .join("\n");
 
   // The raw code is embedded in a hidden <textarea> so the copy handler can
@@ -541,10 +603,11 @@ const extractRawHtml = (text) => {
  * replacing this with a battle-tested library such as `marked` or `micromark`.
  *
  * @param {string} text - Raw Markdown string to convert.
+ * @param {{js: object, sh: object}} syntax - Colours for the fences inside it.
  * @returns {string} HTML string. Output may contain tags but no `<script>` or event handlers
  *   unless `allowDangerousHtml` is explicitly set on the widget.
  */
-const parseMarkdown = (text) => {
+const parseMarkdown = (text, syntax) => {
   if (!text) return "";
 
   let html = text.replace(/\r\n?/g, "\n");
@@ -668,7 +731,7 @@ const parseMarkdown = (text) => {
     (_match, rawIndex) => {
       const block = blocks[Number(rawIndex)];
       if (!block) return "";
-      return renderFencedBlock(block);
+      return renderFencedBlock(block, syntax);
     },
   );
 
@@ -861,8 +924,13 @@ export const Markdown = (props) => {
   // so the last mounted widget's style props leaked into all the others.
   const scope = `markdown-scope-${++markdownScopeUid}`;
 
+  // The fence colours are chosen from the plate the app actually paints, not
+  // from the reader's theme: `preBgColor` is a public prop, so a light palette
+  // can hand its code blocks a dark plate and vice versa.
+  const syntax = syntaxFor(preBgColor);
+
   // Parse Markdown to raw HTML
-  const rawHtml = parseMarkdown(markdownText);
+  const rawHtml = parseMarkdown(markdownText, syntax);
 
   // Outer container
   const container = WidgetFactory({
@@ -1108,7 +1176,7 @@ export const Markdown = (props) => {
             .markdown-content .md-lang-label {
                 font-family: ${codeFontFamily};
                 font-size: 0.75em;
-                color: ${SH.comment};
+                color: ${syntax.sh.muted};
                 text-transform: uppercase;
                 letter-spacing: 0.06em;
                 user-select: none;
@@ -1116,9 +1184,9 @@ export const Markdown = (props) => {
 
             .markdown-content .md-copy-btn {
                 background: none;
-                border: 1px solid rgba(255,255,255,0.15);
+                border: 1px solid ${syntax.sh.hairline};
                 border-radius: 4px;
-                color: ${SH.comment};
+                color: ${syntax.sh.muted};
                 cursor: pointer;
                 font-size: 0.72em;
                 padding: 0.15em 0.55em;
@@ -1127,8 +1195,8 @@ export const Markdown = (props) => {
                 font-family: ${codeFontFamily};
             }
             .markdown-content .md-copy-btn:hover {
-                color: #fff;
-                border-color: rgba(255,255,255,0.4);
+                color: ${syntax.sh.ink};
+                border-color: ${syntax.sh.hairlineHover};
             }
 
             /* Hidden textarea holding the raw source for the copy handler */
@@ -1235,7 +1303,7 @@ export const Markdown = (props) => {
    * @param {string} newText - The updated Markdown string.
    */
   container.updateContent = (newText) => {
-    const newHtml = parseMarkdown(newText);
+    const newHtml = parseMarkdown(newText, syntax);
     contentDiv.innerHTML = allowDangerousHtml
       ? newHtml
       : sanitizeMarkdown(newHtml);

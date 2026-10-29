@@ -1,6 +1,6 @@
 ---
 name: fletbox-rules
-description: The working contract for a FletBox app - FletBox syntax only, never a widget or prop from React/Vue/Svelte/Flutter, look an API up before using it, the rem unit contract, prop aliases, key-based state, resource cleanup, one home for every shared helper, and the two gates that prove the work. Read first, before any other skill, and before writing or editing a single file in src/.
+description: The working contract for a FletBox app - FletBox syntax only, never a widget or prop from React/Vue/Svelte/Flutter, look an API up before using it, the rem unit contract, prop aliases, key-based state, resource cleanup, one home for every shared helper, and the gates that prove the work. Read first, before any other skill, and before writing or editing a single file in src/.
 ---
 
 # Rules — how to work inside this framework
@@ -101,17 +101,43 @@ reactivity). It is the only renderer. A custom component is still a function cal
 returning widgets; never add a parallel way to paint, and never monkey-patch
 `container.update` — compose the update.
 
-## R8 The two gates, after every edit
+That includes the DOM itself. App code never writes `innerHTML`: a hand-written
+element skips the theme, the scale and the accessibility every widget already
+has, and it is how a screen ends up speaking two visual languages at once.
+Building an element with `document.createElement` is the same mistake one layer
+down — the gate reports it as a warning, and it is usually a sign that a widget
+is missing.
+
+## R8 The gates, after every edit
 
 ```bash
+npm run verify     # every gate at once — one report, one exit code. This is the
+                   # command to run after every edit
+npm run verify -- --fix   # the same, after the mechanical repair: a typo is the
+                   # tool's job, not yours
 npm run check      # does this API exist?  exits 1 on an invented widget, prop,
                    # positional call, foreign import or broken module import
 npm run ui         # is this screen clean? tokens, the scale, tap targets, labels,
                    # contrast — and it cites the rule it broke
 npm run fix        # rewrites what the checker can prove: a wrong path, a default
                    # import of a named export, a missing import line, a typo in a
-                   # prop key. Anything ambiguous is printed, never touched
+                   # prop key, a prop the framework renamed. Anything ambiguous is
+                   # printed, never touched
+npm run metrics    # the north metric: how much code passed the gate with no
+                   # correction at all, and which failures keep coming back
 ```
+
+`npm run verify` parses every module first — `node --check`, the parser the
+runtime uses, so a missing `)` comes back as `file:line:column` with the
+offending line, a caret under the character and a hint — then runs the API check,
+the design check, the structural check (two of your modules importing each other
+in a circle, a module outside the project folders, markup written by hand) and
+the prop contract, and then any test scripts the project declares. It prints one
+report: the gate that failed, the file at `line:column`, and what to do about it.
+
+Fix the line it names. Do not rewrite the file to make it pass, and do not
+reformat a line the report did not name — a diff you cannot justify is a diff
+you should not make.
 
 Then look at the screen at 375px and at 1440px, in both themes: **the checker has no
 eyes.** A clean `npm run ui` says the values are legal, not that the screen is
@@ -121,14 +147,31 @@ A finding you keep needs one sentence of justification, written where the next
 session will read it (R10). "The design wants it" is not a justification — it is a
 rule that has not been written down yet.
 
+Every `npm run verify` writes a row into `.fletbox/metrics/generations.md`, green
+or not, so `npm run metrics` can say how much code passed the gate with no
+correction at all. The same command prints the failures that recur most often
+and the rule each one should belong to — and it **fails** when a code comes back
+three times with no rule behind it. That is the loop: the same mistake is a rule
+you did not write, and you are the one who writes it. A code that comes back
+*with* a rule behind it is a different problem, and the command says so: the
+rule is not landing.
+
 ## R9 Do not trust your memory of this framework
 
 FletBox has no `.d.ts` you have read in full, the prop set grows between versions,
-and the installed version is the truth for this app. Three habits follow:
+and the installed version is the truth for this app. Four habits follow:
 
 - Look up before using, even for `Text`.
 - After a dependency bump, re-run `npm run check` across the app — it also reports
   names the package stopped exporting.
+- **A renamed prop never breaks the call, so nothing will tell you.** The old
+  spelling keeps working, marked `@deprecated`, until the next major; the gate
+  stays green either way, and an example you copied from three versions ago still
+  runs. The cheatsheet marks it — `onToggle?: (value: boolean) => void
+  (deprecated → onPress)` — and the prop after the arrow is the one to write.
+  `npm run fix` renames the calls it can prove (imports, prop typos and
+  deprecations in one pass) and prints the ones it cannot, so run it after every
+  upgrade and read the diff — a codemod that guesses is worse than one that stops.
 - What is deployed is built from the **published** package, not from your working
   tree. A fix you made in a local checkout does not exist for an installed app
   until it is released.

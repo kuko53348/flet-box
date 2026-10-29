@@ -29,6 +29,7 @@ import { c, banner, gradient } from "../utils/colors.js";
 import { createBundle } from "./createBundle.js";
 import { resolveUpdateUrl } from "../utils/bundleConfig.js";
 import { INITIAL_VERSION, incrementVersion, isValidVersion } from "../utils/version.js";
+import { isFrameworkProject, missingMigration } from "../utils/migrationGuide.js";
 
 /**
  * Runs a git command in `cwd`, returning trimmed stdout. Throws on failure.
@@ -108,6 +109,23 @@ export const release = async (argv = []) => {
   const pkg = JSON.parse(pkgRaw);
   const current = isValidVersion(pkg.version) ? pkg.version : INITIAL_VERSION;
   const next = incrementVersion(current, type);
+
+  // ---- Guard: a major needs its migration guide ---------------------------
+  // A major is the release where an app has to change something, so the guide
+  // has to say what before the version exists. The guide belongs to the
+  // framework, so the guard never fires inside somebody's app.
+  if (type === "major" && isFrameworkProject(projectRoot)) {
+    const missing = missingMigration(next, projectRoot);
+    if (missing) {
+      console.error(c("red", `❌ The migration guide does not cover ${next}`));
+      console.log(c("gray", `   ${missing.reason}.`));
+      console.log(
+        c("gray", "   Add a section to docs/guides/migration.md that says what this major"),
+      );
+      console.log(c("gray", "   changes, one row per renamed or removed prop, then release again."));
+      process.exit(1);
+    }
+  }
 
   pkg.version = next;
   // Preserve the file's existing 2-space style + trailing newline.

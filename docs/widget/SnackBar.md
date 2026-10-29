@@ -37,7 +37,7 @@ const toast = SnackBar({
 | `margin` | `number \| string` | Space outside the widget, between it and its neighbors. |
 | `elevation` | `number` | Shadow depth. Higher values lift the widget off the page. |
 | `animationDuration` | `number` | Duration for the animation, in milliseconds. |
-| `zIndex` | `number` | Index used for the z. |
+| `zIndex` | `number` | Stacking order: a widget with a higher value paints above lower ones. |
 | `onShow` | `() => void` | Event handler for the `onShow` event. |
 | `onClose` | `() => void` | Fired when the overlay closes. |
 

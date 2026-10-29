@@ -9,6 +9,7 @@ import {
 import { Container } from "../widgets/Container.js";
 import { setGlobalRender } from "../tools/useState.js";
 import { beginRenderPass, endRenderPass } from "../widget-factory/reactiveValue.js";
+import { renderFailure } from "../utils/errorBoundary.js";
 
 /**
  * Mounts a FletBox application into the DOM and manages its full lifecycle.
@@ -184,10 +185,21 @@ export const runApp = (
     // state value surgical.
     beginRenderPass();
     let appContent;
+    let failure = null;
     try {
       appContent = typeof App === "function" ? App() : App;
+    } catch (error) {
+      failure = error;
     } finally {
       endRenderPass();
+    }
+
+    // A throw in the component body — before any widget exists — has no widget
+    // to catch it. Without this the root stayed empty and the screen was
+    // blank; now it says what went wrong and where.
+    if (failure) {
+      renderFailure(root, failure, { widgetName: "App", phase: "app" });
+      return;
     }
 
     const mainContainer = Container({
