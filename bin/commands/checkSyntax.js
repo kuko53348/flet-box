@@ -41,6 +41,27 @@ const IGNORED_FOLDERS = new Set([
   "DerivedData",
 ]);
 
+/**
+ * Hidden folders that are a database or somebody else's cache. Everything else
+ * that starts with a dot is walked: `.qoder/skills`, `.claude/skills` and
+ * `.fletbox` hold scripts this project runs, and skipping every dot-folder let a
+ * broken probe live in the repo without the gate that exists to parse it.
+ */
+const HIDDEN_IGNORED = new Set([
+  ".git",
+  ".hg",
+  ".svn",
+  ".cache",
+  ".next",
+  ".nuxt",
+  ".output",
+  ".turbo",
+  ".yarn",
+  ".pnpm-store",
+  ".venv",
+  ".idea",
+]);
+
 const MODULE_FILE = /\.(?:mjs|cjs|js)$/;
 
 /**
@@ -96,6 +117,10 @@ const HINTS = [
  * Symlinked folders are not followed: a link back up the tree would loop, and
  * a linked dependency is not the project's own code.
  *
+ * Hidden folders are walked, because a script under `.qoder/skills` or
+ * `.claude/skills` is code the project runs. Only the database and the vendor
+ * caches in HIDDEN_IGNORED are skipped.
+ *
  * @param {string} root
  * @returns {string[]}
  */
@@ -109,7 +134,7 @@ export const syntaxFiles = (root) => {
       return;
     }
     for (const entry of entries) {
-      if (entry.name.startsWith(".")) continue;
+      if (HIDDEN_IGNORED.has(entry.name)) continue;
       const full = path.join(dir, entry.name);
       if (entry.isDirectory()) {
         if (!IGNORED_FOLDERS.has(entry.name)) walk(full);
