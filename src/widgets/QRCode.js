@@ -216,6 +216,10 @@ function buildQRMatrix(text, ecLevel = "M") {
     for (let aj = 0; aj < ap.length; aj++) {
       const r = ap[ai], c = ap[aj];
       if (reserved[r][c]) continue; // skip if overlaps finder
+      // FIX [QR-2]: also skip patterns centred on timing rows/cols (row 6 or
+      // col 6). An alignment pattern centred at (6,x) or (x,6) would corrupt
+      // the timing pattern. ISO 18004 §7.3.6 excludes those positions.
+      if (r === 6 || c === 6) continue;
       for (let dr = -2; dr <= 2; dr++) {
         for (let dc = -2; dc <= 2; dc++) {
           const v = (Math.abs(dr) === 2 || Math.abs(dc) === 2) ? 1

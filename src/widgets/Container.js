@@ -13,6 +13,7 @@ export const Container = (props = {}) => {
     overflow = "auto",
     boxSizing = "border-box",
     bgColor = colors.surface,
+    expand,
     flex,
     flexGrow,
     flexShrink,
@@ -28,6 +29,10 @@ export const Container = (props = {}) => {
       ? { flexShrink: 0 }
       : { flex, flexGrow, flexShrink };
 
+  // FIX [CONTAINER-1]: `expand` was documented but never applied.
+  // It maps to `flex: 1` so the container fills available space in its parent.
+  const expandProps = expand ? { flex: 1, flexShrink: 1 } : {};
+
   return WidgetFactory({
     tag: "div",
     widgetName: "Container",
@@ -37,6 +42,7 @@ export const Container = (props = {}) => {
     boxSizing: boxSizing,
     backgroundColor: bgColor,
     ...flexDefaults,
+    ...expandProps,
     ...rest,
   });
 };

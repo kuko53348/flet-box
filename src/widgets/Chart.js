@@ -104,7 +104,9 @@ export const Chart = (props) => {
     ...rest
   } = props;
 
-  if (!data.length) return null;
+  // FIX [CHART-2]: returning null for empty data prevents updateData() from
+  // ever working — the container doesn't exist. Render an empty canvas instead.
+  // if (!data.length) return null;
 
   let canvasRef = null;
   let context = null;
@@ -230,7 +232,10 @@ export const Chart = (props) => {
       ctx.fillStyle = barColor;
       ctx.fillRect(x, Math.min(y, baselineY), barWidth, barHeight);
 
-      if (showValues && labels[index]) {
+      // FIX [CHART-2]: `showValues` was gated on `labels[index]` — so values
+      // were never drawn when no labels array was provided. Show values
+      // independently of labels.
+      if (showValues) {
         ctx.fillStyle = textColor;
         ctx.font = "8px sans-serif";
         ctx.fillText(value, x + barWidth / 2 - 5, y - 2);

@@ -28,7 +28,8 @@ export const ProgressBar = (props) => {
   } = props;
 
   let progressValue = Math.min(Math.max(value, 0), max);
-  let percentage = (progressValue / max) * 100;
+  // Guard against max === 0 to avoid NaN% in the fill and the aria attribute.
+  let percentage = max > 0 ? (progressValue / max) * 100 : 0;
   const finalBorderRadius =
     borderRadius !== undefined ? borderRadius : height / 2;
   const isColumn = valuePosition === "top" || valuePosition === "bottom";
@@ -174,7 +175,7 @@ export const ProgressBar = (props) => {
   const updateProgress = (newValue) => {
     if (indeterminate) return;
     progressValue = Math.min(Math.max(newValue, 0), max);
-    percentage = (progressValue / max) * 100;
+    percentage = max > 0 ? (progressValue / max) * 100 : 0;
     fill.style.width = `${percentage}%`;
     // The announced number has to be the drawn number: a reader kept on the build
     // value would hear "0%" while the bar filled.

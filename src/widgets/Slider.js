@@ -415,7 +415,10 @@ export const Slider = (props) => {
     }
     if (inverted) percent = 1 - percent;
     let raw = currentMin + percent * (currentMax - currentMin);
-    let stepped = Math.round(raw / currentStep) * currentStep;
+    // FIX [SLIDER-3]: snap relative to `min`, not to zero.
+    // `Math.round(raw / step) * step` snapped to 0, step, 2*step, …
+    // For min=1, step=2 that gave 2, 4, 6 instead of 1, 3, 5.
+    let stepped = Math.round((raw - currentMin) / currentStep) * currentStep + currentMin;
     return Math.min(Math.max(stepped, currentMin), currentMax);
   }
 

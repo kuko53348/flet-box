@@ -35,11 +35,13 @@ export const InstallButton = (props) => {
     if (deferredPrompt) {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
+      deferredPrompt = null;
       if (outcome === "accepted") {
-        if (onInstalled) onInstalled();
+        // FIX [INSTALL-1]: do NOT call onInstalled here — the browser fires
+        // `appinstalled` right after acceptance, and handleAppInstalled calls it
+        // there. Calling it in both places caused the double-fire.
         hideButton();
       }
-      deferredPrompt = null;
     }
     if (onClick) onClick();
   };

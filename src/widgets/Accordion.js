@@ -155,6 +155,10 @@ export const Accordion = (props) => {
   let iconElement = null;
   let resizeObserver = null;
   let isAnimating = false;
+  // Pending animation timer ids — cancelled in onUnmount so the callbacks never
+  // fire on a widget that has already left the DOM.
+  let animTimer1 = null;
+  let animTimer2 = null;
 
   // ========== UI UPDATE FUNCTIONS ==========
 
@@ -318,9 +322,11 @@ export const Accordion = (props) => {
 
     // Animate from 0 → measured height → "auto" (to stay responsive to content changes)
     setHeight("0px");
-    setTimeout(() => {
+    animTimer1 = setTimeout(() => {
+      animTimer1 = null;
       setHeight(targetHeight);
-      setTimeout(() => {
+      animTimer2 = setTimeout(() => {
+        animTimer2 = null;
         setHeight("auto", true);
         contentWrapper.style.overflow = "visible";
         isAnimating = false;
@@ -352,10 +358,12 @@ export const Accordion = (props) => {
     contentWrapper.style.overflow = "hidden";
     setHeight(currentHeight);
 
-    setTimeout(() => {
+    animTimer1 = setTimeout(() => {
+      animTimer1 = null;
       setHeight("0px");
       isExpanded = false;
-      setTimeout(() => {
+      animTimer2 = setTimeout(() => {
+        animTimer2 = null;
         contentWrapper.style.display = "none";
         contentWrapper.style.overflow = "";
         contentInner.style.display = "";
@@ -609,6 +617,11 @@ export const Accordion = (props) => {
    * Registered through `onUnmount` so it runs on every teardown path.
    */
   container.onUnmount(() => {
+    // Cancel any in-flight animation timers so the callbacks never fire on a
+    // widget that has already left the DOM.
+    if (animTimer1 !== null) { clearTimeout(animTimer1); animTimer1 = null; }
+    if (animTimer2 !== null) { clearTimeout(animTimer2); animTimer2 = null; }
+    isAnimating = false;
     if (resizeObserver) resizeObserver.disconnect();
     if (contentWrapper && contentWrapper._cleanup) contentWrapper._cleanup();
   });

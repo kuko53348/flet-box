@@ -45,6 +45,10 @@ export const Text = (props) => {
   };
   if (type && headingTags[type]) baseTag = headingTags[type];
 
+  // FIX [TEXT-1]: guard against `styles: null` — Array.isArray(null) is false
+  // but `[...null]` throws; an explicit null means "no styles", same as [].
+  const safeStyles = Array.isArray(textStyles) ? textStyles : [];
+
   const cssStyles = {
     fontSize: size,
     fontWeight: weight,
@@ -59,13 +63,13 @@ export const Text = (props) => {
   if (type === "p") cssStyles.marginBottom = "1em";
 
   if (
-    textStyles.includes("underline") &&
-    textStyles.includes("strikethrough")
+    safeStyles.includes("underline") &&
+    safeStyles.includes("strikethrough")
   ) {
     cssStyles.textDecoration = "underline line-through";
-  } else if (textStyles.includes("underline")) {
+  } else if (safeStyles.includes("underline")) {
     cssStyles.textDecoration = "underline";
-  } else if (textStyles.includes("strikethrough")) {
+  } else if (safeStyles.includes("strikethrough")) {
     cssStyles.textDecoration = "line-through";
   }
 
@@ -78,7 +82,7 @@ export const Text = (props) => {
     ...rest,
   });
 
-  const orderedStyles = [...textStyles].reverse();
+  const orderedStyles = [...safeStyles].reverse();
   for (const style of orderedStyles) {
     const tag = styleMap[style];
     if (tag && style !== "underline" && style !== "strikethrough") {

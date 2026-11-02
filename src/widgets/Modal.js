@@ -468,6 +468,10 @@ export const Modal = (props = {}) => {
   });
 
   // Public API
+  // FIX [MODAL-3]: track the "live" content so setLoading(false) restores
+  // whatever updateContent last set, not the original construction value.
+  let currentContent = content;
+
   const instance = {
     open: handleOpen,
     close: handleClose,
@@ -484,6 +488,8 @@ export const Modal = (props = {}) => {
 
     // Methods for dynamic updates
     updateContent: (newContent) => {
+      // Track the most recent content so setLoading(false) can restore it
+      currentContent = newContent;
       if (contentElement) {
         while (contentElement.firstChild) {
           contentElement.removeChild(contentElement.firstChild);
@@ -548,7 +554,7 @@ export const Modal = (props = {}) => {
 
         instance.updateContent(loadingEl);
       } else {
-        instance.updateContent(content);
+        instance.updateContent(currentContent);
       }
     },
   };

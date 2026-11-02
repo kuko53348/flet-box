@@ -110,6 +110,15 @@ export const DraggBox = (props) => {
     if (onDragEnd) onDragEnd(e, data);
   });
 
+  // FIX [DRAGBOX-1]: if the widget is unmounted while a drag is in progress,
+  // `dragend` never fires and the clone stays in document.body forever.
+  wrapper.onUnmount(() => {
+    if (dragClone && dragClone.parentNode) {
+      dragClone.parentNode.removeChild(dragClone);
+      dragClone = null;
+    }
+  });
+
   return wrapper;
 };
 

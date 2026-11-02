@@ -7,7 +7,9 @@ import { colors } from "../utils/themes.js";
 
 export const Divider = (props = {}) => {
   const {
-    color = colors.surface,
+    // FIX [DIVIDER-1]: default was `colors.surface` — same color as the
+    // background — making every divider invisible unless explicitly colored.
+    color = colors.border,
     thickness = 1,
     margin = 16,
     orientation = "horizontal",

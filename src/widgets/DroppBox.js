@@ -149,6 +149,11 @@ export const DroppBox = (props) => {
     if (disabled) return;
     e.preventDefault();
 
+    // FIX [DROPBOX-1]: `dragleave` fires when the pointer moves onto a child
+    // element inside the drop zone. `relatedTarget` is the element being entered
+    // next; if it is still inside this wrapper the drag hasn't really left.
+    if (wrapper.contains(e.relatedTarget)) return;
+
     if (isActive) {
       isActive = false;
       removeActiveStyles();

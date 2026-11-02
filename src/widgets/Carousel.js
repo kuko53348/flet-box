@@ -279,11 +279,16 @@ export const Carousel = (props) => {
   updatePosition(false);
   updateDots();
 
-  // Autoplay setup
+  // Autoplay setup — start from onMount, not from construction.
+  // If the widget is built but never inserted into the DOM, setInterval would
+  // run forever because lifecycle's orphan-prune never fires unmount on a node
+  // that was never mounted. Hover listeners must follow the same path.
   if (autoPlay) {
-    startAutoPlay();
-    container.addEventListener("mouseenter", stopAutoPlay);
-    container.addEventListener("mouseleave", startAutoPlay);
+    container.onMount(() => {
+      startAutoPlay();
+      container.addEventListener("mouseenter", stopAutoPlay);
+      container.addEventListener("mouseleave", startAutoPlay);
+    });
   }
 
   // Public methods
@@ -295,6 +300,9 @@ export const Carousel = (props) => {
   // Cleanup
   container.onUnmount(() => {
     stopAutoPlay();
+    // Remove hover listeners regardless of whether onMount ran
+    container.removeEventListener("mouseenter", stopAutoPlay);
+    container.removeEventListener("mouseleave", startAutoPlay);
   });
 
   return container;

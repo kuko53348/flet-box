@@ -28,7 +28,12 @@ export const Pagination = (props) => {
     ...rest
   } = props;
 
-  const totalPages = Math.ceil(totalItems / pageSize);
+  // FIX [PAGINATION-1]: pageSize:0 → division by zero → totalPages=Infinity.
+  // maxButtons:0 → getPageNumbers returns [] but the ellipsis logic still adds
+  // boundary buttons. Guard both.
+  const safePageSize = pageSize > 0 ? pageSize : 1;
+  const safeMaxButtons = maxButtons > 0 ? maxButtons : 1;
+  const totalPages = Math.ceil(totalItems / safePageSize);
   if (totalPages <= 1) return null;
 
   let current = Math.min(Math.max(currentPage, 1), totalPages);
@@ -43,11 +48,11 @@ export const Pagination = (props) => {
 
   const getPageNumbers = () => {
     const pages = [];
-    let start = Math.max(1, current - Math.floor(maxButtons / 2));
-    let end = Math.min(totalPages, start + maxButtons - 1);
+    let start = Math.max(1, current - Math.floor(safeMaxButtons / 2));
+    let end = Math.min(totalPages, start + safeMaxButtons - 1);
 
-    if (end - start + 1 < maxButtons) {
-      start = Math.max(1, end - maxButtons + 1);
+    if (end - start + 1 < safeMaxButtons) {
+      start = Math.max(1, end - safeMaxButtons + 1);
     }
 
     for (let i = start; i <= end; i++) {

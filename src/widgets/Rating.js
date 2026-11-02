@@ -8,6 +8,7 @@ import { Text } from "./Text.js";
 import { Icon } from "./Icon.js";
 import { colors, subscribeTheme } from "../utils/themes.js";
 import { TAP_MINIMUM } from "../tools/index.js";
+import { composeUpdate } from "../utils/composeUpdate.js";
 
 export const Rating = (props) => {
   const {
@@ -354,6 +355,14 @@ export const Rating = (props) => {
   ratingContainer.setValue = setValue;
   ratingContainer.getValue = () => currentValue;
   ratingContainer.updateStars = updateStars;
+
+  // FIX [RATING-1]: expose `update({value})` via composeUpdate so the checker's
+  // no-update-overwrite rule is satisfied and `rating.update({value: 3})` works.
+  const RATING_PROP_KEYS = ["value"];
+  const ratingUpdate = (newProps) => {
+    if (newProps.value !== undefined) setValue(newProps.value);
+  };
+  composeUpdate(ratingContainer, RATING_PROP_KEYS, ratingUpdate);
 
   Object.defineProperty(ratingContainer, "value", {
     get: () => currentValue,

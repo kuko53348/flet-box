@@ -578,3 +578,43 @@ Uso típico: `const W = await import("/src/index.js"); const el = W.Chart({...})
 | 9 | **`Maps` nuevo**: proyección Web Mercator, rejilla de teselas, pines y API imperativa **sin librería de mapas, sin CDN y sin API key**. Cableado en las 5 superficies (exports, `index.d.ts`, `ALL_PROPS`, `docs/widget/Maps.md`, snippets) con cobertura total de props. Bugs cazados con sonda en Chrome real, no en el harness: flechas que paneaban al revés, las props propias ligadas a `useState` ni resueltas ni suscritas (la fábrica no las ve), la `setPointerCapture` en `pointerdown` que **se comía el clic del pin**, `wrapLng` devolviendo `2.352200000000039`, `locate()` sin opciones útiles ni códigos de error, y la línea de crédito oculta | **503 OK / 0 fallos** |
 | 10 | Capa vectorial de `Maps` (`polylines`, `polylineColor`, canvas bajo los pines) y modo seguimiento (`followUser`, `onUserUpdate`) con su documentación; volver a aplicar el mismo `center` ya no cuenta como cambio de vista; `Dropdown` honra `value`/`options` ligados a `useState`; la punta del pin cae sobre su coordenada y no a su lado; las 4 props nuevas entran al registro (INTERNAL 4 → 0). Guards: 44 → 63 | **512 OK / 0 fallos** |
 | 11 | Cierre de la documentación: las 4 props de la capa vectorial entran también en la librería de snippets (`UNCOVERED_PROP` 4 → 0) y `docs/widget/Maps.md` se regenera sin delta. **`onMarkerClick` con ratón físico**: el arrastre se decidía sumando la longitud del recorrido, así que una pulsación que tiembla (1 px por evento, 5 px en total) superaba el umbral, el mapa capturaba el puntero y **no disparaba ni el pin ni el mapa**, además de desplazar la vista; ahora se mide la distancia al punto donde se pulsó (`PAN_START_SLOP`) y mientras no se supere la vista no se mueve. Verificado con clicks reales en Chrome y con guarda nueva (65 casos en `regression.test.js`) que **falla** contra la versión anterior | **514 OK / 0 fallos** |
+
+
+---
+
+## Ronda 12 — Bugs medios (Nov 2026)
+
+**Estado:** `npm test` verde · 149 checks OK · 0 fallos  
+**Rama:** `refactory`
+
+### Corregidos (16 bugs)
+
+| ID | Widget | Bug | Fix |
+|---|---|---|---|
+| **[BODY-1]** | Badge | `subscribeTheme` nunca se activaba — condición comparaba defaults resueltos | Captura `callerPassedBgColor/Color` antes del destructuring |
+| **[RATING-1]** | Rating | `update({value})` era no-op — no había método `update()` | Añadido via `composeUpdate` |
+| **[MODAL-3]** | Modal | `setLoading(false)` descartaba `updateContent()` | `let currentContent` mutable |
+| **[CONTAINER-1]** | Container | prop `expand` documentada e ignorada | Traduce a `flex: 1, flexShrink: 1` |
+| **[SLIDER-3]** | Slider | Snapping relativo a cero, no a `min` | `Math.round((raw - min) / step) * step + min` |
+| **[DROPDOWN-2]** | Dropdown | `onChange` solo pasaba `value`, docs prometían `(value, label)` | Segundo argumento `getLabel(opt)` en todos los call sites |
+| **[ICON-1]** | Icon | `className` del usuario reemplazaba `material-icons` | Merge: `material-icons ${extraClassName}` |
+| **[DIVIDER-1]** | Divider | Color default `colors.surface` → divisor invisible | Cambiado a `colors.border` |
+| **[TEXT-1]** | Text | `styles: null` → TypeError en `.includes()` | Guard `Array.isArray(textStyles) ? textStyles : []` |
+| **[DRAGBOX-1]** | DraggBox | Clon huérfano si se desmonta durante drag | `onUnmount` que limpia el clon |
+| **[CHART-2]** | Chart | `showValues` gateado por `labels[index]`; `data:[]` → null crasheaba `updateData` | Condición independiente; comentado el `return null` |
+| **[CC-2]** | CircularChart | % label dividía por ángulo en radianes → `4775%` | Divide por `total` de los datos |
+| **[QR-2]** | QRCode | Patrones de alineación en fila/col 6 corrompían timing (versiones 7-10) | Skip `r === 6 \|\| c === 6` |
+| **[PAGINATION-1]** | Pagination | `pageSize:0` → `totalPages=Infinity`; `maxButtons:0` → botón suelto | Guards `safePageSize` / `safeMaxButtons` |
+| **[DROPBOX-1]** | DroppBox | `dragleave` parpadeaba al pasar sobre hijos — bug clásico sin `relatedTarget` | `if (wrapper.contains(e.relatedTarget)) return` |
+| **[INSTALL-1]** | InstallButton | `onInstalled` se disparaba 2 veces (en `handleClick` + en `appinstalled`) | Elimina llamada en `handleClick`; solo `handleAppInstalled` la dispara |
+
+### Pendientes restantes (§4.2)
+
+- **[ADS-1]** AdMob/AdSense: `label:null` → TypeError; latch `disposed` unidireccional
+- **[SCAFFOLD-1]** Scaffold: `_cleanup` sin `registeredWidgets.delete`
+
+### Historial
+
+| Ronda | Qué se hizo | Suite al cerrar |
+|---|---|---|
+| 12 | 16 bugs medios del §4.2: Badge/Rating/Modal/Container/Slider/Dropdown/Icon/Divider/Text/DraggBox/Chart/CircularChart/QRCode/Pagination/DroppBox/InstallButton | **149 OK / 0 fallos** |

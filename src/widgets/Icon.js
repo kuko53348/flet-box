@@ -13,6 +13,10 @@ export const Icon = (props) => {
     name,
     size = 24,
     color = colors.textSecondary,
+    // FIX [ICON-1]: extract className from rest so it can be merged with
+    // `material-icons` instead of replacing it. An app that passes className
+    // to add a custom style would otherwise break the ligature entirely.
+    className: extraClassName,
     ...rest
   } = props;
   const iconName = icon || name || "";
@@ -35,7 +39,7 @@ export const Icon = (props) => {
   return WidgetFactory({
     tag: "span",
     widgetName: "Icon",
-    className: "material-icons",
+    className: extraClassName ? `material-icons ${extraClassName}` : "material-icons",
     text: iconName, // ✅ CHANGED: text instead of textContent
     fontSize: toREM(size),
     color: color,

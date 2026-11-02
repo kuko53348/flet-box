@@ -434,8 +434,10 @@ export const Dropdown = (inputProps = {}) => {
     const opt = currentOptions[index];
     if (opt === undefined) return;
     const optValue = getValue(opt);
+    // FIX [DROPDOWN-2]: pass (value, label) — docs promise both arguments.
+    const optLabel = getLabel(opt);
     selectedValue = optValue;
-    if (effectiveOnChange) effectiveOnChange(optValue);
+    if (effectiveOnChange) effectiveOnChange(optValue, optLabel);
     updateDisplay();
     closeMenu();
   };
@@ -645,7 +647,10 @@ export const Dropdown = (inputProps = {}) => {
     if (newProps.value !== undefined && newProps.value !== selectedValue) {
       selectedValue = newProps.value;
       needsDisplayUpdate = true;
-      if (effectiveOnChange) effectiveOnChange(selectedValue);
+      // Pass (value, label) consistently; find the label from the current options.
+      const matchedOpt = currentOptions.find((o) => getValue(o) === selectedValue);
+      const matchedLabel = matchedOpt ? getLabel(matchedOpt) : undefined;
+      if (effectiveOnChange) effectiveOnChange(selectedValue, matchedLabel);
     }
     if (newProps.disabled !== undefined) {
       currentDisabled = newProps.disabled;

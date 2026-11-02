@@ -125,9 +125,11 @@ export const CircularBar = (props) => {
 
   const getFormattedValue = () => {
     if (customValueFormatter) return customValueFormatter(currentValue, max);
+    // Guard: max === 0 would produce Infinity or NaN in every branch.
+    const safeMax = max > 0 ? max : 1;
     if (valueFormat === "percent") {
       const percent =
-        Math.round((currentValue / max) * 100 * Math.pow(10, valueDecimals)) /
+        Math.round((currentValue / safeMax) * 100 * Math.pow(10, valueDecimals)) /
         Math.pow(10, valueDecimals);
       return `${valuePrefix}${percent}${valueSuffix}`;
     }
@@ -243,7 +245,9 @@ export const CircularBar = (props) => {
   const drawStatic = () => {
     if (!ctx || !canvas) return;
     currentValue = value;
-    const angle = (value / max) * Math.PI * 2;
+    // Guard: max === 0 would produce Infinity radians → canvas draws nothing.
+    const safeMax = max > 0 ? max : 1;
+    const angle = (value / safeMax) * Math.PI * 2;
     ctx.clearRect(0, 0, currentWidth, currentWidth);
     drawBackground();
     drawProgress(angle);
@@ -261,7 +265,9 @@ export const CircularBar = (props) => {
     const elapsed = timestamp - startTime;
     const progress = Math.min(1, elapsed / animationDuration);
     currentValue = progress * value;
-    const angle = (currentValue / max) * Math.PI * 2;
+    // Guard: max === 0 → Infinity radians.
+    const safeMax = max > 0 ? max : 1;
+    const angle = (currentValue / safeMax) * Math.PI * 2;
     ctx.clearRect(0, 0, currentWidth, currentWidth);
     drawBackground();
     drawProgress(angle);

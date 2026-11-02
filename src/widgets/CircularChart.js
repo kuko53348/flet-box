@@ -289,9 +289,11 @@ export const CircularChart = (props) => {
       ctx.font = `${labelSize}px system-ui`;
       ctx.fillStyle = labelInk(color);
       ctx.shadowBlur = 0;
-      const percent = Math.round(
-        (slice.value / (slice.end - slice.start)) * 100,
-      );
+      // FIX [CC-2]: percent was computed as value / (end-start) * 100, which
+      // divides by the slice's radian angle (~0.002 for small slices) and gives
+      // nonsense like 4775%. Divide by the total instead.
+      const total = data.reduce((s, d) => s + (d?.value || 0), 0);
+      const percent = total > 0 ? Math.round((slice.value / total) * 100) : 0;
       ctx.fillText(slice.original?.label || `${percent}%`, x, y);
     }
   };

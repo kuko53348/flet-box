@@ -37,6 +37,12 @@ import { toREM } from "../utils/units.js";
  * @returns {HTMLElement} The wrapped Stack element, or the child element directly if the badge is hidden.
  */
 export const Badge = (props) => {
+  // Track whether the caller explicitly passed these color props, BEFORE
+  // defaults are applied — the theme subscription should only fire when the
+  // caller left the colors to the theme.
+  const callerPassedBgColor = props.bgColor !== undefined;
+  const callerPassedColor = props.color !== undefined;
+
   const {
     value,
     child,
@@ -134,8 +140,11 @@ export const Badge = (props) => {
   });
 
   // Subscribe to theme changes to keep the badge color in sync when no explicit
-  // bgColor/color was provided by the caller
-  if (!bgColor && !color) {
+  // bgColor/color was provided by the caller.
+  // FIX [BODY-1]: compare against the caller's original intent, not the
+  // post-default values — `bgColor` and `color` both have defaults, so
+  // `!bgColor && !color` was always false and the subscription never ran.
+  if (!callerPassedBgColor && !callerPassedColor) {
     unsubscribeTheme = subscribeTheme(() => {
       badgeElement.style.backgroundColor = colors.danger;
     });
