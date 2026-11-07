@@ -455,7 +455,15 @@ const typesGate = async (root) => {
   };
 };
 
-const GATES = {
+/**
+ * Every gate, by name.
+ *
+ * Exported with `GATE_ORDER` because `scripts/selftest-gates.mjs` holds the
+ * inventory: it proves the two lists agree (a gate in only one of them is a
+ * gate that never runs, or a name that runs nothing) and that every gate has a
+ * fixture. Without that, the coverage could shrink one entry at a time.
+ */
+export const GATES = {
   syntax: syntaxGate,
   api: apiGate,
   types: typesGate,
@@ -465,7 +473,8 @@ const GATES = {
   tests: testsGate,
 };
 
-const GATE_ORDER = ["syntax", "api", "types", "ui", "structure", "surface", "tests"];
+/** Every gate, in the order the report prints them. */
+export const GATE_ORDER = ["syntax", "api", "types", "ui", "structure", "surface", "tests"];
 
 /* ----------------------------------------------------------------- report */
 
