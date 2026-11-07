@@ -62,7 +62,7 @@ const notes = Markdown({
 | `imageBorderRadius` | `number` | Corner radius for the image. |
 | `padding` | `Padding` | Space inside the widget, between its content and its border. |
 | `maxHeight` | `number` | Maximum height the widget may grow to. |
-| `overflow` | `string` | How overflowing content is handled (`hidden`, `auto`, `scroll`). |
+| `overflow` | `'auto' \| 'hidden' \| 'visible' \| 'scroll' \| 'clip'` | How overflowing content is handled (`hidden`, `auto`, `scroll`). |
 | `backgroundColor` | `Color` | Background color. Alias of `bgColor`. |
 | `borderRadius` | `number` | Rounds the corners of the widget. |
 | `allowDangerousHtml` | `boolean` | Allows raw HTML inside markdown output. |
@@ -152,6 +152,11 @@ Every widget also accepts these shared props — see [common props](COMMON_PROPS
 | `onclick` | `(event?: Event) => void` | Lowercase alias of `onClick`, kept because the shipped templates and the HTML habit write it. |
 | `alignSelf` | `AlignSelf` | Overrides the parent's `alignItems` for this child alone (CSS `align-self`). Alias: `selfAlign`. |
 | `selfAlign` | `AlignSelf` | Alias of `alignSelf`. |
+| `overflow` | `'auto' \| 'hidden' \| 'visible' \| 'scroll' \| 'clip'` | How overflowing content is handled (`hidden`, `auto`, `scroll`). |
+| `overflowX` | `'auto' \| 'hidden' \| 'visible' \| 'scroll' \| 'clip'` | The `overflowX` value for the widget. |
+| `overflowY` | `'auto' \| 'hidden' \| 'visible' \| 'scroll' \| 'clip'` | The `overflowY` value for the widget. |
+| `textOverflow` | `'clip' \| 'ellipsis' \| string` | The `textOverflow` value for the widget. |
+| `whiteSpace` | `'normal' \| 'nowrap' \| 'pre' \| 'pre-wrap' \| 'pre-line' \| string` | The `whiteSpace` value for the widget. |
 | `id` | `string` | DOM `id` for the rendered element. |
 | `className` | `string` | CSS class names applied to the rendered element. |
 | `ref` | `(widget: Widget) => void` | Callback that receives the underlying DOM node. |

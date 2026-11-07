@@ -130,7 +130,10 @@ npm run metrics    # the north metric: how much code passed the gate with no
 `npm run verify` parses every module first — `node --check`, the parser the
 runtime uses, so a missing `)` comes back as `file:line:column` with the
 offending line, a caret under the character and a hint — then runs the API check,
-the design check, the structural check (two of your modules importing each other
+the type check (the same `jsconfig.json` the editor reads, through the same
+TypeScript service: a widget typed as a bare `HTMLElement` makes
+`widget.update()` an error here and there), the design check, the structural
+check (two of your modules importing each other
 in a circle, a module outside the project folders, markup written by hand) and
 the prop contract, and then any test scripts the project declares. It prints one
 report: the gate that failed, the file at `line:column`, and what to do about it.

@@ -1,13 +1,13 @@
 // index.d.ts - FletBox Type Declarations
-// Versión completa con todos los widgets, animaciones, servicios y utilidades
+// Full version with every widget, animation, service and utility
 
 declare module 'flet-box' {
   // =========================================================================
-  // Tipos base
+  // Base types
   // =========================================================================
   export type Widget = HTMLElement;
   // A Scaffold slot: an element, a factory it re-runs on each route change (so a
-  // nav can relight the active item), a boolean show/hide, or null for absent.
+  // nav can re-render the active item), a boolean show/hide, or null for absent.
   export type Slot = Widget | (() => Widget) | boolean | null;
   export type Color = string;
   export type Size = number | string;
@@ -34,6 +34,14 @@ declare module 'flet-box' {
     /** Release the widget's resources and remove it from the lifecycle registry. */
     _cleanup(): void;
   }
+
+  /**
+   * The live element every widget constructor returns. It is the factory
+   * instance: a real `HTMLElement` that also carries `update()`, `getProps()`,
+   * `onMount()` and `onUnmount()`. Typing widgets as bare `HTMLElement` made
+   * `estado.update({ text })` — the documented reactive call — an editor error.
+   */
+  export type FletWidget = WidgetFactoryInstance;
 
   // =========================================================================
   // Posicionamiento
@@ -74,7 +82,7 @@ declare module 'flet-box' {
   }
 
   // =========================================================================
-  // Props comunes (heredadas by todos the widgets)
+  // Common props (inherited by every widget)
   // =========================================================================
   export interface CommonProps extends StackPositionProps {
     width?: Size;
@@ -176,6 +184,15 @@ declare module 'flet-box' {
     alignSelf?: AlignSelf;
     // Alias of `alignSelf`, matching the `justify` / `alignItems` shorthand style.
     selfAlign?: AlignSelf;
+    // Text-clamping trio. The engine routes all three on any widget
+    // (`translateProps.js`), and the one-line ellipsis recipe
+    // (`overflow: 'hidden'` + `textOverflow: 'ellipsis'` + `whiteSpace: 'nowrap'`)
+    // is written on a `Text`, which used to reject it as an unknown prop.
+    overflow?: 'auto' | 'hidden' | 'visible' | 'scroll' | 'clip';
+    overflowX?: 'auto' | 'hidden' | 'visible' | 'scroll' | 'clip';
+    overflowY?: 'auto' | 'hidden' | 'visible' | 'scroll' | 'clip';
+    textOverflow?: 'clip' | 'ellipsis' | string;
+    whiteSpace?: 'normal' | 'nowrap' | 'pre' | 'pre-wrap' | 'pre-line' | string;
     id?: string;
     className?: string;
     ref?: (widget: Widget) => void;
@@ -190,7 +207,7 @@ declare module 'flet-box' {
   }
 
   // =========================================================================
-  // useState Hook (persistente with RamStore)
+  // useState Hook (persistent across page reloads with RamStore)
   // =========================================================================
   export function useState<T>(
     key: string,
@@ -350,7 +367,7 @@ declare module 'flet-box' {
     maxWidth?: Size;
     overflow?: 'auto' | 'hidden' | 'visible' | 'scroll';
   }
-  export function Container(props: ContainerProps): Widget;
+  export function Container(props: ContainerProps): FletWidget;
 
   export interface RowProps extends CommonProps {
     gap?: number | string;
@@ -360,7 +377,7 @@ declare module 'flet-box' {
     children?: Widget[];
     onPress?: (event?: Event) => void;
   }
-  export function Row(props: RowProps): Widget;
+  export function Row(props: RowProps): FletWidget;
 
   export interface ColumnProps extends CommonProps {
     gap?: number | string;
@@ -369,7 +386,7 @@ declare module 'flet-box' {
     children?: Widget[];
     onPress?: (event?: Event) => void;
   }
-  export function Column(props: ColumnProps): Widget;
+  export function Column(props: ColumnProps): FletWidget;
 
   /**
    * Layers its children in the same box.
@@ -387,7 +404,7 @@ declare module 'flet-box' {
     position?: 'relative' | 'absolute' | 'stack';
     alignment?: 'top-left' | 'top-center' | 'top-right' | 'center-left' | 'center' | 'center-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
   }
-  export function Stack(props: StackProps): Widget;
+  export function Stack(props: StackProps): FletWidget;
 
   export interface ListViewProps extends CommonProps {
     data?: any[];
@@ -408,7 +425,7 @@ declare module 'flet-box' {
     bufferSize?: number;
     expand?: boolean | number;
   }
-  export function ListView(props: ListViewProps): Widget & {
+  export function ListView(props: ListViewProps): FletWidget & {
     data: any[];
     refreshing: boolean;
     updateData(newData: any[]): void;
@@ -428,7 +445,7 @@ declare module 'flet-box' {
      */
     children?: Widget[] | Widget;
   }
-  export function GridView(props: GridViewProps): Widget;
+  export function GridView(props: GridViewProps): FletWidget;
 
   // =========================================================================
   // Widgets básicos
@@ -439,17 +456,24 @@ declare module 'flet-box' {
     children?: string;
     size?: number;
     color?: Color;
-    weight?: 'normal' | 'bold' | number;
+    // CSS `font-weight`: the two keywords, the numeric scale as a number or as
+    // the same scale written as a string (`'600'` is what a design token table
+    // prints), and the relative keywords the engine forwards untouched.
+    weight?: 'normal' | 'bold' | 'bolder' | 'lighter' | '100' | '200' | '300' | '400' | '500' | '600' | '700' | '800' | '900' | number;
     align?: 'left' | 'center' | 'right' | 'justify';
     italic?: boolean;
     decoration?: 'underline' | 'line-through' | 'overline';
     lineHeight?: number | string;
     letterSpacing?: number | string;
+    /** Glyph outline, e.g. `"4px #fff"` (-webkit-text-stroke). Pair with paintOrder. */
+    textStroke?: string;
+    /** `"stroke fill"` puts the textStroke rim behind the fill so the centre keeps its colour. */
+    paintOrder?: string;
     type?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'p';
     styles?: Array<'bold' | 'italic' | 'underline' | 'strikethrough' | 'mark' | 'small' | 'code'>;
     onPress?: (event?: Event) => void;
   }
-  export function Text(props: TextProps): Widget;
+  export function Text(props: TextProps): FletWidget;
 
   export interface ButtonProps extends CommonProps {
     text?: string;
@@ -472,7 +496,7 @@ declare module 'flet-box' {
     padding?: Padding;
     margin?: Margin;
   }
-  export function Button(props: ButtonProps): Widget;
+  export function Button(props: ButtonProps): FletWidget;
 
   export interface IconProps extends CommonProps {
     // `icon` is the runtime alias the widget reads first (`icon || name`), so
@@ -483,7 +507,7 @@ declare module 'flet-box' {
     color?: Color;
     onPress?: (event?: Event) => void;
   }
-  export function Icon(props: IconProps): Widget;
+  export function Icon(props: IconProps): FletWidget;
 
   export interface ImageProps extends CommonProps {
     src: string;
@@ -498,7 +522,7 @@ declare module 'flet-box' {
     onError?: (widget: Widget) => void;
     onPress?: (event?: Event) => void;
   }
-  export function Image(props: ImageProps): Widget;
+  export function Image(props: ImageProps): FletWidget;
 
   export interface AvatarProps extends CommonProps {
     src?: string;
@@ -512,7 +536,7 @@ declare module 'flet-box' {
     badgeColor?: Color;
     onPress?: (event?: Event) => void;
   }
-  export function Avatar(props: AvatarProps): Widget & {
+  export function Avatar(props: AvatarProps): FletWidget & {
     updateContent(newProps: Partial<AvatarProps>): void;
   };
 
@@ -528,7 +552,7 @@ declare module 'flet-box' {
     borderColor?: Color;
     onPress?: (event?: Event) => void;
   }
-  export function Card(props: CardProps): Widget;
+  export function Card(props: CardProps): FletWidget;
 
   export interface ListTileProps extends CommonProps {
     leftItem?: Widget;
@@ -556,7 +580,7 @@ declare module 'flet-box' {
     elevation?: number;
     borderRadius?: number;
   }
-  export function ListTile(props: ListTileProps): Widget;
+  export function ListTile(props: ListTileProps): FletWidget;
 
   export interface ProgressBarProps extends CommonProps {
     value?: number;
@@ -573,7 +597,7 @@ declare module 'flet-box' {
     striped?: boolean;
     animatedStripes?: boolean;
   }
-  export function ProgressBar(props: ProgressBarProps): Widget & {
+  export function ProgressBar(props: ProgressBarProps): FletWidget & {
     value: number;
     updateProgress(value: number): void;
     getValue(): number;
@@ -597,7 +621,7 @@ declare module 'flet-box' {
     iconHalf?: string;
     onChange?: (value: number) => void;
   }
-  export function Rating(props: RatingProps): Widget & {
+  export function Rating(props: RatingProps): FletWidget & {
     value: number;
     setValue(value: number): void;
     getValue(): number;
@@ -619,7 +643,7 @@ declare module 'flet-box' {
     elevation?: number;
     gap?: number;
   }
-  export function Chip(props: ChipProps): Widget;
+  export function Chip(props: ChipProps): FletWidget;
 
   export interface AdSenseProps extends CommonProps {
     client?: string;
@@ -638,7 +662,7 @@ declare module 'flet-box' {
     onError?: (error: Error, widget: Widget) => void;
     children?: Widget[];
   }
-  export function AdSense(props: AdSenseProps): Widget & {
+  export function AdSense(props: AdSenseProps): FletWidget & {
     refresh(): Widget;
     load(): void;
     getElement(): Widget;
@@ -667,7 +691,7 @@ declare module 'flet-box' {
     onFailed?: (error: Error, widget: Widget) => void;
     onDismissed?: () => void;
   }
-  export function AdMob(props: AdMobProps): Widget & {
+  export function AdMob(props: AdMobProps): FletWidget & {
     show(): Promise<unknown>;
     hide(): Promise<unknown>;
     showInterstitial(): Promise<unknown>;
@@ -688,7 +712,7 @@ declare module 'flet-box' {
     showZero?: boolean;
     max?: number;
   }
-  export function Badge(props: BadgeProps): Widget & {
+  export function Badge(props: BadgeProps): FletWidget & {
     updateValue(newValue: string | number): void;
   };
 
@@ -722,7 +746,7 @@ declare module 'flet-box' {
     onChanged?: (value: number) => void;
     onChangeEnd?: (value: number) => void;
   }
-  export function Slider(props: SliderProps): Widget & {
+  export function Slider(props: SliderProps): FletWidget & {
     value: number;
     min: number;
     max: number;
@@ -763,7 +787,7 @@ declare module 'flet-box' {
     animationDuration?: number;
     elevation?: number;
   }
-  export function Accordion(props: AccordionProps): Widget & {
+  export function Accordion(props: AccordionProps): FletWidget & {
     expanded: boolean;
     setExpanded(exp: boolean, triggerCallback?: boolean): void;
     toggle(): void;
@@ -776,7 +800,7 @@ declare module 'flet-box' {
     margin?: number | { top?: number; right?: number; bottom?: number; left?: number };
     orientation?: 'horizontal' | 'vertical';
   }
-  export function Divider(props?: DividerProps): Widget;
+  export function Divider(props?: DividerProps): FletWidget;
 
   // =========================================================================
   // Formularios e interacción
@@ -813,7 +837,9 @@ declare module 'flet-box' {
     onBlur?: (event: Event) => void;
     onEnter?: (value: string, event: Event) => void;
   }
-  export function Input(props: InputProps): Widget & {
+  export function Input(props: InputProps): FletWidget & {
+    /** The native `<input>` the widget painted: the only place `placeholder` and `value` are visible. */
+    _input: HTMLInputElement;
     getValue(): string;
     setValue(value: string): void;
     isValid(): boolean;
@@ -837,7 +863,7 @@ declare module 'flet-box' {
     label?: string;
     name?: string;
   }
-  export function Radio(props: RadioProps): Widget & {
+  export function Radio(props: RadioProps): FletWidget & {
     select(): void;
     unselect(): void;
     isSelected(): boolean;
@@ -856,7 +882,7 @@ declare module 'flet-box' {
     activeColor?: Color;
     label?: string;
   }
-  export function Switch(props: SwitchProps): Widget & {
+  export function Switch(props: SwitchProps): FletWidget & {
     updateValue(value: boolean): void;
     getValue(): boolean;
   };
@@ -880,7 +906,7 @@ declare module 'flet-box' {
      */
     variant?: 'outlined' | 'filled';
   }
-  export function Checkbox(props: CheckboxProps): Widget & {
+  export function Checkbox(props: CheckboxProps): FletWidget & {
     setChecked(checked: boolean, triggerCallback?: boolean): void;
     getChecked(): boolean;
   };
@@ -893,7 +919,10 @@ declare module 'flet-box' {
     disabled?: boolean;
     label?: string;
     error?: boolean;
-    variant?: 'outlined' | 'filled';
+    // `text` is not a preset the widget styles — it is the honest name for
+    // "no chrome": transparent, borderless, just the label and the chevron,
+    // which is how an inline model picker inside a composer is built.
+    variant?: 'outlined' | 'filled' | 'text';
     size?: 'small' | 'medium' | 'large';
     borderRadius?: number;
     color?: Color;
@@ -914,7 +943,7 @@ declare module 'flet-box' {
      */
     onPress?: (value: any) => void;
   }
-  export function Dropdown(props: DropdownProps): Widget & {
+  export function Dropdown(props: DropdownProps): FletWidget & {
     value: any;
     options: DropdownOption[];
     disabled: boolean;
@@ -1086,7 +1115,7 @@ declare module 'flet-box' {
     backgroundColor?: Color;
     closeDrawerOnNavigate?: boolean;
   }
-  export function Scaffold(props: ScaffoldProps): Widget & {
+  export function Scaffold(props: ScaffoldProps): FletWidget & {
     updateLeftNavBar(cfg: any): void;
     updateRightNavBar(cfg: any): void;
     setLeftNavBarWidth(width: number): void;
@@ -1110,7 +1139,7 @@ declare module 'flet-box' {
     forceMobile?: boolean;
     forceDesktop?: boolean;
   }
-  export function AdaptiveScaffold(props: AdaptiveScaffoldProps): Widget & {
+  export function AdaptiveScaffold(props: AdaptiveScaffoldProps): FletWidget & {
     updateLeftNavBar(cfg: any): void;
     updateRightNavBar(cfg: any): void;
     setLeftNavBarWidth(width: number): void;
@@ -1143,7 +1172,7 @@ declare module 'flet-box' {
     borderRadius?: number;
     shadow?: boolean | string;
   }
-  export function AppBar(props: AppBarProps): Widget & {
+  export function AppBar(props: AppBarProps): FletWidget & {
     setTitle(title: string): void;
     setBackgroundColor(color: string): void;
     show(): void;
@@ -1167,7 +1196,7 @@ declare module 'flet-box' {
     closeOnPress?: boolean;
     disableTransform?: boolean;
   }
-  export function DrawerItem(props: DrawerItemProps): Widget;
+  export function DrawerItem(props: DrawerItemProps): FletWidget;
 
   export interface DrawerInstance {
     open(): void;
@@ -1216,7 +1245,7 @@ declare module 'flet-box' {
     elevation?: number;
     useRouter?: boolean;
   }
-  export function BottomNavigation(props: BottomNavigationProps): Widget & {
+  export function BottomNavigation(props: BottomNavigationProps): FletWidget & {
     setActiveIndex(index: number): void;
     getActiveIndex(): number;
     getCurrentRoute(): string | null;
@@ -1234,7 +1263,7 @@ declare module 'flet-box' {
     disabled?: boolean;
     margin?: number;
   }
-  export function FloatingActionButton(props: FloatingActionButtonProps): Widget;
+  export function FloatingActionButton(props: FloatingActionButtonProps): FletWidget;
 
   export interface TabsProps extends CommonProps {
     tabs: (string | { label: string; icon?: string; badge?: number | string })[];
@@ -1257,7 +1286,7 @@ declare module 'flet-box' {
     badges?: (number | string)[];
     alignment?: 'left' | 'center' | 'right';
   }
-  export function Tabs(props: TabsProps): Widget & {
+  export function Tabs(props: TabsProps): FletWidget & {
     activeIndex: number;
     setActiveTab(index: number): void;
   };
@@ -1273,7 +1302,7 @@ declare module 'flet-box' {
     bgColor?: Color;
     borderRight?: string;
   }
-  export function CollapsibleSideBar(props: CollapsibleSideBarProps): Widget & {
+  export function CollapsibleSideBar(props: CollapsibleSideBarProps): FletWidget & {
     updateWidth(width: number): void;
   };
 
@@ -1324,7 +1353,7 @@ declare module 'flet-box' {
     bottom?: number | string;
     left?: number | string;
   }
-  export function AnimatedBox(props: AnimatedBoxProps): Widget;
+  export function AnimatedBox(props: AnimatedBoxProps): FletWidget;
 
   export interface AnimatedTextProps extends CommonProps {
     child: Widget;
@@ -1334,7 +1363,7 @@ declare module 'flet-box' {
     delayBetween?: number;
     orientation?: 'row' | 'column';
   }
-  export function AnimatedText(props: AnimatedTextProps): Widget;
+  export function AnimatedText(props: AnimatedTextProps): FletWidget;
 
   export interface MatrixRainProps extends CommonProps {
     chars?: string;
@@ -1346,7 +1375,7 @@ declare module 'flet-box' {
     position?: 'fixed' | 'absolute';
     zIndex?: number;
   }
-  export function MatrixRain(props?: MatrixRainProps): Widget;
+  export function MatrixRain(props?: MatrixRainProps): FletWidget;
 
   export interface ParallaxBoxProps extends CommonProps {
     child: Widget;
@@ -1360,7 +1389,7 @@ declare module 'flet-box' {
     duration?: number;
     easing?: string;
   }
-  export function ParallaxBox(props: ParallaxBoxProps): Widget & {
+  export function ParallaxBox(props: ParallaxBoxProps): FletWidget & {
     updateSpeed(speed: number): void;
     updateDirection(direction: string): void;
     setPosition(x: number, y: number, animate?: boolean): void;
@@ -1538,7 +1567,7 @@ declare module 'flet-box' {
     cellPadding?: Padding;
     headerCellPadding?: Padding;
   }
-  export function DataTable(props: DataTableProps): Widget & {
+  export function DataTable(props: DataTableProps): FletWidget & {
     updateData(rows: any[]): void;
     updateColumns(columns: DataTableColumn[]): void;
   };
@@ -1569,7 +1598,7 @@ declare module 'flet-box' {
     showValues?: boolean;
     borderRadius?: number;
   }
-  export function Chart(props: ChartProps): Widget & {
+  export function Chart(props: ChartProps): FletWidget & {
     updateData(newData: any[], newLabels?: string[]): void;
     redraw(): void;
   };
@@ -1582,7 +1611,7 @@ declare module 'flet-box' {
     errorCorrection?: 'L' | 'M' | 'Q' | 'H';
     margin?: number;
   }
-  export function QRCode(props: QRCodeProps): Widget & {
+  export function QRCode(props: QRCodeProps): FletWidget & {
     updateValue(value: string): void;
     download(filename?: string): void;
     getDataURL(): string;
@@ -1604,7 +1633,7 @@ declare module 'flet-box' {
     lineNumberWidth?: number;
     lineNumberColor?: Color;
   }
-  export function CodeViewer(props: CodeViewerProps): Widget & {
+  export function CodeViewer(props: CodeViewerProps): FletWidget & {
     updateCode(code: string): void;
     updateTitle(title: string): void;
     scrollTo(x: number, y: number): void;
@@ -1619,7 +1648,7 @@ declare module 'flet-box' {
     indent?: number;
   }
   /** Paints the reconstructed call of a widget tree. */
-  export function Inspector(props: InspectorProps): Widget;
+  export function Inspector(props: InspectorProps): FletWidget;
   /** Rebuilds the call that made a widget, as a string. */
   export function Inspector(widget: Widget, indent?: number): string;
   export function printWidgetCode(widget: Widget): void;
@@ -1638,7 +1667,7 @@ declare module 'flet-box' {
     dragOverlayColor?: Color;
     dragBorderColor?: Color;
   }
-  export function DraggBox(props: DraggBoxProps): Widget;
+  export function DraggBox(props: DraggBoxProps): FletWidget;
 
   export interface DroppBoxProps extends CommonProps {
     child: Widget;
@@ -1668,7 +1697,7 @@ declare module 'flet-box' {
     transitionTiming?: string;
     showFeedback?: boolean;
   }
-  export function DroppBox(props: DroppBoxProps): Widget;
+  export function DroppBox(props: DroppBoxProps): FletWidget;
 
   export interface CarouselProps extends CommonProps {
     items: (Widget | string | { src: string; alt?: string })[];
@@ -1691,7 +1720,7 @@ declare module 'flet-box' {
     buttonTop?: number | string;
     onIndexChange?: (index: number) => void;
   }
-  export function Carousel(props: CarouselProps): Widget & {
+  export function Carousel(props: CarouselProps): FletWidget & {
     next(): void;
     prev(): void;
     goTo(index: number): void;
@@ -1722,7 +1751,7 @@ declare module 'flet-box' {
     borderWidth?: number;
     shadow?: string;
   }
-  export function Tooltip(props: TooltipProps): Widget & {
+  export function Tooltip(props: TooltipProps): FletWidget & {
     showTooltip(): void;
     hideTooltip(): void;
     updateContent(newText: string): void;
@@ -1744,7 +1773,7 @@ declare module 'flet-box' {
     showTotal?: boolean;
     label?: string;
   }
-  export function Pagination(props: PaginationProps): Widget;
+  export function Pagination(props: PaginationProps): FletWidget;
 
   export interface TreeViewNode {
     id: string;
@@ -1788,7 +1817,7 @@ declare module 'flet-box' {
     iconSize?: number;
     transitionDuration?: string;
   }
-  export function TreeView(props: TreeViewProps): Widget & {
+  export function TreeView(props: TreeViewProps): FletWidget & {
     updateNodes(nodes: any[], selectedId?: string | null): void;
     expandAll(): void;
     collapseAll(): void;
@@ -1821,7 +1850,7 @@ declare module 'flet-box' {
     margin?: Margin;
     width?: number | string;
   }
-  export function Stepper(props: StepperProps): Widget & {
+  export function Stepper(props: StepperProps): FletWidget & {
     goTo(index: number): void;
     next(): void;
     back(): void;
@@ -1859,7 +1888,7 @@ declare module 'flet-box' {
     /** Called with the id after the accent has been applied to the screen. */
     onChange?: (id: string) => void;
   }
-  export function ThemePicker(props?: ThemePickerProps): Widget;
+  export function ThemePicker(props?: ThemePickerProps): FletWidget;
 
   export interface SkeletonProps extends CommonProps {
     variant?: 'text' | 'circular' | 'avatar' | 'image' | 'card' | 'listTile' | 'button';
@@ -1875,7 +1904,7 @@ declare module 'flet-box' {
     pulseDuration?: string;
     waveDuration?: string;
   }
-  export function Skeleton(props: SkeletonProps): Widget;
+  export function Skeleton(props: SkeletonProps): FletWidget;
 
   export interface InstallButtonProps extends CommonProps {
     text?: string;
@@ -1888,7 +1917,7 @@ declare module 'flet-box' {
     onInstalled?: () => void;
     onClick?: () => void;
   }
-  export function InstallButton(props: InstallButtonProps): Widget;
+  export function InstallButton(props: InstallButtonProps): FletWidget;
 
   export interface VideoProps extends Omit<CommonProps, 'ref'> {
     src: string;
@@ -1961,7 +1990,7 @@ declare module 'flet-box' {
     animationDuration?: number;
     onComplete?: () => void;
     ref?: (canvas: HTMLCanvasElement) => void;
-    // Nuevas props
+    // New props
     valueFormat?: 'percent' | 'value' | 'custom';
     valueSuffix?: string;
     valuePrefix?: string;
@@ -1983,7 +2012,7 @@ declare module 'flet-box' {
     subtitleSize?: number;
     tooltip?: string;
   }
-  export function CircularBar(props: CircularBarProps): Widget & {
+  export function CircularBar(props: CircularBarProps): FletWidget & {
     updateValue(newValue: number, newMax?: number): void;
   };
 
@@ -2024,7 +2053,7 @@ declare module 'flet-box' {
     sliceBorderWidth?: number;
     sliceBorderColor?: Color;
   }
-  export function CircularChart(props: CircularChartProps): Widget & {
+  export function CircularChart(props: CircularChartProps): FletWidget & {
     updateData(data: CircularChartSlice[], animate?: boolean): void;
     redraw(): void;
     setCornerRadius(radius: number): void;
@@ -2069,12 +2098,15 @@ declare module 'flet-box' {
     imageBorderRadius?: number;
     padding?: Padding;
     maxHeight?: number;
-    overflow?: string;
+    // Same value as the engine routes on every widget: the scroll container of the
+    // document. Declared as a bare `string` it was incompatible with the base
+    // interface, which a declaration reader reports as a broken inheritance.
+    overflow?: 'auto' | 'hidden' | 'visible' | 'scroll' | 'clip';
     backgroundColor?: Color;
     borderRadius?: number;
     allowDangerousHtml?: boolean;
   }
-  export function Markdown(props: MarkdownProps): Widget & {
+  export function Markdown(props: MarkdownProps): FletWidget & {
     updateContent(newText: string): void;
     getContent(): string;
     getSource(): string;
@@ -2182,7 +2214,7 @@ declare module 'flet-box' {
     /** Fires on each watched fix, including the ones while `followUser` is off. */
     onUserUpdate?: (fix: MapFix) => void;
   }
-  export function Maps(props: MapsProps): Widget & {
+  export function Maps(props: MapsProps): FletWidget & {
     setCenter(position: LatLng, zoom?: number): Widget;
     getCenter(): { lat: number; lng: number };
     getZoom(): number;
@@ -2223,13 +2255,30 @@ declare module 'flet-box' {
   export function App(widget: Widget): Widget;
 
   /**
+   * The element the factory returns for a native `<input type="file">`: the
+   * factory instance plus the HTML input surface. The framework has no file
+   * control, so an app that needs one builds it with `WidgetFactory` and must be
+   * able to say so:
+   *
+   * ```js
+   * const entrada = WidgetFactory<FletInput>({ tag: 'input' });
+   * entrada.type = 'file';
+   * ```
+   */
+  export type FletInput = WidgetFactoryInstance & HTMLInputElement;
+
+  /**
    * The only rendering engine. Turns a tag (or config object) plus props into a
    * real `HTMLElement` with styles, events, children, lifecycle and reactivity.
+   *
+   * The return type is the generic `T`, defaulting to the factory instance. Pass
+   * `FletInput` when the element is a native input the code will drive directly —
+   * otherwise an editor reads `entrada.type` as a missing property.
    */
-  export function WidgetFactory(
+  export function WidgetFactory<T extends WidgetFactoryInstance = WidgetFactoryInstance>(
     tag: string | { tag?: string; [prop: string]: any },
     customProps?: Record<string, any>
-  ): WidgetFactoryInstance;
+  ): T;
 
   export function createApp(routes: any, options?: { rootId?: string; fallback?: Widget | (() => Widget) }): {
     start(): void;
@@ -2253,7 +2302,7 @@ declare module 'flet-box' {
   export function getHMR(): WebSocket | null;
 
   // =========================================================================
-  // Utils (temas, dimensiones, aleatorios, etc.)
+  // Utils (themes, dimensions, random, etc.)
   // =========================================================================
   export const colors: Record<string, string>;
   export const palettes: Record<string, Record<string, string>>;
@@ -2641,7 +2690,10 @@ declare module 'flet-box' {
   }): void;
   export function injectKeyframes(name: string, keyframes: string): void;
 
-  export function border(width?: number | string, style?: string, color: string): string;
+  // `color` is required (a colorless border is invisible) and the first two have
+  // runtime defaults, so the type admits `undefined` in their place: a required
+  // parameter cannot simply follow an optional one in a declaration.
+  export function border(width: number | string | undefined, style: string | undefined, color: string): string;
   export function margin(value: number | string | { all?: number; horizontal?: number; vertical?: number; top?: number; right?: number; bottom?: number; left?: number }): string;
   export function padding(value: number | string | { all?: number; horizontal?: number; vertical?: number; top?: number; right?: number; bottom?: number; left?: number }): string;
   export function gradient(type: 'linear' | 'circle' | 'conic', colors: string[], angle?: number): string;
@@ -2712,7 +2764,18 @@ declare module 'flet-box' {
   export function fromJSON(jsonStr: string): any;
   export function fromEntries(entries: [string, any][]): any;
 
-  export function ref<T extends Widget = Widget>(): (widget: T) => T & { update(props: Partial<any>): void };
+  /**
+   * What `ref()` hands back: the callback the framework calls with the widget,
+   * plus the live handle the docs use (`display.update({ text })`). Typing it as
+   * a bare function is why `display.update(...)` was an editor error even though
+   * the helper defines it.
+   */
+  export type Ref<T extends Widget = Widget> = ((widget: T | null) => T | null) & {
+    /** The bound widget, or null before the framework mounts it. */
+    current?: T | null;
+    update(props?: Record<string, any>): void;
+  };
+  export function ref<T extends Widget = Widget>(): Ref<T>;
   export function uuid(): string;
   export function shortId(): string;
   export function numericId(length?: number): string;

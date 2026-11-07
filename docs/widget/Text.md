@@ -27,12 +27,14 @@ const title = Text({
 | `children` | `string` | An array of child widgets. Alias: `child` for a single child. |
 | `size` | `number` | Overall size preset or pixel value, depending on the widget. |
 | `color` | `Color` | Foreground color, usually the text or icon color. |
-| `weight` | `'normal' \| 'bold' \| number` | Font weight, such as `normal`, `bold`, or a number. |
+| `weight` | `'normal' \| 'bold' \| 'bolder' \| 'lighter' \| '100' \| '200' \| '300' \| '400' \| '500' \| '600' \| '700' \| '800' \| '900' \| number` | Font weight, such as `normal`, `bold`, or a number. |
 | `align` | `'left' \| 'center' \| 'right' \| 'justify'` | Horizontal text alignment. |
 | `italic` | `boolean` | Renders the text in italics. |
 | `decoration` | `'underline' \| 'line-through' \| 'overline'` | Text decoration such as `underline` or `line-through`. |
 | `lineHeight` | `number \| string` | Line height as a number multiplier or CSS value. |
 | `letterSpacing` | `number \| string` | Extra space between letters. |
+| `textStroke` | `string` | The `textStroke` value for the widget. |
+| `paintOrder` | `string` | The `paintOrder` value for the widget. |
 | `type` | `'h1' \| 'h2' \| 'h3' \| 'h4' \| 'h5' \| 'h6' \| 'p'` | Kind or mode of the widget. |
 | `styles` | `Array<'bold' \| 'italic' \| 'underline' \| 'strikethrough' \| 'mark' \| 'small' \| 'code'>` | Extra inline styles applied to the text. |
 | `onPress` | `(event?: Event) => void` | Callback fired when the widget is pressed. Alias: `onClick`. |
@@ -122,6 +124,11 @@ Every widget also accepts these shared props — see [common props](COMMON_PROPS
 | `onclick` | `(event?: Event) => void` | Lowercase alias of `onClick`, kept because the shipped templates and the HTML habit write it. |
 | `alignSelf` | `AlignSelf` | Overrides the parent's `alignItems` for this child alone (CSS `align-self`). Alias: `selfAlign`. |
 | `selfAlign` | `AlignSelf` | Alias of `alignSelf`. |
+| `overflow` | `'auto' \| 'hidden' \| 'visible' \| 'scroll' \| 'clip'` | How overflowing content is handled (`hidden`, `auto`, `scroll`). |
+| `overflowX` | `'auto' \| 'hidden' \| 'visible' \| 'scroll' \| 'clip'` | The `overflowX` value for the widget. |
+| `overflowY` | `'auto' \| 'hidden' \| 'visible' \| 'scroll' \| 'clip'` | The `overflowY` value for the widget. |
+| `textOverflow` | `'clip' \| 'ellipsis' \| string` | The `textOverflow` value for the widget. |
+| `whiteSpace` | `'normal' \| 'nowrap' \| 'pre' \| 'pre-wrap' \| 'pre-line' \| string` | The `whiteSpace` value for the widget. |
 | `id` | `string` | DOM `id` for the rendered element. |
 | `className` | `string` | CSS class names applied to the rendered element. |
 | `ref` | `(widget: Widget) => void` | Callback that receives the underlying DOM node. |

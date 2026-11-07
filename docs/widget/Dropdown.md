@@ -29,7 +29,7 @@ const city = Dropdown({
 | `disabled` | `boolean` | Disables interaction and shows the non-interactive state. |
 | `label` | `string` | Label or caption shown near the control. |
 | `error` | `boolean` | Error flag or message shown under the field. |
-| `variant` | `'outlined' \| 'filled'` | Visual variation or style preset. |
+| `variant` | `'outlined' \| 'filled' \| 'text'` | Visual variation or style preset. |
 | `size` | `'small' \| 'medium' \| 'large'` | Overall size preset or pixel value, depending on the widget. |
 | `borderRadius` | `number` | Rounds the corners of the widget. |
 | `color` | `Color` | Foreground color, usually the text or icon color. |
@@ -127,6 +127,11 @@ Every widget also accepts these shared props — see [common props](COMMON_PROPS
 | `onclick` | `(event?: Event) => void` | Lowercase alias of `onClick`, kept because the shipped templates and the HTML habit write it. |
 | `alignSelf` | `AlignSelf` | Overrides the parent's `alignItems` for this child alone (CSS `align-self`). Alias: `selfAlign`. |
 | `selfAlign` | `AlignSelf` | Alias of `alignSelf`. |
+| `overflow` | `'auto' \| 'hidden' \| 'visible' \| 'scroll' \| 'clip'` | How overflowing content is handled (`hidden`, `auto`, `scroll`). |
+| `overflowX` | `'auto' \| 'hidden' \| 'visible' \| 'scroll' \| 'clip'` | The `overflowX` value for the widget. |
+| `overflowY` | `'auto' \| 'hidden' \| 'visible' \| 'scroll' \| 'clip'` | The `overflowY` value for the widget. |
+| `textOverflow` | `'clip' \| 'ellipsis' \| string` | The `textOverflow` value for the widget. |
+| `whiteSpace` | `'normal' \| 'nowrap' \| 'pre' \| 'pre-wrap' \| 'pre-line' \| string` | The `whiteSpace` value for the widget. |
 | `id` | `string` | DOM `id` for the rendered element. |
 | `className` | `string` | CSS class names applied to the rendered element. |
 | `ref` | `(widget: Widget) => void` | Callback that receives the underlying DOM node. |

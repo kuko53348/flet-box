@@ -14,6 +14,12 @@
  *              other gate reads it as text.
  *   api      — the anti-hallucination gate: invented widgets and props,
  *              positional arguments, foreign imports, broken imports.
+ *   types    — the editor's own question, asked outside the editor: the
+ *              project's `jsconfig.json`, run through the TypeScript checker,
+ *              so `estado.update()` on a widget and a prop the declaration
+ *              forgot are reported as `file:line:column`, not as a squiggle
+ *              somebody learns to ignore. Skipped when TypeScript is absent
+ *              (the editor brings its own, an installed app has neither).
  *   ui       — the design gate: tokens, the 8-based scale, tap targets,
  *              labels, contrast.
  *   structure — how the app's own modules are wired: a cycle between two of
@@ -35,6 +41,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { execFile } from "node:child_process";
+import { createRequire } from "node:module";
 import { checkApi, loadApi, SEVERITY } from "./checkApi.js";
 import { checkUi, ERROR_CODES, WARN_CODES, INFO_CODES } from "./checkUi.js";
 import { scanStructure } from "./checkStructure.js";
@@ -318,16 +325,131 @@ const testsGate = async (root, context = {}) => {
   };
 };
 
+/**
+ * One diagnostic line from `tsc --pretty false`:
+ * `src/file.js(12,5): error TS2339: Property 'update' does not exist …`
+ *
+ * The message is kept with its `TS####` code: it is what the editor prints and
+ * what the reader can paste into a search, and it tells a missing property
+ * (2339) from a wrong union (2769) without parsing English.
+ */
+const TYPE_DIAGNOSTIC = /^(.+?)\((\d+),(\d+)\): error (TS\d+): (.*)$/;
+
+/**
+ * Resolve the compiler without depending on it.
+ *
+ * This file ships inside every app, so `typescript` is never a declared
+ * dependency of the project being checked: an editor brings its own, and an app
+ * installed from the registry has none. A missing compiler means the gate
+ * cannot answer and says so — it does not pass silently and it does not fail
+ * the build. `FLETBOX_TYPESCRIPT` points at a directory with `lib/tsc.js`.
+ *
+ * @returns {string|null} Absolute path to `tsc.js`.
+ */
+const resolveTsc = () => {
+  const explicit = process.env.FLETBOX_TYPESCRIPT;
+  if (explicit) {
+    const candidate = path.join(explicit, "lib", "tsc.js");
+    return fs.existsSync(candidate) ? candidate : null;
+  }
+  try {
+    const require = createRequire(import.meta.url);
+    const candidate = path.join(path.dirname(require.resolve("typescript")), "tsc.js");
+    return fs.existsSync(candidate) ? candidate : null;
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * The type gate: the project's own `jsconfig.json` through the real compiler.
+ *
+ * The check the editor runs is the one that was missing from `verify`: a widget
+ * declared `HTMLElement` made the documented `widget.update({ … })` a red
+ * squiggle in eight files, and nothing in the pipeline noticed, because
+ * `check-app-types` only proves the five generated templates. This gate reads
+ * the same `jsconfig.json` the editor reads, so the app and the editor cannot
+ * disagree about whose fault an error is.
+ *
+ * @param {string} root Project root.
+ * @returns {Promise<object>}
+ */
+const typesGate = async (root) => {
+  const skipped = (why) => ({
+    name: "types",
+    title: "Type check",
+    findings: [],
+    exitCode: 0,
+    skipped: why,
+  });
+  const config = ["jsconfig.json", "tsconfig.json"].find((name) =>
+    fs.existsSync(path.join(root, name)),
+  );
+  if (!config) return skipped("no jsconfig.json — the editor has nothing to check");
+  const tsc = resolveTsc();
+  if (!tsc) return skipped("typescript is not installed — the editor brings its own");
+
+  const output = await new Promise((resolve) => {
+    execFile(
+      process.execPath,
+      [tsc, "-p", config, "--noEmit", "--pretty", "false"],
+      { cwd: root, maxBuffer: 32 * 1024 * 1024 },
+      (error, stdout, stderr) =>
+        resolve({
+          code: error ? (typeof error.code === "number" ? error.code : 1) : 0,
+          text: `${stdout ?? ""}${stderr ?? ""}`,
+        }),
+    );
+  });
+
+  const findings = [];
+  let last = null;
+  for (const raw of output.text.split("\n")) {
+    const line = raw.replace(/\r$/, "");
+    if (!line.trim()) continue;
+    const match = TYPE_DIAGNOSTIC.exec(line);
+    if (match) {
+      last = shape({
+        code: "TYPE_ERROR",
+        file: path.resolve(root, match[1]),
+        line: Number(match[2]),
+        column: Number(match[3]),
+        message: `${match[4]} ${match[5]}`,
+      });
+      findings.push(last);
+    } else if (last && /^\s/.test(line)) {
+      // tsc elaborates a type error over the next indented lines; they belong
+      // to the finding above, not to a finding of their own.
+      last.detail = last.detail ? `${last.detail}\n${line.trim()}` : line.trim();
+    } else if (!findings.length) {
+      // A failure that is not about one line (a bad `include`, a missing file)
+      // still has to be named, or a red gate would print no reason.
+      last = shape({ code: "TYPE_ERROR", message: line.trim() });
+      findings.push(last);
+    }
+  }
+  if (output.code !== 0 && !findings.length) {
+    findings.push(shape({ code: "TYPE_ERROR", message: `tsc exited ${output.code}` }));
+  }
+  return {
+    name: "types",
+    title: "Type check",
+    findings,
+    exitCode: output.code === 0 ? 0 : 1,
+  };
+};
+
 const GATES = {
   syntax: syntaxGate,
   api: apiGate,
+  types: typesGate,
   ui: uiGate,
   structure: structureGate,
   surface: surfaceGate,
   tests: testsGate,
 };
 
-const GATE_ORDER = ["syntax", "api", "ui", "structure", "surface", "tests"];
+const GATE_ORDER = ["syntax", "api", "types", "ui", "structure", "surface", "tests"];
 
 /* ----------------------------------------------------------------- report */
 

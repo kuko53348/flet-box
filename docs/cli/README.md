@@ -660,15 +660,19 @@ api` in a created app is `unpack --all --md`.
 ## Verify everything at once
 
 `flet-box verify` is the single command: it parses every module, then runs the
-anti-hallucination check, the clean-UI check, the structural check and the prop
-contract **in parallel**, and then runs whichever test scripts the project
-declares — one report, one exit code. It is the command to run after every edit:
-the report names the gate, the file at `line:column` and what to do about it,
-instead of making you run six commands and remember which one failed.
+anti-hallucination check, the type check (the project's own `jsconfig.json`
+through TypeScript — the same service the editor uses, so a widget declared as
+a bare `HTMLElement` and the `widget.update({ … })` call it rejects are a gate
+failure with a line, not a squiggle to be ignored), the clean-UI check, the
+structural check and the prop contract **in parallel**, and then runs whichever
+test scripts the project declares — one report, one exit code. It is the command
+to run after every edit: the report names the gate, the file at `line:column`
+and what to do about it, instead of making you run seven commands and remember
+which one failed.
 
 ```bash
 flet-box verify                  # every gate and every suite, one report
-flet-box verify --only syntax    # one gate: syntax | api | ui | structure | surface | tests
+flet-box verify --only syntax    # one gate: syntax | api | types | ui | structure | surface | tests
 flet-box verify --only tests     # the project's own suites, nothing else
 flet-box verify --fix            # the mechanical repair first, then the gates
 flet-box verify --json           # the report as data

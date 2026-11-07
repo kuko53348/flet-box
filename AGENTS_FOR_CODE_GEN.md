@@ -154,7 +154,10 @@ npm run verify     # every gate, one report, one exit code
 --check`, the parser the runtime uses — a missing `)` is reported as
 `file:line:column` with the offending line, a caret under the character and a
 hint), then runs the anti-hallucination gate (invented widgets, positional
-arguments, foreign imports, broken imports), the design gate (tokens, the scale,
+arguments, foreign imports, broken imports), the type gate (the app's own
+`jsconfig.json` through TypeScript: a widget declared as a bare `HTMLElement`
+makes the documented `widget.update()` an error, and a prop the declaration
+forgot is one too), the design gate (tokens, the scale,
 tap targets, labels, contrast), the structural gate (a cycle between two of the
 app's own modules, a module outside the project's folders, markup written by
 hand) and the prop contract (a prop the widget reads but nothing declares), and
