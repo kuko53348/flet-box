@@ -15,6 +15,15 @@ often and the rule each one should belong to. That list is the loop: a code
 that keeps coming back and has no rule behind it is a rule that has not been
 written yet.
 
+## Gate defects
+
+A code listed here was reported by the gate, not by the code it checked. The
+window is the first and the last day it accounts for, so the runs inside it are
+left out of the metric; a run after `Fixed` counts again.
+
+| Code | Seen | Fixed | Where |
+| --- | --- | --- | --- |
+
 | When | Project | Result | Gates | Codes |
 | --- | --- | --- | --- | --- |
 | 2026-10-27T15:49:32.175Z | flet-box | ✓ | — | — |

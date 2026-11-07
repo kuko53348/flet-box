@@ -159,6 +159,12 @@ you did not write, and you are the one who writes it. A code that comes back
 *with* a rule behind it is a different problem, and the command says so: the
 rule is not landing.
 
+But a recurring code can also be the gate's own defect. When you prove that,
+write it into the log's **Gate defects** table with the window of runs it
+explains and where the fix lives — do not rename exports in the app to dodge
+it, and do not hard-code an exception inside the checker: the window is scoped,
+so the same code counts against the project again after the fix day.
+
 ## R9 Do not trust your memory of this framework
 
 FletBox has no `.d.ts` you have read in full, the prop set grows between versions,

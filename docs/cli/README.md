@@ -732,6 +732,14 @@ each one should belong to, and it **exits non-zero** when a code has come back
 three times with no rule behind it. That is the loop closing: a code that keeps
 coming back is a rule that has not been written yet.
 
+The log also holds a **Gate defects** table. A code written there with its
+window — the first and the last day it explains — is the framework's debt, not
+the project's correction: those runs are left out of the metric, never asked to
+justify a rule, and printed on their own (`fixed`, or `⚠ OPEN`). A run after the
+window's last day counts again, so an old row can never silence the same mistake
+coming back. The table is data in the log, not a list inside the command: a
+project records what it proved, and the next release cannot rewrite its past.
+
 ## Command reference
 
 

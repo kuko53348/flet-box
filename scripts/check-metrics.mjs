@@ -9,6 +9,10 @@
 // has not been fixed yet — and the loop is proven to bite: a code that comes
 // back three times with no rule behind it must fail the command.
 //
+// The "Gate defects" table is proven too: a run the gate itself got wrong counts
+// as a pass and never feeds the rule loop, a run after the fix counts again, and
+// an open defect is named as the framework's debt instead of failing the app.
+//
 // Run with:
 //
 //   node scripts/check-metrics.mjs
@@ -19,8 +23,10 @@ import path from "node:path";
 import {
   metrics,
   parseLog,
+  parseDefects,
   groupGenerations,
   rankCodes,
+  rankDefects,
   metricsLog,
   owner,
   OWNERS,
@@ -51,12 +57,23 @@ const check = async (name, fn) => {
  * Write a log with the given rows and return its path.
  *
  * @param {Array<[string, string, string, string, string]>} rows
+ * @param {Array<[string, string, string, string]>} [defects] Registry rows:
+ *   code, first day, last day (`—` while open), where.
  * @returns {string}
  */
-const writeLog = (rows) => {
+const writeLog = (rows, defects = []) => {
   const file = path.join(scratch, "generations.md");
   const lines = rows.map((row) => `| ${row.join(" | ")} |`);
-  fs.writeFileSync(file, `| When | Project | Result | Gates | Codes |\n| --- | --- | --- | --- | --- |\n${lines.join("\n")}\n`, "utf8");
+  const registry = defects.length
+    ? `\n## Gate defects\n\n| Code | Seen | Fixed | Where |\n| --- | --- | --- | --- |\n${defects
+        .map((row) => `| ${row.join(" | ")} |`)
+        .join("\n")}\n`
+    : "";
+  fs.writeFileSync(
+    file,
+    `| When | Project | Result | Gates | Codes |\n| --- | --- | --- | --- | --- |${registry}\n${lines.join("\n")}\n`,
+    "utf8",
+  );
   return file;
 };
 
@@ -290,6 +307,119 @@ await check("a code that comes back once is not called stubborn", async () => {
 });
 
 // ---------------------------------------------------------------------------
+// 3b — a code the gate got wrong is the framework's debt, not the project's
+// ---------------------------------------------------------------------------
+
+await check("the Gate defects table is read, and `—` means still open", () => {
+  const file = writeLog(
+    [["2026-11-07T10:00:00.000Z", "demo", "✓", "—", "—"]],
+    [
+      ["MISSING_EXPORT", "2026-11-06", "2026-11-07", "the gate truncated `fijarTamaño`"],
+      ["SOURCE_OUTSIDE_ROOT", "2026-11-07", "—", "`create --help` scaffolded a folder"],
+    ],
+  );
+  const defects = parseDefects(file);
+  assert.equal(defects.length, 2, `read ${defects.length} defects`);
+  assert.equal(defects[0].fixed, "2026-11-07", "the closed window was not read");
+  assert.equal(defects[1].fixed, null, "an open defect was read as closed");
+  assert.ok(defects[0].where.includes("fijarTamaño"), "the reason was not read");
+});
+
+await check("a Gate defects row is not read as a run", () => {
+  const file = writeLog(
+    [["2026-11-07T10:00:00.000Z", "demo", "✓", "—", "—"]],
+    [["MISSING_EXPORT", "2026-11-06", "2026-11-07", "a truncated name"]],
+  );
+  assert.equal(parseLog(file).length, 1, "the registry row was counted as a run");
+});
+
+await check("a run that only a gate defect failed is left out of the metric", () => {
+  const file = writeLog(
+    [
+      ["2026-11-07T10:00:00.000Z", "demo", "✗", "api", "MISSING_EXPORT"],
+      ["2026-11-07T10:01:00.000Z", "demo", "✗", "api", "MISSING_EXPORT"],
+      ["2026-11-07T10:02:00.000Z", "demo", "✓", "—", "—"],
+    ],
+    [["MISSING_EXPORT", "2026-11-06", "2026-11-07", "a truncated name"]],
+  );
+  const rows = parseLog(file);
+  assert.ok(rows[0].exonerated, "the defect run was charged to the project");
+  assert.deepEqual(rows[0].appCodes, [], "the code was not recognised as the gate's");
+  assert.equal(rankDefects(rows).get("MISSING_EXPORT"), 2, "the debt was not counted");
+  const generations = groupGenerations(rows);
+  assert.equal(generations.length, 1);
+  assert.equal(generations[0].firstTry, true, "a defect turned a first try into a correction");
+  assert.equal(generations[0].corrections, 0);
+});
+
+await check("a run after the fix counts against the project again", () => {
+  const file = writeLog(
+    [
+      ["2026-11-07T10:00:00.000Z", "demo", "✗", "api", "MISSING_EXPORT"],
+      ["2026-11-08T10:00:00.000Z", "demo", "✗", "api", "MISSING_EXPORT"],
+      ["2026-11-08T10:05:00.000Z", "demo", "✓", "—", "—"],
+    ],
+    [["MISSING_EXPORT", "2026-11-06", "2026-11-07", "a truncated name"]],
+  );
+  const rows = parseLog(file);
+  assert.equal(rows[0].exonerated, true, "the run inside the window was not exonerated");
+  assert.equal(rows[1].exonerated, false, "a run after the fix was still excused");
+  assert.equal(rankCodes(rows).get("MISSING_EXPORT"), 1, "the later run did not count");
+});
+
+await check("a real finding beside a gate defect is still a correction", () => {
+  const file = writeLog(
+    [["2026-11-07T10:00:00.000Z", "demo", "✗", "api, ui", "MISSING_EXPORT, LOW_CONTRAST"]],
+    [["MISSING_EXPORT", "2026-11-06", "2026-11-07", "a truncated name"]],
+  );
+  const rows = parseLog(file);
+  assert.equal(rows[0].exonerated, false, "a row with its own finding was excused");
+  assert.deepEqual(rows[0].defectCodes, ["MISSING_EXPORT"]);
+  assert.deepEqual(rows[0].appCodes, ["LOW_CONTRAST"]);
+  assert.equal(rankCodes(rows).has("MISSING_EXPORT"), false, "the gate's code was ranked");
+});
+
+await check("a recurring gate defect does not fail the command", async () => {
+  const file = writeLog(
+    [
+      ["2026-11-06T10:00:00.000Z", "demo", "✗", "api", "MISSING_EXPORT"],
+      ["2026-11-06T10:01:00.000Z", "demo", "✗", "api", "MISSING_EXPORT"],
+      ["2026-11-06T10:02:00.000Z", "demo", "✗", "api", "MISSING_EXPORT"],
+    ],
+    [["MISSING_EXPORT", "2026-11-06", "2026-11-07", "a truncated name"]],
+  );
+  const lines = [];
+  const result = await metrics(["--log", file], { print: (line) => lines.push(line) });
+  assert.equal(result.exitCode, 0, "the gate's own defect failed the project");
+  assert.ok(
+    lines.some((line) => line.includes("MISSING_EXPORT") && line.includes("fixed 2026-11-07")),
+    "the closed defect was not shown as the framework's debt",
+  );
+  assert.ok(
+    !lines.some((line) => line.includes("not landing")),
+    "a gate defect was called a rule that is not landing",
+  );
+});
+
+await check("an open gate defect is named, and the command still passes", async () => {
+  const file = writeLog(
+    [["2026-11-07T10:00:00.000Z", "demo", "✗", "structure", "SOURCE_OUTSIDE_ROOT"]],
+    [["SOURCE_OUTSIDE_ROOT", "2026-11-07", "—", "`create --help` scaffolded a folder"]],
+  );
+  const lines = [];
+  const result = await metrics(["--log", file], { print: (line) => lines.push(line) });
+  assert.equal(result.exitCode, 0, "an open defect blocked the project");
+  assert.ok(
+    lines.some((line) => line.includes("OPEN since 2026-11-07")),
+    "the open defect was not named",
+  );
+  assert.ok(
+    lines.some((line) => line.includes("still open")),
+    "the warning that the gate is wrong was missing",
+  );
+});
+
+// ---------------------------------------------------------------------------
 // 4 — the log of this repository is the real thing
 // ---------------------------------------------------------------------------
 
@@ -326,6 +456,12 @@ await check("the log template carries the table the recorder appends to", () => 
   const text = metricsLogMd();
   assert.ok(text.includes("| When | Project | Result | Gates | Codes |"), "the table header is missing");
   assert.ok(text.includes("| --- | --- | --- | --- | --- |"), "the table rule is missing");
+});
+
+await check("the log template carries the Gate defects table", () => {
+  const text = metricsLogMd();
+  assert.ok(text.includes("## Gate defects"), "the registry section is missing");
+  assert.ok(text.includes("| Code | Seen | Fixed | Where |"), "the registry header is missing");
 });
 
 await check("the app's package.json wires the metrics command", async () => {

@@ -16,6 +16,12 @@
  *      written yet. Each one is printed with the rule that should own it, and a
  *      code that recurs with no owner behind it **fails** this command: that is
  *      the loop closing.
+ *   3. Was a failure the gate's own fault? A code can be recorded in the log's
+ *      "Gate defects" table with the window of runs it accounts for. Those runs
+ *      are the framework's debt, not a correction this project needed, so they
+ *      count as passes and never feed the rule loop. A run after the window's
+ *      `Fixed` day counts again: a defect that comes back cannot hide behind an
+ *      old row.
  *
  * Node core only: this file ships inside every app `flet-box create` builds.
  */
@@ -55,6 +61,110 @@ export const OWNERS = {
 };
 
 /**
+ * A code the gate itself got wrong, over a window of runs.
+ *
+ * The marker lives in the log, not in this file: it describes a moment in one
+ * project's history, and a table that hard-coded "MISSING_EXPORT is never the
+ * app's fault" would silence the real mistake the next time it happens.
+ *
+ * @typedef {object} GateDefect
+ * @property {string} code
+ * @property {string} seen First calendar day (YYYY-MM-DD) it accounts for.
+ * @property {string|null} fixed Last day it accounts for; null while it is open.
+ * @property {string} where Why the gate was wrong, and where the fix lives.
+ */
+
+const DATE = /^\d{4}-\d{2}-\d{2}$/;
+const CODE = /^[A-Z][A-Z0-9_]*$/;
+
+/**
+ * Split a markdown table row into trimmed cells, or null when the line is not
+ * one. The log holds two tables and prose; both readers ignore the same lines.
+ *
+ * @param {string} line
+ * @returns {string[]|null}
+ */
+const cellsOf = (line) => {
+  const trimmed = line.trim();
+  if (!trimmed.startsWith("|")) return null;
+  return trimmed
+    .slice(1, trimmed.endsWith("|") ? -1 : undefined)
+    .split("|")
+    .map((cell) => cell.trim());
+};
+
+/**
+ * Read the "Gate defects" table out of a log's text.
+ *
+ * A run row starts with a timestamp and a registry row starts with a code, so
+ * the two tables share a file without either reader guessing.
+ *
+ * @param {string} text
+ * @returns {GateDefect[]}
+ */
+const parseDefectsFrom = (text) => {
+  const defects = [];
+  for (const line of text.split("\n")) {
+    const cells = cellsOf(line);
+    if (!cells || cells.length < 2) continue;
+    if (!CODE.test(cells[0]) || !DATE.test(cells[1])) continue;
+    defects.push({
+      code: cells[0],
+      seen: cells[1],
+      fixed: DATE.test(cells[2] || "") ? cells[2] : null,
+      where: cells.slice(3).join(" | ").trim(),
+    });
+  }
+  return defects;
+};
+
+/**
+ * Read the gate-defect records of a log file.
+ *
+ * @param {string} file
+ * @returns {GateDefect[]}
+ */
+export const parseDefects = (file) => parseDefectsFrom(fs.readFileSync(file, "utf8"));
+
+/**
+ * Whether a code was a gate defect on the day a run happened.
+ *
+ * @param {GateDefect[]} defects
+ * @param {string} code
+ * @param {string} when ISO timestamp of the run.
+ * @returns {boolean}
+ */
+export const gateDefect = (defects, code, when) => {
+  const day = when.slice(0, 10);
+  return defects.some(
+    (defect) =>
+      defect.code === code && day >= defect.seen && (!defect.fixed || day <= defect.fixed),
+  );
+};
+
+/**
+ * Split a row's codes into the gate's and this project's.
+ *
+ * A row that failed only because of a defect is exonerated: the correction it
+ * needed belonged to the framework, and holding it against the code under test
+ * is the metric lying about that code.
+ *
+ * @param {object} row
+ * @param {GateDefect[]} defects
+ * @returns {object}
+ */
+const classifyRow = (row, defects) => {
+  const defectCodes = row.codes.filter((code) => gateDefect(defects, code, row.when));
+  const appCodes = row.codes.filter((code) => !defectCodes.includes(code));
+  return {
+    ...row,
+    defectCodes,
+    appCodes,
+    exonerated: !row.ok && defectCodes.length > 0 && appCodes.length === 0,
+  };
+};
+
+/**
  * The rule that owns a code.
  *
  * @param {string} code
@@ -87,28 +197,33 @@ export const metricsLog = (root) => {
 /**
  * Read the rows of a metrics log.
  *
+ * `codes` keeps everything the row reported; `defectCodes`, `appCodes` and
+ * `exonerated` come from the log's "Gate defects" table, so a caller can still
+ * see what happened without the metric charging it to the project.
+ *
  * @param {string} file
- * @returns {Array<{when: string, project: string, ok: boolean, gates: string, codes: string[]}>}
+ * @returns {Array<{when: string, project: string, ok: boolean, gates: string, codes: string[], defectCodes: string[], appCodes: string[], exonerated: boolean}>}
  */
 export const parseLog = (file) => {
   const text = fs.readFileSync(file, "utf8");
+  const defects = parseDefectsFrom(text);
   const rows = [];
   for (const line of text.split("\n")) {
-    const trimmed = line.trim();
-    if (!trimmed.startsWith("|")) continue;
-    const cells = trimmed
-      .slice(1, trimmed.endsWith("|") ? -1 : undefined)
-      .split("|")
-      .map((cell) => cell.trim());
-    if (cells.length < 5) continue;
+    const cells = cellsOf(line);
+    if (!cells || cells.length < 5) continue;
     if (!/^\d{4}-\d{2}-\d{2}T/.test(cells[0])) continue;
-    rows.push({
-      when: cells[0],
-      project: cells[1],
-      ok: cells[2] === "✓",
-      gates: cells[3],
-      codes: cells[4] === "—" ? [] : cells[4].split(",").map((code) => code.trim()),
-    });
+    rows.push(
+      classifyRow(
+        {
+          when: cells[0],
+          project: cells[1],
+          ok: cells[2] === "✓",
+          gates: cells[3],
+          codes: cells[4] === "—" ? [] : cells[4].split(",").map((code) => code.trim()),
+        },
+        defects,
+      ),
+    );
   }
   return rows;
 };
@@ -117,12 +232,18 @@ export const parseLog = (file) => {
  * Group the rows into generations: a run of failing rows closed by the first
  * green one. A green row that follows a green row is its own generation.
  *
+ * A run the gate itself failed is left out of the arithmetic: it measured
+ * nothing about the code under test, so counting it as a pass would move the
+ * number without the code getting better, and counting it as a correction
+ * would blame the project for the framework's defect.
+ *
  * @param {Array<object>} rows
  * @returns {Array<{project: string, firstTry: boolean, corrections: number, unfinished?: boolean}>}
  */
 export const groupGenerations = (rows) => {
   const byProject = new Map();
   for (const row of rows) {
+    if (row.exonerated) continue;
     if (!byProject.has(row.project)) byProject.set(row.project, []);
     byProject.get(row.project).push(row);
   }
@@ -150,7 +271,8 @@ export const groupGenerations = (rows) => {
 };
 
 /**
- * Count how often each code was reported.
+ * Count how often each code was reported against the project — the occurrences
+ * the log's "Gate defects" table does not cover.
  *
  * @param {Array<object>} rows
  * @returns {Map<string, number>}
@@ -158,7 +280,25 @@ export const groupGenerations = (rows) => {
 export const rankCodes = (rows) => {
   const counts = new Map();
   for (const row of rows) {
-    for (const code of row.codes) counts.set(code, (counts.get(code) || 0) + 1);
+    for (const code of row.appCodes ?? row.codes) {
+      counts.set(code, (counts.get(code) || 0) + 1);
+    }
+  }
+  return counts;
+};
+
+/**
+ * Count how often each gate defect accounted for a run.
+ *
+ * @param {Array<object>} rows
+ * @returns {Map<string, number>}
+ */
+export const rankDefects = (rows) => {
+  const counts = new Map();
+  for (const row of rows) {
+    for (const code of row.defectCodes ?? []) {
+      counts.set(code, (counts.get(code) || 0) + 1);
+    }
   }
   return counts;
 };
@@ -198,15 +338,56 @@ export const metrics = async (argv = [], io = {}) => {
   const north = generations.length ? firstTry / generations.length : 0;
   const counts = rankCodes(rows);
   const ranked = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  const defects = parseDefects(file);
+  const defectCounts = rankDefects(rows);
+  const exonerated = rows.filter((row) => row.exonerated).length;
 
   print(c("brightCyan", `📈 ${path.relative(root, file) || file}`));
   print(
     c(
       "gray",
-      `   north metric — ${firstTry}/${generations.length} generation(s) passed with no correction (${(north * 100).toFixed(0)}%)`,
+      generations.length
+        ? `   north metric — ${firstTry}/${generations.length} generation(s) passed with no correction (${(north * 100).toFixed(0)}%)`
+        : "   north metric — no generation to measure yet",
     ),
   );
   print(c("gray", `   ${rows.length} run(s) logged`));
+  if (exonerated) {
+    print(
+      c(
+        "gray",
+        `   ${exonerated} run(s) failed only because of a gate defect — left out of the metric, not charged as a correction`,
+      ),
+    );
+  }
+
+  // The framework's debt, kept next to the number it distorts. A fixed defect
+  // stays on the record; an open one says the metric is measuring a broken gate.
+  if (defects.length) {
+    print("");
+    print(c("gray", "   gate defects — a code the gate reported, not the code it checked:"));
+    for (const defect of defects) {
+      const count = defectCounts.get(defect.code) || 0;
+      const status = defect.fixed ? `fixed ${defect.fixed}` : `⚠ OPEN since ${defect.seen}`;
+      print(
+        c(
+          defect.fixed ? "gray" : "yellow",
+          `   ${String(count).padStart(3)}× ${defect.code.padEnd(22)} ${status}${
+            defect.where ? ` · ${defect.where}` : ""
+          }`,
+        ),
+      );
+    }
+    const open = defects.filter((defect) => !defect.fixed);
+    if (open.length) {
+      print(
+        c(
+          "yellow",
+          `   ⚠ ${open.length} gate defect(s) still open — the metric is being read against a gate that is wrong.`,
+        ),
+      );
+    }
+  }
 
   if (ranked.length) {
     print("");
