@@ -12,7 +12,11 @@ import fs from "node:fs";
 import path from "node:path";
 import { neutralise } from "./neutralise.js";
 
-const IDENT = "[A-Za-z_$][\\w$]*";
+// Unicode identifiers: an app is allowed to export `fijarTamaño`. The ASCII
+// class stopped at `ñ`, so the reader stored `fijarTama` and every import of the
+// real name came back as MISSING_EXPORT — a false positive the app then worked
+// around by renaming its exports.
+const IDENT = "[\\p{ID_Start}$_][\\p{ID_Continue}$]*";
 
 /**
  * Resolve a relative/absolute specifier the way the browser ESM loader would,
@@ -85,7 +89,7 @@ export const readModuleExports = (absFile, cache = new Map(), chain = new Set())
   // export const|let|var|function|class NAME  (incl. multi-declarator and async)
   const declRe = new RegExp(
     `export\\s+(?:async\\s+)?(?:const|let|var|function|class)\\s+(${IDENT})`,
-    "g",
+    "gu",
   );
   let decl;
   while ((decl = declRe.exec(code))) {
@@ -93,7 +97,7 @@ export const readModuleExports = (absFile, cache = new Map(), chain = new Set())
     // `export const a = 1, b = 2;` — only accept a later name when it is
     // immediately assigned, so type-ish commas cannot invent an export.
     const tail = code.slice(decl.index + decl[0].length, code.indexOf(";", decl.index));
-    const extraRe = new RegExp(`,\\s*(${IDENT})\\s*=`, "g");
+    const extraRe = new RegExp(`,\\s*(${IDENT})\\s*=`, "gu");
     let extra;
     while ((extra = extraRe.exec(tail))) surface.named.add(extra[1]);
   }
@@ -119,7 +123,7 @@ export const readModuleExports = (absFile, cache = new Map(), chain = new Set())
     for (const part of braces[1].split(",")) {
       const token = part.trim();
       if (!token) continue;
-      const aliased = new RegExp(`^(${IDENT})\\s+as\\s+(${IDENT})$`).exec(token);
+      const aliased = new RegExp(`^(${IDENT})\\s+as\\s+(${IDENT})$`, "u").exec(token);
       const original = aliased ? aliased[1] : token;
       const exportedAs = aliased ? aliased[2] : token;
       if (original === "default") {
@@ -140,7 +144,7 @@ export const readModuleExports = (absFile, cache = new Map(), chain = new Set())
   // export * [as NS] from './mod.js'
   const starRe = new RegExp(
     `export\\s+\\*\\s*(?:as\\s+(${IDENT})\\s+)?from\\s*['"]([^'"]+)['"]`,
-    "g",
+    "gu",
   );
   let star;
   while ((star = starRe.exec(code))) {

@@ -264,6 +264,24 @@ async function main() {
     switch (command) {
       case "create":
       case "new":
+        // `flet-box create --help` must print the help, not scaffold a folder
+        // named `--help`: that stray clone lands inside the project and the
+        // structure gate starts reporting SOURCE_OUTSIDE_ROOT for every module
+        // in it.
+        if (projectName && projectName.startsWith("-")) {
+          if (projectName === "--help" || projectName === "-h") {
+            showHelp();
+            break;
+          }
+          console.error(c("red", `❌ Unknown option: ${projectName}`));
+          console.log(
+            c(
+              "gray",
+              "Usage: flet-box create <project-name> [--adaptive|--blank|--full|--sidebar|--template <name>|--repo user/repo]",
+            ),
+          );
+          process.exit(1);
+        }
         if (!projectName) {
           console.error(c("red", "❌ Error: Project name required"));
           console.log(

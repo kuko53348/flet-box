@@ -58,6 +58,21 @@ try {
     }
   }
 
+  // `create --help` must print the help, not scaffold a folder named `--help`:
+  // that clone lands inside the project and the structure gate then reports
+  // SOURCE_OUTSIDE_ROOT for every module in it — twice in the app that hit it.
+  const helpCwd = path.join(tmp, "help-cwd");
+  fs.mkdirSync(helpCwd, { recursive: true });
+  const help = spawnSync(process.execPath, [cli, "create", "--help"], {
+    cwd: helpCwd,
+    encoding: "utf8",
+    timeout: 60000,
+  });
+  if (help.status !== 0) fail(`flet-box create --help exited ${help.status}`);
+  const wrote = fs.readdirSync(helpCwd);
+  if (wrote.length) fail(`flet-box create --help wrote: ${wrote.join(", ")}`);
+  if (!/create <name>/.test(help.stdout)) fail("flet-box create --help did not print the help");
+
   // The docs ship for the offline agent, so a release that drops them is a
   // release where `npm run check` stops being able to explain itself.
   const docs = path.join(pkg, "docs", "widget");
