@@ -193,9 +193,24 @@ const surfaceGate = async (root) => {
     .filter((name) => /^[A-Z]/.test(name) && propsSource(api, name))
     .sort();
   const findings = [];
+  // The same pass that produces the findings also produces the per-widget
+  // ledger `flet-box report` prints. `unpackWidget` is the expensive half of
+  // this gate, and a report that unpacked the surface a second time would make
+  // the diagnosis cost more than the run it diagnoses.
+  const ledger = [];
   for (const name of widgets) {
     const data = unpackWidget(api, name, definitions);
     const declaration = data.interface || `${name}Props`;
+    ledger.push({
+      name,
+      interface: data.interface,
+      props: data.props.length,
+      invented: data.gaps.invented.map((prop) => prop.prop),
+      dead: data.gaps.dead.map((prop) => prop.prop),
+      notDeclared: data.gaps.hidden.map((prop) => prop.prop),
+      docOnly: data.gaps.docOnly,
+      codeOnly: data.gaps.codeOnly,
+    });
     for (const prop of data.gaps.invented) {
       findings.push(
         shape({
@@ -223,6 +238,7 @@ const surfaceGate = async (root) => {
     name: "surface",
     title: "Prop contract",
     findings,
+    widgets: ledger,
     exitCode: errors.length ? 1 : 0,
   };
 };

@@ -494,9 +494,9 @@ broken" report, and none of them is something `npm run ui` can see:
   (long-press, a native back gesture), not a layout one. A screen built from two
   hard-coded layouts is two screens to maintain; a screen with one per-step value
   where the shape truly changes is one.
-- Overlays go in a `Stack` with `stackPosition`, not in absolute coordinates on
-  `Container({ pos: "absolute", top, left })`. The first survives a content
-  change; the second is a pixel bomb in any language longer than English.
+- Overlays go in a `Stack` with `stackPosition`, never in absolute coordinates
+  (`pos: "absolute"`, `top`, `left`) on a plain `Container`. The first survives a
+  content change; the second is a pixel bomb in any language longer than English.
 
 ## 19 The dated tells
 
@@ -797,7 +797,7 @@ Column({ gap: 4, children: [
   fill into an egg and the capsule's rounded ends cut into the words. `Button`
   holds its label on one line and ellipsizes what does not fit, so a CTA that
   needs three lines is a copy bug wearing a pill. Keep the label a verb and its
-  object — "Seguir la misión 1" — and leave the lesson title to the heading
+  - **Follow Mission 1** — and leave the lesson title to the heading
   (rule 04). If the action genuinely needs a sentence, the control is a card or
   a list tile, not a button (rule 32).
 - **The nesting rule**, as arithmetic: `outer = inner + padding`. A 16-radius

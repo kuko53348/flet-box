@@ -246,9 +246,17 @@ await check("every command the contract names is a real one", async () => {
     framework.scripts.verify,
     "the framework has no `npm run verify`, so the contract's protocol cannot be run here",
   );
+  // The list is read from the CLI itself: a hardcoded copy here would be right
+  // on the day it was written and wrong the day a command was added, which is
+  // exactly the drift this check exists to catch.
+  const dispatched = new Set(
+    [...fs.readFileSync(path.join(repoRoot, "bin", "cli.js"), "utf8").matchAll(/case "([^"]+)":/g)].map(
+      (match) => match[1],
+    ),
+  );
   for (const [, command] of contract.matchAll(/`flet-box ([a-z-]+)/g)) {
     assert.ok(
-      ["verify", "unpack", "check-api", "audit-fix", "create", "run", "build"].includes(command),
+      dispatched.has(command),
       `the contract names "flet-box ${command}", which is not a command`,
     );
   }

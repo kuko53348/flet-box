@@ -17,6 +17,8 @@ import { checkApi } from "./commands/checkApi.js";
 import { checkUi } from "./commands/checkUi.js";
 import { verify, watchVerify, formatReport } from "./commands/verify.js";
 import { metrics } from "./commands/metrics.js";
+import { report } from "./commands/report.js";
+import { tools } from "./commands/tools.js";
 import { auditFix } from "./commands/auditFix.js";
 import { toPng } from "./commands/toPng.js";
 import { images } from "./commands/images.js";
@@ -94,11 +96,17 @@ ${cmd("   └─ --tokens", "print the measured contrast of every color token")}
 ${cmd("   └─ --strict", "fail on contrast warnings too")}
 ${cmd("   └─ alias", "ui | checkUi")}
 ${cmd("verify", "Every gate at once: one report, one exit code")}
-${cmd("   └─ --only <gate>", "run one gate: api | ui | structure | surface")}
+${cmd("   └─ --only <gate>", "syntax | api | types | ui | structure | surface | tests")}
 ${cmd("   └─ --no-tests", "the static gates only; the project's suites run alone")}
 ${cmd("   └─ --fix", "the mechanical repair first, then the gates")}
 ${cmd("   └─ --json", "the report as data")}
 ${cmd("   └─ alias", "check-all")}
+${cmd("report", "Read-only diagnosis: a verdict per file and what to do next")}
+${cmd("   └─ --json | --md", "the same facts as data or Markdown")}
+${cmd("   └─ --html [--out <file>]", "one self-contained page (.fletbox/reports/report.html)")}
+${cmd("   └─ --tests", "also run the project's own suites")}
+${cmd("tools [--emit]", "The read-only toolkit: one question, one command")}
+${cmd("mcp", "Serve that toolkit over MCP stdio (read-only)")}
 ${cmd("metrics", "The north metric: code that passed with no correction")}
 ${cmd("   └─ --log <file>", "read another project's log")}
 ${cmd("audit-fix", "Rewrite broken imports, missing imports and misspelled props")}
@@ -352,6 +360,27 @@ async function main() {
       case "metrics": {
         const { exitCode } = await metrics(args.slice(1));
         if (exitCode) process.exit(exitCode);
+        break;
+      }
+
+      case "report": {
+        const { exitCode } = await report(args.slice(1));
+        if (exitCode) process.exit(exitCode);
+        break;
+      }
+
+      case "tools":
+      case "toolkit": {
+        const { exitCode } = await tools(args.slice(1));
+        if (exitCode) process.exit(exitCode);
+        break;
+      }
+
+      case "mcp": {
+        // Lazy: the stdio server takes over the process, and nothing else in
+        // the CLI should pay for loading it.
+        const { serveStdio } = await import("./mcp.js");
+        serveStdio();
         break;
       }
 

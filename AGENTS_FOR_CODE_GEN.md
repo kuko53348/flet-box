@@ -172,6 +172,11 @@ can prove (`chilldren` → `children`, `bgColr` → `bgColor`, a relative path t
 does not resolve) and leaves anything ambiguous for you to decide. Read the
 diff.
 
+Lost before the first gate answers? `flet-box report` names every file of the
+project with its verdict and a ranked next step, and `flet-box tools` is the
+catalogue that maps a question to the command. Both read; neither repairs, and
+neither appends a metrics row.
+
 Then look at it: `npm run dev` and use the screen. A green report proves the
 code is legal, not that it is right.
 

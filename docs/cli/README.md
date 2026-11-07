@@ -871,6 +871,7 @@ npm install --save-dev esbuild
 - Learn the basics in [Start here](../widget/START_HERE.md).
 - Learn complete app structures in [Build your first FletBox app](../guides/app-templates.md).
 - Explore every widget in the [widget documentation](../widget/README.md).
+- Ask "where is the work?" with [the AI toolkit](../guides/ai-toolkit.md) — `flet-box report`, `flet-box tools`, `flet-box mcp`.
 
 ---
 

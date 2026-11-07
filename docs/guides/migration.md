@@ -86,7 +86,7 @@ To publish it, add the section here first — one row per removed or renamed pro
 ## Continue reading
 
 - **Previous:** [Accessibility](accessibility.md) — Chapter 13
-- **Next:** [Minify and protect a FletBox build](minification-and-protection.md) — Appendix A
+- **Next:** [The AI toolkit](ai-toolkit.md) — Chapter 15
 - **Index:** [Guides index](README.md) · [The FletBox Book](../README.md)
 
 You are reading **Chapter 14 · Migrating to a newer FletBox**.

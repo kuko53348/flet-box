@@ -19,6 +19,7 @@ This documentation is one continuous book. Start at **Chapter 0** and follow the
 | 12 | [Clean UI](guides/clean-ui.md) | The four skills every app ships with, the design system they hold, and the gate that enforces it | Intermediate |
 | 13 | [Accessibility](guides/accessibility.md) | The focus ring, the keyboard pass over every press, the roles the widgets declare, and the overlays that hold the keyboard | Intermediate |
 | 14 | [Migrate an app to a newer FletBox](guides/migration.md) | What changed between releases, and the codemod that writes it for you | Intermediate |
+| 15 | [The AI toolkit](guides/ai-toolkit.md) | The map from a question to the command, the per-file report, and the MCP server | Intermediate |
 | A | [Appendices](guides/minification-and-protection.md) | Minification, mobile, compatibility, embedding, online updates (OTA) | Advanced |
 
 > **Levels.** *Beginner:* start here and read in order. *Intermediate:* continue in order — you are comfortable with widgets. *Advanced:* for when you ship, skip on a first read.
@@ -58,6 +59,7 @@ Front cover (this page)
 → Clean UI · guides/clean-ui.md
 → Accessibility · guides/accessibility.md
 → Migrating · guides/migration.md
+→ The AI toolkit · guides/ai-toolkit.md
 → Appendices (minification → mobile → compatibility → embedding → online updates)
 → The end of the book
 ```

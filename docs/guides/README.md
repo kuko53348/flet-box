@@ -19,6 +19,9 @@ This directory is the **conceptual index** of FletBox: how to build apps, set up
 - **[Migrate an app to a newer FletBox](migration.md)** — Chapter 14 · what
   changed between releases, the "de X a Y" table, and the codemod that writes
   the new names for you.
+- **[The AI toolkit](ai-toolkit.md)** — Chapter 15 · the map from a question to
+  the command (`flet-box tools`), the per-file diagnosis (`flet-box report`), and
+  the same tools over MCP stdio (`flet-box mcp`).
 - **[Widget structure](widget-structure.md)** — the canonical, modular shape every widget follows (and how new ones are added).
 
 ## Appendices (Advanced — for shipping)

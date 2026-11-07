@@ -1719,6 +1719,7 @@ android/capacitor-cordova-android-plugins/
 package-lock.json
 .DS_Store
 *.log
+.fletbox/reports/
 `;
 
 export const readme = (name, _template, appId) => `# ${name}
@@ -2797,6 +2798,9 @@ export const agentsMd = (appName, template, version) =>
     '                       # rule number it broke',
     'npm run metrics        # the north metric: how much code passed the gate with',
     '                       # no correction, and which failures keep coming back',
+    'flet-box report        # lost? every file of this project, its verdict, and',
+    '                       # the one next step — read-only, writes no metrics row',
+    'flet-box tools         # the map: which command answers which question',
     'npm run dev            # serve on :8000 — check the UI actually renders',
     '```',
     '',
@@ -2839,6 +2843,13 @@ export const agentsMd = (appName, template, version) =>
     'one real name is close enough; anything ambiguous is printed untouched for you',
     'to decide. Run `npm run check` again after it, and read the diff.',
     '',
+    'When you are lost, do not guess which gate to run: `flet-box report` names',
+    'every file of this project (clean ones included), its verdict, its widgets,',
+    'and a ranked next step; `flet-box tools` is the catalogue that maps a',
+    'question to the command. Both are read-only — no repair, no metrics row —',
+    'and the only file they can write is the report page, when `--html` asks for',
+    'it, into `.fletbox/reports/` (generated output, not committed).',
+    '',
     '## 6. Memory — do not relearn the same thing',
     '',
     'The full format lives in [skills/fletbox-memory/SKILL.md](skills/fletbox-memory/SKILL.md).',
@@ -2865,6 +2876,10 @@ export const agentsMd = (appName, template, version) =>
     '| `npm run check` | anti-hallucination gate over `src/` |',
     '| `npm run fix` | rewrite mistyped imports and prop names it can prove |',
     '| `npm run metrics` | the north metric: how much code passed the gate with no correction |',
+    '| `flet-box report` | every file with its verdict, the widget ledger, and a ranked next step (read-only) |',
+    '| `flet-box report --html` | the same report as one self-contained page in `.fletbox/reports/` |',
+    '| `flet-box tools` | the catalogue: which command answers which question (`--emit` writes `.fletbox/api/tools.json`) |',
+    '| `flet-box mcp` | the same read-only tools over MCP stdio, for an assistant with no shell |',
     '| `npm run check -- --props Button` | print the real props of a widget |',
     '| `flet-box unpack Button` | everything Button accepts **and that actually works** |',
     '| `flet-box unpack Button --example` | a paste-ready call using only live props |',

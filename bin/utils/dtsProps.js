@@ -107,8 +107,12 @@ export const parseInterfaces = (source) => {
   // Comments can contain `interface` in prose; strip them first so brace
   // matching never starts on a documentation example.
   const code = source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
+  // `[^{;]*`, not `[^{]*`: a non-object alias (`export type FletWidget =
+  // WidgetFactoryInstance;`) has no brace of its own, and the looser tail ran on
+  // to the next declaration's brace — swallowing the interface that followed it
+  // and with it every prop it declared.
   const header =
-    /(export\s+)?(?:declare\s+)?(?:interface\s+([A-Za-z_$][\w$]*)|type\s+([A-Za-z_$][\w$]*)\s*=\s*)([^{]*)\{/g;
+    /(export\s+)?(?:declare\s+)?(?:interface\s+([A-Za-z_$][\w$]*)|type\s+([A-Za-z_$][\w$]*)\s*=\s*)([^{;]*)\{/g;
   let match;
   while ((match = header.exec(code))) {
     const name = match[2] || match[3];

@@ -145,6 +145,10 @@ await check("the interface reader actually read the interface", () => {
   assert.ok(widgetProps.get("Container").has("maxWidth"), "Container props came back empty");
   assert.ok(widgetProps.get("Button").has("variant"), "Button props came back empty");
   assert.ok(widgetProps.get("ListView").has("itemSize"), "ListView props came back empty");
+  // Two levels up: Image → CommonProps → StackPositionProps. A `type X = Y;`
+  // alias with no object body used to swallow the interface after it, and this
+  // one is what silently lost `full`, `pos` and the rest of that parent.
+  assert.ok(widgetProps.get("Image").has("full"), "a grandparent interface was dropped");
 });
 
 await check("every code block passes the anti-hallucination gate", async () => {
