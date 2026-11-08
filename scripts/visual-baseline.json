@@ -174,14 +174,14 @@
       "contrast": 19.9
     },
     "Divider": {
-      "bg": "rgb(250, 250, 250)",
+      "bg": "rgb(228, 228, 231)",
       "fg": "rgb(9, 9, 11)",
       "border": "0px none rgb(9, 9, 11)",
       "radius": "0px",
       "font": "16px 400 18.4px",
       "pad": "0px",
       "h": 1,
-      "contrast": 19.06
+      "contrast": 15.68
     },
     "Tabs": {
       "bg": "rgb(250, 250, 250)",
@@ -433,14 +433,14 @@
       "contrast": 19.06
     },
     "Divider": {
-      "bg": "rgb(24, 24, 27)",
+      "bg": "rgb(39, 39, 42)",
       "fg": "rgb(250, 250, 250)",
       "border": "0px none rgb(250, 250, 250)",
       "radius": "0px",
       "font": "16px 400 18.4px",
       "pad": "0px",
       "h": 1,
-      "contrast": 16.97
+      "contrast": 14.27
     },
     "Tabs": {
       "bg": "rgb(24, 24, 27)",
