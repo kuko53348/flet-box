@@ -3053,13 +3053,6 @@
       "text: \"Click me\","
     ]
   },
-  "FletBox widgets onLongPress": {
-    "prefix": "onLongPress",
-    "description": "Make a FletBox widgets onLongPress widget",
-    "body": [
-      "onLongPress: () => console.log(\"long press\"),"
-    ]
-  },
   "FletBox widgets onToggle": {
     "prefix": "onToggle",
     "description": "Make a FletBox widgets onToggle widget",

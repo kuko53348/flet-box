@@ -583,7 +583,6 @@ attrs_all_placeholders_complete = {
 
     # ---------- Button ----------
     'buttonLabel': 'text: "Click me",',
-    'onLongPress': 'onLongPress: () => console.log("long press"),',
 
     # ---------- Switch ----------
     'onToggle': 'onToggle: (val) => console.log(val),',

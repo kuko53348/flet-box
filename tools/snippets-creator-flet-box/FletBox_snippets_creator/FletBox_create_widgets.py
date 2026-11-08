@@ -32,7 +32,6 @@ only_controls = {
     overflow: "auto",
     cursor: "pointer",
     onPress: () => console.log("pressed"),
-    onLongPress: () => console.log("long"),
     onHover: () => console.log("hover"),
     id: "main-container",
     className: "hero",
@@ -165,7 +164,6 @@ Column({
     margin: margin(8),
     disabled: false,
     onPress: () => console.log("download"),
-    onLongPress: () => console.log("menu"),
     onHover: (hover) => console.log(hover),
     id: "download-btn"
 })''',

@@ -22,7 +22,7 @@
  *                global, it silences an invented prop instead of warning.
  *
  * Usage:
- *   node scripts/check-prop-registry.mjs             # summary, exit 1 on UNKNOWN/CONFLICT
+ *   node scripts/check-prop-registry.mjs             # summary, exit 1 on any finding
  *   node scripts/check-prop-registry.mjs --full      # list every finding
  *   node scripts/check-prop-registry.mjs --json      # machine-readable
  */
@@ -432,13 +432,23 @@ for (const [callerName, { raw, masked, rel }] of parsed) {
 // 5. Registry coverage: props a widget reads that the registry does not know
 // ---------------------------------------------------------------------------
 for (const [widgetName, { consumed, rel }] of impls) {
-  // The router is not a widget: its `config` keys are route descriptors.
+  // The router is not a widget: its `config` keys are route descriptors. The
+  // engine helpers are not widgets either: `easings`, `transitions`, `color`
+  // and friends take an options object as their own function parameters, which
+  // is not a widget prop a caller could pass through a widget call. Only a
+  // module that owns a declared `<Widget>Props` interface is audited here, so a
+  // helper's parameters cannot be read as a prop the registry should know.
   if (widgetName === "Router") continue;
+  if (!interfaces.has(`${widgetName}Props`)) continue;
   const ifaceName = `${widgetName}Props`;
   const declared = interfaces.has(ifaceName) ? interfaceProps(ifaceName) : new Map();
   for (const prop of consumed) {
     if (!/^[A-Za-z_$][\w$]*$/.test(prop)) continue;
     if (PROP_MAP.has(prop) || ENGINE_HANDLED.has(prop)) continue;
+    // A prop the target declares is a declared prop, not an internal leak: the
+    // disagreement between the registry and the interface belongs to the
+    // API-contract gate, not to the "reads it but does not know it" one.
+    if (declared.has(prop)) continue;
     findings.INTERNAL.push({
       prop,
       target: widgetName,
@@ -507,6 +517,12 @@ const dedupe = (rows, keyFn) => {
   return [...map.values()].sort((a, b) => a.prop.localeCompare(b.prop));
 };
 
+// Every group is a defect the audit exists to catch, so every group blocks: an
+// UNKNOWN prop reaches the runtime as a warning + junk style, a DROPPED `special`
+// prop is silently ignored, an UNDOCUMENTED key is undeclared, an INTERNAL read
+// leaks through `...rest`, a DEAD entry silences an invented prop, and a CONFLICT
+// means two spellings disagree. A gate that reports findings and then lets the
+// run pass is a gate that cannot fail — the one defect this repository refuses.
 const groups = {
   UNKNOWN: dedupe(findings.UNKNOWN, (r) => `${r.prop}\u0000${r.target}`),
   DROPPED: dedupe(findings.DROPPED, (r) => `${r.prop}\u0000${r.target}`),
@@ -518,7 +534,10 @@ const groups = {
 
 if (asJson) {
   console.log(JSON.stringify(groups, null, 2));
-  process.exit(groups.UNKNOWN.length + groups.CONFLICT.length ? 1 : 0);
+  process.exit(
+    groups.UNKNOWN.length + groups.DROPPED.length + groups.UNDOCUMENTED.length +
+      groups.INTERNAL.length + groups.DEAD.length + groups.CONFLICT.length > 0 ? 1 : 0,
+  );
 } else {
   const labels = {
     UNKNOWN: "passed but not in the registry -> runtime warning + junk inline style",
@@ -549,7 +568,15 @@ if (asJson) {
   }
 }
 
-const blocking = groups.UNKNOWN.length + groups.CONFLICT.length;
+// Every group is blocking: any finding fails the run, in the summary and in
+// the JSON machine-readable exit.
+const blocking =
+  groups.UNKNOWN.length +
+  groups.DROPPED.length +
+  groups.UNDOCUMENTED.length +
+  groups.INTERNAL.length +
+  groups.DEAD.length +
+  groups.CONFLICT.length;
 console.log(
   `\nSummary: UNKNOWN=${groups.UNKNOWN.length} DROPPED=${groups.DROPPED.length} UNDOCUMENTED=${groups.UNDOCUMENTED.length} INTERNAL=${groups.INTERNAL.length} DEAD=${groups.DEAD.length} CONFLICT=${groups.CONFLICT.length}`,
 );

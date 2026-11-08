@@ -446,7 +446,6 @@ export const ALL_PROPS = [
   { prop: "onToggle", domProp: "onToggle", type: "special" },
   { prop: "onSelect", domProp: "onSelect", type: "special" },
   { prop: "onDelete", domProp: "onDelete", type: "special" },
-  { prop: "onLongPress", domProp: "onLongPress", type: "special" },
 
   // ---- Modal / BottomSheet / AlertDialog / SnackBar ----
   { prop: "content", domProp: "content", type: "special" },
@@ -825,9 +824,6 @@ export const ALL_PROPS = [
   // ---- Image fit ----
   { prop: "fit", domProp: "objectFit", type: "style", unit: "none", reactive: true },
   { prop: "objectFit", domProp: "objectFit", type: "style", unit: "none", reactive: true },
-  // ---- Search ----
-  { prop: "searchable", domProp: "searchable", type: "special" },
-  { prop: "searchPlaceholder", domProp: "searchPlaceholder", type: "special" },
 
   // ============================================================
   // WIDGET-OWNED PROPS (audit pass)
