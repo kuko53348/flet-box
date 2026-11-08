@@ -16,7 +16,7 @@ const warnedProps = new Set();
 
 export function setPropNames(names) {
   propNames = names;
-  try { if (typeof window !== 'undefined') window.__FLETBOX_PROP_NAMES = names; } catch(e){}
+  try { if (typeof window !== 'undefined') window.__FLETBOX_PROP_NAMES = names; } catch (e) {}
 }
 
 function getSuggestions(name, limit = 3) {

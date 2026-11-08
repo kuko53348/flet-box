@@ -35,7 +35,7 @@ import { readSkill } from "../bin/utils/skills.js";
 const repoRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 const failures = [];
-const check = async (name, fn) => {
+const check = async(name, fn) => {
   try {
     await fn();
     console.log(`  ok   ${name}`);
@@ -106,7 +106,7 @@ await check("the published package carries the contract", () => {
 // ---------------------------------------------------------------------------
 
 /** Run a block of code through the anti-hallucination gate. */
-const gate = async (blocks, label) => {
+const gate = async(blocks, label) => {
   const root = path.join(scratch, label);
   fs.mkdirSync(path.join(root, "src"), { recursive: true });
   blocks.forEach((code, i) => {
@@ -120,7 +120,7 @@ const gate = async (blocks, label) => {
   return { exitCode, findings: findings || [] };
 };
 
-await check("every good example passes the anti-hallucination gate", async () => {
+await check("every good example passes the anti-hallucination gate", async() => {
   const blocks = jsBlocks(section("### Good"));
   assert.ok(blocks.length >= 1, "the contract has no good example to check");
   const { exitCode, findings } = await gate(blocks, "good");
@@ -133,7 +133,7 @@ await check("every good example passes the anti-hallucination gate", async () =>
   );
 });
 
-await check("every bad example is rejected by the gate", async () => {
+await check("every bad example is rejected by the gate", async() => {
   const blocks = jsBlocks(section("### Bad"));
   assert.ok(blocks.length >= 1, "the contract has no bad example to check");
   const { exitCode, findings } = await gate(blocks, "bad");
@@ -205,7 +205,7 @@ for (const props of widgetProps.values()) {
   for (const prop of props) propNames.add(prop);
 }
 
-await check("every `colors.X` token exists in both themes", async () => {
+await check("every `colors.X` token exists in both themes", async() => {
   const { palettes } = await import("../src/utils/themes.js");
   const tokens = [...contract.matchAll(/colors\.([A-Za-z0-9]+)/g)].map((m) => m[1]);
   assert.ok(tokens.length >= 3, `the contract names ${tokens.length} color tokens`);
@@ -229,7 +229,7 @@ await check("every rule number the contract cites exists in the design skill", (
   }
 });
 
-await check("every command the contract names is a real one", async () => {
+await check("every command the contract names is a real one", async() => {
   const { packageJson: appTemplate } = await import("../bin/utils/templates.js");
   const app = JSON.parse(appTemplate("demo"));
   const framework = JSON.parse(
@@ -329,7 +329,7 @@ await check("the app's cheatsheet is there and fresh", () => {
   );
 });
 
-await check("the API proof bites — an invented prop is rejected", async () => {
+await check("the API proof bites — an invented prop is rejected", async() => {
   const badRoot = path.join(scratch, "bad-app");
   fs.mkdirSync(path.join(badRoot, "src"), { recursive: true });
   fs.writeFileSync(

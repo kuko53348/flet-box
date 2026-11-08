@@ -46,7 +46,7 @@ const isFrameworkRoot = (projectRoot) => {
   return false;
 };
 
-export const runDevServer = async (options = {}) => {
+export const runDevServer = async(options = {}) => {
   const {
     spaMode = false,
     hotReload = true,
@@ -279,7 +279,7 @@ export const runDevServer = async (options = {}) => {
   const stateDot = (on, color) => (on ? dot(color) : c("gray", "●"));
   let boot = null;
 
-  const printReady = async (p) => {
+  const printReady = async(p) => {
     if (boot) boot.succeed(`Dev server running on port ${p}`);
     console.log("");
     await typewriter(`● http://localhost:${p}`, { ms: 10, color: "#34d399" });
@@ -298,7 +298,7 @@ export const runDevServer = async (options = {}) => {
     console.log(c("gray", "\n  Press Ctrl+C to stop\n"));
   };
 
-  const onServerError = async (err) => {
+  const onServerError = async(err) => {
     if (serverErrorHandled) return;
     serverErrorHandled = true;
 
@@ -370,7 +370,7 @@ export const runDevServer = async (options = {}) => {
         } catch (e) {}
       });
       ws.on("close", () => {
-        clients.delete(ws);
+        clients.delete (ws);
         if (logRequests) console.log(c("gray", "🔌 HMR client disconnected"));
       });
     });
@@ -395,7 +395,7 @@ export const runDevServer = async (options = {}) => {
 
     const lastSent = new Map();
 
-    watcher.on("change", async (filePath) => {
+    watcher.on("change", async(filePath) => {
       if (!isWatched(filePath)) return;
       const fullPath = path.join(projectRoot, filePath);
       try {

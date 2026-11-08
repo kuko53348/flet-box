@@ -31,7 +31,7 @@ export const InstallButton = (props) => {
   let button = null;
   let isInstalled = false;
 
-  const handleClick = async () => {
+  const handleClick = async() => {
     if (deferredPrompt) {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;

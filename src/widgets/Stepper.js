@@ -62,7 +62,7 @@ export const Stepper = (props) => {
 
   const next = () => goToStep(currentStep + 1);
   const back = () => goToStep(currentStep - 1);
-  const finish = () => onFinish?.();
+  const finish = () => onFinish?. ();
 
   const updateUI = () => {
     if (!stepsContainer) return;
@@ -100,7 +100,7 @@ export const Stepper = (props) => {
           justifyContent: "center",
           alignItems: "center",
           child: isCompleted
-            ? Icon({ name: "check", size: 18, color: colors.onSecondary })
+            ? Icon({ name : "check", size: 18, color: colors.onSecondary })
             : Text({
                 text: String(idx + 1),
                 size: 14,
@@ -133,7 +133,7 @@ export const Stepper = (props) => {
       const labelColor = isActive ? colors.primary : colors.textSecondary;
       const label = showLabels
         ? vertical
-          ? Text({ text: step.label, size: 14, color: labelColor })
+          ? Text({ text : step.label, size : 14, color: labelColor })
           : Text({
               text: step.label,
               size: 12,
@@ -160,7 +160,7 @@ export const Stepper = (props) => {
       stepsContainer.appendChild(
         vertical
           ? Row({
-              alignItems: "center",
+              alignItems : "center",
               gap: 12,
               width: "100%",
               ...press,
@@ -180,7 +180,7 @@ export const Stepper = (props) => {
       if (!vertical && !isLast) {
         stepsContainer.appendChild(
           needsWrap
-            ? Container({ width: 8 })
+            ? Container({ width : 8 })
             : Container({
                 flex: 1,
                 height: "2px",
@@ -307,7 +307,7 @@ export const Stepper = (props) => {
   stepsContainer =
     orientation === "horizontal"
       ? Row({
-          alignItems: "center",
+          alignItems : "center",
           display: "flex",
           flexDirection: "row",
           minWidth: "min-content",
@@ -328,7 +328,7 @@ export const Stepper = (props) => {
 
   // Navigation container — only built when the stepper is allowed to drive itself.
   // `updateUI()` below skips the whole nav branch while `navContainer` is null.
-  navContainer = showNavigation ? Container({ width: "100%" }) : null;
+  navContainer = showNavigation ? Container({ width : "100%" }): null;
 
   container.appendChild(stepsWrapper);
   container.appendChild(contentContainer);

@@ -59,7 +59,7 @@ const results = [];
 let pass = 0;
 let fail = 0;
 
-const t = async (name, fn) => {
+const t = async(name, fn) => {
   try {
     await fn();
     pass++;
@@ -77,7 +77,7 @@ const assert = (condition, message) => {
 const frame = () => new Promise((resolve) => requestAnimationFrame(resolve));
 
 /** Awaits `count` animation frames, so a loop has visibly advanced. */
-const frames = async (count) => {
+const frames = async(count) => {
   for (let i = 0; i < count; i++) await frame();
 };
 
@@ -88,7 +88,7 @@ const frames = async (count) => {
  * a run paint the start value. Counting them read as "never moved" on a loaded
  * CI runner, for an engine that was moving.
  */
-const until = async (predicate, budgetMs = 400) => {
+const until = async(predicate, budgetMs = 400) => {
   const deadline = performance.now() + budgetMs;
   while (!predicate() && performance.now() < deadline) await frame();
   return predicate();
@@ -162,7 +162,7 @@ document.body.style.minHeight = "3000px";
 
 // ========== THE TRANSFORM THE ENGINE WRITES ==========
 
-await t("animate() moves an element on the Y axis", async () => {
+await t("animate() moves an element on the Y axis", async() => {
   const el = mount();
   animate(el, "translateY", 24, 0, 120, "easeOut");
   const moved = await until(() => {
@@ -175,7 +175,7 @@ await t("animate() moves an element on the Y axis", async () => {
   unmount(el);
 });
 
-await t("two loops on one element share one transform", async () => {
+await t("two loops on one element share one transform", async() => {
   const el = mount();
   animate(el, "translateY", 20, 0, 140, "easeOut");
   animate(el, "scale", 0.9, 1, 140, "easeOut");
@@ -191,7 +191,7 @@ await t("two loops on one element share one transform", async () => {
   unmount(el);
 });
 
-await t("a rotation and a slide compose in CSS order", async () => {
+await t("a rotation and a slide compose in CSS order", async() => {
   const el = mount();
   animate(el, "rotate", 0, 90, 60, "linear");
   animate(el, "translateX", 0, 10, 60, "linear");
@@ -242,7 +242,7 @@ await t("spring() returns a curve and the duration it needs", () => {
   assert(stiff.overshoot === false && stiff.duration <= 2000, `overdamped wrong: ${stiff.duration}`);
 });
 
-await t("animateSpring() settles where animate() would have", async () => {
+await t("animateSpring() settles where animate() would have", async() => {
   const el = mount();
   animateSpring(el, "scale", 0.9, 1, { stiffness: 320, damping: 12 });
   await frames(6);
@@ -253,7 +253,7 @@ await t("animateSpring() settles where animate() would have", async () => {
 
 // ========== THE NAMED TRANSITIONS ==========
 
-await t("slideIn() arrives and leaves nothing behind", async () => {
+await t("slideIn() arrives and leaves nothing behind", async() => {
   const el = mount({ opacity: "0" });
   const cancel = slideIn(el, { direction: "up", distance: 24, duration: 240 });
   const moved = await until(() => translation(el).y > 1);
@@ -265,7 +265,7 @@ await t("slideIn() arrives and leaves nothing behind", async () => {
   unmount(el);
 });
 
-await t("slideIn({ direction }) picks the axis the words mean", async () => {
+await t("slideIn({ direction }) picks the axis the words mean", async() => {
   const leftward = mount();
   slideIn(leftward, { direction: "left", distance: 20, duration: 240, fade: false });
   const startedRight = await until(() => translation(leftward).x > 1);
@@ -278,7 +278,7 @@ await t("slideIn({ direction }) picks the axis the words mean", async () => {
   unmount(upward);
 });
 
-await t("slideOutAsync() resolves after the exit", async () => {
+await t("slideOutAsync() resolves after the exit", async() => {
   const el = mount();
   await slideOutAsync(el, { direction: "down", distance: 16, duration: 120 });
   assert(el.style.opacity === "0", `still visible: ${el.style.opacity}`);
@@ -286,7 +286,7 @@ await t("slideOutAsync() resolves after the exit", async () => {
   unmount(el);
 });
 
-await t("popIn() overshoots and settles at 1", async () => {
+await t("popIn() overshoots and settles at 1", async() => {
   const el = mount();
   let peak = 0;
   const watch = setInterval(() => {
@@ -299,7 +299,7 @@ await t("popIn() overshoots and settles at 1", async () => {
   unmount(el);
 });
 
-await t("shake() ends at rest", async () => {
+await t("shake() ends at rest", async() => {
   const el = mount();
   let moved = 0;
   const watch = setInterval(() => {
@@ -312,7 +312,7 @@ await t("shake() ends at rest", async () => {
   unmount(el);
 });
 
-await t("a gesture replaces the animation on the same property", async () => {
+await t("a gesture replaces the animation on the same property", async() => {
   const el = mount();
   animate(el, "translateY", 0, 100, 200, "linear");
   slideIn(el, { direction: "up", distance: 20, duration: 40, fade: false });
@@ -332,7 +332,7 @@ await t("stagger() grows and then stops growing", () => {
 
 // ========== REDUCED MOTION ==========
 
-await t("the mode is a preference, not a guess", async () => {
+await t("the mode is a preference, not a guess", async() => {
   assert(getMotionMode() === "auto", `fresh mode: ${getMotionMode()}`);
   assert(prefersReducedMotion() === false, "the harness machine animates by default");
   let seen = null;
@@ -372,7 +372,7 @@ await t("an unknown mode is refused, not applied", () => {
   assert(logged === 1, "refusing silently is the bug this guards");
 });
 
-await t("reduced motion runs one frame that writes the end value", async () => {
+await t("reduced motion runs one frame that writes the end value", async() => {
   setMotionMode("reduce");
   const el = mount({ opacity: "0.2" });
   const started = performance.now();
@@ -384,7 +384,7 @@ await t("reduced motion runs one frame that writes the end value", async () => {
   setMotionMode("auto");
 });
 
-await t("reduced motion still moves the element to where it belongs", async () => {
+await t("reduced motion still moves the element to where it belongs", async() => {
   setMotionMode("reduce");
   const el = mount({ opacity: "0" });
   await slideInAsync(el, { direction: "up", distance: 24, duration: 300 });
@@ -466,7 +466,7 @@ await t("AnimatedBox carries the OS preference rule", () => {
   loop.remove();
 });
 
-await t("ParallaxBox parks when the reader asked for no movement", async () => {
+await t("ParallaxBox parks when the reader asked for no movement", async() => {
   const box = ParallaxBox({ type: "scroll", speed: 0.5, direction: "vertical", maxOffset: 60, child: mount() });
   document.body.appendChild(box);
   const inner = box.firstElementChild;
@@ -485,12 +485,12 @@ await t("ParallaxBox parks when the reader asked for no movement", async () => {
 
   setMotionMode("auto");
   window.scrollTo(0, 0);
-  box._cleanup?.();
+  box._cleanup?. ();
   box.remove();
 });
 
 // A widget that holds a loop should stop it the moment the preference flips.
-await t("a live loop obeys the mode it was started under", async () => {
+await t("a live loop obeys the mode it was started under", async() => {
   const el = mount();
   setMotionMode("full");
   const off = onMotionModeChange((reduced) => {
@@ -510,7 +510,7 @@ await t("a live loop obeys the mode it was started under", async () => {
 
 // A loading loop is the pattern the preference was invented for, and most of
 // them are not AnimatedBox — they are widgets writing an `infinite` animation.
-await t("a widget loop carries the hook too", async () => {
+await t("a widget loop carries the hook too", async() => {
   const { Skeleton } = await import("../src/widgets/Skeleton.js");
   const { ProgressBar } = await import("../src/widgets/ProgressBar.js");
   const skeleton = Skeleton({ animation: "wave", count: 2 });
@@ -648,7 +648,7 @@ await t("splitting a transform across two rules is named", () => {
 // One word, several letters: each letter's delay must be its own, and the letters
 // must still share a single generated rule — a name per call blew the <head> up
 // to one <style> per character.
-await t("AnimatedText staggers on one shared rule", async () => {
+await t("AnimatedText staggers on one shared rule", async() => {
   const { Text } = await import("../src/widgets/Text.js");
   const box = AnimatedText({
     child: Text({ text: "abcd" }),
@@ -703,7 +703,7 @@ await t("a keyframe length follows the reader's font", () => {
   setBaseFontSize(16);
 });
 
-await t("the imperative engine writes framework units too", async () => {
+await t("the imperative engine writes framework units too", async() => {
   setBaseFontSize(20);
   const el = mount();
   animate(el, "translateY", 20, 0, 240, "linear");
@@ -722,7 +722,7 @@ await t("the imperative engine writes framework units too", async () => {
   setBaseFontSize(16);
 });
 
-await t("animate() blends rgb() and rgba()", async () => {
+await t("animate() blends rgb() and rgba()", async() => {
   const start = "rgba(255, 0, 0, 0.4)";
   const el = mount({ backgroundColor: start });
   animate(el, "backgroundColor", start, "rgb(0, 0, 255)", 120, "linear");
@@ -736,7 +736,7 @@ await t("animate() blends rgb() and rgba()", async () => {
   unmount(el);
 });
 
-await t("an unblendable value stops at the end instead of NaN", async () => {
+await t("an unblendable value stops at the end instead of NaN", async() => {
   const el = mount();
   animate(el, "color", "red", "blue", 60, "linear");
   await frames(2);
@@ -751,7 +751,7 @@ await t("an unblendable value stops at the end instead of NaN", async () => {
 
 // ========== THE SHORTCUT PRESETS ==========
 
-await t("pulseAsync() resolves with the widget it pulsed", async () => {
+await t("pulseAsync() resolves with the widget it pulsed", async() => {
   const el = mount();
   const settled = await pulseAsync(el, 120);
   assert(settled === el, `a preset that chains promises should hand back the widget: ${settled}`);
@@ -759,7 +759,7 @@ await t("pulseAsync() resolves with the widget it pulsed", async () => {
   unmount(el);
 });
 
-await t("pulse() and pulseAsync() are the same swell", async () => {
+await t("pulse() and pulseAsync() are the same swell", async() => {
   const el = mount();
   pulse(el, 200);
   const swelled = await until(() => scaleOf(el) > 1);
@@ -769,7 +769,7 @@ await t("pulse() and pulseAsync() are the same swell", async () => {
   unmount(el);
 });
 
-await t("fadeOut() starts where the element is", async () => {
+await t("fadeOut() starts where the element is", async() => {
   const el = mount({ opacity: "0.6" });
   fadeOut(el, 200);
   const left = await until(() => Number(getComputedStyle(el).opacity) < 0.6);
@@ -786,7 +786,7 @@ await t("fadeOut() starts where the element is", async () => {
 // Both forms build their gesture from one step plan, so these assertions cannot
 // fail today. They are here for the day the two paths are edited separately.
 
-await t("a preset's sync and awaitable forms are the same gesture", async () => {
+await t("a preset's sync and awaitable forms are the same gesture", async() => {
   const options = { direction: "up", distance: 24, duration: 120 };
   const sync = mount({ opacity: "0" });
   const awaited = mount({ opacity: "0" });

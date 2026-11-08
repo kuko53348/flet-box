@@ -107,7 +107,7 @@ export const onBreakpointChange = (listener) => {
     };
   }
   return () => {
-    listeners.delete(listener);
-    if (listeners.size === 0) removeResize?.();
+    listeners.delete (listener);
+    if (listeners.size === 0) removeResize?. ();
   };
 };

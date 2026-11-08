@@ -13,12 +13,12 @@ const isAlive = (pid) => {
   }
 };
 
-const waitGone = async (pid, timeout) => {
+const waitGone = async(pid, timeout) => {
   const start = Date.now();
   while (isAlive(pid) && Date.now() - start < timeout) {
     await sleep(100);
   }
-  return !isAlive(pid);
+  return!isAlive(pid);
 };
 
 const hasLsof = () => {
@@ -42,7 +42,7 @@ const listenersOnPort = (port) => {
   }
 };
 
-export const killServer = async (portArg, { dryRun = false } = {}) => {
+export const killServer = async(portArg, { dryRun = false } = {}) => {
   const PORT = Number(portArg) || 8000;
 
   console.log(banner("🗡️  Kill Server", `port ${PORT}`));

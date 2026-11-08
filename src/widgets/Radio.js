@@ -100,7 +100,7 @@ export const Radio = (props) => {
     gap: isLabelled ? 12 : undefined,
     minWidth: isLabelled ? undefined : TAP_MINIMUM,
     minHeight: TAP_MINIMUM,
-    margin: isLabelled ? 0 : -overhang,
+    margin: isLabelled ? 0 : - overhang,
     flexShrink: 0,
     cursor: disabled ? "not-allowed" : "pointer",
     opacity: disabled ? 0.5 : 1,
@@ -108,7 +108,7 @@ export const Radio = (props) => {
       ? [
           circle,
           Text({
-            text: label,
+            text : label,
             size: LABEL_TEXT,
             fontWeight: 500,
             color: disabled ? colors.textDisabled : colors.text,

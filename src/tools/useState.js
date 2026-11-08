@@ -133,9 +133,9 @@ export const registerWidget = (key, widget, propName) => {
     const perWidget = widgetsByKey.get(key);
     const props = perWidget && perWidget.get(widget);
     if (!props) return;
-    props.delete(propName);
-    if (props.size === 0) perWidget.delete(widget);
-    if (perWidget.size === 0) widgetsByKey.delete(key);
+    props.delete (propName);
+    if (props.size === 0) perWidget.delete (widget);
+    if (perWidget.size === 0) widgetsByKey.delete (key);
   };
 
   // The factory installs lifecycle hooks before it binds reactive props, so a
@@ -220,7 +220,7 @@ export const useState = (key, initialState, widget = null, propName = null) => {
     }
     subscribers.get(key).add(callback);
     return () => {
-      subscribers.get(key)?.delete(callback);
+      subscribers.get(key)?.delete (callback);
     };
   };
 
@@ -248,7 +248,7 @@ export const useWatchState = (key, callback) => {
   }
   subscribers.get(key).add(callback);
   return () => {
-    subscribers.get(key)?.delete(callback);
+    subscribers.get(key)?.delete (callback);
   };
 };
 

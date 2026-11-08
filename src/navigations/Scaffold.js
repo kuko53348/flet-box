@@ -468,9 +468,9 @@ export const Scaffold = (props) => {
       if (drawerInstance) {
         container._drawer = drawerInstance;
         container.openDrawer = () =>
-          drawerInstance.open?.() ?? drawerInstance.toggle?.();
+          drawerInstance.open?. () ?? drawerInstance.toggle?. ();
         container.closeDrawer = () =>
-          drawerInstance.close?.() ?? drawerInstance.toggle?.();
+          drawerInstance.close?. () ?? drawerInstance.toggle?. ();
       }
     }
 

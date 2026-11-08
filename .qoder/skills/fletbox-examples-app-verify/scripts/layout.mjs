@@ -13,7 +13,7 @@ const widths = opt("widths", `${WIDTH},1280,900,520`).split(",").map(Number);
 const theme = opt("theme", "");
 const tolerance = Number(opt("tolerance", 2));
 
-const measure = async (page, width, route) => {
+const measure = async(page, width, route) => {
   await page.setViewport({ width, height: 900, deviceScaleFactor: 1 });
   await gotoAndWait(page, route, 400);
   return page.evaluate(
@@ -49,7 +49,7 @@ const measure = async (page, width, route) => {
 const rows = [];
 const problems = [];
 
-await withBrowser(async (browser) => {
+await withBrowser(async(browser) => {
   const { page, problems: channel } = await openPage(browser, { theme: theme || undefined });
   for (const width of widths) {
     for (const route of routes) {
@@ -80,7 +80,7 @@ await withBrowser(async (browser) => {
       }
     }
   }
-  await page.close().catch(() => {});
+  await page.close().catch (() => {});
 });
 
 console.log(JSON.stringify({ ok: problems.length === 0, base: BASE, theme: theme || "app default", rows, problems }, null, 2));

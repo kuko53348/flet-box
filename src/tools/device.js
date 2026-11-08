@@ -45,7 +45,7 @@ export const device = {
    * @returns {boolean} `true` if the device is not mobile and not a tablet
    */
   isDesktop: () => {
-    return !device.isMobile() && !device.isTablet();
+    return!device.isMobile() && !device.isTablet();
   },
 
   /**

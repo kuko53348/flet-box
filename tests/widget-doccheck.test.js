@@ -65,7 +65,7 @@ t("Image: objectFit via style fallback", () => { const e = mount(W.Image({ src: 
 const saveOnce = (props) => {
   const saved = [];
   const realClick = HTMLAnchorElement.prototype.click;
-  HTMLAnchorElement.prototype.click = function () { saved.push(this.download); };
+  HTMLAnchorElement.prototype.click = function() { saved.push(this.download); };
   try { mount(W.Image(props)).click(); } finally { HTMLAnchorElement.prototype.click = realClick; }
   return saved;
 };

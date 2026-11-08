@@ -65,7 +65,7 @@ export default ${name};
  *   numeric string (e.g. `"3"`) to batch-create numbered components.
  * @returns {Promise<void>}
  */
-export const createComponent = async (input) => {
+export const createComponent = async(input) => {
   const projectRoot = process.cwd();
   const componentsDir = path.join(projectRoot, "src", "components");
 

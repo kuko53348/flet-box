@@ -91,7 +91,7 @@ export async function withBrowser(run) {
   try {
     return await run(browser);
   } finally {
-    await browser.close().catch(() => {});
+    await browser.close().catch (() => {});
   }
 }
 

@@ -77,7 +77,7 @@ export const ParallaxBox = (props = {}) => {
    */
   const clearTransitionLater = () => {
     const timer = setTimeout(() => {
-      transitionTimers.delete(timer);
+      transitionTimers.delete (timer);
       if (animatedContent) animatedContent.style.transition = "";
     }, duration);
     transitionTimers.add(timer);
@@ -115,12 +115,12 @@ export const ParallaxBox = (props = {}) => {
     if (direction === "horizontal") moveY = 0;
 
     if (reverse) {
-      moveX = -moveX;
-      moveY = -moveY;
+      moveX = - moveX;
+      moveY = - moveY;
     }
 
-    moveX = Math.max(-maxOffset, Math.min(maxOffset, moveX));
-    moveY = Math.max(-maxOffset, Math.min(maxOffset, moveY));
+    moveX = Math.max(- maxOffset, Math.min(maxOffset, moveX));
+    moveY = Math.max(- maxOffset, Math.min(maxOffset, moveY));
 
     if (onParallaxMove) onParallaxMove({ x: moveX, y: moveY });
 

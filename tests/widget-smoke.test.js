@@ -109,7 +109,7 @@ for (const name of names) {
 // leave the argument out. The promise is in the type, so it has to hold at
 // runtime: the gallery that called `ThemePicker()` with nothing found out it
 // was a lie, and the screen died before it painted a pixel.
-const optionalWidgets = await (async () => {
+const optionalWidgets = await (async() => {
   try {
     const dts = await (await fetch("../src/index.d.ts")).text();
     return [
@@ -137,7 +137,7 @@ for (const name of optionalWidgets) {
   // Some widgets own a resource — a canvas with a running loop, a listener —
   // and hand back the disposer. Nothing here needs the element mounted.
   try {
-    el?._cleanup?.();
+    el?._cleanup?. ();
   } catch {
     /* a widget that cannot be disposed is still a widget that constructed */
   }

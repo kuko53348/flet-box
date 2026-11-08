@@ -259,7 +259,7 @@ const LIGHT_EDGE_DROP = 6;
 export const accentSurfaces = (ramp, theme) =>
   theme === "dark"
     ? {
-        background: color(ramp[3]).darken(DARK_PAGE_DROP).hex(),
+        background : color(ramp[3]).darken(DARK_PAGE_DROP).hex(),
         surface: color(ramp[3]).darken(DARK_PANEL_DROP).hex(),
         card: color(ramp[3]).darken(DARK_CARD_DROP).hex(),
         border: color(ramp[3]).darken(DARK_EDGE_DROP).hex(),
@@ -272,4 +272,3 @@ export const accentSurfaces = (ramp, theme) =>
         border: color(ramp[3]).darken(LIGHT_EDGE_DROP).hex(),
         divider: color(ramp[3]).darken(LIGHT_EDGE_DROP).hex(),
       };
-

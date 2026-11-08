@@ -348,7 +348,7 @@ export const unpackWidget = (api, name, definitions) => {
     typedBy === INLINE ? objectFields(api.signatures.get(name).params[0].type.slice(1, -1)) : null;
   const declared =
     typedBy === INLINE
-      ? new Map(inline.map((f) => [f.prop, { type: f.type, optional: f.optional, declaredBy: INLINE }]))
+      ? new Map(inline.map((f) => [f.prop, { type : f.type, optional: f.optional, declaredBy: INLINE }]))
       : api.interfaces.has(ifaceName)
         ? resolveInterfaceProps(api.interfaces, ifaceName)
         : new Map();
@@ -376,7 +376,7 @@ export const unpackWidget = (api, name, definitions) => {
       optional: info ? info.optional : null,
       declaredBy: info ? info.declaredBy : null,
       engine: def
-        ? { domProp: def.domProp, kind: def.type, unit: def.unit || null, reactive: Boolean(def.reactive) }
+        ? { domProp : def.domProp, kind: def.type, unit: def.unit || null, reactive: Boolean(def.reactive) }
         : null,
       aliasOf: aliases.get(prop) || [],
       read: source.read.has(prop),
@@ -1056,7 +1056,7 @@ const renderMarkdown = (all, api) => {
  * @param {{ print?: Function }} [io]
  * @returns {Promise<{ exitCode: number }>}
  */
-export const unpack = async (argv = [], io = {}) => {
+export const unpack = async(argv = [], io = {}) => {
   const print = io.print || ((line) => console.log(line));
   const root = (() => {
     const i = argv.indexOf("--root");

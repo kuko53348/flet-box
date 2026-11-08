@@ -310,7 +310,7 @@ export const rankDefects = (rows) => {
  * @param {{print?: (line: string) => void, root?: string}} [io]
  * @returns {Promise<{exitCode: number, north: number, generations: number}>}
  */
-export const metrics = async (argv = [], io = {}) => {
+export const metrics = async(argv = [], io = {}) => {
   const print = io.print ?? ((line) => console.log(line));
   const rootIndex = argv.indexOf("--root");
   const root = path.resolve(

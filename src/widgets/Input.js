@@ -585,7 +585,7 @@ export const Input = (props) => {
       // native field's rendering, so refocusing without restoring the selection
       // would jump the cursor to the end.
       const end = inputElement.value.length;
-      inputElement.setSelectionRange?.(end, end);
+      inputElement.setSelectionRange?. (end, end);
       inputElement.focus();
     });
     paint(btn);

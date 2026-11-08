@@ -181,7 +181,7 @@ export const Rating = (props) => {
       // target: 20 units of star inside a 40-unit box. A read-only rating shows a
       // score instead of a control, so it keeps its compact 4-unit gutter.
       ...(readOnly
-        ? { padding: 4 }
+        ? { padding : 4 }
         : { minWidth: TAP_MINIMUM, minHeight: TAP_MINIMUM }),
       // A score shown as filled stars is the only place that state lives: the
       // glyph is decorative and the number is not rendered when `showValue` is

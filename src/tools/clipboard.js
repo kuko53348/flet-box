@@ -24,7 +24,7 @@ export const clipboard = {
   copy: (text) => {
     // Modern path — async internally but fire-and-forget for the caller
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).catch((err) => {
+      navigator.clipboard.writeText(text).catch ((err) => {
         console.error("Clipboard failed:", err);
         clipboard._fallbackCopy(text);
       });
@@ -91,7 +91,7 @@ export const clipboard = {
    * @example
    * const text = await clipboard.read();
    */
-  read: async () => {
+  read: async() => {
     try {
       return await navigator.clipboard.readText();
     } catch (error) {

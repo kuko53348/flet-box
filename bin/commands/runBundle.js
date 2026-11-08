@@ -31,7 +31,7 @@ import { c, banner, dot } from "../utils/colors.js";
  * @param {boolean} [options.logRequests=true]  - Whether to log each HTTP request to stdout.
  * @returns {Promise<void>}
  */
-export const runBundle = async ({
+export const runBundle = async({
   target = "www",
   port = 8000,
   askPort = false,
@@ -51,8 +51,8 @@ export const runBundle = async ({
   process.chdir(target);
 
   await runDevServer({
-    spaMode: true,      // Enable SPA fallback (index.html for unknown routes).
-    hotReload: false,   // Hot reload is off — we're previewing the production build.
+    spaMode: true, // Enable SPA fallback (index.html for unknown routes).
+    hotReload: false, // Hot reload is off — we're previewing the production build.
     port,
     askPort,
     logRequests,

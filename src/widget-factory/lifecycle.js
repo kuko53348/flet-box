@@ -78,7 +78,7 @@ const checkAllStates = () => {
       // The setTimeout lets synchronous reparenting (drag & drop) complete first.
       setTimeout(() => {
         if (!document.body.contains(widget)) {
-          registeredWidgets.delete(widget);
+          registeredWidgets.delete (widget);
           widget._mountFns = [];
           widget._unmountFns = [];
           stopObserverIfIdle();
@@ -92,7 +92,7 @@ const checkAllStates = () => {
       setTimeout(() => {
         widget._orphanScheduled = false;
         if (!widget._mounted && !document.body.contains(widget)) {
-          registeredWidgets.delete(widget);
+          registeredWidgets.delete (widget);
           stopObserverIfIdle();
         }
       }, 0);
@@ -177,7 +177,7 @@ export const addLifecycle = (widget) => {
   widget._cleanup = () => {
     const unmountFns = widget._unmountFns;
     widget._unmountFns = [];
-    registeredWidgets.delete(widget);
+    registeredWidgets.delete (widget);
     stopObserverIfIdle();
     widget._mountFns = [];
     unmountFns.forEach((fn) => {

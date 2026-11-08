@@ -255,8 +255,9 @@ try {
   check("--no-tests leaves the suites out, and a failing suite cannot fail that run", () => {
     const names = staticOnly.report.steps.map((step) => step.name);
     assert(!names.includes("tests"), `--no-tests still ran the suites: ${names.join(", ")}`);
-    assert(names.length === 6, `expected the six static gates, got: ${names.join(", ")}`);
+    assert(names.length === 8, `expected the eight static gates, got: ${names.join(", ")}`);
     assert(names.includes("types"), `the static run does not type-check: ${names.join(", ")}`);
+    assert(names.includes("lint") && names.includes("format"), `the static run does not style-check: ${names.join(", ")}`);
     assert(staticOnly.exitCode === 0, "a suite that was not run decided the exit code");
   });
 } finally {

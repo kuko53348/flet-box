@@ -91,7 +91,7 @@ export const Pagination = (props) => {
       // The plate is the only thing that says "this is the page you are on", and a
       // colour is not something a reader hears. `aria-current` is the same fact in
       // the accessibility tree.
-      ...(isActive ? { "aria-current": "page" } : null),
+      ...(isActive ? { "aria-current" : "page" } : null),
       variant: buttonVariant,
       bgColor: isActive ? color : "transparent",
       color: buttonColor,

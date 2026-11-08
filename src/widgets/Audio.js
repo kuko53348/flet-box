@@ -141,7 +141,7 @@ export const Audio = (props) => {
    * This is necessary for some file formats where the browser's media pipeline
    * cannot determine duration without fully downloading the file.
    */
-  const fallbackGetDuration = async () => {
+  const fallbackGetDuration = async() => {
     if (audioContextFallbackAttempted || disposed) return;
     audioContextFallbackAttempted = true;
 
@@ -220,7 +220,7 @@ export const Audio = (props) => {
    * @returns {HTMLAudioElement} The audio element (for chaining).
    */
   audio.playAudio = () => {
-    nativePlay().catch((e) => console.warn(e));
+    nativePlay().catch ((e) => console.warn(e));
     return audio;
   };
 

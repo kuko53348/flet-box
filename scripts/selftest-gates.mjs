@@ -213,6 +213,27 @@ const fixtures = [
     where: (files) => [at("src/type-error.js", files["src/type-error.js"])],
   },
   {
+    gate: "lint",
+    files: () => ({
+      // The trailing spaces are the defect; the line still parses, so no other
+      // gate can notice it. The marker sits on the next line so the defect
+      // stays at the line's own end.
+      "src/trailing.js": "export const answer = 42;  \n// expect\n",
+    }),
+    expect: { code: "TRAILING_WS" },
+    where: () => [{ file: "src/trailing.js", line: 1 }],
+  },
+  {
+    gate: "format",
+    files: () => ({
+      // The formatter would repair this spacing, so only the format gate may
+      // report it: parse, api and lint all read it as legal.
+      "src/unformatted.js": "export const answer=42; // expect\n",
+    }),
+    expect: { code: "FORMAT_NEEDED" },
+    where: (files) => [at("src/unformatted.js", files["src/unformatted.js"])],
+  },
+  {
     gate: "ui",
     files: () => ({
       "src/off-scale.js": [
@@ -345,7 +366,7 @@ const apply = (root, files) => {
  * @param {string} gate
  * @returns {Promise<object>}
  */
-const one = async (root, gate) => {
+const one = async(root, gate) => {
   const report = await runGates(root, [gate]);
   return report.steps[0];
 };

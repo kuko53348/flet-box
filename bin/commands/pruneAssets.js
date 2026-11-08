@@ -71,7 +71,7 @@ const collectImages = (dir) => {
  * @param {string[]} args - CLI arguments after the command name.
  * @returns {Promise<{exitCode: number}>}
  */
-export const pruneAssets = async (args = []) => {
+export const pruneAssets = async(args = []) => {
   const has = (flag) => args.includes(flag);
   const valueOf = (flag) => {
     const i = args.indexOf(flag);

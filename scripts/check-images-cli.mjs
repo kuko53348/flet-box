@@ -47,7 +47,7 @@ const writePhoto = (file, width = 240, height = 160, alpha = false) => {
 };
 
 
-const check = async (name, fn) => {
+const check = async(name, fn) => {
   try {
     await fn();
     console.log(`  ok   ${name}`);
@@ -81,7 +81,7 @@ await check("an emptied PATH finds no encoder", () => {
 });
 
 if (encoder) {
-  await check("images writes a budget WebP and keeps the source", async () => {
+  await check("images writes a budget WebP and keeps the source", async() => {
     const dir = path.join(scratch, "photos");
     fs.mkdirSync(dir, { recursive: true });
     const source = path.join(dir, "photo.png");
@@ -100,7 +100,7 @@ if (encoder) {
     assert.ok(fs.readFileSync(source).equals(before), "the source PNG was modified");
   });
 
-  await check("images is idempotent: an in-budget WebP is not re-encoded", async () => {
+  await check("images is idempotent: an in-budget WebP is not re-encoded", async() => {
     const dir = path.join(scratch, "photos");
     const out = path.join(dir, "photo.webp");
     const first = fs.readFileSync(out);
@@ -109,7 +109,7 @@ if (encoder) {
     assert.ok(fs.readFileSync(out).equals(first), "a second run rewrote bytes the budget already accepted");
   });
 
-  await check("transparency survives the encoder, and --replace refuses without a consumer", async () => {
+  await check("transparency survives the encoder, and --replace refuses without a consumer", async() => {
     const dir = path.join(scratch, "alpha");
     fs.mkdirSync(dir, { recursive: true });
     const src = path.join(dir, "sticker.png");
@@ -127,7 +127,7 @@ if (encoder) {
     assert.ok(fs.existsSync(src), "--replace removed a source no app references");
   });
 
-  await check("an opaque WebP is reported as opaque", async () => {
+  await check("an opaque WebP is reported as opaque", async() => {
     const dir = path.join(scratch, "photos");
     const opaque = path.join(dir, "photo.webp");
     assert.ok(fs.existsSync(opaque), "run 1 wrote no photo.webp");
@@ -136,7 +136,7 @@ if (encoder) {
     assert.equal(webpCarriesAlpha(fs.readFileSync(opaque)), false, "claimed alpha where the source had none");
   });
 
-  await check("--referenced converts what the app names and skips the rest", async () => {
+  await check("--referenced converts what the app names and skips the rest", async() => {
     const app = path.join(scratch, "app2");
     fs.mkdirSync(path.join(app, "src"), { recursive: true });
     fs.mkdirSync(path.join(app, "assets"), { recursive: true });
@@ -154,7 +154,7 @@ if (encoder) {
     );
   });
 
-  await check("--replace deletes a master once the app loads its WebP", async () => {
+  await check("--replace deletes a master once the app loads its WebP", async() => {
     const app = path.join(scratch, "app3");
     fs.mkdirSync(path.join(app, "src"), { recursive: true });
     fs.mkdirSync(path.join(app, "assets", "shots"), { recursive: true });
@@ -167,7 +167,7 @@ if (encoder) {
     assert.ok(!fs.existsSync(path.join(app, "assets", "shots", "sticker2.png")), "the source the app replaced survived");
   });
 
-  await check("images leaves assets/logo.png alone: it is the app icon", async () => {
+  await check("images leaves assets/logo.png alone: it is the app icon", async() => {
     const app = path.join(scratch, "app4");
     fs.mkdirSync(path.join(app, "src"), { recursive: true });
     fs.mkdirSync(path.join(app, "assets"), { recursive: true });
@@ -187,7 +187,7 @@ if (encoder) {
 }
 
 
-await check("prune keeps what the app names and deletes what it does not", async () => {
+await check("prune keeps what the app names and deletes what it does not", async() => {
   const app = path.join(scratch, "app");
   fs.mkdirSync(path.join(app, "src"), { recursive: true });
   fs.mkdirSync(path.join(app, "assets"), { recursive: true });
@@ -210,7 +210,7 @@ await check("prune keeps what the app names and deletes what it does not", async
   assert.ok(fs.existsSync(path.join(app, "assets", "logo.png")), "assets/logo.png is never pruned: the native icons are built from it");
 });
 
-await check("prune refuses a folder outside the project root", async () => {
+await check("prune refuses a folder outside the project root", async() => {
   const { exitCode } = await pruneAssets([scratch, "--root", path.join(scratch, "app")]);
   assert.equal(exitCode, 1, "it accepted a path outside the project");
 });

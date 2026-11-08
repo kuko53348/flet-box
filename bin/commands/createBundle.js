@@ -78,7 +78,7 @@ const copyFolderSync = (src, dest) => {
  *   root.  Defaults to `"www"` when omitted.
  * @returns {Promise<void>}
  */
-export const createBundle = async (targetArg) => {
+export const createBundle = async(targetArg) => {
   const TARGET = targetArg || "www";
   console.log(banner("📦 FletBox Bundle", TARGET + "/"));
 

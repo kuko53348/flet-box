@@ -218,8 +218,8 @@ const PATTERNS = {
   html: [
     [/(<!--[\s\S]*?-->)/, "comment"],
     [/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/, "string"],
-    [/(<\/?)([a-zA-Z][a-zA-Z0-9-]*)/, "tag"],   // tag name
-    [/\b([a-zA-Z:][a-zA-Z0-9_:-]*)(?=\s*=)/, "attr"],  // attribute name
+    [/(<\/?)([a-zA-Z][a-zA-Z0-9-]*)/, "tag"], // tag name
+    [/\b([a-zA-Z:][a-zA-Z0-9_:-]*)(?=\s*=)/, "attr"], // attribute name
     [/([<>/=])/, "punctuation"],
   ],
   bash: [
@@ -301,7 +301,7 @@ const highlightLine = (line, lang, syntax) => {
  */
 const copyTextToClipboard = (text, onDone) => {
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(onDone).catch(() => {
+    navigator.clipboard.writeText(text).then(onDone).catch (() => {
       legacyCopy(text);
       onDone();
     });
@@ -964,7 +964,7 @@ export const Markdown = (props) => {
   // the sanitizer strips on*= attributes, and a per-button listener would not
   // survive updateContent(); delegation on the persistent content node does.
   contentDiv.addEventListener("click", (event) => {
-    const btn = event.target.closest?.(".md-copy-btn");
+    const btn = event.target.closest?. (".md-copy-btn");
     if (!btn) return;
     const src = btn.closest(".md-code-block")?.querySelector(".md-raw-src");
     const raw = src ? src.value : "";

@@ -129,7 +129,7 @@ export const platformInstaller = () => {
  */
 const isRunnable = (bin) => {
   const probe = spawnSync(bin, ["--version"], { encoding: "utf8" });
-  return !probe.error;
+  return!probe.error;
 };
 
 /**
@@ -169,7 +169,7 @@ export const encode = (encoder, { src, width, quality, method = 6, out }) => {
  * @param {{autoInstall: boolean, isTTY: boolean, quiet: boolean}} opts
  * @returns {Promise<Encoder|null>} The encoder to use, or null when it is missing.
  */
-export const ensureEncoder = async (encoder, { autoInstall = false, isTTY = process.stdout.isTTY, quiet = false } = {}) => {
+export const ensureEncoder = async(encoder, { autoInstall = false, isTTY = process.stdout.isTTY, quiet = false } = {}) => {
   if (encoder) return encoder;
 
   const installer = platformInstaller();
@@ -268,4 +268,3 @@ export const webpCarriesAlpha = (buf) => {
 
 /** Kept for callers that want to report the machine they probed. */
 export const describeMachine = () => `${os.platform()}/${os.arch()} · ${platformInstaller().name}`;
-

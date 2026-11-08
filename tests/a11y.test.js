@@ -773,7 +773,7 @@ const run = () => {
       `activeElement=${document.activeElement?.tagName?.toLowerCase()}`,
     );
     scaffoldDrawer.close();
-    scaffoldDrawer.destroy?.();
+    scaffoldDrawer.destroy?. ();
   }
 
   // An app that already names the menu in its own language must keep that name.
@@ -807,7 +807,7 @@ const run = () => {
       ? `label=${localizedMenu.getAttribute("aria-label")} role=${localizedMenu.getAttribute("role")} tabindex=${localizedMenu.getAttribute("tabindex")}`
       : "no menu glyph found in the Scaffold's app bar",
   );
-  localizedDrawer.destroy?.();
+  localizedDrawer.destroy?. ();
 
   // ============================================================
   // 14. AN INVALID FIELD SAYS SO OUT LOUD

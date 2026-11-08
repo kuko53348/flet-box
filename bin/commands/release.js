@@ -49,7 +49,7 @@ const git = (cmd, cwd) =>
  *   e.g. `["--minor", "--push"]`.
  * @returns {Promise<void>}
  */
-export const release = async (argv = []) => {
+export const release = async(argv = []) => {
   const projectRoot = process.cwd();
 
   // ---- Parse flags --------------------------------------------------------

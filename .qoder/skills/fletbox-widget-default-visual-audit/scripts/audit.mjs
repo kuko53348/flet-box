@@ -164,7 +164,7 @@ async function main() {
   }
 }
 
-main().catch((err) => {
+main().catch ((err) => {
   if (err instanceof Skip) {
     console.log(`SKIP: ${err.message}`);
     process.exit(0);

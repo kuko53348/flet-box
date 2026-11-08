@@ -50,7 +50,7 @@ export const run = (command, args, cwd, label, env = process.env) => {
  */
 export const commandExists = (command, args = ["--version"]) => {
   const result = spawnSync(command, args, { stdio: "ignore" });
-  return !result.error && result.status === 0;
+  return!result.error && result.status === 0;
 };
 
 const hasPackage = (projectRoot, packageName) =>

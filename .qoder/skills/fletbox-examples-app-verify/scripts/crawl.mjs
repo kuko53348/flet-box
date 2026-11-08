@@ -22,7 +22,7 @@ if (!targets.length) {
 const results = [];
 const problems = [];
 
-await withBrowser(async (browser) => {
+await withBrowser(async(browser) => {
   for (const theme of themes) {
     const { page, problems: channel } = await openPage(browser, { theme });
     for (const name of targets) {
@@ -72,7 +72,7 @@ await withBrowser(async (browser) => {
 
       results.push({ theme, name, ...report });
     }
-    await page.close().catch(() => {});
+    await page.close().catch (() => {});
   }
 });
 

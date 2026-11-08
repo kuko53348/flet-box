@@ -196,7 +196,7 @@ export const Tabs = (props) => {
     if (idx < 0 || idx >= tabs.length || currentIndex === idx) return;
     currentIndex = idx;
     updateActiveTab(idx);
-    onChange?.(idx);
+    onChange?. (idx);
     if (moveFocus) tabButtonsRef[idx]?.focus();
   };
 
@@ -218,14 +218,14 @@ export const Tabs = (props) => {
     const iconWidget =
       showIcon && icon
         ? Icon({
-            name: icon,
+            name : icon,
             size: iconSize || sz.i,
             color: isActive ? resolvedActiveTextColor : textColor,
           })
         : null;
     const labelWidget = label
       ? Text({
-          text: label,
+          text : label,
           size: sz.f,
           color: isActive ? resolvedActiveTextColor : textColor,
           weight: isActive ? "500" : "400",
@@ -236,7 +236,7 @@ export const Tabs = (props) => {
           // The signal red is a words-on-a-page tone; white on it measured
           // 2.77:1 in the dark theme. A count is a fill carrying white, so it
           // takes the plate (`dangerPlate`) and the palette's white (`onSecondary`).
-          backgroundColor: colors.dangerPlate,
+          backgroundColor : colors.dangerPlate,
           borderRadius: PILL,
           padding: "4px 8px",
           marginLeft: 4,
@@ -259,7 +259,7 @@ export const Tabs = (props) => {
       iconWidget && (iconPosition === "top" || iconPosition === "bottom");
     const content = stacked
       ? Column({
-          alignItems: "center",
+          alignItems : "center",
           justifyContent: "center",
           gap: 4,
           children:
@@ -348,7 +348,7 @@ export const Tabs = (props) => {
       position: "absolute",
       ...(variant === "slider"
         ? {
-            top: "4px",
+            top : "4px",
             left: "4px",
             height: "calc(100% - 8px)",
             backgroundColor: buttonColor,

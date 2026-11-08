@@ -530,7 +530,7 @@ const readStoredAccent = () => {
     const raw = localStorage.getItem("fletbox-accent");
     if (!raw) return null;
     const surfaces = raw.endsWith(SURFACES_SUFFIX);
-    const id = surfaces ? raw.slice(0, -SURFACES_SUFFIX.length) : raw;
+    const id = surfaces ? raw.slice(0, - SURFACES_SUFFIX.length) : raw;
     return id && accents[id] ? { id, surfaces } : null;
   } catch (e) {
     return null;

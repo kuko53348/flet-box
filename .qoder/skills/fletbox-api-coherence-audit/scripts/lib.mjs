@@ -67,7 +67,7 @@ export const missingDeps = () => {
 };
 
 /** Prints the skip notice and exits 0 when puppeteer or Chrome is absent. */
-export const requireBrowserDeps = async () => {
+export const requireBrowserDeps = async() => {
   const { root, puppeteer, chrome } = missingDeps();
   if (!puppeteer || !chrome) {
     console.log(
@@ -88,7 +88,7 @@ export const requireBrowserDeps = async () => {
     root,
     base,
     browser,
-    close: async () => {
+    close: async() => {
       await browser.close();
       server.close();
     },
@@ -98,7 +98,7 @@ export const requireBrowserDeps = async () => {
 /** Static server rooted at the repo plus a `/__probe__` blank page. Read-only. */
 const startServer = (root) =>
   new Promise((resolve) => {
-    const server = createServer(async (req, res) => {
+    const server = createServer(async(req, res) => {
       if ((req.url || "/").startsWith("/__probe__")) {
         res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
         res.end("<!doctype html><meta charset=utf-8><body></body>");

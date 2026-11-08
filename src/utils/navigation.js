@@ -186,7 +186,7 @@ export const addNavigation = (widget) => {
   // ========================================================================
   // 10. findById (downward search by id)
   // ========================================================================
-  widget.findById = function (id) {
+  widget.findById = function(id) {
     if (this.id === id) return this;
     for (const child of this._children || []) {
       if (child.findById) {
@@ -200,7 +200,7 @@ export const addNavigation = (widget) => {
   // ========================================================================
   // 11. findAll (downward search by widget name)
   // ========================================================================
-  widget.findAll = function (widgetName) {
+  widget.findAll = function(widgetName) {
     const results = [];
     if (this._widgetName === widgetName) results.push(this);
     for (const child of this._children || []) {
@@ -214,7 +214,7 @@ export const addNavigation = (widget) => {
   // ========================================================================
   // 12. TREE (tree view for debugging)
   // ========================================================================
-  widget._generateTree = function (indent = 0, isLast = true, prefix = "") {
+  widget._generateTree = function(indent = 0, isLast = true, prefix = "") {
     const connector = indent === 0 ? "" : isLast ? "└── " : "├── ";
     const continuation = indent === 0 ? "" : isLast ? "    " : "│   ";
 
@@ -248,7 +248,7 @@ export const addNavigation = (widget) => {
   // ========================================================================
   // 13. _getTreeProps (overridable by each widget to display props)
   // ========================================================================
-  widget._getTreeProps = function () {
+  widget._getTreeProps = function() {
     const name = this._widgetName || "";
     const propsMap = {
       Text: () => (this.textContent ? ` [${this.textContent}]` : ""),

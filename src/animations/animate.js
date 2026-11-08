@@ -305,7 +305,7 @@ const registerLoop = (widget, property, state) => {
 const unregisterLoop = (widget, property, state) => {
   if (!isTrackable(widget)) return;
   const byProperty = activeLoops.get(widget);
-  if (byProperty && byProperty.get(property) === state) byProperty.delete(property);
+  if (byProperty && byProperty.get(property) === state) byProperty.delete (property);
 };
 
 /**

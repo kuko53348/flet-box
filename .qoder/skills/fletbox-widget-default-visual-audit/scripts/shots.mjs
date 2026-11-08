@@ -72,7 +72,7 @@ async function main() {
           if (!el) return null;
           const r = el.getBoundingClientRect();
           return {
-            x: Math.max(0, r.x - 8),
+            x : Math.max(0, r.x - 8),
             y: r.y + window.scrollY - 8,
             width: r.width + 16,
             height: r.height + 16,
@@ -80,7 +80,7 @@ async function main() {
         }, card)
       : null;
     if (card && !cardBox) throw new Skip(`no card named "${card}" in the gallery`);
-    const shoot = async (theme) => {
+    const shoot = async(theme) => {
       const full = resolve(out, `gallery-${theme}.png`);
       await page.screenshot({ path: full, fullPage: true });
       files.push(full);
@@ -135,7 +135,7 @@ async function main() {
   }
 }
 
-main().catch((err) => {
+main().catch ((err) => {
   if (err instanceof Skip) {
     console.log(`SKIP: ${err.message}`);
     process.exit(0);

@@ -148,7 +148,7 @@ export const Slider = (props) => {
     position: "relative",
     ...(isHorizontal
       ? {
-          width: "100%",
+          width : "100%",
           height: trackLength,
           // The rail is 4 units of paint; the surface a thumb can grab is 40.
           minHeight: TAP_MINIMUM,
@@ -170,7 +170,7 @@ export const Slider = (props) => {
     position: "relative",
     ...(isHorizontal
       ? {
-          width: "100%",
+          width : "100%",
           height: trackLength,
         }
       : {
@@ -192,7 +192,7 @@ export const Slider = (props) => {
     transition: disabled ? "none" : FILL_EASE,
     ...(isHorizontal
       ? {
-          width: `${displayPercent * 100}%`,
+          width : `${displayPercent * 100}%`,
           height: "100%",
           left: 0,
           top: 0,
@@ -234,7 +234,7 @@ export const Slider = (props) => {
     pointerEvents: "auto",
     ...(isHorizontal
       ? {
-          top: "50%",
+          top : "50%",
           transform: "translateY(-50%)",
         }
       : {
@@ -252,7 +252,7 @@ export const Slider = (props) => {
       position: "absolute",
       ...(isHorizontal
         ? {
-            left: 0,
+            left : 0,
             right: 0,
             top: "50%",
             transform: "translateY(-50%)",
@@ -292,7 +292,7 @@ export const Slider = (props) => {
         position: "absolute",
         ...(isHorizontal
           ? {
-              left: `${posPercent * 100}%`,
+              left : `${posPercent * 100}%`,
               // transform: 'translateX(-50%)',
               top: "50%",
               transform: "translate(-50%, -50%)",
@@ -317,7 +317,7 @@ export const Slider = (props) => {
           position: "absolute",
           ...(isHorizontal
             ? {
-                top: "100%",
+                top : "100%",
                 left: "50%",
                 transform: "translateX(-50%)",
                 marginTop: "4px",

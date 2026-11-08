@@ -403,7 +403,7 @@ export const addSeconds = (date, n) =>
  * @param {number} n - Number of days to subtract.
  * @returns {Date}
  */
-export const subtractDays = (date, n) => addDays(date, -n);
+export const subtractDays = (date, n) => addDays(date, - n);
 
 /**
  * Subtracts `n` hours from a date and returns a new `Date`.
@@ -411,7 +411,7 @@ export const subtractDays = (date, n) => addDays(date, -n);
  * @param {number} n - Number of hours to subtract.
  * @returns {Date}
  */
-export const subtractHours = (date, n) => addHours(date, -n);
+export const subtractHours = (date, n) => addHours(date, - n);
 
 /**
  * Subtracts `n` minutes from a date and returns a new `Date`.
@@ -419,7 +419,7 @@ export const subtractHours = (date, n) => addHours(date, -n);
  * @param {number} n - Number of minutes to subtract.
  * @returns {Date}
  */
-export const subtractMinutes = (date, n) => addMinutes(date, -n);
+export const subtractMinutes = (date, n) => addMinutes(date, - n);
 
 /**
  * Subtracts `n` seconds from a date and returns a new `Date`.
@@ -427,7 +427,7 @@ export const subtractMinutes = (date, n) => addMinutes(date, -n);
  * @param {number} n - Number of seconds to subtract.
  * @returns {Date}
  */
-export const subtractSeconds = (date, n) => addSeconds(date, -n);
+export const subtractSeconds = (date, n) => addSeconds(date, - n);
 
 // ========== RELATIVE ==========
 
@@ -542,7 +542,7 @@ export const sleep = waitFor;
  * @returns {Promise<true>} Resolves `true` when the condition is met.
  * @throws {Error} Throws if the timeout is reached before the condition is satisfied.
  */
-export const waitUntil = async (
+export const waitUntil = async(
   condition,
   timeout = seconds(30),
   interval = seconds(1),
@@ -564,7 +564,7 @@ export const waitUntil = async (
  * @returns {Promise<Element>} Resolves with the found DOM element.
  * @throws {Error} Throws if the element is not found within the timeout.
  */
-export const waitForElement = async (
+export const waitForElement = async(
   selector,
   timeout = seconds(10),
   interval = seconds(0.5),

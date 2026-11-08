@@ -23,7 +23,7 @@ import { c, banner, section } from "../utils/colors.js";
  * @param {{print?: (line: string) => void, root?: string}} [io]
  * @returns {Promise<{exitCode: number}>}
  */
-export const tools = async (argv = [], io = {}) => {
+export const tools = async(argv = [], io = {}) => {
   const print = io.print ?? ((line) => console.log(line));
   const rootIndex = argv.indexOf("--root");
   const root = path.resolve(

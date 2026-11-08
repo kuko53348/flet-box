@@ -43,7 +43,7 @@ const failures = [];
  * @param {string} name
  * @param {() => void | Promise<void>} fn
  */
-const check = async (name, fn) => {
+const check = async(name, fn) => {
   try {
     await fn();
     console.log(`  ok   ${name}`);
@@ -253,7 +253,7 @@ await check("every rule number the owners point at exists in the design skill", 
   }
 });
 
-await check("a code that comes back with no rule fails the command", async () => {
+await check("a code that comes back with no rule fails the command", async() => {
   const file = writeLog([
     ["2026-10-27T10:00:00.000Z", "demo", "✗", "api", "MYSTERY_CODE"],
     ["2026-10-27T10:01:00.000Z", "demo", "✗", "api", "MYSTERY_CODE"],
@@ -268,7 +268,7 @@ await check("a code that comes back with no rule fails the command", async () =>
   );
 });
 
-await check("a code that comes back with a rule behind it passes", async () => {
+await check("a code that comes back with a rule behind it passes", async() => {
   const file = writeLog([
     ["2026-10-27T10:00:00.000Z", "demo", "✗", "api", "UNKNOWN_PROP"],
     ["2026-10-27T10:01:00.000Z", "demo", "✗", "api", "UNKNOWN_PROP"],
@@ -280,7 +280,7 @@ await check("a code that comes back with a rule behind it passes", async () => {
   assert.ok(RECURRING >= 3, "the threshold moved below three");
 });
 
-await check("a recurring code with a rule behind it is named as not landing", async () => {
+await check("a recurring code with a rule behind it is named as not landing", async() => {
   const file = writeLog([
     ["2026-10-27T10:00:00.000Z", "demo", "✗", "api", "UNKNOWN_PROP"],
     ["2026-10-27T10:01:00.000Z", "demo", "✗", "api", "UNKNOWN_PROP"],
@@ -294,7 +294,7 @@ await check("a recurring code with a rule behind it is named as not landing", as
   );
 });
 
-await check("a code that comes back once is not called stubborn", async () => {
+await check("a code that comes back once is not called stubborn", async() => {
   const file = writeLog([
     ["2026-10-27T10:00:00.000Z", "demo", "✗", "api", "UNKNOWN_PROP"],
   ]);
@@ -379,7 +379,7 @@ await check("a real finding beside a gate defect is still a correction", () => {
   assert.equal(rankCodes(rows).has("MISSING_EXPORT"), false, "the gate's code was ranked");
 });
 
-await check("a recurring gate defect does not fail the command", async () => {
+await check("a recurring gate defect does not fail the command", async() => {
   const file = writeLog(
     [
       ["2026-11-06T10:00:00.000Z", "demo", "✗", "api", "MISSING_EXPORT"],
@@ -401,7 +401,7 @@ await check("a recurring gate defect does not fail the command", async () => {
   );
 });
 
-await check("an open gate defect is named, and the command still passes", async () => {
+await check("an open gate defect is named, and the command still passes", async() => {
   const file = writeLog(
     [["2026-11-07T10:00:00.000Z", "demo", "✗", "structure", "SOURCE_OUTSIDE_ROOT"]],
     [["SOURCE_OUTSIDE_ROOT", "2026-11-07", "—", "`create --help` scaffolded a folder"]],
@@ -438,7 +438,7 @@ await check("every code in this repository's log has a rule behind it", () => {
   }
 });
 
-await check("a project with no log is not measured, and says so", async () => {
+await check("a project with no log is not measured, and says so", async() => {
   const lines = [];
   const result = await metrics(["--root", scratch], { print: (line) => lines.push(line) });
   assert.equal(result.exitCode, 0, "a missing log was reported as a failure");
@@ -464,7 +464,7 @@ await check("the log template carries the Gate defects table", () => {
   assert.ok(text.includes("| Code | Seen | Fixed | Where |"), "the registry header is missing");
 });
 
-await check("the app's package.json wires the metrics command", async () => {
+await check("the app's package.json wires the metrics command", async() => {
   const { packageJson } = await import("../bin/utils/templates.js");
   const json = JSON.parse(packageJson("demo"));
   assert.equal(json.scripts.metrics, "flet-box metrics", "the metrics script is not wired");

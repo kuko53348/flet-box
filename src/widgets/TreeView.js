@@ -111,7 +111,7 @@ export const TreeView = (props) => {
       // target was added on top of the 8px vertical padding and every row
       // measured 56px, spreading the tree far more than its 8px rhythm.
       boxSizing: "border-box",
-      ...(selectable ? { minHeight: TAP_MINIMUM } : {}),
+      ...(selectable ? { minHeight : TAP_MINIMUM } : {}),
       borderRadius: toREM(borderRadius),
       marginLeft: toREM(level * indent),
       transition: `background-color ${transitionDuration} ease`,
@@ -164,7 +164,7 @@ export const TreeView = (props) => {
       toggleBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         if (expandedSet.has(node.id)) {
-          expandedSet.delete(node.id);
+          expandedSet.delete (node.id);
         } else {
           expandedSet.add(node.id);
         }
@@ -346,7 +346,7 @@ export const TreeView = (props) => {
       // Keep only the path to target, remove deeper expansions
       const toKeep = new Set(path);
       for (const id of expandedSet) {
-        if (!toKeep.has(id)) expandedSet.delete(id);
+        if (!toKeep.has(id)) expandedSet.delete (id);
       }
       rerender();
     }

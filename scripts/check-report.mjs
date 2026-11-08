@@ -37,7 +37,7 @@ const framework = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..
 const scratch = fs.mkdtempSync(path.join(os.tmpdir(), "fletbox-report-"));
 
 let failures = 0;
-const check = async (label, fn) => {
+const check = async(label, fn) => {
   try {
     await fn();
     console.log(`✅ ${label}`);
@@ -209,7 +209,7 @@ try {
     assert(built.metrics.runs === 2, `expected 2 logged run(s), saw ${built.metrics.runs}`);
   });
 
-  await check("the report writes nothing — not even a metrics row", async () => {
+  await check("the report writes nothing — not even a metrics row", async() => {
     const before = digest(app);
     const again = await buildReport({ root: app });
     assert(again.summary.errors === built.summary.errors, "the second run disagreed with the first");
@@ -218,7 +218,7 @@ try {
     assert(!log.includes("2026-11-"), "the report appended a row to the log it reads");
   });
 
-  await check("a module that does not parse is named by line and column", async () => {
+  await check("a module that does not parse is named by line and column", async() => {
     const response = await handleRequest({
       jsonrpc: "2.0",
       id: 1,
@@ -231,7 +231,7 @@ try {
     assert(response.result.structuredContent.steps[0].exitCode === 1, "a broken module exited 0");
   });
 
-  await check("--json is the same report as data, and exits 1 on an error", async () => {
+  await check("--json is the same report as data, and exits 1 on an error", async() => {
     const lines = [];
     const result = await report(["--root", app, "--json"], { print: (line) => lines.push(line) });
     const data = JSON.parse(lines.join("\n"));
@@ -282,7 +282,7 @@ try {
     assert(catalogJson().readOnly === true, "the catalogue does not declare itself read-only");
   });
 
-  await check("`tools --emit` writes the same catalogue it prints", async () => {
+  await check("`tools --emit` writes the same catalogue it prints", async() => {
     const lines = [];
     await tools(["--root", app, "--emit"], { print: (line) => lines.push(line) });
     const file = path.join(app, ".fletbox", "api", "tools.json");
@@ -298,7 +298,7 @@ try {
 
   /* ------------------------------------------------------------------ MCP */
 
-  await check("MCP lists exactly the catalogue, and answers the handshake", async () => {
+  await check("MCP lists exactly the catalogue, and answers the handshake", async() => {
     const list = await handleRequest({ jsonrpc: "2.0", id: 1, method: "tools/list" });
     assert(
       list.result.tools.map((tool) => tool.name).join() === TOOLS.map((tool) => tool.id).join(),
@@ -310,7 +310,7 @@ try {
     assert(unknown.error.code === -32601, "an unknown method was accepted");
   });
 
-  await check("MCP refuses a bad call without running anything", async () => {
+  await check("MCP refuses a bad call without running anything", async() => {
     const unknown = await handleRequest({
       jsonrpc: "2.0",
       id: 1,
@@ -334,7 +334,7 @@ try {
     assert(noWidget.result.isError === true, "an invented widget name was answered as if it existed");
   });
 
-  await check("MCP answers with the report and changes nothing", async () => {
+  await check("MCP answers with the report and changes nothing", async() => {
     const before = digest(app);
     const response = await handleRequest({
       jsonrpc: "2.0",

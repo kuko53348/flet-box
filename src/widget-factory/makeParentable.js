@@ -23,7 +23,7 @@ import { reregister } from "./lifecycle.js";
 export const makeParentable = (widget) => {
   let _parent = null;
   widget._children = [];
-  widget._isWidget = true;  // Branding flag to identify flet-box widgets
+  widget._isWidget = true; // Branding flag to identify flet-box widgets
 
   Object.defineProperty(widget, "parent", {
     get: () => _parent,
@@ -44,7 +44,7 @@ export const makeParentable = (widget) => {
    * @param {Node} child - The node to append.
    * @returns {Node} The appended child (mirrors native behaviour).
    */
-  widget.appendChild = function (child) {
+  widget.appendChild = function(child) {
     if (child && child._isWidget === true) {
       child.parent = this;
       reregister(child);
@@ -72,7 +72,7 @@ export const makeParentable = (widget) => {
    * @param {Node} child - The node to remove.
    * @returns {Node} The removed child (mirrors native behaviour).
    */
-  widget.removeChild = function (child) {
+  widget.removeChild = function(child) {
     const index = this._children.indexOf(child);
     if (index !== -1) {
       this._children.splice(index, 1);

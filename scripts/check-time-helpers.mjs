@@ -46,7 +46,7 @@ const ZONES = [
 const TIME_NAMES = "seconds minutes hours days weeks months years now today yesterday tomorrow dayOfWeek monthName isToday isYesterday isTomorrow isWeekend isLeapYear formatDate formatDateLong formatDateShort formatTime formatTimeAmPm parseDate dateDiff addDays addHours addMinutes addSeconds subtractDays subtractHours subtractMinutes subtractSeconds timeAgo relativeTime timeAgoLocale waitFor wait sleep waitUntil waitForElement timer every everySecond everyMinute everyHour everyDay".split(" ");
 const STRING_NAMES = "startsWith endsWith includes split join trim capitalize capitalizeWords lowerCase upperCase reverseString truncate".split(" ");
 
-const run = async (out) => {
+const run = async(out) => {
   const F = await import(path.join(repoRoot, "src/index.js"));
   const time = await import(path.join(repoRoot, "src/tools/time.js"));
   const string = await import(path.join(repoRoot, "src/tools/string.js"));
@@ -158,7 +158,7 @@ const run = async (out) => {
   if (!slow) out.push("every returned nothing to clear");
 };
 
-const main = async () => {
+const main = async() => {
   if (!process.env.FLETBOX_TIME_HELPER_CHILD) {
     let failed = 0;
     for (const zone of ZONES) {

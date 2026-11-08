@@ -117,7 +117,7 @@ export const ListTile = (props) => {
   const centerColumn =
     textChildren.length > 0
       ? Column({
-          gap: 4,
+          gap : 4,
           alignItems: "flex-start",
           flex: 1,
           minWidth: 0, // allows the column to shrink below its content size in a flex row

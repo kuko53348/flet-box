@@ -115,7 +115,7 @@ export const readModuleExports = (absFile, cache = new Map(), chain = new Set())
       if (target) {
         chain.add(absFile);
         fromSurface = readModuleExports(target, cache, chain);
-        chain.delete(absFile);
+        chain.delete (absFile);
       } else if (!source.startsWith(".")) {
         fromSurface = emptySurface(true);
       }
@@ -159,7 +159,7 @@ export const readModuleExports = (absFile, cache = new Map(), chain = new Set())
     }
     chain.add(absFile);
     const fromSurface = readModuleExports(target, cache, chain);
-    chain.delete(absFile);
+    chain.delete (absFile);
     for (const name of fromSurface.named) surface.named.add(name);
     if (fromSurface.opaque) surface.opaque = true;
   }

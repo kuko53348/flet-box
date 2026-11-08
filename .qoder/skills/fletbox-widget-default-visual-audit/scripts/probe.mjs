@@ -112,7 +112,7 @@ async function main() {
 
     const run = () =>
       page.evaluate(
-        async ({ src, name }) => {
+        async({ src, name }) => {
           const stage = name
             ? [...document.querySelectorAll("#app .card")]
                 .find((c) => (c.querySelector(".name") || {}).textContent === name)
@@ -144,7 +144,7 @@ async function main() {
   }
 }
 
-main().catch((err) => {
+main().catch ((err) => {
   if (err instanceof Skip) {
     console.log(`SKIP: ${err.message}`);
     process.exit(0);

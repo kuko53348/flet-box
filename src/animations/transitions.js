@@ -133,7 +133,7 @@ const slideSteps = ({
   const { property, sign } = axisFor(direction);
   const offset = Math.abs(Number(distance) || 0) * sign;
   const steps = leaving
-    ? [{ property, from: 0, to: -offset, duration, easing }]
+    ? [{ property, from : 0, to: - offset, duration, easing }]
     : [{ property, from: offset, to: 0, duration, easing }];
   if (fade) {
     steps.push({

@@ -102,7 +102,7 @@ export const BottomSheet = (props) => {
   // ✅ Drag handle with stopPropagation
   const dragHandle = showDragHandle
     ? WidgetFactory({
-        display: "flex",
+        display : "flex",
         justifyContent: "center",
         padding: dragHandlePadding,
         cursor: "grab",
@@ -153,7 +153,7 @@ onclick: (e) => e.stopPropagation(), // ✅ Prevents the click from reaching the
   const header =
     title || showCloseButton
       ? Row({
-          alignItems: "center",
+          alignItems : "center",
           justifyContent: "space-between",
           padding: headerPadding,
           borderBottom: title ? `1px solid ${headerBorderColor}` : "none",
@@ -165,7 +165,7 @@ onclick: (e) => e.stopPropagation(), // ✅ Prevents the click from reaching the
   const actionsElement =
     actions.length > 0
       ? Row({
-          alignItems: "center",
+          alignItems : "center",
           justifyContent: "flex-end",
           gap: 8,
           padding: actionPadding,

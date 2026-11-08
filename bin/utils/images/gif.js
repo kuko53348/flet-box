@@ -181,7 +181,7 @@ const decodeLzw = (buf, offset, count) => {
     for (let i = 0; i < codeSize; i++) {
       const byteIndex = (bitPos + i) >> 3;
       if (byteIndex >= data.length) return -1;
-      code |= ((data[byteIndex] >> ((bitPos + i) & 7)) & 1) << i;
+      code|= ((data[byteIndex] >> ((bitPos + i) & 7)) & 1) << i;
     }
     bitPos += codeSize;
     return code;

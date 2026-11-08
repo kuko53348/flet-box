@@ -83,23 +83,23 @@ export const Badge = (props) => {
   // Pixel offsets for each anchor position — the transform handles the corner alignment
   const positions = {
     "top-right": {
-      top: -offset,
-      right: -offset,
+      top: - offset,
+      right: - offset,
       transform: "translate(25%, -25%)",
     },
     "top-left": {
-      top: -offset,
-      left: -offset,
+      top: - offset,
+      left: - offset,
       transform: "translate(-25%, -25%)",
     },
     "bottom-right": {
-      bottom: -offset,
-      right: -offset,
+      bottom: - offset,
+      right: - offset,
       transform: "translate(25%, 25%)",
     },
     "bottom-left": {
-      bottom: -offset,
-      left: -offset,
+      bottom: - offset,
+      left: - offset,
       transform: "translate(-25%, 25%)",
     },
   };

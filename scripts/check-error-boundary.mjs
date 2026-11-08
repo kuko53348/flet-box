@@ -361,7 +361,7 @@ const failures = [];
  * @param {string} name
  * @param {() => void | Promise<void>} fn
  */
-const check = async (name, fn) => {
+const check = async(name, fn) => {
   try {
     await fn();
     console.log(`  ok   ${name}`);
@@ -548,7 +548,7 @@ await check("HAND_WRITTEN_MARKER bites", () => {
 
 // 13 — the module still imports in Node.
 
-await check("NOT_IMPORTABLE bites", async () => {
+await check("NOT_IMPORTABLE bites", async() => {
   const scratch = fs.mkdtempSync(path.join(os.tmpdir(), "fletbox-boundary-"));
   try {
     // The mutation: a copy of the real module that touches `document` while it
@@ -583,7 +583,7 @@ await check("NOT_IMPORTABLE bites", async () => {
   }
 });
 
-await check("the module imports in Node", async () => {
+await check("the module imports in Node", async() => {
   const module = await import(pathToFileURL(path.join(root, FILE_BOUNDARY)).href);
   for (const name of [
     "FAILURE_ATTR",

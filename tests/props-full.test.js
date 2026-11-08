@@ -1122,15 +1122,15 @@ for (const [name, build] of Object.entries(animationConfigs)) {
 // `open()`-only controllers still need their full prop set to reach the DOM, so
 // they are opened and closed again inside the off-screen host.
 for (const [name, after] of [
-  ["SnackBar", (el) => el?.open?.()],
-  ["Modal", (el) => el?.open?.()],
-  ["BottomSheet", (el) => el?.open?.()],
-  ["AlertDialog", (el) => el?.open?.()],
+  ["SnackBar", (el) => el?.open?. ()],
+  ["Modal", (el) => el?.open?. ()],
+  ["BottomSheet", (el) => el?.open?. ()],
+  ["AlertDialog", (el) => el?.open?. ()],
 ]) {
   try {
     const el = W[name](widgetConfigs[name]());
     after(el);
-    el?.close?.();
+    el?.close?. ();
     mounted.push(`${name} (opened)`);
   } catch (err) {
     errors.push({
@@ -1149,7 +1149,7 @@ window.__FULLPROPS = { mounted, errors, probeProp: PROBE_PROP };
 try {
   const probe = W.Container({ [PROBE_PROP]: 1 });
   host.appendChild(probe);
-  probe._cleanup?.();
+  probe._cleanup?. ();
   probe.remove();
 } catch (e) {
   errors.push({ name: "probe", detail: String(e && e.message ? e.message : e) });
@@ -1161,13 +1161,13 @@ setTimeout(() => {
   // A Drawer instance attaches itself to `document.body`, so it is outside
   // `host` and needs its own teardown.
   try {
-    N.destroyDrawer?.();
+    N.destroyDrawer?. ();
   } catch (e) {
     /* nothing to destroy */
   }
   for (const node of Array.from(host.children)) {
     try {
-      node._cleanup?.();
+      node._cleanup?. ();
     } catch (e) {
       /* a widget without lifecycle hooks is not a failure here */
     }

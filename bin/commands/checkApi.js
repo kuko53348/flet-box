@@ -131,7 +131,7 @@ const resolvePackage = (projectRoot) => {
  * @param {string} projectRoot
  * @returns {Promise<object>}
  */
-export const loadApi = async (projectRoot) => {
+export const loadApi = async(projectRoot) => {
   const { dir, pkg } = resolvePackage(projectRoot);
   const barrel = await import(pathToFileURL(path.join(dir, "src", "index.js")).href);
   const registry = await import(
@@ -407,7 +407,7 @@ const checkFile = (file, api) => {
         const token = part.trim();
         if (!token) continue;
         const aliased = /^(\S+)\s+as\s+(\S+)$/.exec(token);
-        names.push(aliased ? { exported: aliased[1], local: aliased[2] } : { exported: token, local: token });
+        names.push(aliased ? { exported : aliased[1], local: aliased[2] } : { exported: token, local: token });
       }
     }
     const star = /\*\s+as\s+([A-Za-z_$][\w$]*)/.exec(clause);
@@ -663,7 +663,7 @@ export const emitCheatsheet = (api, projectRoot) => {
  * @param {object} [io] Injection point for tests.
  * @returns {Promise<{ findings: object[], exitCode: number }>}
  */
-export const checkApi = async (argv = [], io = {}) => {
+export const checkApi = async(argv = [], io = {}) => {
   const print = io.print ?? ((line) => console.log(line));
   const root = (() => {
     const i = argv.indexOf("--root");

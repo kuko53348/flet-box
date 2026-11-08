@@ -36,7 +36,7 @@ const failures = [];
  * @param {string} source
  * @returns {Promise<object[]>} findings
  */
-const scan = async (source) => {
+const scan = async(source) => {
   fs.writeFileSync(path.join(target, "S.js"), source, "utf8");
   const { findings } = await checkUi(["--root", scratch], { print: () => {} });
   return findings;
@@ -59,7 +59,7 @@ const mutate = (code, pairs) => {
   return text;
 };
 
-const check = async (name, fn) => {
+const check = async(name, fn) => {
   try {
     await fn();
     console.log(`  ok   ${name}`);
@@ -75,7 +75,7 @@ const check = async (name, fn) => {
  * @param {Array<[string, string]>} pairs the break
  */
 const bites = (name, code, pairs) =>
-  check(`${name} → ${code}`, async () => {
+  check(`${name} → ${code}`, async() => {
     const findings = await scan(mutate(code, pairs));
     const hit = findings.find((item) => item.code === code);
     assert.ok(
@@ -162,7 +162,7 @@ export const SettingsScreen = ({ loading, failed, rows }) => {
 console.log("check-clean-ui: flet-box check-ui tiers\n");
 
 // 1 — the baseline: the screen the skill recommends must produce nothing at all.
-await check("the clean screen is clean", async () => {
+await check("the clean screen is clean", async() => {
   const findings = await scan(CLEAN);
   assert.deepEqual(
     findings.map((item) => `${item.code} L${item.line} ${item.message}`),
@@ -187,7 +187,7 @@ await bites("a radius off the scale", "OFF_SCALE_RADIUS", [["borderRadius: 12,",
 // 24 card), and `Drawer`, `DrawerItem` and the `Tabs` slider indicator already
 // default there. A screen that matches its own widgets cannot be off-scale — and a
 // step in the middle of the scale is still policed.
-await check("20 and 24 are steps, and 22 between them is not", async () => {
+await check("20 and 24 are steps, and 22 between them is not", async() => {
   const nested = (radius) =>
     `import { Card, Image } from "flet-box";\n` +
     `const screen = () => Card({\n` +
@@ -213,7 +213,7 @@ await bites("a type size off the scale", "OFF_SCALE_TYPE", [["size: 32,", "size:
 // screen never had. Arithmetic over literals is folded first, and a value that
 // depends on an identifier, a call, a member access or a ternary is unmeasured —
 // silence, which is neither a pass nor a finding.
-await check("arithmetic on literals is folded before judging", async () => {
+await check("arithmetic on literals is folded before judging", async() => {
   const spacing = (findings) => findings.filter((item) => item.code === "OFF_SCALE_SPACING");
   assert.deepEqual(
     spacing(await scan(mutate("fold", [["padding: 24,", "padding: 8 * 3,"]]))),
@@ -235,7 +235,7 @@ await check("arithmetic on literals is folded before judging", async () => {
   );
 });
 
-await check("a value the pass cannot resolve is unmeasured, not a finding", async () => {
+await check("a value the pass cannot resolve is unmeasured, not a finding", async() => {
   const spacing = (findings) => findings.filter((item) => item.code === "OFF_SCALE_SPACING");
   for (const value of ["rows", "rows.length > 1 ? 26 : 24", '"calc(8px + 5px)"']) {
     const findings = await scan(mutate("unmeasured", [["padding: 24,", `padding: ${value},`]]));
@@ -267,7 +267,7 @@ await bites("a tap target below 40", "SMALL_TAP_TARGET", [
 // A pressable glyph's target is its box, not its font size: 16 of glyph with 12
 // of padding on each side is the 40 a thumb needs. Reading `size` alone would
 // reject it; reading it as the target would accept 16 with no padding.
-await check("a glyph's target is its box, not its font size", async () => {
+await check("a glyph's target is its box, not its font size", async() => {
   const icon = (padding) =>
     `import { Icon } from "flet-box";\nconst screen = () => Icon({ name: "share", size: 16${
       padding ? `, padding: ${padding}` : ""
@@ -325,7 +325,7 @@ await bites("two filled buttons on one view", "MULTIPLE_PRIMARY_ACTIONS", [
 // one filled button are two screens, and a components module must not fail for
 // exporting both. A `variant` the pass cannot resolve is unmeasured: the button
 // may be outlined at runtime, so counting it as the primary would be a guess.
-await check("the primary count is per view, not per file", async () => {
+await check("the primary count is per view, not per file", async() => {
   const twoScreens = `import { Button, Column } from "flet-box";
 const go = () => {};
 export const SaveBar = () => {
@@ -390,7 +390,7 @@ await bites("a small preset used as a target", "SMALL_PRESET", [
 // 3 — the depth list is read off the package, not invented here. It must name the
 // widgets that really turn a number into a shadow — Card is one of them since it
 // started reading the shared scale — and never a widget with no scale at all.
-await check("the depth advice comes from the installed package", async () => {
+await check("the depth advice comes from the installed package", async() => {
   const findings = await scan(
     mutate("DEAD_ELEVATION", [
       ["ListView({ children: rows })", "ListView({ children: rows, elevation: 3 })"],
@@ -420,7 +420,7 @@ const IMPORTS = `import { AppBar, Chip, Container, Icon, Row, Slider, Text, colo
 
 /** A screen that must come back with no contrast finding at all. */
 const quiet = (name, body) =>
-  check(`${name} → stays quiet`, async () => {
+  check(`${name} → stays quiet`, async() => {
     const hits = (await scan(`${IMPORTS}\nconst screen = () => ${body};\n`)).filter((item) =>
       CONTRAST_CODES.includes(item.code),
     );
@@ -451,7 +451,7 @@ await quiet(
      })`,
 );
 
-await check("the light theme's own failure still bites, and says so", async () => {
+await check("the light theme's own failure still bites, and says so", async() => {
   const findings = await scan(
     `${IMPORTS}\nconst screen = () => Text({ text: "Total", size: 16, color: colors.info });\n`,
   );
@@ -476,7 +476,7 @@ await quiet(
      })`,
 );
 
-await check("a plate colour written as words still bites, and blames the dark theme", async () => {
+await check("a plate colour written as words still bites, and blames the dark theme", async() => {
   const findings = await scan(
     `${IMPORTS}\nconst screen = () => Text({ text: "Delete 3 files", size: 16, color: colors.dangerPlate });\n`,
   );
@@ -494,7 +494,7 @@ await quiet(
   `Slider({ value: 50, color: colors.info })`,
 );
 
-await check("a chip too light to carry its own label bites as the chip's problem", async () => {
+await check("a chip too light to carry its own label bites as the chip's problem", async() => {
   const findings = await scan(
     `${IMPORTS}\nconst screen = () => Chip({ label: "Info", color: colors.info });\n`,
   );
@@ -514,7 +514,7 @@ await quiet(
 // The accent reading is variant-bound, not widget-bound: an outlined chip paints
 // no plate and writes `color` as its own label, so that one is still ink on the
 // page and the same #3b82f6 is a finding again.
-await check("an outlined chip still answers for its own words", async () => {
+await check("an outlined chip still answers for its own words", async() => {
   const findings = await scan(
     `${IMPORTS}\nconst screen = () => Chip({ label: "Info", variant: "outlined", color: colors.info });\n`,
   );
@@ -528,7 +528,7 @@ await check("an outlined chip still answers for its own words", async () => {
 // what it does. A real name is `aria-label`/`aria-labelledby`, which this lexical
 // pass can see even when the control is built by a helper and labelled at the
 // call site.
-await check("a tooltip is a description, not a name", async () => {
+await check("a tooltip is a description, not a name", async() => {
   const findings = await scan(
     `import { Icon, Tooltip } from "flet-box";\nconst screen = () => Tooltip({ text: "Share", child: Icon({ name: "share", size: 44, onPress: () => {} }) });\n`,
   );
@@ -537,7 +537,7 @@ await check("a tooltip is a description, not a name", async () => {
     "a tooltip counted as the control's accessible name",
   );
 });
-await check("a glyph control that names itself is not nameless", async () => {
+await check("a glyph control that names itself is not nameless", async() => {
   const findings = await scan(
     `${IMPORTS}\nconst iconButton = (name, label) => Button({ icon: name, "aria-label": label, onPress: () => {} });\nconst screen = () => iconButton("share", "Share");\n`,
   );
@@ -549,7 +549,7 @@ await check("a glyph control that names itself is not nameless", async () => {
 // copies, so one screen holds the same call twice by design. Only the one that
 // renders can be wrong, and a finding for the copy teaches the reader to distrust
 // the count.
-await check("an example shown twice is reported once", async () => {
+await check("an example shown twice is reported once", async() => {
   const findings = await scan(
     `${IMPORTS}\nconst example = {\n  build: () => Chip({ label: "Info", color: colors.info }),\n  code: 'Chip({ label: "Info", color: colors.info })',\n};\n`,
   );
@@ -572,7 +572,7 @@ await check("an example shown twice is reported once", async () => {
 // an app was already writing. An app that painted an error card the framework way
 // got `bgColor: undefined` and no card at all: not a contrast finding, because
 // there was no fill to measure.
-await check("both themes carry the same token names", async () => {
+await check("both themes carry the same token names", async() => {
   const { palettes, colors } = await import("../src/utils/themes.js");
   const light = Object.keys(palettes.light);
   const dark = Object.keys(palettes.dark);
@@ -645,7 +645,7 @@ const verifyProject = (name, asFramework) => {
   return dir;
 };
 
-await check("verify stops re-reporting a finding the framework accepted", async () => {
+await check("verify stops re-reporting a finding the framework accepted", async() => {
   const report = await runGates(verifyProject("as-framework", true), ["ui"]);
   const ui = report.steps[0];
   assert.deepEqual(
@@ -663,7 +663,7 @@ await check("verify stops re-reporting a finding the framework accepted", async 
   assert.match(text, /2 accepted/, "the report did not say how many findings were accepted");
 });
 
-await check("verify still reports the same finding inside an app", async () => {
+await check("verify still reports the same finding inside an app", async() => {
   const report = await runGates(verifyProject("as-app", false), ["ui"]);
   const ui = report.steps[0];
   const codes = ui.findings.map((item) => item.code);

@@ -95,7 +95,7 @@ const isWebPBytes = (buf) =>
  * @param {string[]} args - CLI arguments after the command name.
  * @returns {Promise<{exitCode: number}>} Non-zero when a file failed to encode.
  */
-export const images = async (args = []) => {
+export const images = async(args = []) => {
   const has = (flag) => args.includes(flag);
   const valueOf = (flag) => {
     const i = args.indexOf(flag);

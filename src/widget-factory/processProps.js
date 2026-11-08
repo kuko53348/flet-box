@@ -135,9 +135,9 @@ function applyUnit(def, value) {
     return value.map((item) => toREM(item)).join(" ");
   if (typeof value !== "number") return value;
   if (unit === "none") return value;
-  
+
   // Use the dynamic REM converter instead of a hard-coded division.
-  if (unit === "rem") return toREM(value); 
-  
+  if (unit === "rem") return toREM(value);
+
   return `${value}px`;
 }

@@ -101,7 +101,7 @@ export const Menu = (inputProps = {}) => {
     const item = currentItems[index];
     if (!item || item.disabled || currentDisabled) return;
     closeMenu(true);
-    item.onPress?.();
+    item.onPress?. ();
   };
 
   const buildPanel = () => {
@@ -146,7 +146,7 @@ export const Menu = (inputProps = {}) => {
         children: [
           item.icon
             ? Icon({
-                name: item.icon,
+                name : item.icon,
                 size: 18,
                 color: danger ? colors.dangerStrong : colors.textSecondary,
               })

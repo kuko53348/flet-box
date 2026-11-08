@@ -2,7 +2,7 @@
  * @file Button.js
  * @description Button with size presets, variants, icons and gradient support.
  */
-import { WidgetFactory } from "../widget-factory/index.js";import { colors } from "../utils/themes.js";
+import { WidgetFactory } from "../widget-factory/index.js"; import { colors } from "../utils/themes.js";
 import { SHADOW_LEVELS, TAP_MINIMUM } from "../tools/index.js";
 import { readableInk } from "../utils/readableInk.js";
 import { Text } from "./Text.js";

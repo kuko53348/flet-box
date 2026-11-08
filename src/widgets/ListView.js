@@ -241,7 +241,7 @@ export const ListView = (props) => {
           // Evict the oldest cached item when the cache exceeds 200 entries
           if (itemCache.size > 200) {
             const firstKey = itemCache.keys().next().value;
-            itemCache.delete(firstKey);
+            itemCache.delete (firstKey);
           }
           itemCache.set(i, itemEl);
         } catch (err) {

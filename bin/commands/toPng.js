@@ -139,7 +139,7 @@ const writtenPngMatches = (file, expected) => {
  * @param {string[]} args - CLI arguments after the command name.
  * @returns {Promise<{ exitCode: number }>} Non-zero only when a file failed to decode.
  */
-export const toPng = async (args = []) => {
+export const toPng = async(args = []) => {
   const has = (flag) => args.includes(flag);
   const valueOf = (flag) => {
     const index = args.indexOf(flag);

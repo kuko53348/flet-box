@@ -47,7 +47,7 @@ export const sort = (arr, by, order = "asc") => {
         return order === "asc" ? aVal - bVal : bVal - aVal;
       }
       const cmp = String(aVal).localeCompare(String(bVal));
-      return order === "asc" ? cmp : -cmp;
+      return order === "asc" ? cmp : - cmp;
     });
   } else {
     result.sort();

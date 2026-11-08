@@ -52,7 +52,7 @@ const ANSI = /\x1b\[[0-9;]*m/g;
  * @param {string[]} argv
  * @returns {Promise<{text: string, exitCode: number}>}
  */
-const capture = async (fn, argv) => {
+const capture = async(fn, argv) => {
   const lines = [];
   const result = (await fn(argv, { print: (line) => lines.push(String(line)) })) || {};
   return {
@@ -82,30 +82,30 @@ const asData = (text) => {
  * would read and, where the command has a JSON form, the same facts as data.
  */
 const RUN = {
-  report: async ({ root, tests }) => {
+  report: async({ root, tests }) => {
     const built = await buildReport({ root, tests: Boolean(tests) });
     return { text: renderText(built).join("\n"), data: built };
   },
 
-  widget_props: async ({ root, widget }) => {
+  widget_props: async({ root, widget }) => {
     const out = await capture(checkApi, ["--props", widget, ...rootArg(root)]);
     const missing = /is not a FletBox widget/.test(out.text);
     return { ...out, error: missing ? `no widget named "${widget}"` : null };
   },
 
-  widget_contract: async ({ root, widget }) => {
+  widget_contract: async({ root, widget }) => {
     const out = await capture(unpack, [widget, "--json", ...rootArg(root)]);
     return { ...out, data: asData(out.text) };
   },
 
-  list_widgets: async ({ root }) => capture(checkApi, ["--list", ...rootArg(root)]),
+  list_widgets: async({ root }) => capture(checkApi, ["--list", ...rootArg(root)]),
 
-  check: async ({ root, full }) => {
+  check: async({ root, full }) => {
     const out = await capture(checkApi, ["--json", ...(full ? ["--full"] : []), ...rootArg(root)]);
     return { ...out, data: asData(out.text) };
   },
 
-  design: async ({ root, tokens, strict }) => {
+  design: async({ root, tokens, strict }) => {
     const out = await capture(checkUi, [
       "--json",
       ...(tokens ? ["--tokens"] : []),
@@ -115,19 +115,19 @@ const RUN = {
     return { ...out, data: asData(out.text) };
   },
 
-  syntax: async ({ root }) => {
+  syntax: async({ root }) => {
     // `runGates`, not `verify`: verify appends a metrics row, and a diagnosis
     // that changes the history it reports on is not read-only.
     const result = await runGates(root, ["syntax"]);
     return { text: formatReport(result).join("\n").replace(ANSI, ""), data: result };
   },
 
-  types: async ({ root }) => {
+  types: async({ root }) => {
     const result = await runGates(root, ["types"]);
     return { text: formatReport(result).join("\n").replace(ANSI, ""), data: result };
   },
 
-  metrics: async ({ root }) => capture(metrics, rootArg(root)),
+  metrics: async({ root }) => capture(metrics, rootArg(root)),
 };
 
 /**
@@ -167,7 +167,7 @@ const descriptor = (tool) => {
  * @param {{cwd?: string}} [context]
  * @returns {Promise<object|null>} null for a notification (no reply)
  */
-export const handleRequest = async (request, { cwd = process.cwd() } = {}) => {
+export const handleRequest = async(request, { cwd = process.cwd() } = {}) => {
   const { id = null, method, params = {} } = request || {};
   const reply = (result) => ({ jsonrpc: "2.0", id, result });
   const fail = (code, message) => ({ jsonrpc: "2.0", id, error: { code, message } });
@@ -219,7 +219,7 @@ export const handleRequest = async (request, { cwd = process.cwd() } = {}) => {
     }
     return reply({
       content: [{ type: "text", text: result.text || "(no output)" }],
-      ...(result.data ? { structuredContent: result.data } : {}),
+      ...(result.data ? { structuredContent : result.data } : {}),
     });
   } catch (error) {
     return reply({ content: [{ type: "text", text: `${tool.id} failed: ${error.message}` }], isError: true });
@@ -262,7 +262,7 @@ export const serveStdio = () => {
     pending += 1;
     handleRequest(request)
       .then((message) => write(message))
-      .catch((error) => {
+      .catch ((error) => {
         write({ jsonrpc: "2.0", id: request?.id ?? null, error: { code: -32603, message: error.message } });
       })
       .finally(() => {

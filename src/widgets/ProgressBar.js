@@ -47,7 +47,7 @@ export const ProgressBar = (props) => {
     position: "relative",
     ...(striped || indeterminate
       ? {
-        backgroundImage: `repeating-linear-gradient(45deg, rgba(255,255,255,0.15) 0px, rgba(255,255,255,0.15) 10px, transparent 10px, transparent 20px)`,
+        backgroundImage : `repeating-linear-gradient(45deg, rgba(255,255,255,0.15) 0px, rgba(255,255,255,0.15) 10px, transparent 10px, transparent 20px)`,
         backgroundSize: "28px 28px",
       }
       : {}),
@@ -159,9 +159,9 @@ export const ProgressBar = (props) => {
     // An indeterminate bar has no progress to report — giving it a number would be
     // a confident lie, so it is left to `aria-busy` and the label.
     ...(indeterminate
-      ? { "aria-busy": "true" }
+      ? { "aria-busy" : "true" }
       : { "aria-valuenow": String(progressValue) }),
-    ...(label ? { "aria-label": label } : null),
+    ...(label ? { "aria-label" : label } : null),
     display: "flex",
     flexDirection: isColumn ? "column" : "row",
     alignItems: "center",

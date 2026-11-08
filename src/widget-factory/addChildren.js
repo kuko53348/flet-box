@@ -91,7 +91,7 @@ export const takePropChildren = (parent) => {
       if (idx !== -1) parent._children.splice(idx, 1);
       if (child._isWidget) child.parent = null;
     }
-    PROP_CHILDREN.delete(child);
+    PROP_CHILDREN.delete (child);
     taken.push(child);
   });
 
@@ -111,7 +111,7 @@ export const takePropChildren = (parent) => {
  */
 export const clearChildren = (parent) => {
   while (parent.firstChild) {
-    PROP_CHILDREN.delete(parent.firstChild);
+    PROP_CHILDREN.delete (parent.firstChild);
     parent.removeChild(parent.firstChild);
   }
   parent._children = [];

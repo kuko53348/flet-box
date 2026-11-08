@@ -109,7 +109,7 @@ const results = [];
 let pass = 0;
 let fail = 0;
 
-const t = async (name, fn) => {
+const t = async(name, fn) => {
   try {
     await fn();
     pass++;
@@ -125,7 +125,7 @@ const ok = (cond, msg) => {
 };
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-const waitFor = async (predicate, timeoutMs = 1200) => {
+const waitFor = async(predicate, timeoutMs = 1200) => {
   const deadline = performance.now() + timeoutMs;
   while (performance.now() < deadline) {
     if (predicate()) return true;
@@ -207,7 +207,7 @@ async function run() {
   });
 
   // -------------------------------------------------------------- ListView
-  await t("ListView: updateData() does not recurse and re-renders new rows", async () => {
+  await t("ListView: updateData() does not recurse and re-renders new rows", async() => {
     const lv = W.ListView({
       data: ["A", "B"],
       itemSize: 40,
@@ -241,7 +241,7 @@ async function run() {
   });
 
   // --------------------------------------------------------------- SnackBar
-  await t("SnackBar: close() is idempotent — onClose fires exactly once", async () => {
+  await t("SnackBar: close() is idempotent — onClose fires exactly once", async() => {
     let calls = 0;
     const sb = W.SnackBar({ message: "x", onClose: () => { calls++; } });
     sb.close();
@@ -251,7 +251,7 @@ async function run() {
     ok(calls === 1, `onClose fired ${calls} times, expected 1`);
   });
 
-  await t("SnackBar: closing immediately never flashes the toast back on", async () => {
+  await t("SnackBar: closing immediately never flashes the toast back on", async() => {
     const sb = W.SnackBar({ message: "y" });
     const el = sb.getElement();
     sb.close();
@@ -347,7 +347,7 @@ async function run() {
     });
   });
 
-  await t("CodeViewer: the copy button is visible and copies the raw code", async () => {
+  await t("CodeViewer: the copy button is visible and copies the raw code", async() => {
     const code = 'const x = "y";';
     const saved = localStorage.getItem("fletbox-theme");
     const realClipboard = navigator.clipboard;
@@ -537,7 +537,7 @@ async function run() {
   });
 
   // ---------------------------------------------------------------- Markdown
-  await t("Markdown: a `>` inside a quoted attribute cannot smuggle an on* handler", async () => {
+  await t("Markdown: a `>` inside a quoted attribute cannot smuggle an on* handler", async() => {
     // `<[^<>]+>` stops at the first `>`, so this payload used to sail through the
     // regex sanitizer while the browser still kept the event handler.
     const payload = `<img src="x>y" onerror="window.__pwned=1">`;
@@ -596,7 +596,7 @@ async function run() {
   });
 
   // ------------------------------------------------------------------- Input
-  await t("Input: the reactive `label` prop updates the label instead of wiping the widget", async () => {
+  await t("Input: the reactive `label` prop updates the label instead of wiping the widget", async() => {
     // `label` maps to `textContent` in the prop database; letting the factory see
     // it replaced the whole composite widget with a text node.
     const input = W.Input({ label: "Name", value: "x" });
@@ -617,7 +617,7 @@ async function run() {
   });
 
   // ------------------------------------------------- Checkbox / Switch / Radio
-  await t("form controls: the click handler survives update() and reactive setters", async () => {
+  await t("form controls: the click handler survives update() and reactive setters", async() => {
     // `assignProps` clears `onclick` on every update and only re-applies handlers
     // it can see in the merged props. These widgets assigned `onclick` directly,
     // so the first update (or any reactive setter) left them unable to toggle.
@@ -658,7 +658,7 @@ async function run() {
     ok(calls.length === 1, `onPress fired ${calls.length} times, expected 1`);
   });
 
-  await t("Radio: the 40-unit hit box does not push the ring off the label", async () => {
+  await t("Radio: the 40-unit hit box does not push the ring off the label", async() => {
     // Row's default `align-items: stretch` stretched a label beside the radio to
     // the hit box's 40 units, and the block text sat at the top of that box: the
     // ring measured ~10 units below the words' centre, and a requested 10-unit
@@ -730,7 +730,7 @@ async function run() {
     ok(radio.isSelected() === true, "clicking the label did not select the radio");
   });
 
-  await t("Checkbox: the hit box aligns with its label and its rim is visible", async () => {
+  await t("Checkbox: the hit box aligns with its label and its rim is visible", async() => {
     // Same defect as the Radio: a 40-unit box in the layout stretched the row
     // and left the label at the top of it, and the unchecked rim was
     // `colors.border` — 1.3:1 on white, 1.2:1 on the dark card.
@@ -766,7 +766,7 @@ async function run() {
     await wait(20);
   });
 
-  await t("Switch: pressing does not scale the labelled row", async () => {
+  await t("Switch: pressing does not scale the labelled row", async() => {
     // The root of a labelled Switch is the whole row and the root is what
     // carries the click, so `applyEffects` scaled the label and the toggle
     // together like a button. The knob's slide is the feedback; the row now
@@ -788,7 +788,7 @@ async function run() {
     ok(sw.getValue() === false, "the switch stopped toggling");
   });
 
-  await t("Button: hover raises the shadow one elevation step, not two", async () => {
+  await t("Button: hover raises the shadow one elevation step, not two", async() => {
     // Hover replaced the button's level-2 shadow (0 3px 6px) with a hardcoded
     // 0 8px 16px — two steps up and not even on the scale — so the button read
     // as jumping off the page. It now steps to the next SHADOW_LEVELS entry.
@@ -857,7 +857,7 @@ async function run() {
   });
 
   // ------------------------------------------------------------------- Chart
-  await t("Chart: all-negative data is still drawn inside the canvas", async () => {
+  await t("Chart: all-negative data is still drawn inside the canvas", async() => {
     // `Math.max(0, minVal - padding)` inverted the range (min > max) for negative
     // series, so every point landed far outside the canvas and nothing rendered.
     const el = W.Chart({ type: "bar", data: [-30, -10], height: 300, width: 400 });
@@ -886,7 +886,7 @@ async function run() {
   });
 
   // --------------------------------------------------------------- Accordion
-  await t("Accordion: the expand/collapse icon glyph actually changes", async () => {
+  await t("Accordion: the expand/collapse icon glyph actually changes", async() => {
     const acc = W.Accordion({ title: "T", child: W.Text({ text: "body" }) });
     mount(acc);
     await wait(30);
@@ -960,7 +960,7 @@ async function run() {
   });
 
   // ------------------------------------------------------------------- Image
-  await t("Image: `fit` and `circular` reach real CSS", async () => {
+  await t("Image: `fit` and `circular` reach real CSS", async() => {
     // Neither key exists in the prop database, so they used to fall through to an
     // inert `style.fit` / `style.circular` and images stayed stretched and square.
     const fit = W.Image({ src: "", width: 40, height: 40, fit: "cover" });
@@ -980,7 +980,7 @@ async function run() {
   });
 
   // ------------------------------------------- reactive text props on composites
-  await t("Markdown: the reactive `text` prop re-renders instead of wiping the widget", async () => {
+  await t("Markdown: the reactive `text` prop re-renders instead of wiping the widget", async() => {
     const md = W.Markdown({ text: "# Hola" });
     mount(md);
     await wait(30);
@@ -993,7 +993,7 @@ async function run() {
     ok(md.getContent().includes("Tercero"), "update({text}) did not re-render");
   });
 
-  await t("CodeViewer: the reactive `title` prop updates the header, not the DOM", async () => {
+  await t("CodeViewer: the reactive `title` prop updates the header, not the DOM", async() => {
     const cv = W.CodeViewer({ code: "const a = 1;", title: "auth.js" });
     mount(cv);
     await wait(30);
@@ -1010,7 +1010,7 @@ async function run() {
   });
 
   // -------------------------------------------------------------- navigation
-  await t("navigation: window listeners are released on a plain DOM disconnect", async () => {
+  await t("navigation: window listeners are released on a plain DOM disconnect", async() => {
     // The lifecycle observer fires `onUnmount` but never calls `_cleanup`, so
     // anything released only from `_cleanup` leaked when a widget was removed
     // without a full app rebuild. Track listeners by handler identity.
@@ -1025,7 +1025,7 @@ async function run() {
     };
     window.removeEventListener = (type, fn, opts) => {
       const k = `${type}|${opts === true ? "c" : "b"}`;
-      if (sets.has(k)) sets.get(k).delete(fn);
+      if (sets.has(k)) sets.get(k).delete (fn);
       return origRemove(type, fn, opts);
     };
     const count = (type) =>
@@ -1080,7 +1080,7 @@ async function run() {
   });
 
   // --------------------------------------------------- introspection surfaces
-  await t("AnimatedText: letters inherit the source Text styles", async () => {
+  await t("AnimatedText: letters inherit the source Text styles", async() => {
     // It read `child._props`, which nothing ever assigns, so every letter fell
     // back to Text's defaults and the documented inheritance never happened.
     const at = AnimatedText({
@@ -1103,7 +1103,7 @@ async function run() {
     ok(out.includes("Hello"), "the prop value is missing");
   });
 
-  await t("Dropdown: the portal scroll listener is released on close", async () => {
+  await t("Dropdown: the portal scroll listener is released on close", async() => {
     // It was removed without the capture flag it was added with, so the listener
     // survived and every open/close cycle leaked one.
     const sets = new Map();
@@ -1117,7 +1117,7 @@ async function run() {
     };
     window.removeEventListener = (type, fn, opts) => {
       const k = `${type}|${opts === true ? "c" : "b"}`;
-      if (sets.has(k)) sets.get(k).delete(fn);
+      if (sets.has(k)) sets.get(k).delete (fn);
       return origRemove(type, fn, opts);
     };
     const countScroll = () =>
@@ -1141,7 +1141,7 @@ async function run() {
   });
 
   // ------------------------------------------------------ Dropdown reactivity
-  await t("Dropdown: a reactive `value` moves the visible selection", async () => {
+  await t("Dropdown: a reactive `value` moves the visible selection", async() => {
     // `value` is consumed by the widget's own closure and never forwarded to the
     // factory, so `bindReactiveProps` could not see it: a `useState` bound to the
     // box patched nothing and the old seed stayed on screen while the app's state
@@ -1165,7 +1165,7 @@ async function run() {
     ok(seen.length === echoed, `an unchanged value fired onChange ${seen.length - echoed} time(s)`);
   });
 
-  await t("Dropdown: onPress receives the value alone", async () => {
+  await t("Dropdown: onPress receives the value alone", async() => {
     // The declaration promised `(value, label)` and the runtime only ever sent
     // the value, so a handler reading `label` got `undefined` and a second
     // parameter was a promise nothing kept.
@@ -1193,7 +1193,7 @@ async function run() {
   });
 
   // ------------------------------------------------------------ Scaffold/Drawer
-  await t("Scaffold/Drawer: teardown destroys the drawer (node + listeners)", async () => {
+  await t("Scaffold/Drawer: teardown destroys the drawer (node + listeners)", async() => {
     // Scaffold only did `removeChild` on the drawer wrapper, never `destroy()`,
     // so the viewport-resize listener, the Escape handler and the close timer
     // survived — and `document.body` grew on every rebuilt scaffold.
@@ -1235,7 +1235,7 @@ async function run() {
     }
   });
 
-  await t("Scaffold: static mode mounts the appBar, bottomBar and FAB", async () => {
+  await t("Scaffold: static mode mounts the appBar, bottomBar and FAB", async() => {
     // Those three zones were only filled in router mode, so the documented
     // `Scaffold({ appBar, body })` example rendered a bare body with no bar.
     const sc = Scaffold({
@@ -1254,7 +1254,7 @@ async function run() {
     sc.remove();
   });
 
-  await t("Drawer: body rows keep content height instead of being squeezed", async () => {
+  await t("Drawer: body rows keep content height instead of being squeezed", async() => {
     // The scrollable body is a `flex: 1` column inside a fixed-height panel and
     // every widget defaults to `flex-shrink: 1`, so as soon as the rows did not
     // fit, each one was crushed toward its own padding instead of the body
@@ -1282,7 +1282,7 @@ async function run() {
     }
   });
 
-  await t("Drawer: the panel pads its content out of the iOS safe area", async () => {
+  await t("Drawer: the panel pads its content out of the iOS safe area", async() => {
     // The panel spans the viewport edge to edge, so on a notched phone the
     // header sat under the status bar and the footer's last row under the home
     // indicator. Measured with a 59px/34px inset: header top 24px, footer
@@ -1342,7 +1342,7 @@ async function run() {
   });
 
   // ------------------------------------------------------- Modal / BottomSheet
-  await t("Modal: reopening during the close animation leaves it visible", async () => {
+  await t("Modal: reopening during the close animation leaves it visible", async() => {
     // The hide-after-close timer was neither stored nor cancelled, so a reopen
     // within the animation window got hidden by the stale timer while still open.
     const m = W.Modal({ title: "T", content: W.Text({ text: "x" }) });
@@ -1357,10 +1357,10 @@ async function run() {
     await wait(350); // past the stale 300 ms timer
     ok(overlay.style.visibility === "visible", "the stale timer hid an OPEN modal");
     ok(m.isOpen === true, "isOpen flipped");
-    m.destroy?.();
+    m.destroy?. ();
   });
 
-  await t("BottomSheet: reopening during the close animation leaves it visible", async () => {
+  await t("BottomSheet: reopening during the close animation leaves it visible", async() => {
     const bs = W.BottomSheet({ child: W.Text({ text: "sheet" }) });
     await wait(20);
     const overlay = document.body.lastElementChild;
@@ -1374,7 +1374,7 @@ async function run() {
     ok(overlay.style.visibility === "visible", "the stale timer hid an OPEN sheet");
   });
 
-  await t("Modal: closeOnOverlayClick dismisses from the backdrop only", async () => {
+  await t("Modal: closeOnOverlayClick dismisses from the backdrop only", async() => {
     // The prop was documented on both overlays while the backdrop handler sat
     // commented out, so `closeOnOverlayClick: true` (the default) closed nothing.
     const m = W.Modal({ title: "T", content: W.Text({ text: "x" }) });
@@ -1382,7 +1382,7 @@ async function run() {
     const overlay = document.body.lastElementChild;
     m.open();
     await wait(20);
-    overlay.firstChild?.dispatchEvent?.(
+    overlay.firstChild?.dispatchEvent?. (
       new MouseEvent("click", { bubbles: true }),
     );
     await wait(20);
@@ -1390,7 +1390,7 @@ async function run() {
     overlay.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     await wait(20);
     ok(m.isOpen === false, "a backdrop click did not close the modal");
-    m.destroy?.();
+    m.destroy?. ();
 
     const kept = W.Modal({
       title: "T",
@@ -1404,16 +1404,16 @@ async function run() {
     keptOverlay.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     await wait(20);
     ok(kept.isOpen === true, "closeOnOverlayClick:false still closed on the backdrop");
-    kept.destroy?.();
+    kept.destroy?. ();
   });
 
-  await t("BottomSheet: closeOnOverlayClick dismisses from the backdrop only", async () => {
+  await t("BottomSheet: closeOnOverlayClick dismisses from the backdrop only", async() => {
     const bs = W.BottomSheet({ content: W.Text({ text: "sheet" }) });
     await wait(20);
     const overlay = document.body.lastElementChild;
     bs.open();
     await wait(60);
-    overlay.firstChild?.dispatchEvent?.(new MouseEvent("click", { bubbles: true }));
+    overlay.firstChild?.dispatchEvent?. (new MouseEvent("click", { bubbles: true }));
     await wait(20);
     ok(
       overlay.style.opacity === "1",
@@ -1430,17 +1430,17 @@ async function run() {
       overlay.style.visibility === "hidden",
       "the sheet stayed in the DOM after closing",
     );
-    bs.destroy?.();
+    bs.destroy?. ();
   });
 
-  await t("Modal/BottomSheet: a backdrop press dismisses without sinking the panel", async () => {
+  await t("Modal/BottomSheet: a backdrop press dismisses without sinking the panel", async() => {
     // The engine's press feedback writes `scale: 0.98` on the element that carries
     // the click handler — and on both overlays that element is the scrim, which is
     // the panel's own parent. So holding the pointer on the backdrop shrank the whole
     // layer: the sheet measured -5.3px of travel and 10px less width, the modal 1.45px
     // and 9.04px, and both lost their shadow, for the length of the press. A scrim
     // dismisses; it is not a control that answers to being pushed.
-    const pressScrim = async (build, label) => {
+    const pressScrim = async(build, label) => {
       const ctrl = build();
       await wait(20);
       const scrim = document.body.lastElementChild;
@@ -1469,7 +1469,7 @@ async function run() {
         scrim.style.opacity === "0",
         `${label}: a backdrop press no longer dismisses (opacity ${scrim.style.opacity})`,
       );
-      ctrl.destroy?.();
+      ctrl.destroy?. ();
     };
 
     await pressScrim(
@@ -1483,7 +1483,7 @@ async function run() {
   });
 
   // ---------------------------------------------------------------- animate.js
-  await t("animate.js: negative duration terminates and `from: undefined` never writes NaN", async () => {
+  await t("animate.js: negative duration terminates and `from: undefined` never writes NaN", async() => {
     const { animate, animateAsync } = await import("../src/animations/animate.js");
     let frames = 0;
     const timers = new Map();
@@ -1491,12 +1491,12 @@ async function run() {
     const origCaf = window.cancelAnimationFrame.bind(window);
     window.requestAnimationFrame = (cb) => {
       frames++;
-      const id = setTimeout(() => { timers.delete(id); cb(performance.now()); }, 1);
+      const id = setTimeout(() => { timers.delete (id); cb(performance.now()); }, 1);
       timers.set(id, true);
       return id;
     };
     window.cancelAnimationFrame = (id) => {
-      if (timers.has(id)) { clearTimeout(id); timers.delete(id); } else { origCaf(id); }
+      if (timers.has(id)) { clearTimeout(id); timers.delete (id); } else { origCaf(id); }
     };
     try {
       // A negative duration used to make progress < 1 forever (infinite frames).
@@ -1528,7 +1528,7 @@ async function run() {
   });
 
   // ------------------------------------------------------------------- Audio
-  await t("Audio: the 2 s duration fallback does not fire after unmount", async () => {
+  await t("Audio: the 2 s duration fallback does not fire after unmount", async() => {
     // The timer was never stored, so after teardown it still fetched the whole
     // file, spun up an AudioContext and called onLoad on a discarded widget —
     // once per tree rebuild (i.e. per state change).
@@ -1541,7 +1541,7 @@ async function run() {
       if (String(args[0]).includes(MINE)) fetchMine++;
       return origFetch(...args);
     };
-    window.AudioContext = function (...args) { ctxMine++; return new OrigAC(...args); };
+    window.AudioContext = function(...args) { ctxMine++; return new OrigAC(...args); };
     try {
       // Let the smoke harness's own Audio widget (src: "") finish its fallback
       // first, so the baseline is stable and the delta is attributable to us.
@@ -1563,7 +1563,7 @@ async function run() {
   });
 
   // --------------------------------------------------------------- ParallaxBox
-  await t("ParallaxBox: the window scroll listener is released on DOM disconnect", async () => {
+  await t("ParallaxBox: the window scroll listener is released on DOM disconnect", async() => {
     // It was released only from the `_cleanup` monkey-patch, which the lifecycle
     // observer never calls — so a plain removal kept a window scroll listener
     // (and the whole closure) alive forever.
@@ -1579,7 +1579,7 @@ async function run() {
     };
     window.removeEventListener = (type, fn, opts) => {
       const k = `${type}|${opts === true ? "c" : "b"}`;
-      if (sets.has(k)) sets.get(k).delete(fn);
+      if (sets.has(k)) sets.get(k).delete (fn);
       return origRemove(type, fn, opts);
     };
     const countScroll = () =>
@@ -1606,7 +1606,7 @@ async function run() {
   });
 
   // ------------------------------------------------- surgical useState binding
-  await t("useState: a directly-bound prop updates ONLY that widget (0 rebuilds)", async () => {
+  await t("useState: a directly-bound prop updates ONLY that widget (0 rebuilds)", async() => {
     // `const [color, setColor] = useState(key, v); Widget({ bgColor: color })` is
     // meant to be surgical: the factory auto-binds the prop to its key, so a change
     // patches that one widget instead of re-rendering the whole app.
@@ -1638,7 +1638,7 @@ async function run() {
     ok(renders === before.renders, `the app re-rendered ${renders - before.renders} time(s)`);
   });
 
-  await t("useState: a DERIVED value still re-renders the app (declarative path intact)", async () => {
+  await t("useState: a DERIVED value still re-renders the app (declarative path intact)", async() => {
     // The other half of the contract: when the state is only read inside the
     // component function (a template literal, a conditional, a list) there is no
     // prop to bind, so the app must re-run. Breaking this would break the model.
@@ -1654,7 +1654,7 @@ async function run() {
       return W.Column({
         children: [
           W.Text({ text: "N=" + n }),
-          n.valueOf() > 2 ? W.Text({ text: "MUCHO" }) : null,
+          n.valueOf() > 2 ? W.Text({ text : "MUCHO" }): null,
         ],
       });
     };
@@ -1671,7 +1671,7 @@ async function run() {
     ok(root.textContent.includes("MUCHO"), "the conditional branch did not appear");
   });
 
-  await t("useState: a key used BOTH directly and structurally updates both", async () => {
+  await t("useState: a key used BOTH directly and structurally updates both", async() => {
     // The mixed case: the same key feeds a prop (surgical) *and* a conditional
     // (needs the app render). Skipping the render when a widget is bound broke it:
     // the prop was patched but the conditional never re-evaluated.
@@ -1684,7 +1684,7 @@ async function run() {
       renders++;
       const [n, setN] = useState("mixedN", 0);
       setValue = setN;
-      const branch = n.valueOf() > 2 ? W.Text({ text: "MUCHO" }) : null;
+      const branch = n.valueOf() > 2 ? W.Text({ text : "MUCHO" }): null;
       return W.Column({
         children: [W.Text({ id: "mixed-direct", text: n }), branch],
       });
@@ -1703,7 +1703,7 @@ async function run() {
     ok(renders > initialRenders, "the app did not re-render for a structural read");
   });
 
-  await t("useState: reading the value inside a handler keeps the binding surgical", async () => {
+  await t("useState: reading the value inside a handler keeps the binding surgical", async() => {
     // A read that happens outside the component render (an event handler) must NOT
     // flag the key as structural — otherwise any handler that inspects the current
     // value would silently cost a full app re-render on every change.
@@ -1733,7 +1733,7 @@ async function run() {
     ok(renders === before, `a handler read forced ${renders - before} app render(s)`);
   });
 
-  await t("warnings: an unknown prop is reported once, not on every update", async () => {
+  await t("warnings: an unknown prop is reported once, not on every update", async() => {
     // `warnUnknownProp` captured a stack trace and emitted ~8 styled console calls,
     // with no "already warned" check. Because update() re-applies every original
     // prop, one unknown prop cost ~137 µs on EVERY update — ~400x a known prop —
@@ -1760,7 +1760,7 @@ async function run() {
     }
   });
 
-  await t("useState: a null value is seeded once, not on every render", async () => {
+  await t("useState: a null value is seeded once, not on every render", async() => {
     // `getRam` answers `null` for a missing key AND for a key whose value is
     // null, so a `null` initial state looked uninitialized on every
     // construction: each render re-saved it, the save re-rendered the component
@@ -1790,7 +1790,7 @@ async function run() {
     ok(renders - before <= 2, `a null state kept the app re-rendering: ${renders - before} renders after one change`);
   });
 
-  await t("useState: saving the value a key already holds does not re-render", async () => {
+  await t("useState: saving the value a key already holds does not re-render", async() => {
     // The seeding path talks to RamStore directly, so the dispatcher has to
     // ignore an identical write: a "change" notification for a value that did
     // not change patched every bound widget and re-ran the structural render.
@@ -1814,7 +1814,7 @@ async function run() {
     ok(root.textContent.includes("BAJO"), `content: "${root.textContent}"`);
   });
 
-  await t("useState: unmounting releases the binding (no updates to detached nodes)", async () => {
+  await t("useState: unmounting releases the binding (no updates to detached nodes)", async() => {
     // The binding used to be released by monkey-patching `_cleanup`, which the
     // lifecycle observer never calls — so a detached widget stayed registered and
     // kept receiving updates forever. It is now released through `onUnmount`.
@@ -1838,7 +1838,7 @@ async function run() {
   });
 
   // -------------------------------------------------------------- MatrixRain
-  await t("MatrixRain: stops its rAF loop when detached from the DOM", async () => {
+  await t("MatrixRain: stops its rAF loop when detached from the DOM", async() => {
     // A coherent stub: rAF -> setTimeout and cancelAnimationFrame -> clearTimeout,
     // otherwise headless Chrome's frame throttling makes the count meaningless.
     const origRaf = window.requestAnimationFrame.bind(window);
@@ -1847,12 +1847,12 @@ async function run() {
     let frames = 0;
     window.requestAnimationFrame = (cb) => {
       frames++;
-      const id = setTimeout(() => { timers.delete(id); cb(); }, 1);
+      const id = setTimeout(() => { timers.delete (id); cb(); }, 1);
       timers.set(id, true);
       return id;
     };
     window.cancelAnimationFrame = (id) => {
-      if (timers.has(id)) { clearTimeout(id); timers.delete(id); } else { origCaf(id); }
+      if (timers.has(id)) { clearTimeout(id); timers.delete (id); } else { origCaf(id); }
     };
     try {
       // Let frames pending from the previous assertions settle, then measure the
@@ -1882,7 +1882,7 @@ async function run() {
     }
   });
 
-  await t("MatrixRain: _cleanup() stops the loop and keeps the canvas mounted", async () => {
+  await t("MatrixRain: _cleanup() stops the loop and keeps the canvas mounted", async() => {
     // The documented contract is "call it when removing the canvas from the DOM",
     // so a caller that only wants to freeze the rain must not lose the element.
     const snapshot = (canvas) => {
@@ -1915,7 +1915,7 @@ async function run() {
   });
 
   // -------------------------------------------------- animate: cancelable loops
-  await t("animate: cancel() freezes the property and stopAnimation ends the loop", async () => {
+  await t("animate: cancel() freezes the property and stopAnimation ends the loop", async() => {
     const box = document.createElement("div");
     host.appendChild(box);
     const cancel = animate(box, "opacity", 0, 1, 600);
@@ -1939,7 +1939,7 @@ async function run() {
     other.remove();
   });
 
-  await t("animate: a second animation on a property replaces the first", async () => {
+  await t("animate: a second animation on a property replaces the first", async() => {
     // Two loops writing one style fight: the older one resumed after the newer had
     // finished and drove the property back to ITS target.
     const box = document.createElement("div");
@@ -1955,7 +1955,7 @@ async function run() {
     box.remove();
   });
 
-  await t("pulse: cancel() stops phase two (no leftover setTimeout)", async () => {
+  await t("pulse: cancel() stops phase two (no leftover setTimeout)", async() => {
     const box = document.createElement("div");
     host.appendChild(box);
     const cancel = pulse(box, 400);
@@ -1973,7 +1973,7 @@ async function run() {
   });
 
   // --------------------------------------------- ListView: frames and geometry
-  await t("ListView: unmount cancels the scroll frame (no onEndReached after detach)", async () => {
+  await t("ListView: unmount cancels the scroll frame (no onEndReached after detach)", async() => {
     let ended = 0;
     const list = W.ListView({
       data: Array.from({ length: 60 }, (_, i) => i),
@@ -2002,7 +2002,7 @@ async function run() {
     );
   });
 
-  await t("ListView: the header height is not counted twice", async () => {
+  await t("ListView: the header height is not counted twice", async() => {
     const header = document.createElement("div");
     header.style.height = "50px";
     header.textContent = "HEADER";
@@ -2036,7 +2036,7 @@ async function run() {
     list.remove();
   });
 
-  await t("ListView: growing the viewport renders the newly visible rows", async () => {
+  await t("ListView: growing the viewport renders the newly visible rows", async() => {
     const list = W.ListView({
       data: Array.from({ length: 100 }, (_, i) => i),
       itemSize: 20,
@@ -2063,7 +2063,7 @@ async function run() {
   });
 
   // --------------------------- ListView: the row slot is a framework unit, not a pixel
-  await t("ListView: the virtual row slot grows with the base font", async () => {
+  await t("ListView: the virtual row slot grows with the base font", async() => {
     const root = document.documentElement;
     const previous = root.style.fontSize;
     const build = () => {
@@ -2078,7 +2078,7 @@ async function run() {
       host.appendChild(list);
       return list;
     };
-    const firstTwoTops = async (list) => {
+    const firstTwoTops = async(list) => {
       await wait(120);
       const rows = Array.from(list.querySelectorAll("div"))
         .filter((n) => n.style.position === "absolute" && n.firstChild)
@@ -2113,7 +2113,7 @@ async function run() {
   // and the numbers below are the documented ones, not a scaling artifact. The
   // measurement happens while the grid is still in the DOM: a detached element
   // answers every rect with zeros.
-  const measureGrid = async (props, read) => {
+  const measureGrid = async(props, read) => {
     const root = document.documentElement;
     const previous = root.style.fontSize;
     root.style.fontSize = "16px";
@@ -2193,7 +2193,7 @@ async function run() {
     }));
 
   // ------------------------------------------------------------------ Badge
-  await t("Badge: the pill anchors to its child, not to the parent's width", async () => {
+  await t("Badge: the pill anchors to its child, not to the parent's width", async() => {
     // The panel is what every app writes: a full-width Column. Its default
     // `align-items: stretch` used to pull the badge's anchor box to the panel's
     // width, and the pill — positioned against that box — landed on the far edge
@@ -2228,7 +2228,7 @@ async function run() {
   });
 
   // ------------------- The OS answer is painted, never written down as a choice
-  await t("applySystemTheme follows the OS without pinning the preference", async () => {
+  await t("applySystemTheme follows the OS without pinning the preference", async() => {
     const savedPref = localStorage.getItem("fletbox-theme");
     const realMatchMedia = window.matchMedia;
     localStorage.removeItem("fletbox-theme");
@@ -2268,7 +2268,7 @@ async function run() {
   // shipped whatever literal its scaffold hard-coded — #1a1a2e, the pre-zinc
   // indigo — and the bars stayed that color through every theme change. That is
   // the "the bar and the installed app keep the old colors" report.
-  await t("applyPalette moves theme-color and color-scheme with the theme", async () => {
+  await t("applyPalette moves theme-color and color-scheme with the theme", async() => {
     const savedPref = localStorage.getItem("fletbox-theme");
     const savedScheme = document.documentElement.style.colorScheme;
     try {
@@ -2335,7 +2335,7 @@ async function run() {
   };
   const rimOf = (cell) => getComputedStyle(cell.firstElementChild).borderTopColor;
 
-  await t("every shipped accent family clears its seven numbers in both themes", async () => {
+  await t("every shipped accent family clears its seven numbers in both themes", async() => {
     const savedTheme = localStorage.getItem("fletbox-theme");
     const savedAccent = getAccent();
     const failures = [];
@@ -2421,7 +2421,7 @@ async function run() {
   // every ink still reads on every surface it now sits on, and nothing but the
   // surfaces moves — the words, the brand and the plate keep the palette's own
   // values, which is what makes a tinted theme unable to make itself unreadable.
-  await t("an accent worn as a theme keeps every ink on the surfaces it paints", async () => {
+  await t("an accent worn as a theme keeps every ink on the surfaces it paints", async() => {
     const savedTheme = localStorage.getItem("fletbox-theme");
     const savedAccent = getAccent();
     const savedSurfaces = getAccentSurfaces();
@@ -2527,7 +2527,7 @@ async function run() {
     }
   });
 
-  await t("the accent layer paints inside the palette funnel and survives a theme change", async () => {
+  await t("the accent layer paints inside the palette funnel and survives a theme change", async() => {
     // The layer used to be a second repaint bolted after `applyPalette`, so the
     // next `setTheme` — a toggle, an OS flip, a boot — wrote the palette's own
     // `primary` back over the reader's choice. It is now merged in that one
@@ -2628,7 +2628,7 @@ async function run() {
     }
   });
 
-  await t("ThemePicker: named radios, a two-tone square each, and a tap that moves the accent", async () => {
+  await t("ThemePicker: named radios, a two-tone square each, and a tap that moves the accent", async() => {
     const savedAccent = getAccent();
     const savedTheme = localStorage.getItem("fletbox-theme");
     const savedStored = localStorage.getItem("fletbox-accent");
@@ -2761,7 +2761,7 @@ async function run() {
   });
 
   // ------------------------------------------- Slider: thumb retry loop
-  await t("Slider: the thumb retry loop stops when the widget unmounts", async () => {
+  await t("Slider: the thumb retry loop stops when the widget unmounts", async() => {
     const origRaf = window.requestAnimationFrame;
     let frames = 0;
     window.requestAnimationFrame = (cb) =>
@@ -2892,7 +2892,7 @@ async function run() {
   });
 
   // ------------------------------------------- useState: surgical vs structural
-  await t("useState: a key stops forcing full renders once the component no longer reads it structurally", async () => {
+  await t("useState: a key stops forcing full renders once the component no longer reads it structurally", async() => {
     // The reactivity model has two halves: a key passed straight into a prop is
     // patched surgically, a key the component *computes with* needs the app render.
     // Flagging the second half forever — because one earlier render used it in a
@@ -2917,7 +2917,7 @@ async function run() {
       return W.Column({
         children: [
           showLabel
-            ? W.Text({ text: "count=" + n }) // computed with `n` → app render
+            ? W.Text({ text : "count=" + n }) // computed with `n` → app render
             : W.Text({ id: "bound-text", text: n }), // passed as a prop → surgical
         ],
       });
@@ -2977,7 +2977,7 @@ async function run() {
   });
 
   // ------------------------------------------------- documented-but-dead props
-  await t("engine: `visible` hides the widget and restores its own display", async () => {
+  await t("engine: `visible` hides the widget and restores its own display", async() => {
     // `visible` was in CommonProps and every doc page, but no registry entry and
     // no handler existed, so it was silently dropped and the widget always showed.
     const row = mount(W.Row({ visible: false, children: [W.Text({ text: "x" })] }));
@@ -2991,7 +2991,7 @@ async function run() {
     ok(getComputedStyle(inline).display === "inline", "the original display was lost");
   });
 
-  await t("engine: `wrap: true` and `expand: true` write valid CSS", async () => {
+  await t("engine: `wrap: true` and `expand: true` write valid CSS", async() => {
     // Both were plain style props, so `applyUnit` turned `true` into `1`:
     // `flex-wrap: 1` and `flex: 1`-as-a-string are invalid and did nothing.
     const wrapped = mount(W.Row({ wrap: true, width: 100, children: [W.Text({ text: "a" })] }));
@@ -3008,7 +3008,7 @@ async function run() {
     ok(getComputedStyle(still).flexBasis !== "", `expand:false left no flex shorthand: ${getComputedStyle(still).flex}`);
   });
 
-  await t("engine: `for`/`htmlFor` bind a <label> instead of writing a junk attribute", async () => {
+  await t("engine: `for`/`htmlFor` bind a <label> instead of writing a junk attribute", async() => {
     // `setAttribute("htmlFor", …)` creates a literal `htmlfor`-ish attribute the
     // browser ignores, so the label never pointed at its control.
     const viaFor = mount(WidgetFactory({ tag: "label", text: "A", for: "field-a" }));
@@ -3018,7 +3018,7 @@ async function run() {
     ok(viaAlias.htmlFor === "field-b", `htmlFor did not map to for: "${viaAlias.htmlFor}"`);
   });
 
-  await t("Image: onLoad and onError are real DOM events", async () => {
+  await t("Image: onLoad and onError are real DOM events", async() => {
     // Registered as `special`, which nothing handled: the callbacks were consumed
     // by the engine and never reached the <img>, so neither ever fired.
     const png =
@@ -3033,7 +3033,7 @@ async function run() {
     ok(okImg.tagName === "IMG", "Image stopped rendering an <img>");
   });
 
-  await t("Input: clearable, passwordToggle and onEnter do what Input.md says", async () => {
+  await t("Input: clearable, passwordToggle and onEnter do what Input.md says", async() => {
     // All three were documented in Input.md and declared in InputProps, and were
     // dead registry entries: no trailing control appeared and Enter never fired.
     const entered = [];
@@ -3066,7 +3066,7 @@ async function run() {
     ok(off.querySelector("button") === null, "a plain Input grew a trailing control");
   });
 
-  await t("Input: the trailing controls are icons, not emoji", async () => {
+  await t("Input: the trailing controls are icons, not emoji", async() => {
     // The reveal button used to paint `👁` and `🙈`. An emoji is a colour bitmap:
     // the field's own `color` cannot reach it, the operating system's emoji font
     // draws it (20×17px measured, in a slot the field sizes at 16), and on iOS it
@@ -3105,7 +3105,7 @@ async function run() {
     ok(revealGlyph.textContent === "visibility", "hiding did not swap the icon back");
   });
 
-  await t("Checkbox/Radio/Switch: activeColor paints the active state", async () => {
+  await t("Checkbox/Radio/Switch: activeColor paints the active state", async() => {
     // The three controls hardcoded the theme color when active, so the documented
     // `activeColor` prop changed nothing.
     // The paint is on the drawn element, not on the widget: each control is now a
@@ -3286,7 +3286,7 @@ async function run() {
     ok(cb.getChecked() === true, "clicking the label did not toggle the box");
   });
 
-  await t("Stepper: the active step's content is mounted on the first paint", async () => {
+  await t("Stepper: the active step's content is mounted on the first paint", async() => {
     // The rail and the button bar drew themselves; the content slot stayed empty
     // until something was pressed. The symptom reads as "the widget inside is
     // invisible", and the only way to make it appear was to navigate away and
@@ -3382,7 +3382,7 @@ async function run() {
     v.remove();
   });
 
-  await t("Stack: alignment anchors children at the documented nine points", async () => {
+  await t("Stack: alignment anchors children at the documented nine points", async() => {
     // `alignment` was in StackProps, Stack.md and three examples, and Stack never
     // read it: every preset rendered a plain block with children at the top-left.
     const read = (alignment, extra = {}) => {
@@ -3402,7 +3402,7 @@ async function run() {
     ok(read(undefined) === "flex/flex-start/flex-start", `no alignment → ${read(undefined)}`);
   });
 
-  await t("Stack: the children paint in the same box, not one after the other", async () => {
+  await t("Stack: the children paint in the same box, not one after the other", async() => {
     // The widget is documented as the overlay container — `Stack.md` opens with
     // "children occupy the same box" — and it never layered anything: every child
     // arrived in normal flow, so the second tile sat below the first and the only
@@ -3465,7 +3465,7 @@ async function run() {
     }
   });
 
-  await t("Stack: the first child sizes the box and two claims still hold", async () => {
+  await t("Stack: the first child sizes the box and two claims still hold", async() => {
     // Taking every child out of the flow would fix the layering and break the
     // sizing: an unsized Stack would collapse to 0px and the overlay would be
     // invisible, which reads as a different bug. So the first child stays in the
@@ -3505,7 +3505,7 @@ async function run() {
     );
   });
 
-  await t("Stack: the float reaches the children an update brings later", async () => {
+  await t("Stack: the float reaches the children an update brings later", async() => {
     // Why the rule lives in a stylesheet and not on each child: `update()`
     // replaces the child nodes, and a style written onto a node leaves with it.
     const s = mount(
@@ -3545,7 +3545,7 @@ async function run() {
     ok(getComputedStyle(live).alignSelf === "center", "alignSelf stopped being reactive on update()");
   });
 
-  await t("BottomNavigation: a navigating onTabChange does not recurse", async () => {
+  await t("BottomNavigation: a navigating onTabChange does not recurse", async() => {
     // updateColorsFromRouter() fired onTabChange on every router event, so the
     // documented usage (go to the tab's route from the callback) looped
     // route change -> goTo -> route change until the call stack blew and the
@@ -3584,7 +3584,7 @@ async function run() {
   // locate() used to hardcode { timeout: 10000, maximumAge: 0,
   // enableHighAccuracy: true }, so a caller could not widen the window for a
   // slow desktop fix and an app could not tell a timeout from a denial.
-  await t("Maps: locate() forwards timeout/maximumAge/highAccuracy to the browser", async () => {
+  await t("Maps: locate() forwards timeout/maximumAge/highAccuracy to the browser", async() => {
     const real = navigator.geolocation;
     let seen = null;
     Object.defineProperty(navigator, "geolocation", {
@@ -3602,14 +3602,14 @@ async function run() {
       const map = mount(W.Maps({}));
       const error = await map
         .locate({ timeout: 20000, maximumAge: 5000, highAccuracy: false })
-        .catch((e) => e);
+        .catch ((e) => e);
       ok(seen && seen.timeout === 20000, `timeout reached as ${seen && seen.timeout}`);
       ok(seen.maximumAge === 5000, `maximumAge reached as ${seen && seen.maximumAge}`);
       ok(seen.enableHighAccuracy === false, `enableHighAccuracy reached as ${seen && seen.enableHighAccuracy}`);
       ok(error && error.code === 3, `rejection kept error.code (${error && error.code})`);
 
       seen = null;
-      await map.locate().catch(() => {});
+      await map.locate().catch (() => {});
       ok(
         seen.timeout === 10000 && seen.maximumAge === 0 && seen.enableHighAccuracy === true,
         `defaults changed: ${JSON.stringify(seen)}`,
@@ -3621,7 +3621,7 @@ async function run() {
 
   // setUserPosition() is the permission-free path (a native fix, or an embedded
   // webview that answers code 1 in 0 ms), so it must never touch geolocation.
-  await t("Maps: setUserPosition() centres and draws the dot without geolocation", async () => {
+  await t("Maps: setUserPosition() centres and draws the dot without geolocation", async() => {
     const real = navigator.geolocation;
     let asked = 0;
     Object.defineProperty(navigator, "geolocation", {
@@ -3654,7 +3654,7 @@ async function run() {
   // The background watcher keeps re-reporting its denial on every retry, and its
   // error handler used to clear userPosition unconditionally — so an IP-based or
   // native position set by the app vanished a frame after it was drawn.
-  await t("Maps: a watcher error keeps the position set by the app", async () => {
+  await t("Maps: a watcher error keeps the position set by the app", async() => {
     const real = navigator.geolocation;
     let watchError = null;
     Object.defineProperty(navigator, "geolocation", {
@@ -3684,7 +3684,7 @@ async function run() {
   // Maps had no vector layer at all, so a route or a track could only be faked
   // with pins. A line must reach the canvas AND leave ink on it: a layer that
   // normalises correctly but never paints is the failure this widget is prone to.
-  await t("Maps: polylines paint strokes over the tiles and clear with clearPolylines()", async () => {
+  await t("Maps: polylines paint strokes over the tiles and clear with clearPolylines()", async() => {
     const painted = (canvas) => {
       const ctx = canvas.getContext("2d");
       const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -3747,7 +3747,7 @@ async function run() {
   });
 
   // ---------------------------------------------------------------- pin anchor
-  await t("Maps: the tip of a pin lands on its coordinate, whatever the label says", async () => {
+  await t("Maps: the tip of a pin lands on its coordinate, whatever the label says", async() => {
     // The pin button was a flex column sized by its own label, so a long label
     // slid the teardrop sideways off the point it marks (measured: 54 px right of
     // the click in demoMap on 2026-10-19), and the rotated square's real corner
@@ -3782,7 +3782,7 @@ async function run() {
   // ------------------------------------------------------------------ follow
   // Watching with enableHighAccuracy:false + maximumAge:60000 is right for a dot
   // and useless while chasing a moving car: the view would lag minutes behind.
-  await t("Maps: followUser() centres on each fix, reports onUserUpdate and asks for fresh positions", async () => {
+  await t("Maps: followUser() centres on each fix, reports onUserUpdate and asks for fresh positions", async() => {
     const real = navigator.geolocation;
     let seenOptions = null;
     let pushFix = null;
@@ -3844,7 +3844,7 @@ async function run() {
   // An app that writes onMoveEnd back into the `center` key it binds (the only
   // way fitBounds survives a re-render) made applyProps report a view change
   // every time, so the map invalidated and fired onMoveEnd forever.
-  await t("Maps: re-applying an unchanged center is not a view change", async () => {
+  await t("Maps: re-applying an unchanged center is not a view change", async() => {
     let reports = 0;
     const map = mount(W.Maps({ center: [10, 20], zoom: 6, onMoveEnd: () => reports++ }));
     await wait(300);
@@ -3865,7 +3865,7 @@ async function run() {
   // reach the container, so every press on them also reported the coordinate
   // hiding underneath. In demoMap that re-decoded the destination on each zoom
   // step and the drop jumped to the corner of the view (measured 2026-10-19).
-  await t("Maps: a press on the widget's own chrome is not a click on the map", async () => {
+  await t("Maps: a press on the widget's own chrome is not a click on the map", async() => {
     const clicks = [];
     const map = mount(
       W.Maps({
@@ -3923,7 +3923,7 @@ async function run() {
   // limit, the map claimed the pointer and *neither* handler fired while the view
   // slid by the tremor. Measured with Chrome on 2026-10-19: a shaky press on a pin
   // reported nothing at all.
-  await t("Maps: a press that trembles is a click, not a pan", async () => {
+  await t("Maps: a press that trembles is a click, not a pan", async() => {
     const markerClicks = [];
     const mapClicks = [];
     const map = mount(
@@ -3979,7 +3979,7 @@ async function run() {
   // A vehicle that does not point where it is going is a dot with a label, so
   // `rotation` has to turn the drop around the very tip that sits on its
   // coordinate — and the caption has to stay readable while it does.
-  await t("Maps: a rotated marker turns on its tip and keeps its caption upright", async () => {
+  await t("Maps: a rotated marker turns on its tip and keeps its caption upright", async() => {
     const LAT = 10;
     const LNG = 20;
     const map = mount(
@@ -4016,7 +4016,7 @@ async function run() {
   // A fix arrives every second and a bearing every frame, while `addMarker`
   // appends: the pooled node keyed by the id kept winning on screen and the list
   // grew without bound, so an hour of a tracked ride is 3 600 markers deep.
-  await t("Maps: setMarker() moves the pin it already drew instead of stacking one", async () => {
+  await t("Maps: setMarker() moves the pin it already drew instead of stacking one", async() => {
     const taps = [];
     const map = mount(
       W.Maps({
@@ -4056,7 +4056,7 @@ async function run() {
   // A bearing changes every second and the caption carries it ("Coche · 90°"),
   // so the pooled pin has to restate its own label — otherwise the drop turns
   // under a caption frozen at mount, and the accessibility name lies too.
-  await t("Maps: setMarker() restates the caption of the pin it moves", async () => {
+  await t("Maps: setMarker() restates the caption of the pin it moves", async() => {
     const map = mount(
       W.Maps({
         center: [10, 20],
@@ -4091,7 +4091,7 @@ async function run() {
   // every tap meant for the map landed on the car and reported "Sin rumbo".
   // `clickable: false` has to make the pin transparent to the pointer — muting
   // its handler would leave a dead patch of map under it.
-  await t("Maps: a marker with clickable:false lets the tap reach the map", async () => {
+  await t("Maps: a marker with clickable:false lets the tap reach the map", async() => {
     const mapClicks = [];
     const markerClicks = [];
     const LAT = 10;
@@ -4153,7 +4153,7 @@ async function run() {
   });
 
   // ---------------- props that lived only in the registry (measured 2026-10-20)
-  await t("Avatar: presence bound to a state key moves the dot", async () => {
+  await t("Avatar: presence bound to a state key moves the dot", async() => {
     // `online` was a `special` registry entry no widget read, so it neither
     // painted anything nor took part in the reactive protocol: the store moved
     // and the avatar stayed as it was built.
@@ -4170,7 +4170,7 @@ async function run() {
     ok(dot() === "none", "the dot stayed on after presence went offline");
   });
 
-  await t("Avatar: update() keeps the content and moves the geometry", async () => {
+  await t("Avatar: update() keeps the content and moves the geometry", async() => {
     // The old widget rebuilt its children from the construction-time props on any
     // update, and never touched width or radius, so an image avatar reverted to
     // initials and a size change left the box the original size.
@@ -4183,7 +4183,7 @@ async function run() {
     ok(getComputedStyle(a).borderRadius === "0px", `radius did not follow shape: ${a.style.borderRadius}`);
   });
 
-  await t("Tooltip: tooltipDelay is the old name of delay, and delay wins", async () => {
+  await t("Tooltip: tooltipDelay is the old name of delay, and delay wins", async() => {
     // `tooltipDelay` was a `special` entry no widget read: passing it changed
     // nothing, and the default 300 ms stayed in force.
     const base = document.body.children.length;
@@ -4203,7 +4203,7 @@ async function run() {
     fast.hideTooltip();
   });
 
-  await t("Tooltip: a tap on a device that cannot hover leaves no bubble", async () => {
+  await t("Tooltip: a tap on a device that cannot hover leaves no bubble", async() => {
     // iOS fires a synthetic `mouseenter` on the first tap and never the matching
     // `mouseleave`, so the hover listeners used to strand a bubble on screen that
     // nothing could ever dismiss — two taps, two bubbles, both permanent.
@@ -4217,7 +4217,7 @@ async function run() {
     // reduced-motion feature the engine reads — still goes to the real thing.
     window.matchMedia = (query) =>
       /hover:\s*hover/.test(query)
-        ? { matches: false, media: query, addEventListener() {}, removeEventListener() {} }
+        ? { matches : false, media: query, addEventListener() {}, removeEventListener() {} }
         : realMatchMedia(query);
     try {
       ok(!window.matchMedia("(hover: hover)").matches, "the shadow did not take");
@@ -4241,7 +4241,7 @@ async function run() {
     }
   });
 
-  await t("Tooltip: a bubble with no room above the trigger flips below it", async () => {
+  await t("Tooltip: a bubble with no room above the trigger flips below it", async() => {
     // The old clamp only pushed the bubble down to `top: 10` and never sideways
     // past the bottom edge, so a trigger near the top of the screen got a bubble
     // half over the status bar — on a notched phone `10` is inside it.
@@ -4295,12 +4295,12 @@ async function run() {
     lowTip.hideTooltip();
   });
 
-  await t("Image: downloadable saves, and never steals onPress", async () => {
+  await t("Image: downloadable saves, and never steals onPress", async() => {
     // Neither `downloadable` nor `downloadFileName` was read by the widget, so a
     // "downloadable" image only ever pressed.
     const saved = [];
     const realClick = HTMLAnchorElement.prototype.click;
-    HTMLAnchorElement.prototype.click = function () { saved.push(this.download); };
+    HTMLAnchorElement.prototype.click = function() { saved.push(this.download); };
     let pressed = 0;
     try {
       mount(W.Image({ src: "/files/quote.png", downloadable: true, onPress: () => pressed++ })).click();
@@ -4312,13 +4312,13 @@ async function run() {
     ok(pressed === 1, `onPress fired ${pressed} times`);
   });
 
-  await t("Image: the download props survive update() and a state key", async () => {
+  await t("Image: the download props survive update() and a state key", async() => {
     // `downloadable`/`downloadFileName` were read once, at construction, and the
     // factory never saw them (`special`): an update or a store change could
     // neither offer a save nor rename the file it offered.
     const saved = [];
     const realClick = HTMLAnchorElement.prototype.click;
-    HTMLAnchorElement.prototype.click = function () { saved.push(this.download); };
+    HTMLAnchorElement.prototype.click = function() { saved.push(this.download); };
     const { useState } = await import("../src/tools/useState.js");
     try {
       const stillPlain = mount(W.Image({ src: "/files/quote.png" }));
@@ -4709,7 +4709,7 @@ async function run() {
     item.remove();
   });
 
-  await t("CollapsibleSideBar: the toggle repaints width, chevron and content", async () => {
+  await t("CollapsibleSideBar: the toggle repaints width, chevron and content", async() => {
     // toggle() only wrote the persisted state, so the bar kept the width, the
     // glyph and the content opacity it was built with: it never collapsed.
     const bar = mount(
@@ -4765,7 +4765,7 @@ async function run() {
   // `autoShow` is the mount switch. It used to sit inside showBanner() itself,
   // so autoShow:false silenced the manual container.show() too and a banner
   // saved for a paywall moment could never be asked for.
-  await t("AdMob: autoShow:false silences the mount, not the manual show()", async () => {
+  await t("AdMob: autoShow:false silences the mount, not the manual show()", async() => {
     const calls = [];
     const plugin = {
       initialize: () => {
@@ -4839,7 +4839,7 @@ async function run() {
     withWidth(100, () => ok(atLeast("huge") === true, "an unknown name must not block a layout"));
   });
 
-  await t("onBreakpointChange: one call per crossing, none per pixel", async () => {
+  await t("onBreakpointChange: one call per crossing, none per pixel", async() => {
     const seen = [];
     let unsubscribe;
     withWidth(700, () => {
@@ -4888,7 +4888,7 @@ async function run() {
     }
   });
 
-  await t("loadFont: a face that cannot be had resolves false, never hangs", async () => {
+  await t("loadFont: a face that cannot be had resolves false, never hangs", async() => {
     const settled = await Promise.race([
       loadFont("FbMissingFamily", { url: "/tests/fixtures/no-such-stylesheet.css" }),
       wait(4000).then(() => "hung"),
@@ -4897,7 +4897,7 @@ async function run() {
     ok(await fontsReady() === true, "fontsReady() did not settle in the browser");
   });
 
-  await t("Skeleton: a documented shimmerColor paints the wave band", async () => {
+  await t("Skeleton: a documented shimmerColor paints the wave band", async() => {
     const band = (props) => {
       const root = mount(W.Skeleton({ animation: "wave", ...props }));
       const painted = getComputedStyle(root.firstElementChild).backgroundImage;
@@ -4919,7 +4919,7 @@ async function run() {
     );
   });
 
-  await t("Input: an iOS field is never under 16px, which is what zoomed the page", async () => {
+  await t("Input: an iOS field is never under 16px, which is what zoomed the page", async() => {
     const html = document.documentElement;
     const hadMarker = html.hasAttribute("data-fb-ios");
     const savedRootFont = html.style.fontSize;
@@ -4991,13 +4991,13 @@ async function run() {
   });
 
   // ------------------------------------------------- Chart: Y-axis label steps
-  await t("Chart: the Y axis labels in one round step, not in fifths of the range", async () => {
+  await t("Chart: the Y axis labels in one round step, not in fifths of the range", async() => {
     const orig = HTMLCanvasElement.prototype.getContext;
 
     /** Mount one chart and return only the texts drawn in the Y-axis gutter. */
-    const axisOf = async (props) => {
+    const axisOf = async(props) => {
       const drawn = [];
-      HTMLCanvasElement.prototype.getContext = function (kind, ...rest) {
+      HTMLCanvasElement.prototype.getContext = function(kind, ...rest) {
         const ctx = orig.call(this, kind, ...rest);
         if (ctx && kind === "2d" && !ctx.__fbRecorded) {
           ctx.__fbRecorded = true;
@@ -5026,13 +5026,13 @@ async function run() {
     // gridlines with unequal labelled steps (4, 4, 5, 4, 4).
     const axis = (await axisOf({ data: [6, 12, 19, 21], labels: ["a", "b", "c", "d"] })).map(Number);
     ok(axis.length >= 3, `only ${axis.length} Y labels were drawn`);
-    const steps = axis.slice(1).map((v, i) => +(v - axis[i]).toFixed(6));
+    const steps = axis.slice(1).map((v, i) => + (v - axis[i]).toFixed(6));
     ok(
       steps.every((s) => Math.abs(s - steps[0]) < 1e-6),
       `the axis reads ${axis.join(", ")} — steps of ${steps.join(", ")}: the labels do not agree with their own gridlines`,
     );
     const exponent = 10 ** Math.floor(Math.log10(steps[0]));
-    const mantissa = +(steps[0] / exponent).toFixed(6);
+    const mantissa = + (steps[0] / exponent).toFixed(6);
     ok(
       [1, 2, 5, 10].includes(mantissa),
       `the axis counts by ${steps[0]}, which is not a 1/2/5 step`,
@@ -5153,7 +5153,7 @@ async function run() {
   });
 
   // ------------------------------------- CircularChart: a donut hole is empty
-  await t("CircularChart: the donut's hole shows the card, not a painted disc", async () => {
+  await t("CircularChart: the donut's hole shows the card, not a painted disc", async() => {
     for (const theme of ["light", "dark"]) {
       setTheme(theme);
       const chart = mount(

@@ -1,7 +1,7 @@
 {
   "name": "flet-box",
   "version": "1.1.3",
-  "description": "Declarative, zero-dependency UI framework in vanilla JS — ship web, PWA, Android and iOS from one codebase",
+  "description": "Declarative, zero-dependency UI framework in vanilla JS \u2014 ship web, PWA, Android and iOS from one codebase",
   "type": "module",
   "main": "src/index.js",
   "types": "src/index.d.ts",
@@ -23,9 +23,11 @@
     "selftest": "node scripts/selftest-gates.mjs",
     "build": "node bin/cli.js createBundle",
     "release": "node bin/cli.js release",
-    "test": "node scripts/check-widgets.mjs && node scripts/check-widget-scale.mjs && node scripts/check-shared-helpers.mjs && node scripts/check-a11y.mjs && node scripts/check-error-boundary.mjs && node scripts/check-prop-registry.mjs && node scripts/check-docs-props.mjs && python3 scripts/generate_widget_docs.py --check && node scripts/check-api-contract.mjs && node scripts/check-api-surface.mjs && node scripts/check-bundle-size.mjs && node scripts/check-api-propscan.mjs && node scripts/check-module-exports.mjs && node scripts/check-time-helpers.mjs && node scripts/check-router-base.mjs && node scripts/check-clean-ui.mjs && node scripts/check-framework-ui.mjs && node scripts/check-structure.mjs && node scripts/check-ui-rules.mjs && node scripts/check-syntax.mjs && node scripts/check-metrics.mjs && node scripts/check-report.mjs && node scripts/check-skills.mjs && node scripts/check-app-types.mjs && node scripts/check-codegen-contract.mjs && node scripts/check-migrations.mjs && node scripts/check-ota-assets.mjs && node scripts/check-pwa-shell.mjs && node scripts/check-image-convert.mjs && node scripts/check-images-cli.mjs && node scripts/selftest-gates.mjs && node scripts/check-cli-install.mjs && python3 tools/snippets-creator-flet-box/build_snippets.py --check && node scripts/check-snippets.mjs",
+    "test": "node scripts/check-widgets.mjs && node scripts/check-widget-scale.mjs && node scripts/check-shared-helpers.mjs && node scripts/check-a11y.mjs && node scripts/check-error-boundary.mjs && node scripts/check-prop-registry.mjs && node scripts/check-docs-props.mjs && python3 scripts/generate_widget_docs.py --check && node scripts/check-api-contract.mjs && node scripts/check-api-surface.mjs && node scripts/check-bundle-size.mjs && node scripts/check-api-propscan.mjs && node scripts/check-module-exports.mjs && node scripts/check-time-helpers.mjs && node scripts/check-router-base.mjs && node scripts/check-clean-ui.mjs && node scripts/check-framework-ui.mjs && node scripts/check-structure.mjs && node scripts/check-ui-rules.mjs && node scripts/check-syntax.mjs && node scripts/check-lint.mjs && node scripts/check-format.mjs && node scripts/check-types.mjs && node scripts/check-metrics.mjs && node scripts/check-report.mjs && node scripts/check-skills.mjs && node scripts/check-app-types.mjs && node scripts/check-codegen-contract.mjs && node scripts/check-migrations.mjs && node scripts/check-ota-assets.mjs && node scripts/check-pwa-shell.mjs && node scripts/check-image-convert.mjs && node scripts/check-images-cli.mjs && node scripts/selftest-gates.mjs && node scripts/check-cli-install.mjs && python3 tools/snippets-creator-flet-box/build_snippets.py --check && node scripts/check-snippets.mjs",
     "test:browser": "node scripts/run-browser-tests.mjs",
-    "test:visual": "node scripts/check-visual.mjs"
+    "test:visual": "node scripts/check-visual.mjs",
+    "lint": "node bin/cli.js lint",
+    "format": "node bin/cli.js format"
   },
   "keywords": [
     "fletbox",
@@ -50,6 +52,7 @@
     "url": "https://github.com/kuko53348/flet-box/issues"
   },
   "devDependencies": {
+    "@types/node": "^26.6.6",
     "chokidar": "^4.0.3",
     "esbuild": "^0.28.0",
     "typescript": "^7.0.2",

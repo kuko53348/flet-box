@@ -98,4 +98,3 @@ export const references = (text, rel) => text.includes(rel) || text.includes(pat
  */
 export const protectedMaster = (rel) =>
   PROTECTED_MASTERS.find((entry) => entry.rel === rel || entry.rel.split("/").pop() === path.basename(rel)) || null;
-

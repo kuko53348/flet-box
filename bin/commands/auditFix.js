@@ -756,7 +756,7 @@ const applyEdits = (code, edits) => {
  * @param {{ print?: Function }} [io]
  * @returns {Promise<{ exitCode: number, changed: string[], untouched: string[] }>}
  */
-export const auditFix = async (argv = [], io = {}) => {
+export const auditFix = async(argv = [], io = {}) => {
   const print = io.print || ((line) => console.log(line));
   const root = (() => {
     const i = argv.indexOf("--root");

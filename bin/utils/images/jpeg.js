@@ -67,7 +67,7 @@ const buildHuffman = (counts, values) => {
       code++;
       index++;
     }
-    code <<= 1;
+    code<<=1;
   }
   return map;
 };

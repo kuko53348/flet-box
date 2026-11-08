@@ -97,7 +97,7 @@ export const os = {
    * @returns {boolean} `true` if the OS is not Android or iOS
    */
   isDesktop: () => {
-    return !os.isMobile();
+    return!os.isMobile();
   },
 };
 

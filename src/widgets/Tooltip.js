@@ -208,7 +208,7 @@ export const Tooltip = (props) => {
         top = targetRect.bottom + offset;
         left = targetRect.left + targetRect.width / 2 - tooltipRect.width / 2;
         if (tooltipElement._arrow) {
-          arrowTop = -arrowSize;
+          arrowTop = - arrowSize;
           arrowLeft = tooltipRect.width / 2 - arrowSize;
           tooltipElement._arrow.style.borderWidth = `0 ${toREM(arrowSize)} ${toREM(arrowSize)} ${toREM(arrowSize)}`;
           tooltipElement._arrow.style.borderColor = `transparent transparent ${bgColor} transparent`;
@@ -233,7 +233,7 @@ export const Tooltip = (props) => {
         left = targetRect.right + offset;
         if (tooltipElement._arrow) {
           arrowTop = tooltipRect.height / 2 - arrowSize;
-          arrowLeft = -arrowSize;
+          arrowLeft = - arrowSize;
           tooltipElement._arrow.style.borderWidth = `${toREM(arrowSize)} ${toREM(arrowSize)} ${toREM(arrowSize)} 0`;
           tooltipElement._arrow.style.borderColor = `transparent ${bgColor} transparent transparent`;
           tooltipElement._arrow.style.top = `${arrowTop}px`;

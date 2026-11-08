@@ -132,7 +132,7 @@ export const updateRam = (key, newValue) => {
 export const deleteRam = (key) => {
   try {
     const oldValue = ramStore.get(key);
-    const deleted = ramStore.delete(key);
+    const deleted = ramStore.delete (key);
     if (deleted) {
       notifySubscribers(key, null, oldValue);
     }

@@ -97,7 +97,7 @@ export default ${name}Screen;
  *   numeric string (e.g. `"3"`) to batch-create numbered screens.
  * @returns {Promise<void>}
  */
-export const createScreen = async (input) => {
+export const createScreen = async(input) => {
   const projectRoot = process.cwd();
   const screensDir = path.join(projectRoot, "src", "screens");
 

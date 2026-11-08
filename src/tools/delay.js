@@ -23,7 +23,7 @@ export const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
  * @example
  * const data = await withMinDelay(fetchData(), 800);
  */
-export const withMinDelay = async (promise, minMs = 500) => {
+export const withMinDelay = async(promise, minMs = 500) => {
   const [result] = await Promise.all([promise, delay(minMs)]);
   return result;
 };
@@ -41,7 +41,7 @@ export const withMinDelay = async (promise, minMs = 500) => {
  * @example
  * const data = await retry(() => fetchData(), 3, 1000);
  */
-export const retry = async (fn, retries = 3, delayMs = 1000) => {
+export const retry = async(fn, retries = 3, delayMs = 1000) => {
   try {
     return await fn();
   } catch (error) {

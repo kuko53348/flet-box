@@ -56,7 +56,7 @@ const seed = {
 };
 
 const installRunner = (seedSpec, stubUnknown) =>
-  page.evaluate(async (spec) => {
+  page.evaluate(async(spec) => {
     window.__api = await import("/src/index.js");
     window.__log = [];
     for (const kind of ["warn", "error"]) {
@@ -108,7 +108,7 @@ const installRunner = (seedSpec, stubUnknown) =>
     };
   }, { seedSpec, unknownToStub: stubUnknown });
 
-const runPass = async (label) => {
+const runPass = async(label) => {
   await installRunner(label === "seeded" ? seed : {}, label === "seeded");
   const failures = [];
   const BATCH = 25;
@@ -118,7 +118,7 @@ const runPass = async (label) => {
       page.evaluate((list) => list.map((s) => [s.key, window.__run(s.body)]), batch),
       60000,
       `batch ${i / BATCH}`
-    ).catch(() => batch.map((s) => [s.key, { error: "timeout / infinite loop", messages: [] }]));
+    ).catch (() => batch.map((s) => [s.key, { error: "timeout / infinite loop", messages: [] }]));
     for (const [key, r] of out) if (r.error || r.messages.length) failures.push([key, r]);
   }
   console.log(`${label} pass: ${failures.length} of ${snippets.length} executable bodies failed/warned`);

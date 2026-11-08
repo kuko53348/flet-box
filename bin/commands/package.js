@@ -19,7 +19,7 @@ try {
     ).version;
 } catch {}
 
-export const packageManager = async () => {
+export const packageManager = async() => {
   const PACKAGE = "flet-box";
   const PKG_PATH = path.join(__dirname, "../..");
   const rl = readline.createInterface({

@@ -46,6 +46,8 @@ import { checkApi, loadApi, SEVERITY } from "./checkApi.js";
 import { checkUi, ERROR_CODES, WARN_CODES, INFO_CODES } from "./checkUi.js";
 import { scanStructure } from "./checkStructure.js";
 import { scanSyntax } from "./checkSyntax.js";
+import { scanLint } from "./checkLint.js";
+import { formatFiles, scanFormatNeeded } from "./format.js";
 import { auditFix } from "./auditFix.js";
 import { metricsLog } from "./metrics.js";
 import { definitionIndex, propsSource, unpackWidget } from "./unpack.js";
@@ -101,7 +103,7 @@ const relative = (file, root) => {
 
 /* ------------------------------------------------------------------ gates */
 
-const syntaxGate = async (root) => {
+const syntaxGate = async(root) => {
   const findings = await scanSyntax(root);
   return {
     name: "syntax",
@@ -111,7 +113,7 @@ const syntaxGate = async (root) => {
   };
 };
 
-const apiGate = async (root) => {
+const apiGate = async(root) => {
   const { findings, exitCode } = await checkApi(["--root", root], { print: () => {} });
   return {
     name: "api",
@@ -151,7 +153,7 @@ const acceptedDesignFindings = (root) => {
   }
 };
 
-const uiGate = async (root) => {
+const uiGate = async(root) => {
   const { findings } = await checkUi(["--root", root], { print: () => {} });
   const accepted = acceptedDesignFindings(root);
   // The baseline key drops the line number on purpose: editing anything above a
@@ -176,7 +178,7 @@ const uiGate = async (root) => {
   };
 };
 
-const structureGate = async (root) => {
+const structureGate = async(root) => {
   const findings = await scanStructure(root);
   return {
     name: "structure",
@@ -186,7 +188,27 @@ const structureGate = async (root) => {
   };
 };
 
-const surfaceGate = async (root) => {
+const lintGate = async(root) => {
+  const findings = await scanLint(root);
+  return {
+    name: "lint",
+    title: "Lint rules",
+    findings: findings.map((finding) => shape(finding)),
+    exitCode: findings.length ? 1 : 0,
+  };
+};
+
+const formatGate = async(root) => {
+  const findings = scanFormatNeeded(root);
+  return {
+    name: "format",
+    title: "Format check",
+    findings: findings.map((finding) => shape(finding)),
+    exitCode: findings.length ? 1 : 0,
+  };
+};
+
+const surfaceGate = async(root) => {
   const api = await loadApi(root);
   const definitions = definitionIndex(api.dir);
   const widgets = api.exports
@@ -264,7 +286,7 @@ const lastLines = (text, count = 15) =>
     .split(/\r?\n/)
     .map((line) => line.trimEnd())
     .filter(Boolean)
-    .slice(-count)
+    .slice(- count)
     .join("\n");
 
 /**
@@ -285,7 +307,7 @@ const lastLines = (text, count = 15) =>
  * @param {{print?: (line: string) => void}} [context]
  * @returns {Promise<object>}
  */
-const testsGate = async (root, context = {}) => {
+const testsGate = async(root, context = {}) => {
   const skipped = (why) => ({
     name: "tests",
     title: "Test suite",
@@ -390,7 +412,7 @@ const resolveTsc = () => {
  * @param {string} root Project root.
  * @returns {Promise<object>}
  */
-const typesGate = async (root) => {
+const typesGate = async(root) => {
   const skipped = (why) => ({
     name: "types",
     title: "Type check",
@@ -467,6 +489,8 @@ export const GATES = {
   syntax: syntaxGate,
   api: apiGate,
   types: typesGate,
+  lint: lintGate,
+  format: formatGate,
   ui: uiGate,
   structure: structureGate,
   surface: surfaceGate,
@@ -474,7 +498,7 @@ export const GATES = {
 };
 
 /** Every gate, in the order the report prints them. */
-export const GATE_ORDER = ["syntax", "api", "types", "ui", "structure", "surface", "tests"];
+export const GATE_ORDER = ["syntax", "api", "types", "lint", "format", "ui", "structure", "surface", "tests"];
 
 /* ----------------------------------------------------------------- report */
 
@@ -610,7 +634,7 @@ const asJson = (report) => ({
     findings: step.findings,
     // Present only for a gate that can accept a finding: the entries this
     // checkout has decided about, with the reason it wrote down.
-    ...(step.accepted?.length ? { accepted: step.accepted } : {}),
+    ...(step.accepted?.length ? { accepted : step.accepted } : {}),
   })),
 });
 
@@ -665,9 +689,9 @@ export const recordGeneration = (root, report) => {
  * @param {{print?: (line: string) => void}} [context] Passed to a gate that reports progress.
  * @returns {Promise<object>}
  */
-export const runGates = async (root, names, context = {}) => {
+export const runGates = async(root, names, context = {}) => {
   const steps = await Promise.all(
-    names.map(async (name) => {
+    names.map(async(name) => {
       const gate = GATES[name];
       try {
         const result = await gate(root, context);
@@ -704,7 +728,7 @@ export const runGates = async (root, names, context = {}) => {
  * @param {{print?: (line: string) => void, root?: string}} [io]
  * @returns {Promise<{exitCode: number, report: object}>}
  */
-export const verify = async (argv = [], io = {}) => {
+export const verify = async(argv = [], io = {}) => {
   const print = io.print ?? ((line) => console.log(line));
   const rootIndex = argv.indexOf("--root");
   const root = path.resolve(
@@ -730,12 +754,17 @@ export const verify = async (argv = [], io = {}) => {
 
   // `--fix` runs the mechanical repair first, so a mistyped prop or a wrong
   // relative path is corrected by the tool that can prove the correction and
-  // never reaches the agent as work to do.
+  // never reaches the agent as work to do. Spacing normalises the same way:
+  // the formatter decides it, so it is repaired before the format gate reads.
   if (argv.includes("--fix")) {
     const fix = await auditFix(["--root", root], { print });
-    if (fix.changed.length) {
+    const formatted = await formatFiles(["--write", "--root", root], { print: () => {} });
+    if (fix.changed.length || formatted.findings.length) {
       print(
-        c("gray", `   ${fix.changed.length} file(s) rewritten — the gates below read the result.`),
+        c(
+          "gray",
+          `   ${fix.changed.length + formatted.findings.length} file(s) repaired — the gates below read the result.`,
+        ),
       );
     }
     print("");
@@ -804,7 +833,7 @@ export const watchVerify = ({ root, onReport, debounce = 500 }) => {
   let queued = false;
   let previous = "";
 
-  const tick = async () => {
+  const tick = async() => {
     if (running) {
       queued = true;
       return;

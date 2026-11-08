@@ -108,7 +108,7 @@ export const CircularBar = (props) => {
       const rad = (gradientAngle * Math.PI) / 180;
       const centre = currentWidth / 2;
       const dx = Math.sin(rad) * centre;
-      const dy = -Math.cos(rad) * centre;
+      const dy = - Math.cos(rad) * centre;
       const grad = ctx.createLinearGradient(
         centre - dx,
         centre - dy,
@@ -172,8 +172,8 @@ export const CircularBar = (props) => {
       getCenter(),
       getCenter(),
       getRadius(),
-      -Math.PI / 2,
-      -Math.PI / 2 + angleRad,
+      - Math.PI / 2,
+      - Math.PI / 2 + angleRad,
     );
     ctx.strokeStyle = getGradient();
     ctx.lineWidth = strokeWidth;
@@ -331,7 +331,7 @@ export const CircularBar = (props) => {
       "aria-valuemin": "0",
       "aria-valuemax": String(max),
       "aria-valuenow": String(Math.min(value, max)),
-      ...(label ? { "aria-label": label } : null),
+      ...(label ? { "aria-label" : label } : null),
       display: isFixedSize ? "inline-block" : "block",
       width: isFixedSize ? `${fixedSize}px` : "100%",
       height: isFixedSize ? `${fixedSize}px` : "auto",

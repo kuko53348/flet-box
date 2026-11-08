@@ -9,7 +9,7 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       console.log("Cache opened");
-      return cache.addAll(urlsToCache).catch((err) => {
+      return cache.addAll(urlsToCache).catch ((err) => {
         console.log("Cache addAll failed:", err);
       });
     }),
@@ -23,7 +23,7 @@ self.addEventListener("activate", (event) => {
       return Promise.all(
         keys
           .filter((key) => key !== CACHE_NAME)
-          .map((key) => caches.delete(key)),
+          .map((key) => caches.delete (key)),
       );
     }),
   );
@@ -36,7 +36,7 @@ self.addEventListener("fetch", (event) => {
       if (response) {
         return response;
       }
-      return fetch(event.request).catch(() => {
+      return fetch(event.request).catch (() => {
         return new Response("Offline content not available", {
           status: 404,
           statusText: "Not Found",

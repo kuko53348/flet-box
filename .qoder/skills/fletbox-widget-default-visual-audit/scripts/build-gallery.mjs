@@ -56,7 +56,7 @@ async function main() {
   await sleep(1 << 30);
 }
 
-main().catch((err) => {
+main().catch ((err) => {
   if (err instanceof Skip) {
     console.log(`SKIP: ${err.message}`);
     process.exit(0);

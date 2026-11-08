@@ -86,7 +86,7 @@ export class Dict {
    * @param {string} key - Key to remove.
    * @returns {Dict} This instance.
    */
-  delete(key) {
+  delete (key) {
     delete this._data[key];
     return this;
   }

@@ -149,7 +149,7 @@ export const assignProps = (widget, props) => {
       });
       widget._events = [];
     }
-    
+
     widget.onclick = null;
 
     if (props.events && Object.keys(props.events).length > 0) {

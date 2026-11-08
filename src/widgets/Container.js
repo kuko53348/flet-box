@@ -26,12 +26,12 @@ export const Container = (props = {}) => {
   // still wins, which is how a stretchable body keeps working.
   const flexDefaults =
     flex === undefined && flexGrow === undefined && flexShrink === undefined
-      ? { flexShrink: 0 }
+      ? { flexShrink : 0 }
       : { flex, flexGrow, flexShrink };
 
   // FIX [CONTAINER-1]: `expand` was documented but never applied.
   // It maps to `flex: 1` so the container fills available space in its parent.
-  const expandProps = expand ? { flex: 1, flexShrink: 1 } : {};
+  const expandProps = expand ? { flex : 1, flexShrink: 1 } : {};
 
   return WidgetFactory({
     tag: "div",

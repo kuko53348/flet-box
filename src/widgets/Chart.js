@@ -38,7 +38,7 @@ const niceStep = (rough) => {
  * @returns {number}
  */
 const stepDecimals = (step) =>
-  Math.max(0, Math.min(6, -Math.floor(Math.log10(step))));
+  Math.max(0, Math.min(6, - Math.floor(Math.log10(step))));
 
 /**
  * Creates a Chart widget rendered on an HTML5 `<canvas>` element.

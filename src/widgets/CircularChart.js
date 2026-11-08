@@ -16,7 +16,7 @@ export const CircularChart = (props) => {
     innerRadius = null,
     rounded = false,
     cornerRadius = 0,
-    startAngle = -Math.PI / 2,
+    startAngle = - Math.PI / 2,
     endAngle = null,
     animate = true,
     animationDuration = 1000,
@@ -58,7 +58,7 @@ export const CircularChart = (props) => {
   if (semiCircle) {
     switch (semiCircle) {
       case "top":
-        startAngle = -Math.PI;
+        startAngle = - Math.PI;
         endAngle = 0;
         break;
       case "bottom":
@@ -66,7 +66,7 @@ export const CircularChart = (props) => {
         endAngle = Math.PI;
         break;
       case "left":
-        startAngle = -Math.PI / 2;
+        startAngle = - Math.PI / 2;
         endAngle = Math.PI / 2;
         break;
       case "right":

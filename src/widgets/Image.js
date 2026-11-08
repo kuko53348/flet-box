@@ -74,7 +74,7 @@ export const Image = (props) => {
   const img = WidgetFactory({
     tag: "img",
     widgetName: "Image",
-    ...(circular ? { borderRadius: "50%" } : null),
+    ...(circular ? { borderRadius : "50%" } : null),
     ...rest,
   });
 

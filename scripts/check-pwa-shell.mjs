@@ -97,19 +97,19 @@ const bootWorker = (src, routes) => {
     fetch: (input) => network(typeof input === "string" ? input : input.url),
     Response: { error: () => ({ type: "error", ok: false, status: 500, body: "error" }) },
     caches: {
-      open: async (name) => ({
-        put: async (req, res) => { openStore(name).set(entryKey(req), res); },
-        match: async (req) => openStore(name).get(entryKey(req)),
+      open: async(name) => ({
+        put: async(req, res) => { openStore(name).set(entryKey(req), res); },
+        match: async(req) => openStore(name).get(entryKey(req)),
       }),
-      keys: async () => [...stores.keys()],
-      delete: async (name) => stores.delete(name),
+      keys: async() => [...stores.keys()],
+      delete: async(name) => stores.delete (name),
     },
   };
   sandbox.globalThis = sandbox;
   vm.createContext(sandbox);
   vm.runInContext(src, sandbox, { filename: "service-worker.js" });
 
-  const fire = async (name, event) => {
+  const fire = async(name, event) => {
     listeners[name](event);
     if (event.pending) await event.pending;
   };
@@ -119,7 +119,7 @@ const bootWorker = (src, routes) => {
       const event = { waitUntil: (p) => { event.pending = p; } };
       return fire("install", event);
     },
-    fetchWith: async (req) => {
+    fetchWith: async(req) => {
       const event = { request: req, respondWith: (p) => { event.pending = p; } };
       await fire("fetch", event);
       return event.pending;

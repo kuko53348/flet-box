@@ -21,7 +21,7 @@ mkdirSync(OUT_DIR, { recursive: true });
 const written = [];
 const problems = [];
 
-await withBrowser(async (browser) => {
+await withBrowser(async(browser) => {
   for (const theme of themes) {
     const { page, problems: channel } = await openPage(browser, { theme, width, height: 1000, deviceScaleFactor: 2 });
     for (const route of routes) {
@@ -52,7 +52,7 @@ await withBrowser(async (browser) => {
       if (painted.errors) problems.push(`${label}: ${painted.errors} example(s) threw in the browser`);
       written.push({ [label]: painted });
     }
-    await page.close().catch(() => {});
+    await page.close().catch (() => {});
   }
 });
 

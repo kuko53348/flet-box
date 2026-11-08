@@ -480,7 +480,7 @@ const foldArithmetic = (tokens) => {
   const unary = () => {
     if (tokens[i]?.type === "-") {
       i++;
-      return -unary();
+      return - unary();
     }
     if (tokens[i]?.type === "+") {
       i++;
@@ -1532,7 +1532,7 @@ const resolveIdent = (name, scope, pos, visited) => {
       if (visited.has(key)) return null;
       visited.add(key);
       const resolved = resolveExpr(b.init, cur, b.declOffset, visited);
-      visited.delete(key);
+      visited.delete (key);
       return resolved === null ? b.init : resolved;
     }
     cur = cur.parent;
@@ -1654,7 +1654,7 @@ const checkFile = (file, ctx) => {
     if (max) return true;
     const width = call.props.get("width");
     if (!width) return false;
-    return !/['"]?100%|['"]?\d{4,}|stretch/.test(width.value);
+    return!/['"]?100%|['"]?\d{4,}|stretch/.test(width.value);
   };
 
   for (const call of calls) {
@@ -2114,7 +2114,7 @@ export const tokenTable = (tokens, contrast) => {
  * @param {{print?: (line: string) => void}} [io]
  * @returns {Promise<{findings: object[], exitCode: number}>}
  */
-export const checkUi = async (argv = [], io = {}) => {
+export const checkUi = async(argv = [], io = {}) => {
   const print = io.print ?? ((line) => console.log(line));
   const rootIndex = argv.indexOf("--root");
   const root = path.resolve(
@@ -2158,7 +2158,7 @@ export const checkUi = async (argv = [], io = {}) => {
   const declaredProps = (widget) => {
     if (!cache.has(widget)) {
       const props = resolveInterfaceProps(api.interfaces, `${widget}Props`);
-      cache.set(widget, new Set([...(props?.keys?.() ?? [])]));
+      cache.set(widget, new Set([...(props?.keys?. () ?? [])]));
     }
     return cache.get(widget);
   };

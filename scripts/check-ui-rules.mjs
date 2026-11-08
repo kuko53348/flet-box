@@ -36,7 +36,7 @@ const failures = [];
  * @param {string} source
  * @returns {Promise<{ui: object[], structure: object[]}>}
  */
-const scan = async (source) => {
+const scan = async(source) => {
   fs.rmSync(scratch, { recursive: true, force: true });
   fs.mkdirSync(path.join(scratch, "src"), { recursive: true });
   fs.writeFileSync(path.join(scratch, "src", "app.js"), source, "utf8");
@@ -49,7 +49,7 @@ const scan = async (source) => {
  * @param {string} name
  * @param {() => void | Promise<void>} fn
  */
-const check = async (name, fn) => {
+const check = async(name, fn) => {
   try {
     await fn();
     console.log(`  ok   ${name}`);
@@ -68,7 +68,7 @@ const hit = (findings, code) => findings.find((item) => item.code === code);
 
 // 1 — a hex value outside the theme.
 
-await check("RAW_COLOR fires on a hand-typed colour", async () => {
+await check("RAW_COLOR fires on a hand-typed colour", async() => {
   const { ui } = await scan(
     'import { Text } from "flet-box";\nexport const t = () => Text({ text: "Hi", color: "#4f46e5" });\n',
   );
@@ -77,7 +77,7 @@ await check("RAW_COLOR fires on a hand-typed colour", async () => {
   assert.ok(found.line >= 1, "the finding has no line to point at");
 });
 
-await check("RAW_COLOR accepts a token", async () => {
+await check("RAW_COLOR accepts a token", async() => {
   const { ui } = await scan(
     'import { Text, colors } from "flet-box";\nexport const t = () => Text({ text: "Hi", color: colors.primary });\n',
   );
@@ -86,35 +86,35 @@ await check("RAW_COLOR accepts a token", async () => {
 
 // 2 — a value that is not on the 8-based scale.
 
-await check("OFF_SCALE_SPACING fires on a spacing that is not on the scale", async () => {
+await check("OFF_SCALE_SPACING fires on a spacing that is not on the scale", async() => {
   const { ui } = await scan(
     'import { Container } from "flet-box";\nexport const c = () => Container({ padding: 13 });\n',
   );
   assert.ok(hit(ui, "OFF_SCALE_SPACING"), "13 was accepted as spacing");
 });
 
-await check("OFF_SCALE_SPACING accepts a step of the scale", async () => {
+await check("OFF_SCALE_SPACING accepts a step of the scale", async() => {
   const { ui } = await scan(
     'import { Container } from "flet-box";\nexport const c = () => Container({ padding: 16 });\n',
   );
   assert.equal(hit(ui, "OFF_SCALE_SPACING"), undefined, "16 was reported as off the scale");
 });
 
-await check("OFF_SCALE_TYPE fires on a type size that is not on the scale", async () => {
+await check("OFF_SCALE_TYPE fires on a type size that is not on the scale", async() => {
   const { ui } = await scan(
     'import { Text } from "flet-box";\nexport const t = () => Text({ text: "Hi", size: 15 });\n',
   );
   assert.ok(hit(ui, "OFF_SCALE_TYPE"), "15 was accepted as a type size");
 });
 
-await check("OFF_SCALE_RADIUS fires on a radius that is not on the scale", async () => {
+await check("OFF_SCALE_RADIUS fires on a radius that is not on the scale", async() => {
   const { ui } = await scan(
     'import { Container } from "flet-box";\nexport const c = () => Container({ rounded: 13 });\n',
   );
   assert.ok(hit(ui, "OFF_SCALE_RADIUS"), "13 was accepted as a radius");
 });
 
-await check("OFF_SCALE_RADIUS accepts a radius on the scale", async () => {
+await check("OFF_SCALE_RADIUS accepts a radius on the scale", async() => {
   const { ui } = await scan(
     'import { Container } from "flet-box";\nexport const c = () => Container({ rounded: 16 });\n',
   );
@@ -133,7 +133,7 @@ for (const [declaration, widget, prop, code] of [
   ['const ALTO = 32;', 'Button', 'text: "Go", height: ALTO, onPress: () => {}', 'SMALL_TAP_TARGET'],
   ['const INK = "#ffffff"; const BG = "#ffffff";', 'Text', 'text: "Hi", color: INK, bgColor: BG', 'LOW_CONTRAST'],
 ]) {
-  await check(`${code} follows ${declaration}`, async () => {
+  await check(`${code} follows ${declaration}`, async() => {
     const { ui } = await scan(`import { ${widget} } from "flet-box";\n${declaration}\nexport const view = () => ${widget}({ ${prop} });\n`);
     const found = hit(ui, code);
     assert.ok(found, `${prop} hid ${code}`);
@@ -141,7 +141,7 @@ for (const [declaration, widget, prop, code] of [
   });
 }
 
-await check('a local constant, an alias and ASI still expose their literal', async () => {
+await check('a local constant, an alias and ASI still expose their literal', async() => {
   const { ui } = await scan(`import { Container } from "flet-box";
 export const view = () => {
   const BASE = 13
@@ -151,7 +151,7 @@ export const view = () => {
   assert.equal(hit(ui, 'OFF_SCALE_SPACING')?.line, 5);
 });
 
-await check('on-scale constants, quoted numbers and token aliases stay clean', async () => {
+await check('on-scale constants, quoted numbers and token aliases stay clean', async() => {
   const { ui } = await scan(`import { Container, Text, colors } from "flet-box";
 const PAD = 16, RADIO = 12;
 const TIPO = 14;
@@ -180,7 +180,7 @@ for (const body of [
   'export const view = () => Container({ padding: flag ? PAD : 16 });',
   'export const view = () => Container({ padding: compute(PAD) });',
 ]) {
-  await check(`does not guess bindings/runtime values: ${body}`, async () => {
+  await check(`does not guess bindings/runtime values: ${body}`, async() => {
     const { ui } = await scan(`import { Container } from "flet-box";\nconst PAD = 13;\n${body}`);
     assert.equal(hit(ui, 'OFF_SCALE_SPACING'), undefined);
   });
@@ -200,7 +200,7 @@ for (const source of [
   'const sample = `const PAD = 13;`; Container({ padding: PAD });',
   '// const PAD = 13;\nContainer({ padding: PAD });',
 ]) {
-  await check(`leaves unsupported declarations unknown: ${source}`, async () => {
+  await check(`leaves unsupported declarations unknown: ${source}`, async() => {
     const { ui } = await scan(`import { Container } from "flet-box";\n${source}`);
     assert.equal(hit(ui, 'OFF_SCALE_SPACING'), undefined);
   });
@@ -208,7 +208,7 @@ for (const source of [
 
 // 3 — a button that shows a glyph and no name.
 
-await check("ICON_ONLY_CONTROL fires on a button with an icon and no name", async () => {
+await check("ICON_ONLY_CONTROL fires on a button with an icon and no name", async() => {
   const { ui } = await scan(
     'import { Button, Container } from "flet-box";\nexport const c = () => Container({ children: [Button({ icon: "add" })] });\n',
   );
@@ -217,14 +217,14 @@ await check("ICON_ONLY_CONTROL fires on a button with an icon and no name", asyn
   assert.ok(found.detail.length > 40, "the finding carries no advice");
 });
 
-await check("ICON_ONLY_CONTROL accepts a button named with aria-label", async () => {
+await check("ICON_ONLY_CONTROL accepts a button named with aria-label", async() => {
   const { ui } = await scan(
     'import { Button, Container } from "flet-box";\nexport const c = () => Container({ children: [Button({ icon: "add", "aria-label": "Add" })] });\n',
   );
   assert.equal(hit(ui, "ICON_ONLY_CONTROL"), undefined, "a named button was reported");
 });
 
-await check("ICON_ONLY_CONTROL accepts a button with words", async () => {
+await check("ICON_ONLY_CONTROL accepts a button with words", async() => {
   const { ui } = await scan(
     'import { Button, Container } from "flet-box";\nexport const c = () => Container({ children: [Button({ icon: "add", text: "Add" })] });\n',
   );
@@ -233,7 +233,7 @@ await check("ICON_ONLY_CONTROL accepts a button with words", async () => {
 
 // 4 — a control too small for a finger.
 
-await check("SMALL_TAP_TARGET fires on a pressable control under 40", async () => {
+await check("SMALL_TAP_TARGET fires on a pressable control under 40", async() => {
   const { ui } = await scan(
     'import { Button } from "flet-box";\nexport const b = () => Button({ text: "Save", onPress: () => {}, height: 30 });\n',
   );
@@ -242,7 +242,7 @@ await check("SMALL_TAP_TARGET fires on a pressable control under 40", async () =
   assert.ok(found.detail.length > 20, "the finding carries no advice");
 });
 
-await check("SMALL_TAP_TARGET accepts a control of 40", async () => {
+await check("SMALL_TAP_TARGET accepts a control of 40", async() => {
   const { ui } = await scan(
     'import { Button } from "flet-box";\nexport const b = () => Button({ text: "Save", onPress: () => {}, height: 40 });\n',
   );
@@ -251,14 +251,14 @@ await check("SMALL_TAP_TARGET accepts a control of 40", async () => {
 
 // 5 — a field with no name.
 
-await check("UNLABELED_FIELD fires on a field with neither label nor placeholder", async () => {
+await check("UNLABELED_FIELD fires on a field with neither label nor placeholder", async() => {
   const { ui } = await scan(
     'import { Input } from "flet-box";\nexport const i = () => Input({ value: "" });\n',
   );
   assert.ok(hit(ui, "UNLABELED_FIELD"), "a nameless field was accepted");
 });
 
-await check("UNLABELED_FIELD accepts a field with a label", async () => {
+await check("UNLABELED_FIELD accepts a field with a label", async() => {
   const { ui } = await scan(
     'import { Input } from "flet-box";\nexport const i = () => Input({ label: "Email", value: "" });\n',
   );
@@ -267,7 +267,7 @@ await check("UNLABELED_FIELD accepts a field with a label", async () => {
 
 // 6 — markup written by hand.
 
-await check("HAND_WRITTEN_DOM fires on innerHTML in app code", async () => {
+await check("HAND_WRITTEN_DOM fires on innerHTML in app code", async() => {
   const { structure } = await scan(
     'const el = document.getElementById("root");\nel.innerHTML = "<b>Hi</b>";\n',
   );
@@ -276,7 +276,7 @@ await check("HAND_WRITTEN_DOM fires on innerHTML in app code", async () => {
   assert.equal(found.severity, "error");
 });
 
-await check("HAND_WRITTEN_DOM accepts a screen built with widgets", async () => {
+await check("HAND_WRITTEN_DOM accepts a screen built with widgets", async() => {
   const { structure } = await scan(
     'import { Container, Text } from "flet-box";\nexport const c = () => Container({ child: Text({ text: "Hi" }) });\n',
   );

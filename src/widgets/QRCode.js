@@ -19,22 +19,22 @@ import { WidgetFactory } from "../widget-factory/index.js";
 /** Error correction capacity tables [version][ecLevel] = { totalCodewords, ecCodewordsPerBlock, blocks } */
 const EC_TABLE = {
   // [totalDataCodewords, ecPerBlock, blocks]
-  1:  { L: [19, 7, 1],  M: [16, 10, 1], Q: [13, 13, 1], H: [9,  17, 1] },
-  2:  { L: [34, 10, 1], M: [28, 16, 1], Q: [22, 22, 1], H: [16, 28, 1] },
-  3:  { L: [55, 15, 1], M: [44, 26, 1], Q: [34, 18, 2], H: [26, 22, 2] },
-  4:  { L: [80, 20, 1], M: [64, 18, 2], Q: [48, 26, 2], H: [36, 16, 4] },
-  5:  { L: [108,26, 1], M: [86, 24, 2], Q: [62, 18, 4], H: [46, 22, 2] }, // simplified
-  6:  { L: [136,18, 2], M: [108,16, 4], Q: [76, 24, 4], H: [60, 28, 4] },
-  7:  { L: [156,20, 2], M: [124,18, 4], Q: [88, 18, 6], H: [66, 26, 4] },
-  8:  { L: [194,24, 2], M: [154,22, 2], Q: [110,22, 4], H: [86, 26, 4] },
-  9:  { L: [232,30, 2], M: [182,22, 3], Q: [132,20, 4], H: [100,24, 4] },
-  10: { L: [274,18, 4], M: [216,26, 4], Q: [154,24, 6], H: [122,28, 6] },
+  1: { L: [19, 7, 1], M: [16, 10, 1], Q: [13, 13, 1], H: [9, 17, 1] },
+  2: { L: [34, 10, 1], M: [28, 16, 1], Q: [22, 22, 1], H: [16, 28, 1] },
+  3: { L: [55, 15, 1], M: [44, 26, 1], Q: [34, 18, 2], H: [26, 22, 2] },
+  4: { L: [80, 20, 1], M: [64, 18, 2], Q: [48, 26, 2], H: [36, 16, 4] },
+  5: { L: [108, 26, 1], M: [86, 24, 2], Q: [62, 18, 4], H: [46, 22, 2] }, // simplified
+  6: { L: [136, 18, 2], M: [108, 16, 4], Q: [76, 24, 4], H: [60, 28, 4] },
+  7: { L: [156, 20, 2], M: [124, 18, 4], Q: [88, 18, 6], H: [66, 26, 4] },
+  8: { L: [194, 24, 2], M: [154, 22, 2], Q: [110, 22, 4], H: [86, 26, 4] },
+  9: { L: [232, 30, 2], M: [182, 22, 3], Q: [132, 20, 4], H: [100, 24, 4] },
+  10: { L: [274, 18, 4], M: [216, 26, 4], Q: [154, 24, 6], H: [122, 28, 6] },
 };
 
 /** Alignment pattern center positions per version (version 1 has none) */
 const ALIGN_POS = {
-  1: [], 2: [6,18], 3: [6,22], 4: [6,26], 5: [6,30],
-  6: [6,34], 7: [6,22,38], 8: [6,24,42], 9: [6,26,46], 10: [6,28,50],
+  1: [], 2: [6, 18], 3: [6, 22], 4: [6, 26], 5: [6, 30],
+  6: [6, 34], 7: [6, 22, 38], 8: [6, 24, 42], 9: [6, 26, 46], 10: [6, 28, 50],
 };
 
 /** GF(256) tables for Reed-Solomon (generator polynomial x^8+x^4+x^3+x^2+1 = 0x11D) */
@@ -45,8 +45,8 @@ const GF_LOG = new Uint8Array(256);
   for (let i = 0; i < 255; i++) {
     GF_EXP[i] = x;
     GF_LOG[x] = i;
-    x <<= 1;
-    if (x & 0x100) x ^= 0x11D;
+    x<<=1;
+    if (x & 0x100) x^=0x11D;
   }
   for (let i = 255; i < 512; i++) GF_EXP[i] = GF_EXP[i - 255];
 })();
@@ -61,7 +61,7 @@ function rsGenerator(n) {
     const result = new Array(g.length + factor.length - 1).fill(0);
     for (let j = 0; j < g.length; j++)
       for (let k = 0; k < factor.length; k++)
-        result[j + k] ^= gfMul(g[j], factor[k]);
+        result[j + k]^=gfMul(g[j], factor[k]);
     g = result;
   }
   return g;
@@ -75,7 +75,7 @@ function rsEncode(data, ecCount) {
     const coeff = msg[i];
     if (coeff !== 0) {
       for (let j = 1; j < gen.length; j++) {
-        msg[i + j] ^= gfMul(gen[j], coeff);
+        msg[i + j]^=gfMul(gen[j], coeff);
       }
     }
   }
@@ -115,7 +115,7 @@ function buildQRMatrix(text, ecLevel = "M") {
   const pushBits = (val, len) => {
     for (let i = len - 1; i >= 0; i--) bits.push((val >> i) & 1);
   };
-  pushBits(0b0100, 4);           // mode indicator: byte
+  pushBits(0b0100, 4); // mode indicator: byte
   // Character count: 8 bits for versions 1-9, 16 bits for versions 10-40
   // (ISO/IEC 18004). Emitting 8 bits at version 10 misaligns every later bit.
   pushBits(bytes.length, version < 10 ? 8 : 16);
@@ -128,7 +128,7 @@ function buildQRMatrix(text, ecLevel = "M") {
   const padBytes = [0xEC, 0x11];
   let padIdx = 0;
   while (bits.length < dataCodewords * 8) {
-    pushBits(padBytes[padIdx++ % 2], 8);
+    pushBits(padBytes[padIdx++% 2], 8);
   }
 
   // 4. Convert bits to data codewords
@@ -272,7 +272,7 @@ function buildQRMatrix(text, ecLevel = "M") {
     ][maskId];
     for (let r = 0; r < size; r++)
       for (let c = 0; c < size; c++)
-        if (!reserved[r][c] && fn(r, c)) m[r][c] ^= 1;
+        if (!reserved[r][c] && fn(r, c)) m[r][c]^=1;
   };
 
   const penaltyScore = (m) => {
@@ -282,8 +282,8 @@ function buildQRMatrix(text, ecLevel = "M") {
       for (let isCol = 0; isCol < 2; isCol++) {
         let run = 1;
         for (let i = 1; i < size; i++) {
-          const prev = isCol ? m[i-1][r] : m[r][i-1];
-          const cur  = isCol ? m[i][r]   : m[r][i];
+          const prev = isCol ? m[i - 1][r] : m[r][i - 1];
+          const cur = isCol ? m[i][r] : m[r][i];
           if (cur === prev) { run++; if (run === 5) score += 3; else if (run > 5) score++; }
           else run = 1;
         }
@@ -292,22 +292,22 @@ function buildQRMatrix(text, ecLevel = "M") {
     // Rule 2: 2×2 blocks
     for (let r = 0; r < size - 1; r++)
       for (let c = 0; c < size - 1; c++)
-        if (m[r][c] === m[r][c+1] && m[r][c] === m[r+1][c] && m[r][c] === m[r+1][c+1])
+        if (m[r][c] === m[r][c + 1] && m[r][c] === m[r + 1][c] && m[r][c] === m[r + 1][c + 1])
           score += 3;
     // Rule 3: finder-like patterns
-    const pat1 = [1,0,1,1,1,0,1,0,0,0,0], pat2 = [0,0,0,0,1,0,1,1,1,0,1];
+    const pat1 = [1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0], pat2 = [0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1];
     for (let r = 0; r < size; r++) {
       for (let c = 0; c <= size - 11; c++) {
         let m1 = true, m2 = true;
         for (let k = 0; k < 11; k++) {
-          if (m[r][c+k] !== pat1[k]) m1 = false;
-          if (m[r][c+k] !== pat2[k]) m2 = false;
+          if (m[r][c + k] !== pat1[k]) m1 = false;
+          if (m[r][c + k] !== pat2[k]) m2 = false;
         }
         if (m1 || m2) score += 40;
         m1 = true; m2 = true;
         for (let k = 0; k < 11; k++) {
-          if (m[c+k][r] !== pat1[k]) m1 = false;
-          if (m[c+k][r] !== pat2[k]) m2 = false;
+          if (m[c + k][r] !== pat1[k]) m1 = false;
+          if (m[c + k][r] !== pat2[k]) m2 = false;
         }
         if (m1 || m2) score += 40;
       }
@@ -334,8 +334,8 @@ function buildQRMatrix(text, ecLevel = "M") {
   // Write format information
   const writeFormat = (bits15) => {
     const fmtPositions = [
-      [[8,0],[8,1],[8,2],[8,3],[8,4],[8,5],[8,7],[8,8],[7,8],[5,8],[4,8],[3,8],[2,8],[1,8],[0,8]],
-      [[size-1,8],[size-2,8],[size-3,8],[size-4,8],[size-5,8],[size-6,8],[size-7,8],[8,size-8],[8,size-7],[8,size-6],[8,size-5],[8,size-4],[8,size-3],[8,size-2],[8,size-1]],
+      [[8, 0], [8, 1], [8, 2], [8, 3], [8, 4], [8, 5], [8, 7], [8, 8], [7, 8], [5, 8], [4, 8], [3, 8], [2, 8], [1, 8], [0, 8]],
+      [[size - 1, 8], [size - 2, 8], [size - 3, 8], [size - 4, 8], [size - 5, 8], [size - 6, 8], [size - 7, 8], [8, size - 8], [8, size - 7], [8, size - 6], [8, size - 5], [8, size - 4], [8, size - 3], [8, size - 2], [8, size - 1]],
     ];
     for (let copy = 0; copy < 2; copy++)
       for (let i = 0; i < 15; i++)
@@ -347,7 +347,7 @@ function buildQRMatrix(text, ecLevel = "M") {
   let fmtBCH = fmtData << 10;
   const poly = 0b10100110111;
   for (let i = 14; i >= 10; i--)
-    if ((fmtBCH >> i) & 1) fmtBCH ^= poly << (i - 10);
+    if ((fmtBCH >> i) & 1) fmtBCH^=poly << (i - 10);
   writeFormat(((fmtData << 10) | fmtBCH) ^ 0b101010000010010);
 
   return { matrix: mat, size };
@@ -469,8 +469,8 @@ export const QRCode = (props) => {
   };
 
   container.getDataURL = () => canvas.toDataURL("image/png");
-  container.getCanvas  = () => canvas;
-  container.getValue   = () => currentValue;
+  container.getCanvas = () => canvas;
+  container.getValue = () => currentValue;
 
   return container;
 };

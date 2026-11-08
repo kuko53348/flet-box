@@ -63,7 +63,7 @@ const resolvePlugin = (explicit) => {
 const ensureInitialized = (plugin) => {
   if (!plugin || typeof plugin.initialize !== "function") return Promise.resolve();
   if (!initPromise) {
-    initPromise = Promise.resolve(plugin.initialize({})).catch((error) => {
+    initPromise = Promise.resolve(plugin.initialize({})).catch ((error) => {
       console.warn("[FletBox AdMob] initialize failed:", error);
     });
   }
@@ -219,7 +219,7 @@ export const AdMob = (props) => {
         bannerVisible = true;
         if (typeof onLoaded === "function") onLoaded(container);
       }),
-    ).catch((error) => {
+    ).catch ((error) => {
       if (disposed) return null;
       console.warn("[FletBox AdMob] showBanner failed:", error);
       if (typeof onFailed === "function") onFailed(error, container);
@@ -232,7 +232,7 @@ export const AdMob = (props) => {
     return withPlugin((plugin) => {
       const remove = plugin.removeBanner || plugin.hideBanner;
       return typeof remove === "function" ? Promise.resolve(remove.call(plugin)) : null;
-    }).catch(() => null);
+    }).catch (() => null);
   };
 
   const showFullScreen = (prepareProps, prepareName, showName) =>
@@ -248,7 +248,7 @@ export const AdMob = (props) => {
           if (typeof onDismissed === "function") onDismissed();
           return result;
         });
-    }).catch((error) => {
+    }).catch ((error) => {
       console.warn(`[FletBox AdMob] ${showName} failed:`, error);
       if (typeof onFailed === "function") onFailed(error, container);
       return null;
@@ -300,7 +300,7 @@ export const AdMob = (props) => {
     if (!currentAutoInitialize) return;
     const plugin = resolvePlugin(pluginProp);
     if (plugin && typeof plugin.removeBanner === "function") {
-      Promise.resolve(plugin.removeBanner()).catch(() => {});
+      Promise.resolve(plugin.removeBanner()).catch (() => {});
     }
   };
   container.onUnmount(dispose);

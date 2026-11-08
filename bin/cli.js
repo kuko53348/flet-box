@@ -15,6 +15,8 @@ import path from "path";
 import { createProject } from "./commands/create.js";
 import { checkApi } from "./commands/checkApi.js";
 import { checkUi } from "./commands/checkUi.js";
+import { checkLint } from "./commands/checkLint.js";
+import { formatFiles } from "./commands/format.js";
 import { verify, watchVerify, formatReport } from "./commands/verify.js";
 import { metrics } from "./commands/metrics.js";
 import { report } from "./commands/report.js";
@@ -95,8 +97,14 @@ ${cmd("check-ui", "Clean-UI gate: tokens, 8-based scale, tap targets, WCAG contr
 ${cmd("   └─ --tokens", "print the measured contrast of every color token")}
 ${cmd("   └─ --strict", "fail on contrast warnings too")}
 ${cmd("   └─ alias", "ui | checkUi")}
+${cmd("lint", "Lint rules a formatter does not decide (tabs, final newline)")}
+${cmd("   └─ --json", "the findings as data")}
+${cmd("format", "Normalise inter-token spacing; never re-indents")}
+${cmd("   └─ --write", "rewrite the files that need it")}
+${cmd("   └─ --json", "the findings as data")}
+${cmd("   └─ alias", "fmt")}
 ${cmd("verify", "Every gate at once: one report, one exit code")}
-${cmd("   └─ --only <gate>", "syntax | api | types | ui | structure | surface | tests")}
+${cmd("   └─ --only <gate>", "syntax | api | types | lint | format | ui | structure | surface | tests")}
 ${cmd("   └─ --no-tests", "the static gates only; the project's suites run alone")}
 ${cmd("   └─ --fix", "the mechanical repair first, then the gates")}
 ${cmd("   └─ --json", "the report as data")}
@@ -364,6 +372,21 @@ async function main() {
       case "checkUi":
       case "ui": {
         const { exitCode } = await checkUi(args.slice(1));
+        if (exitCode) process.exit(exitCode);
+        break;
+      }
+
+      case "lint":
+      case "check-lint":
+      case "checkLint": {
+        const { exitCode } = await checkLint(args.slice(1));
+        if (exitCode) process.exit(exitCode);
+        break;
+      }
+
+      case "format":
+      case "fmt": {
+        const { exitCode } = await formatFiles(args.slice(1));
         if (exitCode) process.exit(exitCode);
         break;
       }

@@ -26,7 +26,7 @@ const MIME = {
 /** Minimal static server rooted at the repo, on an ephemeral port. */
 export const startServer = (root) =>
   new Promise((done, fail) => {
-    const server = createServer(async (req, res) => {
+    const server = createServer(async(req, res) => {
       try {
         const urlPath = decodeURIComponent((req.url || "/").split("?")[0]);
         const target = join(root, normalize(urlPath).replace(/^(\.\.[/\\])+/, ""));
@@ -79,7 +79,7 @@ export const resolveChrome = () =>
  * host, and the probe mounts its own fixed overlay, so it needs `src/index.js`
  * and nothing else from the app.
  */
-export const openProbe = async ({ root, scale = 2 }) => {
+export const openProbe = async({ root, scale = 2 }) => {
   if (!existsSync(join(root, "src", "index.js")) || !existsSync(join(root, "index.html"))) {
     fail(`not a FletBox checkout: ${root} has no src/index.js + index.html (pass --root <repo>)`);
   }

@@ -50,9 +50,9 @@ export const Icon = (props) => {
     ...(isNamed
       ? isPressable
         ? null
-        : { role: "img" }
+        : { role : "img" }
       : // An app that hid it deliberately keeps its own answer.
-        rest["aria-hidden"] === undefined ? { "aria-hidden": "true" } : null),
+        rest["aria-hidden"] === undefined ? { "aria-hidden" : "true" } : null),
     ...rest,
   });
 };

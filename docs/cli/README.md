@@ -672,7 +672,7 @@ which one failed.
 
 ```bash
 flet-box verify                  # every gate and every suite, one report
-flet-box verify --only syntax    # one gate: syntax | api | types | ui | structure | surface | tests
+flet-box verify --only lint      # one gate: syntax | api | types | lint | format | ui | structure | surface | tests
 flet-box verify --only tests     # the project's own suites, nothing else
 flet-box verify --fix            # the mechanical repair first, then the gates
 flet-box verify --json           # the report as data
@@ -690,6 +690,9 @@ The gates, and what each one owns:
 | --- | --- |
 | `syntax` | Every module loads. Each `.js`/`.mjs`/`.cjs` outside `node_modules`, `www` and `dist` is handed to `node --check` — the parser the runtime uses — and a parse error is reported at `file:line:column` with the offending source line, a caret under the character and a hint: an unclosed brace, a backtick that never closes, a smart quote that only looks like a quote. |
 | `api` | The code only names widgets and props that exist, and its own modules resolve each other. |
+| `types` | The JSDoc/`index.d.ts` contract holds under the real TypeScript compiler. The project's own `jsconfig.json` is what the editor reads, so the gate reports the same diagnostics the editor underlines — a prop the declaration forgot, a `widget.update()` the shape rejects — at `file:line:column`. Skipped when neither a jsconfig exists nor TypeScript is installed; never a silent pass. |
+| `lint` | The rules a formatter does not decide: no trailing whitespace, no tab indentation, LF (not CRLF) line endings, and a final newline. Every rule is mechanical, and `--write`-able ones say so. |
+| `format` | Every module is in canonical form. The formatter normalises the whitespace *between* tokens — an operator takes its space, a call keeps its parens glued, a string keeps its quotes — and never re-indents, never wraps, never moves a line it did not start. A file the formatter would change fails the gate; `flet-box format --write` repairs it. |
 | `ui` | The code is on the tokens, on the scale, and every control has a name. |
 | `structure` | Two of your modules do not import each other in a circle, every module lives where the project expects it, and no screen writes the DOM by hand. |
 | `surface` | Every prop a widget reads is declared, and every declared prop is read. |
@@ -708,6 +711,47 @@ only form in which an agent can act on them.
 mistyped prop, a wrong relative path, a missing import — and then the gates
 read the result. A typo is mechanical, and it should never reach you as work
 to do.
+
+## Lint
+
+`flet-box lint` runs the rules the formatter does not decide, and exits `1`
+when any of them fires. The four:
+
+| Code | Rule | Auto-fix |
+| --- | --- | --- |
+| `TRAILING_WS` | A line ends with a space or tab. | `flet-box format --write` |
+| `TAB_INDENT` | A line is indented with a tab; the spaces of two are the project style. | Never — the formatter does not move an indent. |
+| `CRLF` | The file uses CRLF line endings. | `flet-box format --write` |
+| `NO_FINAL_NL` | The file does not end with a newline. | `flet-box format --write` |
+
+```bash
+flet-box lint
+flet-box lint --json
+```
+
+Aliases: `check-lint`, `checkLint`. The whitespace that lives *inside* a
+multi-line string or template literal is content, not style, and is never
+flagged: a template that ships a generated screen keeps the spaces its
+screen needs.
+
+## Format
+
+`flet-box format` normalises the whitespace *between* tokens — an operator
+takes its space, a call keeps its parens glued, a ternary colon keeps its
+space and a property colon does not, a unary `-1` stays glued — and never
+rewrites a token's text: a string keeps its quotes, a comment keeps its
+words, a number keeps its digits. Line structure is the author's: it never
+wraps, splits, joins or re-indents, so a formatter run rewrites spacing only,
+the output is idempotent (formatting formatted code is a no-op), and the diff
+against the input is small.
+
+```bash
+flet-box format            # list the files that need it (exit 1 if any)
+flet-box format --write    # rewrite them in place
+flet-box format --json
+```
+
+Alias: `fmt`.
 
 ## The north metric
 

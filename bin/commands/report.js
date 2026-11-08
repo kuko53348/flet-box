@@ -125,7 +125,7 @@ const widgetsIn = (text, api) => {
  * @param {{root?: string, tests?: boolean, print?: (line: string) => void}} [options]
  * @returns {Promise<object>}
  */
-export const buildReport = async ({ root = process.cwd(), tests = false, print } = {}) => {
+export const buildReport = async({ root = process.cwd(), tests = false, print } = {}) => {
   const absoluteRoot = path.resolve(root);
   const names = tests ? [...REPORT_GATES, "tests"] : REPORT_GATES;
   const run = await runGates(absoluteRoot, names, tests ? { print } : {});
@@ -204,7 +204,7 @@ export const buildReport = async ({ root = process.cwd(), tests = false, print }
     .filter((row) => row.total > 0)
     .sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));
   const widgets = ledger.length
-    ? { total: ledger.length, clean: ledger.length - withDebt.length, withDebt }
+    ? { total : ledger.length, clean: ledger.length - withDebt.length, withDebt }
     : null;
 
   let metrics = null;
@@ -804,7 +804,7 @@ ${
  * @param {{print?: (line: string) => void, root?: string}} [io]
  * @returns {Promise<{exitCode: number, report: object}>}
  */
-export const report = async (argv = [], io = {}) => {
+export const report = async(argv = [], io = {}) => {
   const print = io.print ?? ((line) => console.log(line));
   const rootIndex = argv.indexOf("--root");
   const root = path.resolve(

@@ -70,6 +70,12 @@ const MODULE_FILE = /\.(?:mjs|cjs|js)$/;
  * Only the message is matched — the caret and the source line are the parser's
  * own and are printed as it wrote them.
  */
+/**
+ * Each entry is a [message pattern, hint] pair; the pattern is what the
+ * parser says, the hint is the fix an agent should make.
+ *
+ * @type {[RegExp, string][]}
+ */
 const HINTS = [
   [
     /Unexpected end of input|Unexpected token '\}'/,
@@ -162,7 +168,7 @@ const hintFor = (message) =>
  *
  * @param {string} file Absolute path, as it was passed to the parser.
  * @param {string} stderr
- * @returns {object|null} null when the output does not name the file
+ * @returns {SyntaxFailure|null} null when the output does not name the file
  */
 export const parseFailure = (file, stderr) => {
   const lines = String(stderr).split(/\r?\n/);
@@ -200,9 +206,14 @@ export const parseFailure = (file, stderr) => {
  * and the end arrives inside it. The parity of the backticks says which one it
  * is, and that is the hint that fixes the line in one edit.
  *
- * @param {object} failure
+ * @param {SyntaxFailure} failure
  * @param {string} file
- * @returns {object}
+ * @returns {SyntaxFailure}
+ */
+/**
+ * One parse finding before the gate refines it.
+ *
+ * @typedef {{file: string, line: number, column: number, code: string, message: string, detail: string, suggestion: string}} SyntaxFailure
  */
 const refine = (failure, file) => {
   if (!/Unexpected end of input/.test(failure.message)) return failure;
@@ -265,10 +276,10 @@ const checkOne = (file) =>
  * @param {(item: T) => Promise<R>} worker
  * @returns {Promise<R[]>}
  */
-const pool = async (items, slots, worker) => {
+const pool = async(items, slots, worker) => {
   const results = new Array(items.length);
   let next = 0;
-  const run = async () => {
+  const run = async() => {
     while (next < items.length) {
       const index = next;
       next += 1;
@@ -286,8 +297,14 @@ const pool = async (items, slots, worker) => {
  * @param {{concurrency?: number}} [options]
  * @returns {Promise<object[]>}
  */
-export const scanSyntax = async (root, { concurrency = 8 } = {}) => {
+export const scanSyntax = async(root, { concurrency = 8 } = {}) => {
+  /**
+   * One parse finding; consumed by the `syntax` gate, which ships the shape
+   * to the report unchanged.
+   *
+   * @typedef {{file: string, line: number, column: number, code: string, message: string, detail: string, suggestion: string}} SyntaxFinding
+   */
   const files = syntaxFiles(root);
-  const findings = (await pool(files, concurrency, checkOne)).filter(Boolean);
+  const findings = /** @type {SyntaxFinding[]} */ ((await pool(files, concurrency, checkOne)).filter(Boolean));
   return findings.sort((a, b) => (a.file === b.file ? a.line - b.line : a.file.localeCompare(b.file)));
 };

@@ -80,7 +80,7 @@ const lngToWorldX = (lng, z) => ((lng + 180) / 360) * worldSizePx(z);
 
 /** Latitude → world Y (px) at zoom `z` (Mercator, clamped to ±85.0511°). */
 const latToWorldY = (lat, z) => {
-  const sin = Math.sin(clamp(lat, -MAX_LATITUDE, MAX_LATITUDE) * (Math.PI / 180));
+  const sin = Math.sin(clamp(lat, - MAX_LATITUDE, MAX_LATITUDE) * (Math.PI / 180));
   return (0.5 - Math.log((1 + sin) / (1 - sin)) / (4 * Math.PI)) * worldSizePx(z);
 };
 
@@ -88,7 +88,7 @@ const worldXToLng = (x, z) => (x / worldSizePx(z)) * 360 - 180;
 
 const worldYToLat = (y, z) => {
   const n = Math.PI * (1 - (2 * y) / worldSizePx(z));
-  return (180 / Math.PI) * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n)));
+  return (180 / Math.PI) * Math.atan(0.5 * (Math.exp(n) - Math.exp(- n)));
 };
 
 /**
@@ -113,13 +113,13 @@ const normalizePosition = (value) => {
   if (Array.isArray(value)) {
     const [lat, lng] = value;
     if (typeof lat !== "number" || typeof lng !== "number") return null;
-    return { lat: clamp(lat, -MAX_LATITUDE, MAX_LATITUDE), lng };
+    return { lat: clamp(lat, - MAX_LATITUDE, MAX_LATITUDE), lng };
   }
   if (typeof value !== "object") return null;
   const lat = value.lat ?? value.latitude;
   const lng = value.lng ?? value.longitude;
   if (typeof lat !== "number" || typeof lng !== "number") return null;
-  return { lat: clamp(lat, -MAX_LATITUDE, MAX_LATITUDE), lng };
+  return { lat: clamp(lat, - MAX_LATITUDE, MAX_LATITUDE), lng };
 };
 
 /** A bare position (array or `{lat, lng}`) instead of a `{position, …}` record. */
@@ -562,7 +562,7 @@ export const Maps = (inputProps = {}) => {
     const record = tiles.get(key);
     if (!record) return;
     record.el.remove();
-    tiles.delete(key);
+    tiles.delete (key);
   };
 
   const createTile = (key, x, y) => {
@@ -742,7 +742,7 @@ export const Maps = (inputProps = {}) => {
       if (offscreen) {
         if (el) {
           el.remove();
-          pinEls.delete(id);
+          pinEls.delete (id);
         }
         continue;
       }
@@ -792,7 +792,7 @@ export const Maps = (inputProps = {}) => {
     for (const [id, el] of Array.from(pinEls)) {
       if (live.has(id)) continue;
       el.remove();
-      pinEls.delete(id);
+      pinEls.delete (id);
     }
   };
 
@@ -908,7 +908,7 @@ export const Maps = (inputProps = {}) => {
       center = {
         lat: clamp(
           worldYToLat(latToWorldY(geo.lat, target) - (anchor.y - viewport.height / 2), target),
-          -MAX_LATITUDE,
+          - MAX_LATITUDE,
           MAX_LATITUDE,
         ),
         lng: wrapLng(
@@ -935,7 +935,7 @@ export const Maps = (inputProps = {}) => {
       lng: worldXToLng(lngToWorldX(center.lng, zoom) - dx, zoom),
       lat: worldYToLat(latToWorldY(center.lat, zoom) - dy, zoom),
     };
-    center = { lat: clamp(next.lat, -MAX_LATITUDE, MAX_LATITUDE), lng: wrapLng(next.lng) };
+    center = { lat: clamp(next.lat, - MAX_LATITUDE, MAX_LATITUDE), lng: wrapLng(next.lng) };
     invalidate();
   };
 
@@ -1062,9 +1062,9 @@ export const Maps = (inputProps = {}) => {
       // `panByPixels(dx, dy)` moves the CONTENT like a dragged pointer would, so
       // pointing the view east means pushing it west: the signs are inverted.
       ArrowUp: () => panByPixels(0, KEY_PAN_STEP),
-      ArrowDown: () => panByPixels(0, -KEY_PAN_STEP),
+      ArrowDown: () => panByPixels(0, - KEY_PAN_STEP),
       ArrowLeft: () => panByPixels(KEY_PAN_STEP, 0),
-      ArrowRight: () => panByPixels(-KEY_PAN_STEP, 0),
+      ArrowRight: () => panByPixels(- KEY_PAN_STEP, 0),
       "+": () => zoomAt(zoom + 1),
       "=": () => zoomAt(zoom + 1),
       "-": () => zoomAt(zoom - 1),
@@ -1343,7 +1343,7 @@ export const Maps = (inputProps = {}) => {
     }
     zoom = target;
     center = {
-      lat: clamp((box.south + box.north) / 2, -MAX_LATITUDE, MAX_LATITUDE),
+      lat: clamp((box.south + box.north) / 2, - MAX_LATITUDE, MAX_LATITUDE),
       lng: wrapLng((box.west + box.east) / 2),
     };
     invalidate();
@@ -1390,7 +1390,7 @@ export const Maps = (inputProps = {}) => {
     const node = pinEls.get(id);
     if (node) {
       node.remove();
-      pinEls.delete(id);
+      pinEls.delete (id);
     }
     scheduleRender();
     return container;

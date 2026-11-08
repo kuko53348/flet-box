@@ -31,8 +31,8 @@ const page = await browser.newPage();
 // so the dynamic import of `/src/index.js` would not resolve.
 await page.goto(`${base}/__probe__`, { waitUntil: "domcontentloaded" });
 
-const describe = async (source) =>
-  page.evaluate(async (code) => {
+const describe = async(source) =>
+  page.evaluate(async(code) => {
     const api = await import("/src/index.js");
     const warnings = [];
     for (const kind of ["warn", "error"]) {
@@ -69,12 +69,12 @@ const describe = async (source) =>
       computed: root
         ? (() => {
             const s = getComputedStyle(root);
-            return { display: s.display, visibility: s.visibility, opacity: s.opacity, flexWrap: s.flexWrap, boxShadow: s.boxShadow, pointerEvents: s.pointerEvents };
+            return { display : s.display, visibility: s.visibility, opacity: s.opacity, flexWrap: s.flexWrap, boxShadow: s.boxShadow, pointerEvents: s.pointerEvents };
           })()
         : null,
       childCounts: root
         ? {
-            buttons: root.querySelectorAll("button").length,
+            buttons : root.querySelectorAll("button").length,
             inputs: root.querySelectorAll("input").length,
             spans: root.querySelectorAll("span").length,
             total: root.querySelectorAll("*").length,

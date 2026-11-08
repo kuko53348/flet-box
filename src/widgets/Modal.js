@@ -134,7 +134,7 @@ const ModalHeader = ({
 
   return children.length
     ? Row({
-        alignItems: "center",
+        alignItems : "center",
         justifyContent: "space-between",
         padding: headerPadding || "16px 20px",
         backgroundColor: headerBgColor || "transparent",

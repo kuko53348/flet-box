@@ -59,7 +59,7 @@ const failures = [];
  * @param {string} name
  * @param {() => void | Promise<void>} fn
  */
-const check = async (name, fn) => {
+const check = async(name, fn) => {
   try {
     await fn();
     console.log(`  ok   ${name}`);

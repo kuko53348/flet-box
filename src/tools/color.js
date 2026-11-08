@@ -273,7 +273,7 @@ class Color {
    * @returns {boolean} `true` if the color is perceptually light
    */
   isLight() {
-    return !this.isDark();
+    return!this.isDark();
   }
 
   /**

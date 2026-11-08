@@ -40,7 +40,7 @@ export const Video = (props) => {
 
   // Add custom methods BEFORE calling the ref
   video.playVideo = () => {
-    nativePlay().catch((error) => console.warn("Video play failed:", error));
+    nativePlay().catch ((error) => console.warn("Video play failed:", error));
     return video;
   };
 

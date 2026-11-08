@@ -149,7 +149,7 @@ export const ThemePicker = (props = {}) => {
         ? [
             swatch,
             Text({
-              text: accent.label,
+              text : accent.label,
               size: LABEL_TEXT,
               color: off ? colors.textDisabled : colors.textSecondary,
             }),

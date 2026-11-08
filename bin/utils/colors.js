@@ -177,7 +177,7 @@ export const banner = (title, subtitle = "", opts = {}) =>
 export const dot = (color = "#34d399") => hex("●", color);
 
 // Typewriter effect: prints the text character by character (only on a TTY)
-export const typewriter = async (
+export const typewriter = async(
   text,
   { ms = 12, color = "#34d399" } = {},
 ) => {

@@ -73,7 +73,7 @@ export const FloatingActionButton = (props) => {
     transition: "all 0.2s ease",
     padding: extended ? `0 ${toREM(16)}` : 0,
     child: extended
-      ? Row({ alignItems: "center", gap: 8, children })
+      ? Row({ alignItems : "center", gap: 8, children })
       : children[0],
     ...rest,
   });

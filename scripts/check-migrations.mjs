@@ -43,7 +43,7 @@ const repoRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const scratch = fs.mkdtempSync(path.join(os.tmpdir(), "fletbox-migrations-"));
 
 const failures = [];
-const check = async (name, fn) => {
+const check = async(name, fn) => {
   try {
     await fn();
     console.log(`  ok   ${name}`);
@@ -121,7 +121,7 @@ const interfaces = parseInterfaces(dts);
 const deprecatedKeys = new Set();
 for (const [iface, names] of deprecated) {
   if (!iface.endsWith("Props")) continue;
-  const widget = iface.slice(0, -"Props".length);
+  const widget = iface.slice(0, - "Props".length);
   for (const name of names) deprecatedKeys.add(`${widget}.${name}`);
 }
 
@@ -330,7 +330,7 @@ export { a, b };
 // from two files — the cheatsheet it reads first and the example `unpack`
 // prints — and a retired name in either of them outlives every guide.
 
-await check("the cheatsheet an app reads marks every renamed prop", async () => {
+await check("the cheatsheet an app reads marks every renamed prop", async() => {
   const api = await loadApi(repoRoot);
   const text = fs.readFileSync(emitCheatsheet(api, scratch), "utf8");
   for (const row of DEPRECATED_PROPS) {
@@ -350,7 +350,7 @@ await check("the cheatsheet an app reads marks every renamed prop", async () => 
   }
 });
 
-await check("the paste-ready example never teaches a renamed prop", async () => {
+await check("the paste-ready example never teaches a renamed prop", async() => {
   for (const row of DEPRECATED_PROPS) {
     const lines = [];
     const { exitCode } = await unpack([row.widget, "--example", "--root", repoRoot], {

@@ -67,11 +67,11 @@ export const Chip = (props) => {
       ? {
           // The delete glyph carries the 40-unit target itself, so the row does
           // not need a second gutter above and below it.
-          paddingVertical: onDelete ? 0 : 4,
+          paddingVertical : onDelete ? 0 : 4,
           paddingHorizontal: 12,
         }
       : typeof padding === "number"
-        ? { paddingVertical: padding, paddingHorizontal: padding * 2 }
+        ? { paddingVertical : padding, paddingHorizontal: padding * 2 }
         : { padding };
 
   // Derive background, text, and border colors from the variant. A filled chip
@@ -165,7 +165,7 @@ export const Chip = (props) => {
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
-    ...(onPress || onDelete ? { minHeight: TAP_MINIMUM } : {}),
+    ...(onPress || onDelete ? { minHeight : TAP_MINIMUM } : {}),
     cursor: onPress ? "pointer" : "default",
     transition: "all 0.2s ease",
     child: chipContent,

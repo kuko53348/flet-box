@@ -138,7 +138,7 @@ export const AlertDialog = (props) => {
 
   let modal = null;
   // Placeholder until the modal is created below — avoids a temporal dead-zone
-  let closeModal = () => { };
+  let closeModal = () => {};
 
   // Delegate to the base Modal widget, passing our content and actions
   modal = Modal({

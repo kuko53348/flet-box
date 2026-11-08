@@ -206,7 +206,7 @@ export const AdSense = (props) => {
         pushAd();
         if (typeof onLoad === "function") onLoad(container);
       })
-      .catch((error) => {
+      .catch ((error) => {
         if (disposed) return;
         console.warn("[FletBox AdSense] SDK failed to load:", error);
         if (typeof onError === "function") onError(error, container);

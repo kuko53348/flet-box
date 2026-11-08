@@ -58,7 +58,7 @@ const failures = [];
  * @param {string} name
  * @param {() => void | Promise<void>} fn
  */
-const check = async (name, fn) => {
+const check = async(name, fn) => {
   try {
     await fn();
     console.log(`  ok   ${name}`);
@@ -111,11 +111,11 @@ const ENTRIES = {
  * @param {{ stdin?: string, entryPoints?: string[] }} entry
  * @returns {Promise<{ raw: number, gzip: number, brotli: number, modules: Record<string, number> }>}
  */
-const measure = async (entry) => {
+const measure = async(entry) => {
   const result = await esbuild.build({
     ...ESBUILD_OPTIONS,
     ...(entry.stdin
-      ? { stdin: { contents: entry.stdin, resolveDir: entry.resolveDir } }
+      ? { stdin : { contents: entry.stdin, resolveDir: entry.resolveDir } }
       : { entryPoints: entry.entryPoints }),
   });
   const output = result.outputFiles[0].contents;

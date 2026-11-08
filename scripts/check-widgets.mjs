@@ -93,7 +93,7 @@ const collectViolations = () => {
       .filter(([name, check]) => {
         // Controllers have no single element root, so `widgetName` does not apply.
         if (name === "widget-name" && CONTROLLER_FILES.has(file)) return false;
-        return !check.test(src);
+        return!check.test(src);
       })
       .map(([name]) => name);
     if (failing.length) violations[file] = failing;

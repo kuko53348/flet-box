@@ -33,7 +33,7 @@ const MIME = {
  */
 export const startStaticServer = (root) =>
   new Promise((resolve) => {
-    const server = createServer(async (req, res) => {
+    const server = createServer(async(req, res) => {
       try {
         const urlPath = decodeURIComponent((req.url || "/").split("?")[0]);
         const target = join(root, normalize(urlPath).replace(/^(\.\.[/\\])+/, ""));

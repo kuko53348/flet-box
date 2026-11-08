@@ -166,7 +166,7 @@ const resolveOtaUrl = (input) => {
  * @param {string[]} [rawArgs=[]] - Additional CLI arguments forwarded from the main CLI dispatcher.
  * @returns {Promise<void>}
  */
-export const createProject = async (projectName, rawArgs = []) => {
+export const createProject = async(projectName, rawArgs = []) => {
   const { template, projectName: name, repo: repoArg } = parseCreateArgs([
     projectName,
     ...rawArgs,

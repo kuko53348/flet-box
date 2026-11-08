@@ -131,7 +131,7 @@ export const EASINGS = {
   easeInElastic: (t) => {
     if (t === 0 || t === 1) return t;
     const c4 = (2 * Math.PI) / 3;
-    return -(2 ** (10 * t - 10)) * Math.sin((t * 10 - 10.75) * c4);
+    return - (2 ** (10 * t - 10)) * Math.sin((t * 10 - 10.75) * c4);
   },
   easeOutElastic: (t) => {
     if (t === 0 || t === 1) return t;
@@ -230,7 +230,7 @@ export const spring = ({
     if (seconds <= 0) return 0;
     if (zeta < 1) {
       const omegaD = omega0 * Math.sqrt(1 - zeta * zeta);
-      const envelope = Math.exp(-zeta * omega0 * seconds);
+      const envelope = Math.exp(- zeta * omega0 * seconds);
       return (
         1 -
         envelope *
@@ -239,12 +239,12 @@ export const spring = ({
       );
     }
     if (zeta === 1) {
-      const envelope = Math.exp(-omega0 * seconds);
+      const envelope = Math.exp(- omega0 * seconds);
       return 1 - envelope * (1 + (omega0 - v0) * seconds);
     }
     const root = omega0 * Math.sqrt(zeta * zeta - 1);
-    const r1 = -zeta * omega0 + root;
-    const r2 = -zeta * omega0 - root;
+    const r1 = - zeta * omega0 + root;
+    const r2 = - zeta * omega0 - root;
     const c1 = (r2 - v0) / (r2 - r1);
     const c2 = (v0 - r1) / (r2 - r1);
     return 1 - (c1 * Math.exp(r1 * seconds) + c2 * Math.exp(r2 * seconds));
@@ -254,7 +254,7 @@ export const spring = ({
   // tail is slower than its envelope, so solve that branch numerically instead.
   const settleSeconds = () => {
     if (zeta > 0) {
-      const estimate = -Math.log(eps) / (zeta * omega0);
+      const estimate = - Math.log(eps) / (zeta * omega0);
       if (zeta < 1) return estimate;
     }
     let seconds = 0.001;

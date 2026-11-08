@@ -49,7 +49,7 @@ const EXPECTED = [
 ];
 
 const failures = [];
-const check = async (name, fn) => {
+const check = async(name, fn) => {
   try {
     await fn();
     console.log(`  ok   ${name}`);
@@ -151,7 +151,7 @@ await check("the interface reader actually read the interface", () => {
   assert.ok(widgetProps.get("Image").has("full"), "a grandparent interface was dropped");
 });
 
-await check("every code block passes the anti-hallucination gate", async () => {
+await check("every code block passes the anti-hallucination gate", async() => {
   const sourceRoot = path.join(scratch, "blocks");
   fs.mkdirSync(path.join(sourceRoot, "src"), { recursive: true });
   let count = 0;
@@ -217,7 +217,7 @@ await check("every inline `Widget({ prop: … })` names a real widget and prop",
   }
 });
 
-await check("no skill teaches a prop the framework has deprecated", async () => {
+await check("no skill teaches a prop the framework has deprecated", async() => {
   // A rename never breaks a call: the old spelling keeps working and every gate
   // stays green, so a skill that teaches it teaches it to every app built from
   // the skill. This is how `Switch({ onToggle })` outlived its own migration.
@@ -234,7 +234,7 @@ await check("no skill teaches a prop the framework has deprecated", async () => 
   }
 });
 
-await check("every `colors.X` token exists in both themes", async () => {
+await check("every `colors.X` token exists in both themes", async() => {
   const { palettes } = await import("../src/utils/themes.js");
   for (const name of names) {
     for (const [, token] of readSkill(name).matchAll(/colors\.([A-Za-z0-9]+)/g)) {
@@ -257,7 +257,7 @@ await check("every helper the skills call is exported", () => {
   }
 });
 
-await check("the number of helpers R12 quotes is the number there are", async () => {
+await check("the number of helpers R12 quotes is the number there are", async() => {
   // A count in a skill is a promise: it is how an agent decides whether reading
   // the table is worth it. It went stale twice — the tools barrel grew by 49
   // names and the sentence still said 66 — so it is read off `src/tools/index.js`
@@ -292,7 +292,7 @@ await check("the number of helpers R12 quotes is the number there are", async ()
   }
 });
 
-await check("the phone coverage matrix ships in the skill and in a new project", async () => {
+await check("the phone coverage matrix ships in the skill and in a new project", async() => {
   // The matrix is the strict rule every screen is measured against, and the CLI
   // is the only way a new app hears about it: a skill the scaffold never copies,
   // or a generated AGENTS.md without the block, leaves the rule in one place.
@@ -407,7 +407,7 @@ await check("the gate, the design skill and the docs agree on which rule proves 
   }
 });
 
-await check("the API proof bites — an invented prop is rejected", async () => {
+await check("the API proof bites — an invented prop is rejected", async() => {
   const badRoot = path.join(scratch, "bad");
   fs.mkdirSync(path.join(badRoot, "src"), { recursive: true });
   fs.writeFileSync(
@@ -429,7 +429,7 @@ await check("the inline proof bites — a name it must reject", () => {
   assert.ok(props.has("itemSize") && !props.has("virtualise"), "ListView props read wrong");
 });
 
-await check("the deprecation proof bites — an old spelling is rejected", async () => {
+await check("the deprecation proof bites — an old spelling is rejected", async() => {
   // The rule above is only worth having if a renamed prop really is read from a
   // skill's code and really is in the table. Both directions: `Switch.onToggle`
   // is the old name of `onPress`, while `TreeView.onToggle` is that widget's own

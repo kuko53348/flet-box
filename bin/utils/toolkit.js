@@ -25,7 +25,7 @@
  */
 
 /** Bumped only when an entry's shape changes, so a cached copy can be noticed. */
-export const CATALOG_VERSION = 1;
+export const CATALOG_VERSION = 2;
 
 /**
  * Every read-only tool, ordered from "where do I start" to "one narrow check".
@@ -141,6 +141,28 @@ export const TOOLS = [
     writes: [],
     params: [{ name: "root", type: "string", description: "Project folder; defaults to the current directory." }],
     when: ["when a widget method or prop is flagged in the editor", "after upgrading the package"],
+  },
+  {
+    id: "lint",
+    title: "Lint rules",
+    question: "Which mechanical style rules does this file break (tabs, trailing whitespace, CRLF, final newline)?",
+    cli: "flet-box lint",
+    usage: "flet-box lint [--json] [--root <dir>]",
+    output: ["text", "json"],
+    writes: [],
+    params: [{ name: "root", type: "string", description: "Project folder; defaults to the current directory." }],
+    when: ["when a diff shows whitespace-only churn", "when a file renders fine but CI is red on style"],
+  },
+  {
+    id: "format",
+    title: "Format check",
+    question: "Which files are not in canonical form?",
+    cli: "flet-box format",
+    usage: "flet-box format [--json] [--root <dir>]",
+    output: ["text", "json"],
+    writes: [],
+    params: [{ name: "root", type: "string", description: "Project folder; defaults to the current directory." }],
+    when: ["when two people edit one file and diff against each other", "before running the full verify"],
   },
   {
     id: "metrics",

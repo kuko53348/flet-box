@@ -23,7 +23,7 @@ const TUNNEL_URL_RE = /https:\/\/[a-z0-9-]+\.trycloudflare\.com/;
  * @param {{ target?: string, port?: number, logRequests?: boolean }} [options]
  * @returns {Promise<void>}
  */
-export const runCloudflareDemo = async ({
+export const runCloudflareDemo = async({
   target = "www",
   port = 8000,
   logRequests = false,

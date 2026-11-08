@@ -227,7 +227,7 @@ export const findCycles = (files) => {
  * @param {{ packageDir?: string }} [options]
  * @returns {Promise<object[]>} findings
  */
-export const scanStructure = async (root, options = {}) => {
+export const scanStructure = async(root, options = {}) => {
   const findings = [];
   let packageDir = options.packageDir;
   if (!packageDir) {
@@ -326,7 +326,7 @@ export const scanStructure = async (root, options = {}) => {
  * @param {{print?: (line: string) => void}} [io]
  * @returns {Promise<{findings: object[], exitCode: number}>}
  */
-export const checkStructure = async (argv = [], io = {}) => {
+export const checkStructure = async(argv = [], io = {}) => {
   const print = io.print ?? ((line) => console.log(line));
   const rootIndex = argv.indexOf("--root");
   const root = path.resolve(

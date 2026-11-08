@@ -114,7 +114,7 @@ export const Switch = (props) => {
     child: isLabelled
       ? [
           Text({
-            text: label,
+            text : label,
             size: LABEL_TEXT,
             fontWeight: 500,
             color: disabled ? colors.textDisabled : colors.text,

@@ -125,7 +125,7 @@ export const setMotionMode = (next) => {
 export const onMotionModeChange = (listener) => {
   if (typeof listener !== "function") return () => {};
   listeners.add(listener);
-  return () => listeners.delete(listener);
+  return () => listeners.delete (listener);
 };
 
 /**

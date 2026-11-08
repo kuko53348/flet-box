@@ -192,7 +192,7 @@ export const applyEffects = (widget) => {
       isPressed = false;
       // Restore scale without touching transform.
       widget.style.scale = "";
-      widget.style.boxShadow = widget._originalShadow || "";  
+      widget.style.boxShadow = widget._originalShadow || "";
     };
 
     const pressStart = ["mousedown", "touchstart"];

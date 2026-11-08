@@ -1,0 +1,45 @@
+{
+  // The editor's own question, asked outside the editor.
+  //
+  // The `types` gate in `flet-box verify` runs this exact file (switching to
+  // `tsconfig.json` only when one exists), with the `typescript` package the
+  // editor brings — so what the editor underlines and what the gate reports
+  // are the same diagnostics, not two implementations of the same question.
+  //
+  // Scope, and why:
+  //   - `bin/` and `scripts/` are the CLI and the gates: TypeScript, Node 20
+  //     and the DOM. `@types/node` (a devDependency, never shipped) gives
+  //     the `process`/`Buffer`/fs names an editor would otherwise underline.
+  //   - `src/` is the framework's runtime, written for the browser and
+  //     exercised through the apps' own jsconfig (which generated projects
+  //     carry) — re-checking it here with `checkJs: false` would take it
+  //     through the same compiler with... no. `src/` is in, with checkJs
+  //     OFF, so the gate still resolves every import of the shipped package
+  //     and catches a broken one — while the app-side contract (the props
+  //     table vs `index.d.ts`) stays where it is owned: `check-app-types`.
+  //
+  // `checkJs` is deliberately off for the repository-wide run: the CLI's
+  // module boundaries are carried by JSDoc `@param {object}` types that the
+  // compiler reads as `object` and then (correctly) refuses to destructure.
+  // Sequencing ~390 such annotations across every command is a separate,
+  // mechanical, reviewable pass — it is not this change. Until it lands, the
+  // strict half of the check is pinned on the lint/format code, which is new
+  // and JSDoc-complete: `scripts/check-types.mjs` runs tsc with checkJs true
+  // over those files and requires zero diagnostics.
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false,
+    "noEmit": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "target": "es2022",
+    "lib": ["es2022", "dom", "dom.iterable"],
+    "skipLibCheck": true,
+    "strict": false,
+    "noImplicitAny": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "types": ["node"]
+  },
+  "include": ["bin", "scripts", "src"]
+}

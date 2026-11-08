@@ -357,10 +357,10 @@ const rememberAssets = (config, base) => {
   );
 };
 
-const openAssetCache = async () =>
+const openAssetCache = async() =>
   "caches" in globalThis ? await caches.open(OTA_CACHE) : null;
 
-globalThis.__FLETBOX_OTA_ASSET__ = async (relPath) => {
+globalThis.__FLETBOX_OTA_ASSET__ = async(relPath) => {
   const clean = String(relPath || "").replace(/^\.?\//, "");
   if (!clean) return null;
   const shippedUrl = new URL(clean, SHIPPED_BASE).href;

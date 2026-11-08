@@ -33,7 +33,7 @@ await ensureDir(outDir);
 
 const buildAndMeasure = (theme) =>
   probe.page.evaluate(
-    async ({ theme, widgetName, props, depth, label }) => {
+    async({ theme, widgetName, props, depth, label }) => {
       const FB = await import("/src/index.js");
       const { setTheme, colors } = await import("/src/utils/themes.js");
       setTheme(theme);
@@ -53,7 +53,7 @@ const buildAndMeasure = (theme) =>
         colors.text +
         ";";
       const widget = make(props);
-      host.append(label ? FB.Row({ gap: 10, children: [widget, FB.Text({ text: label })] }) : widget);
+      host.append(label ? FB.Row({ gap : 10, children: [widget, FB.Text({ text: label })] }): widget);
       document.body.appendChild(host);
       await new Promise((r) => setTimeout(r, 300));
 

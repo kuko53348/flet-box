@@ -367,7 +367,7 @@ export const buildBundleConfig = ({
     assets: Array.isArray(assets)
       ? assets
           .filter((a) => a && typeof a.path === "string" && typeof a.hash === "string")
-          .map((a) => ({ path: a.path, hash: a.hash, size: Number(a.size) || 0 }))
+          .map((a) => ({ path : a.path, hash: a.hash, size: Number(a.size) || 0 }))
       : [],
     // Minimum native (APK/IPA) version this bundle is compatible with. When the
     // installed native shell is older, the loader must fall back to a store

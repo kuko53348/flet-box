@@ -62,7 +62,7 @@ const failures = [];
  * @param {string} name
  * @param {() => void | Promise<void>} fn
  */
-const check = async (name, fn) => {
+const check = async(name, fn) => {
   try {
     await fn();
     console.log(`  ok   ${name}`);
@@ -99,7 +99,7 @@ const findChrome = () => CHROME_CANDIDATES.find((p) => existsSync(p)) || null;
  * @param {string} profileDir
  * @returns {Promise<{ proc: import("node:child_process").ChildProcess, wsUrl: string }>}
  */
-const launchChrome = async (chromePath, profileDir) => {
+const launchChrome = async(chromePath, profileDir) => {
   const proc = spawn(
     chromePath,
     [
@@ -152,7 +152,7 @@ class DevTools {
       const message = JSON.parse(raw.toString());
       if (message.id !== undefined && this.pending.has(message.id)) {
         const { resolve, reject } = this.pending.get(message.id);
-        this.pending.delete(message.id);
+        this.pending.delete (message.id);
         if (message.error) reject(new Error(`${message.error.message} (${message.method})`));
         else resolve(message.result);
         return;
@@ -162,7 +162,7 @@ class DevTools {
       for (const callback of this.listeners.get(key) || []) callback(message.params);
       const listeners = this.waiting.get(key);
       if (listeners && listeners.length) {
-        this.waiting.delete(key);
+        this.waiting.delete (key);
         for (const resolve of listeners) resolve(message.params);
       }
     });
@@ -227,7 +227,7 @@ class DevTools {
  * @param {string[]} errors Collects what the page complained about.
  * @returns {Promise<object>}
  */
-const readFingerprint = async (devtools, sessionId, url, errors) => {
+const readFingerprint = async(devtools, sessionId, url, errors) => {
   const loaded = devtools.once("Page.loadEventFired", sessionId);
   await devtools.send("Page.navigate", { url }, sessionId);
   await loaded;

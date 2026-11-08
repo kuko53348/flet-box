@@ -119,6 +119,10 @@ npm run check      # does this API exist?  exits 1 on an invented widget, prop,
                    # positional call, foreign import or broken module import
 npm run ui         # is this screen clean? tokens, the scale, tap targets, labels,
                    # contrast — and it cites the rule it broke
+npm run lint       # the rules a formatter does not decide: trailing whitespace,
+                   # tab indentation, CRLF, a missing final newline
+npm run format     # list the files whose spacing is not canonical — `flet-box
+                   # format --write` repairs them (spacing only, never indent)
 npm run fix        # rewrites what the checker can prove: a wrong path, a default
                    # import of a named export, a missing import line, a typo in a
                    # prop key, a prop the framework renamed. Anything ambiguous is
@@ -132,7 +136,9 @@ runtime uses, so a missing `)` comes back as `file:line:column` with the
 offending line, a caret under the character and a hint — then runs the API check,
 the type check (the same `jsconfig.json` the editor reads, through the same
 TypeScript service: a widget typed as a bare `HTMLElement` makes
-`widget.update()` an error here and there), the design check, the structural
+`widget.update()` an error here and there), the lint gate (trailing
+whitespace, tab indentation, CRLF, missing final newline) and the format gate
+(every module in canonical form), the design check, the structural
 check (two of your modules importing each other
 in a circle, a module outside the project folders, markup written by hand) and
 the prop contract, and then any test scripts the project declares. It prints one

@@ -506,7 +506,7 @@ export const Dropdown = (inputProps = {}) => {
             children: leftOption,
           }),
           isSelected
-            ? Icon({ name: "check", size: 16, color: currentColor })
+            ? Icon({ name : "check", size: 16, color: currentColor })
             : null,
         ].filter(Boolean),
       });

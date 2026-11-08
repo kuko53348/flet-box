@@ -29,7 +29,7 @@ const probe = await openProbe({ root, scale: Number(args.scale || 2) });
 
 const build = () =>
   probe.page.evaluate(
-    async ({ widgetName, props, theme, withHandler }) => {
+    async({ widgetName, props, theme, withHandler }) => {
       const FB = await import("/src/index.js");
       const { setTheme, colors } = await import("/src/utils/themes.js");
       const { SHADOW_LEVELS } = await import("/src/tools/shadow.js");
@@ -44,7 +44,7 @@ const build = () =>
       host.style.cssText =
         `position:fixed;left:40px;top:120px;z-index:9999;padding:32px;display:flex;gap:24px;` +
         `background:${colors.background};color:${colors.text};`;
-      const widget = make(withHandler ? { onPress: () => {}, ...props } : props);
+      const widget = make(withHandler ? { onPress : () => {}, ...props } : props);
       host.append(widget);
       document.body.appendChild(host);
       window.__PROBE = widget;
