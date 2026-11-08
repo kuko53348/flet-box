@@ -257,4 +257,5 @@ Minification reduces the web payload inside the native application. It does not 
 
 - **Previous:** [The AI toolkit](ai-toolkit.md) — Chapter 15
 - **Next:** [Build FletBox for mobile and other platforms](mobile-and-platforms.md) — Appendix B
+- **See also:** [Migrate an app to a newer FletBox](migration.md) — Chapter 14
 - **Index:** [Guides index](README.md) · [The FletBox Book](../README.md)

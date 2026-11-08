@@ -65,62 +65,63 @@ _dialogs, sheets, notifications and progress_
 27. [BottomSheet](BottomSheet.md) — A panel that slides up from the bottom of the screen over a dimmed overlay.
 28. [SnackBar](SnackBar.md) — A transient toast that appears at the edge of the screen, reports a short message, and dismisses itself.
 29. [Tooltip](Tooltip.md) — Wraps a child widget and shows a labeled overlay bubble on hover or focus
-30. [ProgressBar](ProgressBar.md) — A horizontal bar that visualizes completion from zero to max
-31. [CircularBar](CircularBar.md) — A circular or radial progress indicator drawn on canvas
-32. [Skeleton](Skeleton.md) — Renders animated placeholder blocks that stand in for content while it loads
-33. [FloatingActionButton](FloatingActionButton.md) — A circular, elevated button that floats over content and can expand into a labeled pill.
-34. [Pagination](Pagination.md) — Renders page controls derived from totalItems and pageSize, with optional first/last and prev/next buttons
+30. [Menu](Menu.md) — A trigger button that opens an anchored menu of actions
+31. [ProgressBar](ProgressBar.md) — A horizontal bar that visualizes completion from zero to max
+32. [CircularBar](CircularBar.md) — A circular or radial progress indicator drawn on canvas
+33. [Skeleton](Skeleton.md) — Renders animated placeholder blocks that stand in for content while it loads
+34. [FloatingActionButton](FloatingActionButton.md) — A circular, elevated button that floats over content and can expand into a labeled pill.
+35. [Pagination](Pagination.md) — Renders page controls derived from totalItems and pageSize, with optional first/last and prev/next buttons
 
 ### Chapter 5 · Navigation and flows
 
 _multi-step flows, trees and rotating content_
 
-35. [Stepper](Stepper.md) — A multi-step progress indicator that shows each step as a circle, number or icon and reveals the active step's content.
-36. [Accordion](Accordion.md) — A collapsible panel that hides a title bar with expandable content beneath it
-37. [TreeView](TreeView.md) — Renders a collapsible hierarchy from nodes, each with an id, label, optional icon, badge and children
-38. [Carousel](Carousel.md) — Cycles through items one at a time with optional arrows, dots and autoplay
-39. [InstallButton](InstallButton.md) — A floating button that appears only when the browser is ready to install the app as a PWA
+36. [Stepper](Stepper.md) — A multi-step progress indicator that shows each step as a circle, number or icon and reveals the active step's content.
+37. [Accordion](Accordion.md) — A collapsible panel that hides a title bar with expandable content beneath it
+38. [TreeView](TreeView.md) — Renders a collapsible hierarchy from nodes, each with an id, label, optional icon, badge and children
+39. [Carousel](Carousel.md) — Cycles through items one at a time with optional arrows, dots and autoplay
+40. [InstallButton](InstallButton.md) — A floating button that appears only when the browser is ready to install the app as a PWA
 
 ### Chapter 6 · Data, rich content & effects
 
 _tables, charts, rich text, ads and motion_
 
-40. [DataTable](DataTable.md) — Renders tabular rows using a columns definition, with optional striping, hover and borders
-41. [Chart](Chart.md) — Draws bar, line, area or candlestick data onto a canvas, with optional labels, grid and value annotations
-42. [CircularChart](CircularChart.md) — A pie or donut chart drawn on canvas with per-slice value, label, and color
-43. [Markdown](Markdown.md) — Renders markdown source as styled HTML with scoped CSS, syntax-highlighted code blocks, copy buttons, tables, and blockquotes inside a scrollable surface.
-44. [CodeViewer](CodeViewer.md) — Shows a read-only code block with an optional header, line numbers and scrolling for long files
-45. [QRCode](QRCode.md) — Renders a scannable QR image for a string value
-46. [Inspector](Inspector.md) — Renders a read-only tree that drills into a widget's props, children and element structure
-47. [AdSense](AdSense.md) — Google AdSense display unit for the web
-48. [AdMob](AdMob.md) — Google AdMob banner and full-screen ads for native Capacitor builds
-49. [AnimatedBox](AnimatedBox.md) — Wraps a single child and plays a sequence of CSS animations described by effect/from/to steps
-50. [AnimatedText](AnimatedText.md) — Splits a Text widget into individual characters and animates each one, optionally staggering the start of every letter for a cascade effect.
-51. [MatrixRain](MatrixRain.md) — A canvas-based Matrix-style effect where random characters cascade down the screen
-52. [ParallaxBox](ParallaxBox.md) — A container that shifts its child in response to scroll, mouse position, or hover entry
+41. [DataTable](DataTable.md) — Renders tabular rows using a columns definition, with optional striping, hover and borders
+42. [Chart](Chart.md) — Draws bar, line, area or candlestick data onto a canvas, with optional labels, grid and value annotations
+43. [CircularChart](CircularChart.md) — A pie or donut chart drawn on canvas with per-slice value, label, and color
+44. [Markdown](Markdown.md) — Renders markdown source as styled HTML with scoped CSS, syntax-highlighted code blocks, copy buttons, tables, and blockquotes inside a scrollable surface.
+45. [CodeViewer](CodeViewer.md) — Shows a read-only code block with an optional header, line numbers and scrolling for long files
+46. [QRCode](QRCode.md) — Renders a scannable QR image for a string value
+47. [Inspector](Inspector.md) — Renders a read-only tree that drills into a widget's props, children and element structure
+48. [AdSense](AdSense.md) — Google AdSense display unit for the web
+49. [AdMob](AdMob.md) — Google AdMob banner and full-screen ads for native Capacitor builds
+50. [AnimatedBox](AnimatedBox.md) — Wraps a single child and plays a sequence of CSS animations described by effect/from/to steps
+51. [AnimatedText](AnimatedText.md) — Splits a Text widget into individual characters and animates each one, optionally staggering the start of every letter for a cascade effect.
+52. [MatrixRain](MatrixRain.md) — A canvas-based Matrix-style effect where random characters cascade down the screen
+53. [ParallaxBox](ParallaxBox.md) — A container that shifts its child in response to scroll, mouse position, or hover entry
 
 ### Chapter 7 · Media and drag & drop
 
 _audio, video and drag-and-drop_
 
-53. [Audio](Audio.md) — A thin wrapper around the native <audio> element with reliable duration detection, progress callbacks, and an imperative playback API
-54. [Video](Video.md) — Renders a native <video> element with proper media attributes and a convenient playback API
-55. [Maps](Maps.md) — An interactive map — pan, zoom, markers and polylines — with no map library behind it
-56. [DraggBox](DraggBox.md) — Wraps a child so it can be dragged with the native drag-and-drop API
-57. [DroppBox](DroppBox.md) — A drop target for DraggBox items
+54. [Audio](Audio.md) — A thin wrapper around the native <audio> element with reliable duration detection, progress callbacks, and an imperative playback API
+55. [Video](Video.md) — Renders a native <video> element with proper media attributes and a convenient playback API
+56. [Maps](Maps.md) — An interactive map — pan, zoom, markers and polylines — with no map library behind it
+57. [DraggBox](DraggBox.md) — Wraps a child so it can be dragged with the native drag-and-drop API
+58. [DroppBox](DroppBox.md) — A drop target for DraggBox items
 
 ### Chapter 8 · App navigation
 
 _Build the shell of a real application and wire it to the router._
 
-58. [Scaffold](Scaffold.md) — the app shell: app bar, body, drawer, side bars
-59. [AdaptiveScaffold](AdaptiveScaffold.md) — the same shell, adapted to phone and desktop
-60. [AppBar](AppBar.md) — a top bar for titles, actions, and back navigation
-61. [Drawer](Drawer.md) — a panel that slides in from the side
-62. [DrawerItem](DrawerItem.md) — a router-aware row for a drawer or side bar
-63. [BottomNavigation](BottomNavigation.md) — a bottom tab bar synced with the router
-64. [Tabs](Tabs.md) — switch panes inside a screen
-65. [CollapsibleSideBar](CollapsibleSideBar.md) — a side panel that collapses to icons
+59. [Scaffold](Scaffold.md) — the app shell: app bar, body, drawer, side bars
+60. [AdaptiveScaffold](AdaptiveScaffold.md) — the same shell, adapted to phone and desktop
+61. [AppBar](AppBar.md) — a top bar for titles, actions, and back navigation
+62. [Drawer](Drawer.md) — a panel that slides in from the side
+63. [DrawerItem](DrawerItem.md) — a router-aware row for a drawer or side bar
+64. [BottomNavigation](BottomNavigation.md) — a bottom tab bar synced with the router
+65. [Tabs](Tabs.md) — switch panes inside a screen
+66. [CollapsibleSideBar](CollapsibleSideBar.md) — a side panel that collapses to icons
 
 Then continue with [State, Router & Services](../guides/state.md) — Chapter 9.
 
@@ -170,6 +171,7 @@ Then continue with [State, Router & Services](../guides/state.md) — Chapter 9.
 - [Maps](Maps.md)
 - [Markdown](Markdown.md)
 - [MatrixRain](MatrixRain.md)
+- [Menu](Menu.md)
 - [Modal](Modal.md)
 - [Pagination](Pagination.md)
 - [ParallaxBox](ParallaxBox.md)

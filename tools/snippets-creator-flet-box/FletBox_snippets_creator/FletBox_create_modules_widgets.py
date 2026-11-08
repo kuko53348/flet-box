@@ -243,15 +243,15 @@ export const MyGallery = ({ items = generateImages(), onPress }) => {
 };''',
 
     # =========================================================================
-    # MODULE TEMPLATES (una plantilla por familia de API)
+    # MODULE TEMPLATES (a template per API family)
     #
-    # Cada bloque es un módulo completo: sólo importa nombres que el paquete
-    # exporta de verdad, así que `npm test` falla si la API cambia.
+    # Each block is a complete module: it only imports names the package
+    # exports for real, so `npm test` fails if the API changes.
     # =========================================================================
 
     'createModule.state': '''import { useState, useWatchState, Column, Text, Button } from 'flet-box';
 
-// useState() guarda la clave en RamStore, así que sobrevive a los re-render.
+// useState() saves the key in RamStore, so it survives re-renders.
 const [count, setCount, onCount] = useState('counter', 0);
 const label = Text({ text: '0' });
 
@@ -290,7 +290,7 @@ export const base = () => getBasePath();''',
 export const saveSettings = (settings) => Storage.saveData('settings', settings);
 export const loadSettings = () => Storage.getDataSync('settings') || { theme: 'light' };
 
-// Session dura lo que la pestaña; RamStore sólo mientras la app está viva.
+// Session lasts for the tab; RamStore only while the app is running.
 Session.saveSession('draft', { title: 'Untitled' });
 RamStore.saveRam('scrollY', 0);
 
@@ -334,7 +334,7 @@ export const updateUser = (id, user) => httpPut(buildUrl(`${API}/users/:id`, { i
 export const patchUser = (id, data) => httpPatch(buildUrl(`${API}/users/:id`, { id }), { body: data });
 export const removeUser = (id) => httpDelete(buildUrl(`${API}/users/:id`, { id }));
 
-// httpRequest() es la forma explícita cuando el verbo no es un helper.
+// httpRequest() is the explicit form when the verb is not a helper.
 export const search = (q) => httpRequest('GET', `${API}/search`, { params: { q } });
 
 export const fetchWithRetry = () => retry(() => withMinDelay(httpGet(`${API}/users`), 300), 3, 200);''',
@@ -353,7 +353,7 @@ export const grow = async () => {
     stopAnimation(box, 'opacity');
 };
 
-// Las entradas con nombre ya traen el fade y el desplazamiento en un solo gesto.
+// Named entries already bring the fade and the shift in one gesture.
 export const enter = () => slideIn(box, { direction: 'up', distance: 16, duration: 240 });
 export const leave = async () => { await slideOutAsync(box); box.remove(); };
 export const reportWrongPassword = () => shake(box, { axis: 'x', distance: 6, cycles: 3 });
@@ -363,10 +363,10 @@ export const settle = () => animateSpring(box, 'scale', 0.94, 1, { stiffness: 26
 // Un stagger de lista: capped, para que 20 filas no sean 1.2 s de espera.
 export const delayFor = (index) => stagger(index, { step: 60, max: 8 });
 
-// La decisión de moverse o no la toma el usuario, no la pantalla.
+// The decision whether to move is made by the user, not the screen.
 export const mayMove = () => prefersReducedMotion() === false;
 
-// El keyframe se inyecta una vez y después se referencia por nombre.
+// The keyframe is injected once, then referenced by name.
 injectKeyframes('float', '0% { transform: translateY(0); } 100% { transform: translateY(-8px); }');
 
 export const Loader = () => AnimatedBox({
@@ -408,15 +408,15 @@ export const sampleUser = () => ({
     Column, Text, useState
 } from 'flet-box';
 
-// La tabla es única: md = 768 es la misma línea que cruza AdaptiveScaffold.
+// The table is unique: md = 768 is the same line crossed by AdaptiveScaffold.
 export const gutter = () => pick({ xs: 16, md: 24, lg: 32 });
 export const twoColumns = () => atLeast('md');
 export const stepOf = (px) => breakpointForWidth(px);
 export const table = `${Object.keys(BREAKPOINTS).join(' ')} / ${BREAKPOINT_NAMES.length}`;
 
-// Se re-renderiza al cruzar un paso, no en cada píxel del resize.
-// onBreakpointChange devuelve la función de baja; el widget es el que vive y
-// muere con la suscripción, así que se la entrega a él.
+// Re-renders when crossing a breakpoint, not on every pixel of the resize.
+// onBreakpointChange returns the unsubscribe function; the widget owns it and
+// The widget owns it and dies with the subscription, so it hands it to it.
 export const ResponsiveTitle = () => {
     const [name, setName] = useState('bp', currentBreakpoint());
     const header = Column({
@@ -427,7 +427,7 @@ export const ResponsiveTitle = () => {
     return header;
 };
 
-// Una tipografía de red es una petición: se pide, se espera, y entonces se usa.
+// A remote typography is a request: it is fetched, then awaited, then used.
 export const useInter = async (node) => {
     const ok = await loadFont('Inter', { weights: [400, 600] });
     if (ok) node.style.fontFamily = 'Inter, system-ui, sans-serif';
@@ -445,7 +445,7 @@ export const Article = ({ source }) => Markdown({
 
 export const Snippet = ({ code }) => CodeViewer({ code, title: 'example.js', showLineNumbers: true });
 
-// tokenize() es el lexer que usa CodeViewer; highlightColors mapea tipo de token a color.
+// tokenize() is the lexer CodeViewer uses; highlightColors maps token type to color.
 export const tokens = (code) => tokenize(code);
 export const html = (code) => generateHighlightedHtml(code);
 export const keywordColor = highlightColors.keyword;
@@ -468,7 +468,7 @@ export const PwaRow = () => Column({
 
     'createModule.customWidget': '''import { WidgetFactory, useState, Column, Text, Button, colors } from 'flet-box';
 
-// La fábrica es el único renderizador: props dentro, HTMLElement fuera.
+// The factory is the only renderer: props in, HTMLElement out.
 export const Panel = (props) => WidgetFactory('section', {
     widgetName: 'Panel',
     padding: 16,
@@ -490,7 +490,7 @@ export const Counter = () => {
 
     'createModule.ads': '''import { AdMob, AdSense, Column, Text } from 'flet-box';
 
-// AdMob habla con el plugin de Capacitor; sin él, muestra el placeholder.
+// AdMob communicates with the Capacitor plugin; without it, it shows the placeholder.
 export const Banner = () => AdMob({
     adId: 'ca-app-pub-3940256099942544/6300978111',
     isTesting: true,

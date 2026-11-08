@@ -81,6 +81,19 @@ const frames = async (count) => {
   for (let i = 0; i < count; i++) await frame();
 };
 
+/**
+ * Awaits frames until `predicate` holds, up to a budget. A frame count is not a
+ * duration: the loop captures `performance.now()` when it is called, while the
+ * rAF timestamp can start a few milliseconds *below* it, so the first frames of
+ * a run paint the start value. Counting them read as "never moved" on a loaded
+ * CI runner, for an engine that was moving.
+ */
+const until = async (predicate, budgetMs = 400) => {
+  const deadline = performance.now() + budgetMs;
+  while (!predicate() && performance.now() < deadline) await frame();
+  return predicate();
+};
+
 /** The test element, mounted fresh for one assertion. */
 const mount = (styles = {}) => {
   const el = document.createElement("div");
@@ -152,10 +165,12 @@ document.body.style.minHeight = "3000px";
 await t("animate() moves an element on the Y axis", async () => {
   const el = mount();
   animate(el, "translateY", 24, 0, 120, "easeOut");
-  await frames(2);
-  const mid = translation(el);
-  assert(mid.y > 0 && mid.y < 24, `translateY never painted: transform=${getComputedStyle(el).transform}`);
-  await frames(12);
+  const moved = await until(() => {
+    const { y } = translation(el);
+    return y > 0 && y < 24;
+  });
+  assert(moved, `translateY never painted: transform=${getComputedStyle(el).transform}`);
+  await until(() => Math.abs(translation(el).y) < 1.5);
   assert(Math.abs(translation(el).y) < 1.5, `did not settle at 0: ${translation(el).y}`);
   unmount(el);
 });
@@ -240,11 +255,11 @@ await t("animateSpring() settles where animate() would have", async () => {
 
 await t("slideIn() arrives and leaves nothing behind", async () => {
   const el = mount({ opacity: "0" });
-  const cancel = slideIn(el, { direction: "up", distance: 24, duration: 120 });
-  await frames(2);
-  assert(translation(el).y > 1, `never travelled: ${getComputedStyle(el).transform}`);
-  await frames(12);
-  assert(Math.abs(translation(el).y) < 1.5, `did not land: ${translation(el).y}`);
+  const cancel = slideIn(el, { direction: "up", distance: 24, duration: 240 });
+  const moved = await until(() => translation(el).y > 1);
+  assert(moved, `never travelled: ${getComputedStyle(el).transform}`);
+  const landed = await until(() => Math.abs(translation(el).y) < 1.5 && el.style.opacity === "1");
+  assert(landed, `did not land: ${translation(el).y}`);
   assert(el.style.opacity === "1", `still faded: ${el.style.opacity}`);
   assert(cancel() === false, "a finished gesture should report nothing to cancel");
   unmount(el);
@@ -252,13 +267,13 @@ await t("slideIn() arrives and leaves nothing behind", async () => {
 
 await t("slideIn({ direction }) picks the axis the words mean", async () => {
   const leftward = mount();
-  slideIn(leftward, { direction: "left", distance: 20, duration: 40, fade: false });
-  await frames(1);
-  assert(translation(leftward).x > 0, `entering while travelling left must start right: ${leftward.style.transform}`);
+  slideIn(leftward, { direction: "left", distance: 20, duration: 240, fade: false });
+  const startedRight = await until(() => translation(leftward).x > 1);
+  assert(startedRight, `entering while travelling left must start right: ${leftward.style.transform}`);
   const upward = mount();
-  slideIn(upward, { direction: "up", distance: 20, duration: 40, fade: false });
-  await frames(1);
-  assert(translation(upward).y > 0, `entering while travelling up must start below: ${upward.style.transform}`);
+  slideIn(upward, { direction: "up", distance: 20, duration: 240, fade: false });
+  const startedBelow = await until(() => translation(upward).y > 1);
+  assert(startedBelow, `entering while travelling up must start below: ${upward.style.transform}`);
   unmount(leftward);
   unmount(upward);
 });
@@ -691,16 +706,18 @@ await t("a keyframe length follows the reader's font", () => {
 await t("the imperative engine writes framework units too", async () => {
   setBaseFontSize(20);
   const el = mount();
-  animate(el, "translateY", 20, 0, 60, "linear");
-  await frames(2);
-  assert(
-    el.style.transform.includes("rem"),
-    `a bare 20 painted pixels through animate(): ${el.style.transform}`,
-  );
+  animate(el, "translateY", 20, 0, 240, "linear");
+  const movedInRem = await until(() => {
+    const away = translation(el).y;
+    return el.style.transform.includes("rem") && away > 8 && away < 21;
+  });
   const away = translation(el).y;
-  assert(away > 8 && away < 21, `the unit is off: ${away}px of a 20-unit travel`);
-  await frames(10);
-  assert(Math.abs(translation(el).y) < 1.5, `did not settle at 0: ${translation(el).y}`);
+  assert(
+    movedInRem,
+    `the unit is off: ${away}px of a 20-unit travel (${el.style.transform})`,
+  );
+  const settled = await until(() => Math.abs(translation(el).y) < 1.5);
+  assert(settled, `did not settle at 0: ${translation(el).y}`);
   unmount(el);
   setBaseFontSize(16);
 });
@@ -709,11 +726,11 @@ await t("animate() blends rgb() and rgba()", async () => {
   const start = "rgba(255, 0, 0, 0.4)";
   const el = mount({ backgroundColor: start });
   animate(el, "backgroundColor", start, "rgb(0, 0, 255)", 120, "linear");
-  await frames(2);
+  const left = await until(() => el.style.backgroundColor !== start);
   const written = el.style.backgroundColor;
   assert(written.startsWith("rgb"), `the blend was dropped by CSS: "${written}"`);
-  assert(written !== start, `it never left the start color: ${written}`);
-  await frames(14);
+  assert(left, `it never left the start color: ${written}`);
+  await until(() => /^rgb\(0,\s*0,\s*255\)$/.test(getComputedStyle(el).backgroundColor));
   const value = getComputedStyle(el).backgroundColor;
   assert(/^rgb\(0,\s*0,\s*255\)$/.test(value), `did not reach the end color: ${value}`);
   unmount(el);
@@ -745,10 +762,9 @@ await t("pulseAsync() resolves with the widget it pulsed", async () => {
 await t("pulse() and pulseAsync() are the same swell", async () => {
   const el = mount();
   pulse(el, 200);
-  await frames(3);
-  const mid = scaleOf(el);
-  assert(mid > 1, `a pulse that never overshoots is not a pulse: ${mid}`);
-  await frames(14);
+  const swelled = await until(() => scaleOf(el) > 1);
+  assert(swelled, `a pulse that never overshoots is not a pulse: ${scaleOf(el)}`);
+  await until(() => Math.abs(scaleOf(el) - 1) < 0.02);
   assert(Math.abs(scaleOf(el) - 1) < 0.02, `the pulse did not return: ${scaleOf(el)}`);
   unmount(el);
 });
@@ -756,11 +772,11 @@ await t("pulse() and pulseAsync() are the same swell", async () => {
 await t("fadeOut() starts where the element is", async () => {
   const el = mount({ opacity: "0.6" });
   fadeOut(el, 200);
-  await frames(3);
+  const left = await until(() => Number(getComputedStyle(el).opacity) < 0.6);
   const value = Number(getComputedStyle(el).opacity);
   assert(value <= 0.61, `it flashed to full opacity first: ${value}`);
-  assert(value < 0.6, `it never left 0.6: ${value}`);
-  await frames(14);
+  assert(left, `it never left 0.6: ${value}`);
+  await until(() => Number(getComputedStyle(el).opacity) < 0.05);
   assert(Number(getComputedStyle(el).opacity) < 0.05, `did not fade out: ${getComputedStyle(el).opacity}`);
   unmount(el);
 });

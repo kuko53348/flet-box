@@ -47,7 +47,7 @@ export const FloatingActionButton = (props) => {
     children.push(
       Text({
         // FIX: `value` es special y `applySpecial` solo lo aplica en inputs
-        // → en un <span> no hacía nada y el label quedaba vacío.
+        // a span did nothing and the label stayed empty.
         text: label,
         size: 14,
         fontWeight: "500",

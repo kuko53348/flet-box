@@ -1,6 +1,6 @@
 attrs_all_placeholders_complete = {
     # =========================================================================
-    # 1. UTILIDADES (funciones) – terminan en _fn para no chocar con props
+    # 1. UTILITIES (FUNCTIONS) – end in _fn to avoid clashing with props
     # =========================================================================
 
     # ---------- ANIMATION ----------
@@ -367,15 +367,15 @@ attrs_all_placeholders_complete = {
     'stagger': 'const delay = stagger(3, { start: 0, step: 60, max: 8 })',
 
     # =========================================================================
-    # 2. PROPS GENÉRICAS (válidas para casi cualquier widget)
+    # 2. GENERIC PROPS (valid for almost any widget)
     # =========================================================================
 
-    # ---------- Identificación y atributos DOM ----------
+    # ---------- IDENTIFICATION AND DOM ATTRIBUTES ----------
     'id': 'id: "myId",',
     'className': 'className: "my-class",',
     'ref': 'ref: (el) => myRef = el,',
 
-    # ---------- Contenido y composición ----------
+    # ---------- CONTENT AND COMPOSITION ----------
     'children': 'children: [Text({ text: "A" }), Text({ text: "B" })],',
     'child': 'child: Text({ text: "Hello" }),',
 
@@ -423,7 +423,7 @@ attrs_all_placeholders_complete = {
     'shadow': 'shadow: shadow(0, 4, 8, 0, rgba(0,0,0,0.1)),',
     'boxShadow': 'boxShadow: shadow(0, 4, 8, 0, rgba(0,0,0,0.1)),',
 
-    # ---------- Posición ----------
+    # ---------- POSITION ----------
     'position': 'position: "absolute",',
     'top': 'top: 20,',
     'right': 'right: 20,',
@@ -431,7 +431,7 @@ attrs_all_placeholders_complete = {
     'left': 'left: 20,',
     'zIndex': 'zIndex: 9998,',
 
-    # ---------- Flexbox / alineación ----------
+    # ---------- FLEXBOX / ALIGNMENT ----------
     'alignItems': 'alignItems: "center",',
     'alignSelf': 'alignSelf: "flex-end",',
     'selfAlign': 'selfAlign: "center",',
@@ -456,7 +456,7 @@ attrs_all_placeholders_complete = {
     'filter': 'filter: "blur(4px) brightness(0.9)",',
     'maskImage': 'maskImage: "linear-gradient(to bottom, #000 60%, transparent)",',
 
-    # ---------- Eventos genéricos ----------
+    # ---------- GENERIC EVENTS ----------
     'onPress': 'onPress: () => console.log("clicked"),',
     'onClick': 'onClick: () => console.log("clicked"),',
     'onDoublePress': 'onDoublePress: () => console.log("double click"),',
@@ -500,7 +500,7 @@ attrs_all_placeholders_complete = {
     'fullWidth': 'fullWidth: true,',
     'sizeMedium': 'size: "medium",',  # small, medium, large
 
-    # ---------- Validación (Input) ----------
+    # ---------- VALIDATION (INPUT) ----------
     'validation': 'validation: "email",',
     'maxLength': 'maxLength: 50,',
     'customPattern': 'customPattern: "^[A-Za-z]+$",',
@@ -630,7 +630,7 @@ attrs_all_placeholders_complete = {
     'modalHeaderElevation': 'headerElevation: 0,',
     'modalFooterElevation': 'footerElevation: 0,',
 
-    # ---------- BottomSheet específico ----------
+    # ---------- SPECIFIC BOTTOM SHEET ----------
     'bottomSheetDragHandleColor': 'dragHandleColor: colors.border,',
     'bottomSheetHeaderBorderColor': 'headerBorderColor: colors.border,',
     'bottomSheetActionBorderColor': 'actionBorderColor: colors.border,',
@@ -876,7 +876,7 @@ attrs_all_placeholders_complete = {
     'onInstalled': 'onInstalled: () => console.log("installed"),',
 
     # =========================================================================
-    # 3. PROPS ESPECÍFICAS DE WIDGETS DE NAVEGACIÓN Y ESTRUCTURA
+    # 3. SPECIFIC PROPS OF NAVIGATION AND STRUCTURE WIDGETS
     # =========================================================================
 
     # ---------- App Bar ----------
@@ -1029,9 +1029,9 @@ attrs_all_placeholders_complete = {
     # 4. COBERTURA COMPLETA DEL REGISTRO DE PROPS
     #
     # Cada clave de este bloque es una entrada del banco de datos de
-    # `translateProps.js` que ninguna otra snippet usaba todavía. Los valores
-    # siguen las reglas del motor: un número en un prop de unidad `rem` son
-    # píxeles sobre base 16, los props `style: none` quieren la cadena CSS
+    # `translateProps.js` that no other snippet used yet. The values
+    # follow the engine rules: a number in a `rem` unit prop is
+    # pixels over base 16, the `style: none` props want the exact CSS
     # exacta y los de tipo `attribute` se escriben como atributos DOM.
     # =========================================================================
 
@@ -1070,7 +1070,7 @@ attrs_all_placeholders_complete = {
     'marginHorizontal': 'marginHorizontal: 24,',
     'marginVertical': 'marginVertical: 16,',
 
-    # ---------- Posición y capa ----------
+    # ---------- POSITION AND LAYER ----------
     'pos': 'pos: "absolute",',
     'z': 'z: 10,',
     'inset': 'inset: 16,',
@@ -1082,7 +1082,7 @@ attrs_all_placeholders_complete = {
     'bgPosition': 'bgPosition: "center",',
     'bgRepeat': 'bgRepeat: "no-repeat",',
 
-    # ---------- Tipografía ----------
+    # ---------- TYPOGRAPHY ----------
     'fontWeight': 'fontWeight: "bold",',
     'lineH': 'lineH: 1.5,',
     'letterSpace': 'letterSpace: 1,',
@@ -1122,7 +1122,7 @@ attrs_all_placeholders_complete = {
     'borderRadiusLeft': 'borderRadiusLeft: 12,',
     'borderRadiusRight': 'borderRadiusRight: 12,',
 
-    # ---------- Interacción y visibilidad ----------
+    # ---------- INTERACTION AND VISIBILITY ----------
     'visibility': 'visibility: "hidden",',
     'pointerEvents': 'pointerEvents: "none",',
     'userSelect': 'userSelect: "none",',
@@ -1156,7 +1156,7 @@ attrs_all_placeholders_complete = {
     'onTouchEnd': 'onTouchEnd: (e) => console.log(e.changedTouches[0].clientX),',
 
     # ---------- Posicionamiento absoluto ----------
-    # El motor sólo aplica estos desplazamientos cuando el propio widget declara
+    # The engine only applies these offsets when the widget itself declares
     # position: "stack"; dentro de un `Stack` el CSS ya flota a los hijos.
     'stackStart': 'start: 16, // needs position: "stack" on this widget',
     'stackEnd': 'end: 16, // needs position: "stack" on this widget',
@@ -1181,7 +1181,7 @@ attrs_all_placeholders_complete = {
     'subtitleProps': 'subtitleProps: { color: colors.textSecondary },',
     'descriptionProps': 'descriptionProps: { color: colors.textSecondary, size: 12 },',
 
-    # ---------- DroppBox (estado activo del área de soltado) ----------
+    # ---------- DROPPABLE BOX (ACTIVE DROP ZONE STATE) ----------
     'activeBorderStyle': 'activeBorderStyle: "dashed",',
     'activeBorderWidth': 'activeBorderWidth: 2,',
     'activeShadow': 'activeShadow: "0 0 12px rgba(99, 102, 241, 0.4)",',
@@ -1241,8 +1241,8 @@ attrs_all_placeholders_complete = {
     # =========================================================================
     # 5. UTILIDADES DE BAJO NIVEL DEL FRAMEWORK
     #
-    # Exportaciones públicas que ninguna snippet alcanzaba: efectos visuales,
-    # inserción en el DOM, PWA, HMR, router y utilidades de texto.
+    # Public exports no snippet reached: visual effects,
+    # DOM insertion, PWA, HMR, router and text utilities.
     # =========================================================================
 
     # ---------- Efectos visuales ----------
@@ -1253,12 +1253,12 @@ attrs_all_placeholders_complete = {
     'applyIndeterminate': 'const track = Container({ height: 4 });\napplyIndeterminate(track, { duration: "1.5s", width: "50%" });',
     'applyPulse': 'const dot = Icon({ name: "circle" });\napplyPulse(dot, { scale: 1.05, duration: "0.3s" });',
     'injectKeyframes': 'injectKeyframes("float", "0% { transform: translateY(0); } 100% { transform: translateY(-8px); }");',
-    'stackPosition': '// Ancla el widget sobre su ancestro posicionado: posición absoluta + offsets en rem.\nconst badge = Text({ text: "3" });\nstackPosition(badge, { top: 8, right: 8 });',
+    'stackPosition': '// Anchor a widget onto its positioned ancestor: absolute position + rem offsets.\nconst badge = Text({ text: "3" });\nstackPosition(badge, { top: 8, right: 8 });',
 
     # ---------- Animaciones ----------
     'stopAnimation': 'const box = Container({ width: 100, height: 100 });\nanimate(box, "opacity", 1, 0.2, 400);\nstopAnimation(box, "opacity");',
 
-    # ---------- Inserción en el DOM ----------
+    # ---------- DOM INSERTION ----------
     'insertBy': 'insertBy(Text({ text: "Mounted" }), "root");',
     'prependBy': 'prependBy(Text({ text: "First" }), "root");',
     'insertBefore': 'insertBefore(Text({ text: "Before" }), "target-id");',

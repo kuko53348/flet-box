@@ -6795,7 +6795,7 @@
     "prefix": "stackPosition",
     "description": "Make a FletBox widgets stackPosition widget",
     "body": [
-      "// Ancla el widget sobre su ancestro posicionado: posici\u00f3n absoluta + offsets en rem.",
+      "// Anchor a widget onto its positioned ancestor: absolute position + rem offsets.",
       "const badge = Text({ text: \"3\" });",
       "stackPosition(badge, { top: 8, right: 8 });"
     ]

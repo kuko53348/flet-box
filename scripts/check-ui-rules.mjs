@@ -121,6 +121,91 @@ await check("OFF_SCALE_RADIUS accepts a radius on the scale", async () => {
   assert.equal(hit(ui, "OFF_SCALE_RADIUS"), undefined, "16 was reported as off the scale");
 });
 
+// Constants must not hide a literal, nor make a runtime value look like one.
+for (const [declaration, widget, prop, code] of [
+  ['const PAD = 13;', 'Container', 'padding: PAD', 'OFF_SCALE_SPACING'],
+  ['const RADIO = 22;', 'Container', 'borderRadius: RADIO', 'OFF_SCALE_RADIUS'],
+  ['const TIPO = 15;', 'Text', 'text: "Hi", size: TIPO', 'OFF_SCALE_TYPE'],
+  ['const MARCA = "#4f46e5";', 'Container', 'bgColor: MARCA', 'RAW_COLOR'],
+  ['const PAD = "12px 20px";', 'Container', 'padding: PAD', 'OFF_SCALE_SPACING'],
+  ['const BASE = 6; const PAD = BASE * 2 + 1;', 'Container', 'padding: PAD', 'OFF_SCALE_SPACING'],
+  ['const BASE = 6;', 'Container', 'padding: BASE * 2 + 1', 'OFF_SCALE_SPACING'],
+  ['const ALTO = 32;', 'Button', 'text: "Go", height: ALTO, onPress: () => {}', 'SMALL_TAP_TARGET'],
+  ['const INK = "#ffffff"; const BG = "#ffffff";', 'Text', 'text: "Hi", color: INK, bgColor: BG', 'LOW_CONTRAST'],
+]) {
+  await check(`${code} follows ${declaration}`, async () => {
+    const { ui } = await scan(`import { ${widget} } from "flet-box";\n${declaration}\nexport const view = () => ${widget}({ ${prop} });\n`);
+    const found = hit(ui, code);
+    assert.ok(found, `${prop} hid ${code}`);
+    assert.equal(found.line, 3, 'report the prop use, not its initializer');
+  });
+}
+
+await check('a local constant, an alias and ASI still expose their literal', async () => {
+  const { ui } = await scan(`import { Container } from "flet-box";
+export const view = () => {
+  const BASE = 13
+  const PAD = BASE
+  return Container({ padding: PAD });
+};`);
+  assert.equal(hit(ui, 'OFF_SCALE_SPACING')?.line, 5);
+});
+
+await check('on-scale constants, quoted numbers and token aliases stay clean', async () => {
+  const { ui } = await scan(`import { Container, Text, colors } from "flet-box";
+const PAD = 16, RADIO = 12;
+const TIPO = 14;
+const INK = colors.text;
+const LABEL = "PAD 13";
+export const view = () => Container({ padding: PAD, borderRadius: RADIO,
+  child: Text({ text: LABEL, size: TIPO, color: INK }) });`);
+  assert.deepEqual(ui, []);
+});
+
+// A file-wide name map is unsafe: any binding the pass cannot distinguish must
+// stay unknown, even if that sacrifices resolution in an unrelated function.
+for (const body of [
+  'export const view = (PAD) => Container({ padding: PAD });',
+  'export const view = PAD => Container({ padding: PAD });',
+  'export const view = ({ PAD }) => Container({ padding: PAD });',
+  'export const view = ({ value: PAD = 16 }) => Container({ padding: PAD });',
+  'export const view = (...PAD) => Container({ padding: PAD });',
+  'export function view(PAD = 16) { return Container({ padding: PAD }); }',
+  'export const view = () => { let PAD = 16; return Container({ padding: PAD }); };',
+  'export const view = () => { var PAD = 16; return Container({ padding: PAD }); };',
+  'export const view = () => { const PAD = 16; return Container({ padding: PAD }); };',
+  'export const view = () => { try {} catch (PAD) { return Container({ padding: PAD }); } };',
+  'export const view = () => Container({ padding: settings.PAD });',
+  'export const view = () => Container({ padding: unknown * 1.5 });',
+  'export const view = () => Container({ padding: flag ? PAD : 16 });',
+  'export const view = () => Container({ padding: compute(PAD) });',
+]) {
+  await check(`does not guess bindings/runtime values: ${body}`, async () => {
+    const { ui } = await scan(`import { Container } from "flet-box";\nconst PAD = 13;\n${body}`);
+    assert.equal(hit(ui, 'OFF_SCALE_SPACING'), undefined);
+  });
+}
+
+for (const source of [
+  'const view = () => Container({ padding: PAD }); const PAD = unknown;',
+  '{ const PAD = 13; } const view = () => Container({ padding: PAD });',
+  'const view = () => Container({ padding: PAD }); const PAD = 13;',
+  'for (const PAD of values) { Container({ padding: PAD }); }',
+  'for (const PAD = 13; false;) {} Container({ padding: PAD });',
+  'let PAD = 13; PAD = 16; Container({ padding: PAD });',
+  'const PAD = unknown; Container({ padding: PAD * 1.5 });',
+  'const PAD = other; const other = PAD; Container({ padding: PAD });',
+  'const sample = "const PAD = 13;"; Container({ padding: PAD });',
+  'const sample = /const PAD = 13;/; Container({ padding: PAD });',
+  'const sample = `const PAD = 13;`; Container({ padding: PAD });',
+  '// const PAD = 13;\nContainer({ padding: PAD });',
+]) {
+  await check(`leaves unsupported declarations unknown: ${source}`, async () => {
+    const { ui } = await scan(`import { Container } from "flet-box";\n${source}`);
+    assert.equal(hit(ui, 'OFF_SCALE_SPACING'), undefined);
+  });
+}
+
 // 3 — a button that shows a glyph and no name.
 
 await check("ICON_ONLY_CONTROL fires on a button with an icon and no name", async () => {

@@ -32,7 +32,7 @@ BOOK = [
     (
         "Chapter 4 · Feedback and overlays",
         [
-            "AlertDialog", "Modal", "BottomSheet", "SnackBar", "Tooltip",
+            "AlertDialog", "Modal", "BottomSheet", "SnackBar", "Tooltip", "Menu",
             "ProgressBar", "CircularBar", "Skeleton", "FloatingActionButton", "Pagination",
         ],
     ),
@@ -487,6 +487,15 @@ WIDGET_DESC = {
         "position": "Side of the child the bubble appears on.",
         "delay": "Milliseconds the pointer has to stay on the widget before the tooltip appears.",
         "tooltipDelay": "Deprecated alias of `delay`.",
+    },
+    "Menu": {
+        "items": "The actions, as `{ text, icon?, onPress?, disabled?, danger? }` records. `danger: true` writes the row in `colors.dangerStrong`.",
+        "label": "Accessible name of the trigger and of the open menu. An icon-only trigger has no visible text, so this is the name a screen reader reads.",
+        "icon": "Glyph drawn in the trigger. Defaults to `more_vert`, the vertical ellipsis a row menu is recognised by.",
+        "align": "Which edge of the trigger the panel lines up with. `end` keeps a menu at the right edge of a row from hanging off the sidebar.",
+        "width": "Width of the open panel, in framework units. The trigger itself is a square `size` wide.",
+        "size": "Side of the square trigger, in framework units. Defaults to 40 — the tap minimum — and the glyph scales with it.",
+        "portal": "Mount the panel on `document.body` so no ancestor's overflow can clip it. On by default; turn it off only when the trigger already lives in an unclipped stacking context.",
     },
     "AdMob": {
         "position": "Pins the banner to the top or bottom of the viewport.",

@@ -103,9 +103,13 @@ export default function run(ctx) {
   });
 
   // ---------------- Chart ----------------
-  t("Chart: empty data returns null", () => {
-    eq(W.Chart({ data: [] }), null);
-    eq(W.Chart({}), null);
+  t("Chart: empty data returns an updatable canvas", () => {
+    const e = mount(W.Chart({ type: "line", data: [] }));
+    eq(e.tagName, "DIV");
+    if (!e.querySelector("canvas")) throw new Error("empty chart has no canvas");
+    eq(typeof e.updateData, "function");
+    e.updateData([1, 2]);
+    eq(e.querySelectorAll("canvas").length, 1);
   });
 
   t("Chart: DIV container > scroll DIV > CANVAS", () => {

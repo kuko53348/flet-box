@@ -128,6 +128,11 @@ export const ALL_PROPS = [
   { prop: "wordBreak", domProp: "wordBreak", type: "style", unit: "none", reactive: true },
   { prop: "fontFamily", domProp: "fontFamily", type: "style", unit: "none", reactive: true },
   { prop: "textOverflow", domProp: "textOverflow", type: "style", unit: "none", reactive: true },
+  // Contorno de glifo: `textStroke: "4px #fff"` pinta un aro alrededor de las letras
+  // (-webkit-text-stroke) and `paintOrder: "stroke fill"` put it behind the fill,
+  // so the center keeps its own color instead of having the stroke absorb it.
+  { prop: "textStroke", domProp: "webkitTextStroke", type: "style", unit: "none", reactive: true },
+  { prop: "paintOrder", domProp: "paintOrder", type: "style", unit: "none", reactive: true },
 
   // ============================================================
   // FLEXBOX
@@ -167,7 +172,7 @@ export const ALL_PROPS = [
   { prop: "roundedLeft", domProp: "borderTopLeftRadius", type: "style", unit: "rem", reactive: true, targets: ["borderTopLeftRadius", "borderBottomLeftRadius"] },
   { prop: "roundedRight", domProp: "borderTopRightRadius", type: "style", unit: "rem", reactive: true, targets: ["borderTopRightRadius", "borderBottomRightRadius"] },
 
-  // Aliases simétricos (usados en only_controls: Image({ borderRadiusTop: 20 }))
+  // Symmetric aliases (used in only_controls: Image({ borderRadiusTop: 20 }))
   { prop: "borderRadiusTop", domProp: "borderTopLeftRadius", type: "style", unit: "rem", reactive: true, targets: ["borderTopLeftRadius", "borderTopRightRadius"] },
   { prop: "borderRadiusBottom", domProp: "borderBottomLeftRadius", type: "style", unit: "rem", reactive: true, targets: ["borderBottomLeftRadius", "borderBottomRightRadius"] },
   { prop: "borderRadiusLeft", domProp: "borderTopLeftRadius", type: "style", unit: "rem", reactive: true, targets: ["borderTopLeftRadius", "borderBottomLeftRadius"] },

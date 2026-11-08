@@ -222,6 +222,8 @@
       "    decoration: \"underline\",",
       "    lineHeight: 1.4,",
       "    letterSpacing: 0.5,",
+      "    textStroke: \"4px #fff\",",
+      "    paintOrder: \"stroke fill\",",
       "    styles: [\"bold\", \"italic\"],",
       "    type: \"h1\",",
       "    onPress: () => console.log(\"text clicked\"),",
@@ -867,6 +869,57 @@
       "    animationDuration: 200,",
       "    arrowSize: 6,",
       "    shadow: \"0 2px 8px rgba(0,0,0,0.2)\",",
+      "    disabled: false",
+      "})"
+    ]
+  },
+  "FletBox widgets Menu.basic": {
+    "prefix": "Menu.basic",
+    "description": "Make a FletBox widgets Menu.basic widget",
+    "body": [
+      "Menu({",
+      "    items: [",
+      "        { text: \"Rename\", icon: \"edit\", onPress: () => console.log(\"rename\") },",
+      "        { text: \"Delete\", icon: \"delete\", danger: true, onPress: () => console.log(\"delete\") }",
+      "    ]",
+      "})"
+    ]
+  },
+  "FletBox widgets Menu.normal": {
+    "prefix": "Menu.normal",
+    "description": "Make a FletBox widgets Menu.normal widget",
+    "body": [
+      "Menu({",
+      "    label: \"Project actions\",",
+      "    items: [",
+      "        { text: \"New conversation\", icon: \"add\", onPress: () => console.log(\"new\") },",
+      "        { text: \"Rename project\", icon: \"edit\", onPress: () => console.log(\"rename\") },",
+      "        { text: \"Delete project\", icon: \"delete\", danger: true, onPress: () => console.log(\"delete\") }",
+      "    ],",
+      "    align: \"end\",",
+      "    width: 220",
+      "})"
+    ]
+  },
+  "FletBox widgets Menu.full": {
+    "prefix": "Menu.full",
+    "description": "Make a FletBox widgets Menu.full widget",
+    "body": [
+      "Menu({",
+      "    label: \"Conversation actions\",",
+      "    items: [",
+      "        { text: \"Copy link\", icon: \"link\", onPress: () => console.log(\"copy\") },",
+      "        { text: \"Rename\", icon: \"edit\", onPress: () => console.log(\"rename\") },",
+      "        { text: \"Archive\", icon: \"archive\", disabled: true },",
+      "        { text: \"Delete\", icon: \"delete\", danger: true, onPress: () => console.log(\"delete\") }",
+      "    ],",
+      "    icon: \"more_vert\",",
+      "    size: 40,",
+      "    width: 220,",
+      "    align: \"start\",",
+      "    portal: true,",
+      "    bgColor: colors.surface,",
+      "    borderRadius: 8,",
       "    disabled: false",
       "})"
     ]

@@ -123,8 +123,8 @@ export const ProgressBar = (props) => {
 
   // Value percentage.
   // FIX: guardo referencia directa al span del valor (`valueElRef`) en vez de
-  // buscarlo con `querySelector("span:last-child")` — la versión anterior
-  // podía escribir el porcentaje dentro del label (si el label estaba a la
+  // querySelector("span:last-child") - the old version could
+  // write the percentage inside the label (if the label was at the
   // derecha, era el último span) y el check `valueEl !== label` nunca fallaba
   // porque `label` era un string.
   let valueElRef = null;

@@ -276,7 +276,7 @@ export const Dropdown = (inputProps = {}) => {
         alignItems: "center",
         gap: 8,
         // minWidth: 0 para que un texto largo ENCOJA y no empuje al icono: sin
-        // él, el span no puede bajar de su ancho de contenido y el
+        // el span cannot shrink below its content width and the
         // expand_more sale del selector.
         flex: 1,
         minWidth: 0,
@@ -286,7 +286,7 @@ export const Dropdown = (inputProps = {}) => {
       // width "100%" por defecto, y con eso este bloque se apropiaba de casi
       // todo el ancho del selector: al no llevar justifyContent, el glifo
       // quedaba anclado a su borde izquierdo, pegado al texto, en vez de
-      // apartado a la derecha. flexShrink 0 evita además que se apriete cuando
+      // the right side. flexShrink 0 additionally prevents squeezing when
       // el texto es largo.
       Row({
         alignItems: "center",
@@ -434,10 +434,8 @@ export const Dropdown = (inputProps = {}) => {
     const opt = currentOptions[index];
     if (opt === undefined) return;
     const optValue = getValue(opt);
-    // FIX [DROPDOWN-2]: pass (value, label) — docs promise both arguments.
-    const optLabel = getLabel(opt);
     selectedValue = optValue;
-    if (effectiveOnChange) effectiveOnChange(optValue, optLabel);
+    if (effectiveOnChange) effectiveOnChange(optValue);
     updateDisplay();
     closeMenu();
   };
@@ -647,10 +645,7 @@ export const Dropdown = (inputProps = {}) => {
     if (newProps.value !== undefined && newProps.value !== selectedValue) {
       selectedValue = newProps.value;
       needsDisplayUpdate = true;
-      // Pass (value, label) consistently; find the label from the current options.
-      const matchedOpt = currentOptions.find((o) => getValue(o) === selectedValue);
-      const matchedLabel = matchedOpt ? getLabel(matchedOpt) : undefined;
-      if (effectiveOnChange) effectiveOnChange(selectedValue, matchedLabel);
+      if (effectiveOnChange) effectiveOnChange(selectedValue);
     }
     if (newProps.disabled !== undefined) {
       currentDisabled = newProps.disabled;

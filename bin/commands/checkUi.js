@@ -613,12 +613,14 @@ const lineOf = (offsets, index) => {
 const isLargeText = (props) => {
   let size = null;
   for (const key of ["fontSize", "size"]) {
-    const numbers = numbersIn(props.get(key)?.value ?? "");
+    const entry = props.get(key);
+    const numbers = numbersIn(entry?.resolved ?? entry?.value ?? "");
     if (numbers.length === 1) size = numbers[0].number;
   }
   if (size === null) return false;
   if (size >= LARGE_TEXT_SIZE) return true;
-  return size >= 18 && /bold|['"]?(600|700)['"]?/.test(props.get("weight")?.value ?? "");
+  const weightEntry = props.get("weight");
+  return size >= 18 && /bold|['"]?(600|700)['"]?/.test(weightEntry?.resolved ?? weightEntry?.value ?? "");
 };
 
 /** The props that paint the plate a label sits on, in the order they win. */
@@ -636,10 +638,11 @@ const fillOf = (props, tokens) => {
   for (const key of FILL_KEYS) {
     const entry = props.get(key);
     if (!entry) continue;
+    const value = entry.resolved ?? entry.value;
     const resolved =
       key === "gradient"
-        ? gradientStop(entry.value, tokens)
-        : resolveColor(entry.value, tokens);
+        ? gradientStop(value, tokens)
+        : resolveColor(value, tokens);
     if (resolved) return resolved;
   }
   return null;
@@ -739,10 +742,10 @@ const checkContrast = (widget, props, scopeProps, ctx, line) => {
   /** The theme whose answer is hardest to read, plus the numbers to print. */
   let worst = null;
   for (const theme of themes) {
-    const fg = resolveColor(fgEntry.value, theme.tokens);
+    const fg = resolveColor(fgEntry.resolved ?? fgEntry.value, theme.tokens);
     if (!fg) continue;
     if (accent) {
-      const bg = resolveColor(accent.value, theme.tokens);
+      const bg = resolveColor(accent.resolved ?? accent.value, theme.tokens);
       if (!bg) continue;
       const ratio = ctx.contrast(fg, bg);
       if (!worst || ratio < worst.ratio) worst = { ratio, fg, bg, theme: theme.name };
@@ -897,10 +900,651 @@ export const functionBodies = (code) => {
   return bodies;
 };
 
+// --------------------------------------------------------------------------- //
+// Const resolution for the clean-UI pass. A value written as an identifier that
+// names a module-level or block-level `const` is resolved to the literal it
+// stands for, so `padding: PAD` where `const PAD = 13;` is still reported as an
+// off-scale spacing. Bindings that are not a simple const (parameters, catch
+// variables, loop variables, `let`/`var`, destructuring) shadow the name and
+// make it unresolvable, so a runtime value is never mistaken for a literal.
+// --------------------------------------------------------------------------- //
+
+const matchingBracket = (code, i) => {
+  const open = code[i];
+  const close = open === "{" ? "}" : open === "(" ? ")" : open === "[" ? "]" : null;
+  if (!close) return -1;
+  let depth = 0;
+  let str = false;
+  let quote = "";
+  for (let j = i; j < code.length; j++) {
+    const ch = code[j];
+    if (str) {
+      if (ch === "\\\\") {
+        j++;
+        continue;
+      }
+      if (ch === quote) str = false;
+      continue;
+    }
+    if (isQuote(ch)) {
+      str = true;
+      quote = ch;
+      continue;
+    }
+    if (ch === open) depth++;
+    else if (ch === close) {
+      depth--;
+      if (depth === 0) return j;
+    }
+  }
+  return -1;
+};
+
+const splitTopLevel = (s, sep) => {
+  const out = [];
+  let depth = 0;
+  let str = false;
+  let quote = "";
+  let cur = "";
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (str) {
+      cur += ch;
+      if (ch === "\\\\") {
+        cur += s[++i] ?? "";
+        continue;
+      }
+      if (ch === quote) str = false;
+      continue;
+    }
+    if (isQuote(ch)) {
+      str = true;
+      quote = ch;
+      cur += ch;
+      continue;
+    }
+    if (ch === "{" || ch === "(" || ch === "[") {
+      depth++;
+      cur += ch;
+      continue;
+    }
+    if (ch === "}" || ch === ")" || ch === "]") {
+      depth--;
+      cur += ch;
+      continue;
+    }
+    if (depth === 0 && ch === sep) {
+      out.push(cur);
+      cur = "";
+      continue;
+    }
+    cur += ch;
+  }
+  if (cur.trim() !== "") out.push(cur);
+  return out;
+};
+
+const findTopLevelEquals = (s) => {
+  let depth = 0;
+  let str = false;
+  let quote = "";
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (str) {
+      if (ch === "\\\\") {
+        i++;
+        continue;
+      }
+      if (ch === quote) str = false;
+      continue;
+    }
+    if (isQuote(ch)) {
+      str = true;
+      quote = ch;
+      continue;
+    }
+    if (ch === "{" || ch === "(" || ch === "[") {
+      depth++;
+      continue;
+    }
+    if (ch === "}" || ch === ")" || ch === "]") {
+      depth--;
+      continue;
+    }
+    if (depth === 0 && ch === "=" && s[i + 1] !== "=" && s[i - 1] !== "=" && s[i + 1] !== ">") {
+      return i;
+    }
+  }
+  return -1;
+};
+
+const findTopLevelColon = (s) => {
+  let depth = 0;
+  let str = false;
+  let quote = "";
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (str) {
+      if (ch === "\\\\") {
+        i++;
+        continue;
+      }
+      if (ch === quote) str = false;
+      continue;
+    }
+    if (isQuote(ch)) {
+      str = true;
+      quote = ch;
+      continue;
+    }
+    if (ch === "{" || ch === "(" || ch === "[") {
+      depth++;
+      continue;
+    }
+    if (ch === "}" || ch === ")" || ch === "]") {
+      depth--;
+      continue;
+    }
+    if (depth === 0 && ch === ":") return i;
+  }
+  return -1;
+};
+
+const extractBindingNames = (pattern) => {
+  const p = pattern.trim();
+  if (!p) return [];
+  if (/^[A-Za-z_$][\w$]*$/.test(p)) return [p];
+  if (p.startsWith("{") && p.endsWith("}")) {
+    const inner = p.slice(1, -1);
+    const parts = splitTopLevel(inner, ",");
+    const names = [];
+    for (const part of parts) {
+      let pp = part.trim();
+      if (!pp) continue;
+      if (pp.startsWith("...")) pp = pp.slice(3).trim();
+      const colon = findTopLevelColon(pp);
+      if (colon !== -1) {
+        const valuePart = pp.slice(colon + 1).trim();
+        const eq = findTopLevelEquals(valuePart);
+        const target = eq !== -1 ? valuePart.slice(0, eq).trim() : valuePart;
+        names.push(...extractBindingNames(target));
+      } else {
+        const eq = findTopLevelEquals(pp);
+        const target = eq !== -1 ? pp.slice(0, eq).trim() : pp;
+        names.push(...extractBindingNames(target));
+      }
+    }
+    return names;
+  }
+  if (p.startsWith("[") && p.endsWith("]")) {
+    const inner = p.slice(1, -1);
+    const parts = splitTopLevel(inner, ",");
+    const names = [];
+    for (const part of parts) {
+      let pp = part.trim();
+      if (!pp) continue;
+      if (pp.startsWith("...")) pp = pp.slice(3).trim();
+      const eq = findTopLevelEquals(pp);
+      const target = eq !== -1 ? pp.slice(0, eq).trim() : pp;
+      names.push(...extractBindingNames(target));
+    }
+    return names;
+  }
+  return [];
+};
+
+const parseParamNames = (s) => {
+  const parts = splitTopLevel(s, ",");
+  const names = [];
+  for (const part of parts) {
+    let pp = part.trim();
+    if (!pp) continue;
+    const eq = findTopLevelEquals(pp);
+    if (eq !== -1) pp = pp.slice(0, eq).trim();
+    if (pp.startsWith("...")) pp = pp.slice(3).trim();
+    names.push(...extractBindingNames(pp));
+  }
+  return names;
+};
+
+const extractBindingNamesFromFor = (s) => {
+  let main = s;
+  const ofMatch = /\s+(?:of|in)\s+/.exec(s);
+  if (ofMatch) main = s.slice(0, ofMatch.index);
+  const parts = splitTopLevel(main, ",");
+  const names = [];
+  for (const part of parts) {
+    let pp = part.trim();
+    const eq = findTopLevelEquals(pp);
+    if (eq !== -1) pp = pp.slice(0, eq).trim();
+    names.push(...extractBindingNames(pp));
+  }
+  return names;
+};
+
+export const paramsBeforeBrace = (code, brace) => {
+  let i = brace - 1;
+  while (i >= 0 && /\s/.test(code[i])) i--;
+  let arrow = false;
+  if (i >= 1 && code[i] === ">" && code[i - 1] === "=") {
+    arrow = true;
+    i -= 2;
+  }
+  while (i >= 0 && /\s/.test(code[i])) i--;
+  if (i < 0 || code[i] !== ")") return null;
+  const closeIdx = i;
+  let depth = 0;
+  let start = -1;
+  for (let j = closeIdx; j >= 0; j--) {
+    const ch = code[j];
+    if (ch === ")") depth++;
+    else if (ch === "(") {
+      depth--;
+      if (depth === 0) {
+        start = j;
+        break;
+      }
+    }
+  }
+  if (start === -1) return null;
+  let k = start - 1;
+  let _d = 0;
+  while (k >= 0) {
+    const ch = code[k];
+    if (ch === ")" || ch === "]") _d++;
+    else if (ch === "(" || ch === "[") {
+      if (_d === 0) break;
+      _d--;
+    } else if (_d === 0 && (ch === ";" || ch === "{" || ch === "}" || ch === "\n")) {
+      break;
+    }
+    k--;
+  }
+  const before = code.slice(k + 1, start).trim();
+  let kind = null;
+  if (/\bcatch$/.test(before)) kind = "catch";
+  else if (/\bfor$/.test(before)) kind = "for";
+  else if (/\bfunction\b/.test(before)) kind = "function";
+  else if (before.endsWith("=>")) kind = "function";
+  else if (/[A-Za-z_$][\w$]*\s*$/.test(before) && !/\b(if|for|while|switch|with|do|else|try|catch)$/.test(before)) kind = "function";
+  else if (arrow) kind = "function";
+  if (!kind) return null;
+
+  const paramText = code.slice(start + 1, closeIdx);
+  if (kind === "for") {
+    const names = extractBindingNamesFromFor(paramText);
+    return names.length ? names : null;
+  }
+  return parseParamNames(paramText);
+};
+
+export const arrowParams = (code, arrowIdx) => {
+  let i = arrowIdx - 1;
+  while (i >= 0 && /\s/.test(code[i])) i--;
+  if (i < 0) return null;
+  if (/[A-Za-z_$]/.test(code[i])) {
+    const m = /[A-Za-z_$][\w$]*$/.exec(code.slice(0, i + 1));
+    if (m) return [m[0]];
+    return null;
+  }
+  if (code[i] !== ")") return null;
+  const closeIdx = i;
+  let depth = 0;
+  let start = -1;
+  for (let j = closeIdx; j >= 0; j--) {
+    const ch = code[j];
+    if (ch === ")") depth++;
+    else if (ch === "(") {
+      depth--;
+      if (depth === 0) {
+        start = j;
+        break;
+      }
+    }
+  }
+  if (start === -1) return null;
+  return parseParamNames(code.slice(start + 1, closeIdx));
+};
+
+const exprExtent = (code, j, hi) => {
+  let depth = 0;
+  let str = false;
+  let quote = "";
+  let i = j;
+  while (i < hi) {
+    const ch = code[i];
+    if (str) {
+      if (ch === "\\\\") {
+        i += 2;
+        continue;
+      }
+      if (ch === quote) str = false;
+      i++;
+      continue;
+    }
+    if (isQuote(ch)) {
+      str = true;
+      quote = ch;
+      i++;
+      continue;
+    }
+    if (ch === "{" || ch === "(" || ch === "[") {
+      depth++;
+      i++;
+      continue;
+    }
+    if (ch === "}" || ch === ")" || ch === "]") {
+      if (depth === 0) break;
+      depth--;
+      i++;
+      continue;
+    }
+    if (depth === 0 && (ch === ";" || ch === ",")) break;
+    if (depth === 0 && ch === "\n") {
+      const soFar = code.slice(j, i).trimEnd();
+      const last = soFar[soFar.length - 1];
+      if (last && /[+\-*/%&|^,(:[{]/.test(last)) {
+        i++;
+        continue;
+      }
+      break;
+    }
+    i++;
+  }
+  return i;
+};
+
+const isConstKeyword = (code, i) => {
+  if (i > 0 && /[A-Za-z0-9_$]/.test(code[i - 1])) return false;
+  if (!code.startsWith("const", i)) return false;
+  const after = code[i + 5];
+  if (after && /[A-Za-z0-9_$]/.test(after)) return false;
+  return true;
+};
+
+const isLetOrVarKeyword = (code, i) => {
+  for (const kw of ["let", "var"]) {
+    if (!code.startsWith(kw, i)) continue;
+    if (i > 0 && /[A-Za-z0-9_$]/.test(code[i - 1])) continue;
+    const after = code[i + kw.length];
+    if (after && /[A-Za-z0-9_$]/.test(after)) continue;
+    return kw;
+  }
+  return null;
+};
+
+const parseConstDecl = (code, start, hi, kind) => {
+  const kw = kind === "const" ? "const" : kind;
+  let i = start + kw.length;
+  const decls = [];
+  const parseOne = () => {
+    while (i < hi && /\s/.test(code[i])) i++;
+    if (i >= hi) return false;
+    if (code[i] === ";" || code[i] === "}" || code[i] === "\n") {
+      if (code[i] === ";") i++;
+      return false;
+    }
+    const patStart = i;
+    let pattern;
+    if (code[i] === "{" || code[i] === "[") {
+      const close = matchingBracket(code, i);
+      if (close === -1 || close >= hi) return false;
+      pattern = code.slice(i, close + 1);
+      i = close + 1;
+    } else {
+      const m = /^[A-Za-z_$][\w$]*/.exec(code.slice(i));
+      if (!m) return false;
+      pattern = m[0];
+      i += m[0].length;
+    }
+    while (i < hi && /\s/.test(code[i])) i++;
+    let init = null;
+    let initStart = null;
+    if (i < hi && code[i] === "=" && code[i + 1] !== "=" && code[i + 1] !== ">") {
+      i++;
+      while (i < hi && /\s/.test(code[i])) i++;
+      initStart = i;
+      let depth = 0;
+      let str = false;
+      let quote = "";
+      while (i < hi) {
+        const ch = code[i];
+        if (str) {
+          if (ch === "\\\\") {
+            i += 2;
+            continue;
+          }
+          if (ch === quote) str = false;
+          i++;
+          continue;
+        }
+        if (isQuote(ch)) {
+          str = true;
+          quote = ch;
+          i++;
+          continue;
+        }
+        if (ch === "{" || ch === "(" || ch === "[") {
+          depth++;
+          i++;
+          continue;
+        }
+        if (ch === "}" || ch === ")" || ch === "]") {
+          if (depth === 0) break;
+          depth--;
+          i++;
+          continue;
+        }
+        if (depth === 0 && (ch === "," || ch === ";")) break;
+        if (depth === 0 && ch === "\n") {
+          const soFar = code.slice(initStart, i).trimEnd();
+          const last = soFar[soFar.length - 1];
+          if (!last || !/[+\-*/%&|^,(:[{]/.test(last)) break;
+        }
+        i++;
+      }
+      init = code.slice(initStart, i).trim();
+    }
+    decls.push({ pattern, name: /^[A-Za-z_$][\w$]*$/.test(pattern) ? pattern : null, init, declOffset: patStart, kind, initStart, initEnd: init !== null ? i : null });
+    while (i < hi && /\s/.test(code[i])) i++;
+    if (i < hi && code[i] === ",") {
+      i++;
+      return true;
+    }
+    return false;
+  };
+  let more = true;
+  while (more && i < hi) {
+    more = parseOne();
+  }
+  return { decls, endOffset: i };
+};
+
+export const processRange = (code, lo, hi, parent, params) => {
+  const scope = {
+    parent,
+    lo,
+    hi,
+    bindings: new Map(),
+    children: [],
+  };
+  for (const p of params || []) {
+    if (/^[A-Za-z_$][\w$]*$/.test(p)) {
+      scope.bindings.set(p, { kind: "param", init: null, declOffset: lo });
+    }
+  }
+  let i = lo;
+  let parenDepth = 0;
+  while (i < hi) {
+    if (isQuote(code[i])) {
+      i = skipString(code, i);
+      continue;
+    }
+    if (parenDepth > 0) {
+      if (code[i] === "(") parenDepth++;
+      else if (code[i] === ")") parenDepth--;
+      i++;
+      continue;
+    }
+    if (code[i] === "(") {
+      parenDepth++;
+      i++;
+      continue;
+    }
+    if (code[i] === "{") {
+      const close = matchingBracket(code, i);
+      if (close === -1 || close >= hi) {
+        i++;
+        continue;
+      }
+      let childParams = null;
+      const pb = paramsBeforeBrace(code, i);
+      if (pb) childParams = pb;
+      const child = processRange(code, i + 1, close, scope, childParams);
+      scope.children.push(child);
+      i = close + 1;
+      continue;
+    }
+    if (code[i] === "=" && code[i + 1] === ">") {
+      const ps = arrowParams(code, i);
+      let j = i + 2;
+      while (j < hi && /\s/.test(code[j])) j++;
+      if (j < hi && code[j] !== "{") {
+        const bodyEnd = exprExtent(code, j, hi);
+        const child = processRange(code, j, bodyEnd, scope, ps || []);
+        scope.children.push(child);
+        i = bodyEnd;
+        continue;
+      }
+      i += 2;
+      continue;
+    }
+    const letKw = isLetOrVarKeyword(code, i);
+    if (letKw) {
+      const kind = letKw;
+      const parsed = parseConstDecl(code, i, hi, kind);
+      for (const d of parsed.decls) {
+        const names = d.name ? [d.name] : extractBindingNames(d.pattern);
+        for (const n of names) {
+          scope.bindings.set(n, { kind, init: null, declOffset: d.declOffset });
+        }
+        if (d.initStart !== null && d.initEnd !== null && d.initEnd > d.initStart) {
+          const child = processRange(code, d.initStart, d.initEnd, scope, []);
+          scope.children.push(child);
+        }
+      }
+      i = parsed.endOffset;
+      continue;
+    }
+    if (isConstKeyword(code, i)) {
+      const parsed = parseConstDecl(code, i, hi, "const");
+      for (const d of parsed.decls) {
+        if (d.name) {
+          scope.bindings.set(d.name, { kind: "const", init: d.init, declOffset: d.declOffset });
+        } else {
+          const names = extractBindingNames(d.pattern);
+          for (const n of names) {
+            scope.bindings.set(n, { kind: "other", init: null, declOffset: d.declOffset });
+          }
+        }
+        if (d.initStart !== null && d.initEnd !== null && d.initEnd > d.initStart) {
+          const child = processRange(code, d.initStart, d.initEnd, scope, []);
+          scope.children.push(child);
+        }
+      }
+      i = parsed.endOffset;
+      continue;
+    }
+    i++;
+  }
+  return scope;
+};
+
+export const scopeAt = (root, offset) => {
+  let cur = root;
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const child of cur.children) {
+      if (offset >= child.lo && offset < child.hi) {
+        cur = child;
+        changed = true;
+        break;
+      }
+    }
+  }
+  return cur;
+};
+
+const resolveExpr = (text, scope, pos, visited) => {
+  const t = text.trim();
+  if (!t) return text;
+  if (isQuote(t[0])) {
+    const end = skipString(t, 0);
+    if (end === t.length) return text;
+  }
+  if (/^-?\d+(?:\.\d+)?$/.test(t)) return text;
+  if (/^colors\.[A-Za-z_$][\w$]*$/.test(t)) return text;
+  if (/^[A-Za-z_$][\w$]*$/.test(t)) {
+    const r = resolveIdent(t, scope, pos, visited || new Set());
+    return r === null ? text : r;
+  }
+  let out = "";
+  let i = 0;
+  const v = visited || new Set();
+  while (i < t.length) {
+    const ch = t[i];
+    if (isQuote(ch)) {
+      const end = skipString(t, i);
+      out += t.slice(i, end);
+      i = end;
+      continue;
+    }
+    if (/[A-Za-z_$]/.test(ch)) {
+      const m = /^[A-Za-z_$][\w$]*/.exec(t.slice(i));
+      const ident = m[0];
+      const before = i > 0 ? t[i - 1] : "";
+      const after = t[i + ident.length] || "";
+      if (before !== "." && after !== ".") {
+        const r = resolveIdent(ident, scope, pos, v);
+        out += r === null ? ident : r;
+      } else {
+        out += ident;
+      }
+      i += ident.length;
+      continue;
+    }
+    out += ch;
+    i++;
+  }
+  return out;
+};
+
+const resolveIdent = (name, scope, pos, visited) => {
+  let cur = scope;
+  while (cur) {
+    const b = cur.bindings.get(name);
+    if (b) {
+      if (b.declOffset > pos) return null;
+      if (b.kind !== "const") return null;
+      if (b.init == null) return null;
+      const key = name + "@" + (cur.lo || 0);
+      if (visited.has(key)) return null;
+      visited.add(key);
+      const resolved = resolveExpr(b.init, cur, b.declOffset, visited);
+      visited.delete(key);
+      return resolved === null ? b.init : resolved;
+    }
+    cur = cur.parent;
+  }
+  return null;
+};
+
 const checkFile = (file, ctx) => {
   const findings = [];
   const src = fs.readFileSync(file, "utf8");
   const code = blankComments(src);
+  const rootScope = processRange(code, 0, code.length, null, []);
   const offsets = lineOffsets(src);
   const tokenFile = isTokenFile(file);
   const push = (line, codeName, message, detail) =>
@@ -914,7 +1558,15 @@ const checkFile = (file, ctx) => {
   const calls = findCalls(code).map((call) => {
     const props = new Map();
     for (const entry of entriesOf(code, call.open, call.close)) {
-      if (!props.has(entry.key)) props.set(entry.key, entry);
+      if (!props.has(entry.key)) {
+        entry.resolved = resolveExpr(
+          entry.value,
+          scopeAt(rootScope, entry.valueStart),
+          entry.valueStart,
+          new Set(),
+        );
+        props.set(entry.key, entry);
+      }
     }
     return { ...call, props };
   });
@@ -959,7 +1611,7 @@ const checkFile = (file, ctx) => {
     for (const key of TEXT_KEYS) {
       const entry = call.props.get(key);
       if (!entry) continue;
-      const match = /^['"`]([\s\S]*)['"`]$/.exec(entry.value.trim());
+      const match = /^['"`]([\s\S]*)['"`]$/.exec((entry.resolved ?? entry.value).trim());
       return match ? match[1] : null;
     }
     return null;
@@ -1018,11 +1670,11 @@ const checkFile = (file, ctx) => {
       if (SKIP_VALUE_KEYS.has(key)) continue;
       const kind = ctx.propKinds.get(key);
       const valueLine = lineOf(offsets, entry.valueStart);
-      const measured = measuredNumbers(entry.value);
+      const measured = measuredNumbers(entry.resolved ?? entry.value);
       const numbers = measured.numbers;
 
       if (kind === "color" || COLOR_FALLBACK_KEYS.has(key)) {
-        const literal = colorLiteralIn(entry.value);
+        const literal = colorLiteralIn(entry.resolved ?? entry.value);
         if (literal && !tokenFile) {
           push(
             valueLine,
@@ -1030,7 +1682,7 @@ const checkFile = (file, ctx) => {
             `${call.name} sets \`${key}\` to the literal ${literal}.`,
             "Color comes from a token (`colors.text`, `colors.primary`). A typed hex is the first sign a screen drifted from the rest; if a token is missing, add it to src/database/themes.js.",
           );
-        } else if (/colors\.[A-Za-z0-9_]+\s*\+\s*['"][0-9a-fA-F]{2}['"]/.test(entry.value)) {
+        } else if (/colors\.[A-Za-z0-9_]+\s*\+\s*['"][0-9a-fA-F]{2}['"]/.test(entry.resolved ?? entry.value)) {
           push(
             valueLine,
             "HAND_MIXED_COLOR",
@@ -1093,9 +1745,9 @@ const checkFile = (file, ctx) => {
         // is 40x40 and legal, while `size: 16` alone is the glyph and nothing else.
         // A padding this pass cannot resolve makes the target unmeasured.
         const padded = props.has("paddingVertical")
-          ? measuredNumbers(props.get("paddingVertical").value)
+          ? measuredNumbers(props.get("paddingVertical").resolved ?? props.get("paddingVertical").value)
           : props.has("padding")
-            ? measuredNumbers(props.get("padding").value)
+            ? measuredNumbers(props.get("padding").resolved ?? props.get("padding").value)
             : { measured: true, numbers: [0] };
         const vertical = padded.measured ? Math.abs(padded.numbers[0] ?? 0) : null;
         for (const n of numbers) {
@@ -1116,7 +1768,7 @@ const checkFile = (file, ctx) => {
       if (
         tappable &&
         key === "size" &&
-        /(['"])small\1/.test(entry.value) &&
+        /(['"])small\1/.test(entry.resolved ?? entry.value) &&
         !props.has("height") &&
         !props.has("minHeight")
       ) {

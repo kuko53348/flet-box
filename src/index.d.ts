@@ -1758,6 +1758,37 @@ declare module 'flet-box' {
     updatePosition(): void;
   };
 
+  export type MenuItem = {
+    text: string;
+    icon?: string;
+    onPress?: () => void;
+    disabled?: boolean;
+    danger?: boolean;
+  };
+
+  export interface MenuProps extends CommonProps {
+    items: MenuItem[];
+    /** Accessible name of the trigger and of the menu it opens. */
+    label?: string;
+    icon?: string;
+    /** Width of the open panel. The trigger is a square `size` wide. */
+    width?: number | string;
+    /** Which edge of the trigger the panel aligns to. */
+    align?: 'start' | 'end';
+    disabled?: boolean;
+    /** Mount the panel on `document.body` so no ancestor can clip it. */
+    portal?: boolean;
+    bgColor?: Color;
+    borderRadius?: number;
+    size?: number;
+  }
+
+  export function Menu(props: MenuProps): FletWidget & {
+    open(): void;
+    close(): void;
+    update(props: Partial<MenuProps>): void;
+  };
+
   export interface PaginationProps extends CommonProps {
     totalItems: number;
     pageSize?: number;

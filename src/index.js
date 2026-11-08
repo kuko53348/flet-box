@@ -248,6 +248,7 @@ export {
   DataTable,
   Carousel,
   Tooltip,
+  Menu,
   InstallButton,
   Video,
   Audio,

@@ -88,6 +88,8 @@ const widgetConfigs = {
     decoration: "underline",
     lineHeight: 1.4,
     letterSpacing: 0.4,
+    textStroke: "2px #fff",
+    paintOrder: "stroke fill",
   }),
   Button: () => ({
     text: "btn",

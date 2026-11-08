@@ -10,7 +10,7 @@ import { readableInk } from "../utils/readableInk.js";
 import { toREM } from "../utils/units.js";
 
 /**
- * SnackBar - Notificación temporal
+ * SnackBar - Temporary notification
  * @param {Object} options
  * @returns {Object} { close, show, getElement }
  */
@@ -84,7 +84,7 @@ export function SnackBar(options) {
   const finalAction =
     customAction || (customBg ? finalText : preset.action);
 
-  // Createste main container
+  // Creates the main container
   const snackbar = WidgetFactory({
     tag: "div",
     position: "fixed",

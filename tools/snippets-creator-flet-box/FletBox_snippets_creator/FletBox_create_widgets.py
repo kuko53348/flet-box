@@ -139,6 +139,8 @@ Column({
     decoration: "underline",
     lineHeight: 1.4,
     letterSpacing: 0.5,
+    textStroke: "4px #fff",
+    paintOrder: "stroke fill",
     styles: ["bold", "italic"],
     type: "h1",
     onPress: () => console.log("text clicked"),
@@ -484,6 +486,40 @@ Column({
     animationDuration: 200,
     arrowSize: 6,
     shadow: "0 2px 8px rgba(0,0,0,0.2)",
+    disabled: false
+})''',
+
+'Menu.basic': '''Menu({
+    items: [
+        { text: "Rename", icon: "edit", onPress: () => console.log("rename") },
+        { text: "Delete", icon: "delete", danger: true, onPress: () => console.log("delete") }
+    ]
+})''',
+'Menu.normal': '''Menu({
+    label: "Project actions",
+    items: [
+        { text: "New conversation", icon: "add", onPress: () => console.log("new") },
+        { text: "Rename project", icon: "edit", onPress: () => console.log("rename") },
+        { text: "Delete project", icon: "delete", danger: true, onPress: () => console.log("delete") }
+    ],
+    align: "end",
+    width: 220
+})''',
+'Menu.full': '''Menu({
+    label: "Conversation actions",
+    items: [
+        { text: "Copy link", icon: "link", onPress: () => console.log("copy") },
+        { text: "Rename", icon: "edit", onPress: () => console.log("rename") },
+        { text: "Archive", icon: "archive", disabled: true },
+        { text: "Delete", icon: "delete", danger: true, onPress: () => console.log("delete") }
+    ],
+    icon: "more_vert",
+    size: 40,
+    width: 220,
+    align: "start",
+    portal: true,
+    bgColor: colors.surface,
+    borderRadius: 8,
     disabled: false
 })''',
 
@@ -1408,7 +1444,7 @@ console.log("code block");
 })''',
 
 # =========================================================================
-# EXPORTACIONES SIN EJEMPLO: fábrica, montaje, monetización y stores
+# EXPORTS WITHOUT EXAMPLE: factory, mounting, monetization and stores
 # =========================================================================
 
 'App.basic': 'App(Text({ text: "Hello" }))',

@@ -265,6 +265,24 @@ const fixtures = [
   },
 ];
 
+// Naming a literal must not hide it from the design gate. Keep each code on
+// its own marked use, so a report on the declaration cannot satisfy the guard.
+for (const [declaration, widget, prop, code] of [
+  ['const PAD = 13;', 'Container', 'padding: PAD', 'OFF_SCALE_SPACING'],
+  ['const RADIO = 22;', 'Container', 'borderRadius: RADIO', 'OFF_SCALE_RADIUS'],
+  ['const TIPO = 15;', 'Text', 'text: "Hi", size: TIPO', 'OFF_SCALE_TYPE'],
+  ['const MARCA = "#4f46e5";', 'Container', 'bgColor: MARCA', 'RAW_COLOR'],
+]) {
+  fixtures.push({
+    gate: 'ui',
+    files: () => ({
+      'src/named-literal.js': `import { ${widget} } from "flet-box";\n${declaration}\nexport const view = () => ${widget}({ ${prop} }); // expect\n`,
+    }),
+    expect: { code },
+    where: (files) => [at('src/named-literal.js', files['src/named-literal.js'])],
+  });
+}
+
 // A second structural code the gate owns, proven on the same fixture root: a
 // cycle needs two modules, so it gets its own entry instead of sharing `stray.js`.
 fixtures.push({

@@ -125,6 +125,14 @@ const ok = (cond, msg) => {
 };
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+const waitFor = async (predicate, timeoutMs = 1200) => {
+  const deadline = performance.now() + timeoutMs;
+  while (performance.now() < deadline) {
+    if (predicate()) return true;
+    await wait(16);
+  }
+  return Boolean(predicate());
+};
 
 // `innerWidth` is a read-only accessor on Window, so a responsive test has to
 // shadow it with its own configurable property and hand the descriptor back.
@@ -1164,6 +1172,7 @@ async function run() {
     const args = [];
     const dd = W.Dropdown({
       options: ["a", "b"],
+      portal: false,
       onPress: (...received) => args.push(received),
     });
     mount(dd);
@@ -1172,6 +1181,15 @@ async function run() {
     ok(args.length === 1, `onPress fired ${args.length} time(s) for one change`);
     ok(args[0].length === 1, `onPress received ${args[0].length} argument(s), the declaration says one`);
     ok(args[0][0] === "b", `onPress received ${JSON.stringify(args[0][0])}, expected "b"`);
+
+    args.length = 0;
+    dd.open();
+    const option = dd.querySelector('[role="option"]');
+    ok(option, "opening the dropdown did not render an option");
+    option.click();
+    ok(args.length === 1, `selecting an option fired onPress ${args.length} time(s)`);
+    ok(args[0].length === 1, `selection sent ${args[0].length} arguments to onPress`);
+    ok(args[0][0] === "a", `selection sent ${JSON.stringify(args[0][0])}, expected "a"`);
   });
 
   // ------------------------------------------------------------ Scaffold/Drawer
@@ -3652,11 +3670,11 @@ async function run() {
       const dot = Array.from(map.children).find((el) => el.style.borderRadius.includes("50%"));
       ok(dot, "no user dot layer found");
       map.setUserPosition([41.3874, 2.1686]);
-      await wait(40);
-      ok(dot.style.display !== "none", "dot missing before the watcher failed");
+      const appeared = await waitFor(() => dot.style.display !== "none");
+      ok(appeared, "dot missing before the watcher failed");
       watchError();
-      await wait(40);
-      ok(dot.style.display !== "none", "the watcher error wiped the position set by the app");
+      const retained = await waitFor(() => dot.style.display !== "none");
+      ok(retained, "the watcher error wiped the position set by the app");
     } finally {
       Object.defineProperty(navigator, "geolocation", { configurable: true, value: real });
     }
@@ -3683,11 +3701,13 @@ async function run() {
         ],
       }),
     );
-    await wait(60);
+    const ready = await waitFor(() => {
+      const layer = Array.from(map.children).find((el) => el.tagName === "CANVAS");
+      return layer && layer.width > 0 && layer.height > 0 && painted(layer);
+    });
     const canvas = Array.from(map.children).find((el) => el.tagName === "CANVAS");
     ok(canvas, "no canvas layer was added");
-    ok(canvas.width > 0 && canvas.height > 0, `canvas backing store is ${canvas.width}x${canvas.height}`);
-    ok(painted(canvas), "the canvas holds no ink");
+    ok(ready, `canvas did not paint after layout (${canvas.width}x${canvas.height})`);
     const stored = map.getPolylines();
     ok(stored.length === 2, `${stored.length} lines stored`);
     ok(stored[0].width === 4 && stored[0].color !== "#ff0000", "a bare line got no defaults");
@@ -3704,14 +3724,14 @@ async function run() {
     );
 
     map.clearPolylines();
-    await wait(60);
+    const cleared = await waitFor(() => !painted(canvas));
     ok(map.getPolylines().length === 0, "clearPolylines() kept lines");
-    ok(!painted(canvas), "clearPolylines() left strokes on the canvas");
+    ok(cleared, "clearPolylines() left strokes on the canvas");
 
     const added = map.addPolyline([[10, 10], [20, 20]]);
     ok(added, "addPolyline() returned nothing");
-    await wait(60);
-    ok(painted(canvas), "addPolyline() did not repaint");
+    const repainted = await waitFor(() => painted(canvas));
+    ok(repainted, "addPolyline() did not repaint");
     ok(map.getPolylines().length === 1, "addPolyline() did not store the line");
     ok(map.removePolyline(added) && map.getPolylines().length === 0, "removePolyline() lost nothing");
     await wait(60);

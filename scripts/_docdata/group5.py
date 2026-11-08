@@ -46,6 +46,62 @@ WIDGET_DOCS = {
   animationDuration: 180,
 });''',
     },
+    "Menu": {
+        "summary": "A trigger button that opens an anchored menu of actions. The panel is a "
+                   "portal on document.body, so a row's overflow cannot clip it, and it speaks "
+                   "the menu keyboard pattern instead of being a second list of links.",
+        "when": "Use it for the secondary actions of a row — rename, duplicate, delete — when "
+                "two permanent buttons would take the space the row's own label needs.",
+        "related": ["Button", "Dropdown", "ListTile"],
+        "tips": [
+            "Keep the items to the actions of the row it belongs to. A menu that copies the whole app navigation is a drawer with extra steps.",
+            "Mark a destructive item with danger: true; the ink becomes colors.dangerStrong, the token that is readable as words.",
+            "The trigger is an icon-only control, so label is not optional in practice: it is the name a screen reader reads before opening the menu.",
+        ],
+        "accessibility": [
+            "The trigger keeps the Tab stop and reports aria-haspopup and aria-expanded; ArrowDown and ArrowUp open the panel on the first and last action.",
+            "Inside the panel the arrow keys move focus between role=menuitem rows, Enter or Space runs the action, Escape closes and returns focus to the trigger, and Tab closes and moves on.",
+            "The panel holds Tab while it is open through the same focus scope as the overlays, and gives focus back when it closes or unmounts.",
+        ],
+        "behavior": [
+            "The panel is measured against the viewport: it aligns to the trigger's start or end edge and flips above the trigger when it does not fit below.",
+            "Escape, a click outside the trigger and the panel, or scrolling with the menu open closes it; every listener is released on unmount.",
+            "Changing items through update() rebuilds the open panel; setting disabled closes it and disables the trigger.",
+        ],
+        "basic": '''const actions = Menu({
+  label: "Conversation actions",
+  items: [
+    { text: "Rename", icon: "edit", onPress: rename },
+    { text: "Delete", icon: "delete", danger: true, onPress: remove },
+  ],
+});''',
+        "normal": '''const rowMenu = Menu({
+  label: "Project actions",
+  items: [
+    { text: "Rename project", icon: "edit", onPress: renameProject },
+    { text: "Delete project", icon: "delete", danger: true, onPress: deleteProject },
+  ],
+  align: "end",
+  width: 220,
+});''',
+        "full": '''const menu = Menu({
+  label: "Message actions",
+  icon: "more_vert",
+  items: [
+    { text: "Copy", icon: "content_copy", onPress: copy },
+    { text: "Edit", icon: "edit", onPress: edit },
+    { text: "Archive", icon: "archive", onPress: archive, disabled: true },
+    { text: "Delete", icon: "delete", danger: true, onPress: remove },
+  ],
+  size: 40,
+  width: 220,
+  align: "start",
+  portal: true,
+  bgColor: "#ffffff",
+  borderRadius: 8,
+  disabled: false,
+});''',
+    },
     "InstallButton": {
         "summary": "A floating button that appears only when the browser is ready to install "
                    "the app as a PWA. It wraps a standard Button and stays hidden otherwise.",

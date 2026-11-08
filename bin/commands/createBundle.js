@@ -260,8 +260,8 @@ export const createBundle = async (targetArg) => {
   // Visual reference only: createBundle NEVER bumps the version — only
   // `flet-box release` does. Print what each release flag would produce so the
   // next version is visible at build time.
-  console.log(section("🔢", `Versión del bundle: ${appVersion}`, "#34d399"));
-  console.log(c("gray", "     Qué haría cada release:"));
+  console.log(section("🔢", `Bundle version: ${appVersion}`, "#34d399"));
+  console.log(c("gray", "     What each release would do:"));
   for (const [flag, type] of [
     ["--patch", "patch"],
     ["--minor", "minor"],

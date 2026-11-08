@@ -133,9 +133,9 @@ export const AdaptiveScaffold = (props) => {
       widthCollapsed: 50,
       bgColor: colors.surface,
       // FIX: CollapsibleSideBar aplica `borderRight` por defecto (default
-      // `1px solid ${colors.border}`), así que un sidebar derecho acababa
+      // a right sidebar would end up with a border that was
       // con doble borde: `borderRight` (heredado del default) + `borderLeft`
-      // (el que pedimos aquí). Forzamos `borderRight: "none"` para que solo
+      // (the one we requested here). We force `borderRight: "none"` so only
       // tenga el borde izquierdo (el que da al contenido central).
       borderRight: "none",
       borderLeft: `1px solid ${colors.border}`,

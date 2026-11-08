@@ -236,11 +236,9 @@ await check("arithmetic on literals is folded before judging", async () => {
 });
 
 await check("a value the pass cannot resolve is unmeasured, not a finding", async () => {
-  const withGutter = (source) =>
-    source.replace("const retry = () => {};", "const gutter = 26;\nconst retry = () => {};");
   const spacing = (findings) => findings.filter((item) => item.code === "OFF_SCALE_SPACING");
-  for (const value of ["gutter", "rows.length > 1 ? 26 : 24", '"calc(8px + 5px)"']) {
-    const findings = await scan(withGutter(mutate("unmeasured", [["padding: 24,", `padding: ${value},`]])));
+  for (const value of ["rows", "rows.length > 1 ? 26 : 24", '"calc(8px + 5px)"']) {
+    const findings = await scan(mutate("unmeasured", [["padding: 24,", `padding: ${value},`]]));
     assert.deepEqual(
       spacing(findings).map((item) => item.message),
       [],

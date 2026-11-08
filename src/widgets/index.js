@@ -37,6 +37,7 @@ export { DroppBox } from "./DroppBox.js";
 export { DataTable } from "./DataTable.js";
 export { Carousel } from "./Carousel.js";
 export { Tooltip } from "./Tooltip.js";
+export { Menu } from "./Menu.js";
 export { Pagination } from "./Pagination.js";
 export { TreeView } from "./TreeView.js";
 export { Stepper } from "./Stepper.js";
