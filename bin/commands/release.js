@@ -130,6 +130,41 @@ export const release = async (argv = []) => {
   pkg.version = next;
   // Preserve the file's existing 2-space style + trailing newline.
   fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n");
+
+  // ---- Sync src/constants.js (APP_VERSION / FRAMEWORK_VERSION) ------------
+  // Generated apps keep their displayed versions as literals in src/constants.js
+  // (the dev server loads modules straight from disk). Keep them in lock-step
+  // with the release so check-version (and the bundle's own stamp) agree.
+  const constantsPath = path.join(projectRoot, "src", "constants.js");
+  if (fs.existsSync(constantsPath)) {
+    let src = fs.readFileSync(constantsPath, "utf8");
+    src = src.replace(
+      /export const APP_VERSION\\s*=\\s*"[^"]*";/,
+      `export const APP_VERSION = "${next}";`,
+    );
+    let fwVersion = null;
+    const fwPkgPath = path.join(projectRoot, "node_modules", "flet-box", "package.json");
+    if (fs.existsSync(fwPkgPath)) {
+      try {
+        fwVersion = JSON.parse(fs.readFileSync(fwPkgPath, "utf8")).version;
+      } catch {
+        /* ignore */
+      }
+    }
+    if (fwVersion) {
+      src = src.replace(
+        /export const FRAMEWORK_VERSION\\s*=\\s*"[^"]*";/,
+        `export const FRAMEWORK_VERSION = "${fwVersion}";`,
+      );
+    }
+    fs.writeFileSync(constantsPath, src);
+    console.log(
+      c("gray", `   synced src/constants.js (APP_VERSION=${next}`) +
+        (fwVersion ? c("gray", `, FRAMEWORK_VERSION=${fwVersion}`) : "") +
+        c("gray", ")"),
+    );
+  }
+
   console.log(
     c("blue", "\n🔢 Version ") +
       c("gray", current) +
