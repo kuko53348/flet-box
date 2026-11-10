@@ -123,10 +123,13 @@ What each surface does with it:
   once, which overrides every animated element — no listener to leak, nothing to rebuild.
 - **Every `infinite` CSS animation the factory writes** is marked with that same hook, so the loading
   loops belong to the widget author: `Skeleton`, `ProgressBar`, `Slider` (striped or glowing), the
-  `ListView` refresh spinner and the `Modal` spinner all stop on their own.
+  `ListView` refresh spinner and the `Modal` spinner all stop on their own. They also follow
+  `setMotionMode("reduce")`; `"full"` opts out of the system preference.
 - **`ParallaxBox`** parks its layer at the origin and stops answering scroll or pointer input.
-- **`MatrixRain`** paints one static field and releases the `requestAnimationFrame`.
-- **`applyPulse`** does nothing at all.
+- **`MatrixRain`** paints one static field and releases the `requestAnimationFrame`; it resumes
+  when the app or system allows motion again.
+- **`applyPulse`** does nothing when called in reduced mode; an active pulse is also
+  shortened if the app switches to reduced motion.
 
 ```javascript
 // A settings screen that hands the decision to the reader.

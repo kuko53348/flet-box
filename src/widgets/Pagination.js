@@ -43,6 +43,7 @@ export const Pagination = (props) => {
     if (page === current) return;
     if (page < 1 || page > totalPages) return;
     current = page;
+    renderControls();
     if (onPageChange) onPageChange(current);
   };
 
@@ -61,7 +62,6 @@ export const Pagination = (props) => {
     return pages;
   };
 
-  const pageNumbers = getPageNumbers();
   // Every size is at least TAP_MINIMUM units tall: a page number is a thumb
   // target, and the strip may only get smaller by type and gap, never below the
   // 40-unit floor the rest of the framework holds itself to.
@@ -143,6 +143,17 @@ export const Pagination = (props) => {
     ...rest,
   });
 
+  const renderControls = () => {
+    container.replaceChildren();
+    const pageNumbers = getPageNumbers();
+    const ellipsis = () =>
+      Text({
+        text: "...",
+        "aria-hidden": "true",
+        size: sz.fontSize,
+        color: colors.textSecondary,
+      });
+
   // First button
   if (showFirstLast && totalPages > 1) {
     container.appendChild(
@@ -165,16 +176,7 @@ export const Pagination = (props) => {
   if (pageNumbers[0] > 1) {
     container.appendChild(createPageButton(1));
     if (pageNumbers[0] > 2) {
-      container.appendChild(
-        Text({
-          text: "...",
-          // The skipped pages are a visual ellipsis: spoken as "dot dot dot" it is
-          // noise, and the jump is already implied by the numbers around it.
-          "aria-hidden": "true",
-          size: sz.fontSize,
-          color: colors.textSecondary,
-        }),
-      );
+      container.appendChild(ellipsis());
     }
   }
 
@@ -184,16 +186,7 @@ export const Pagination = (props) => {
 
   if (pageNumbers[pageNumbers.length - 1] < totalPages) {
     if (pageNumbers[pageNumbers.length - 1] < totalPages - 1) {
-      container.appendChild(
-        Text({
-          text: "...",
-          // The skipped pages are a visual ellipsis: spoken as "dot dot dot" it is
-          // noise, and the jump is already implied by the numbers around it.
-          "aria-hidden": "true",
-          size: sz.fontSize,
-          color: colors.textSecondary,
-        }),
-      );
+      container.appendChild(ellipsis());
     }
     container.appendChild(createPageButton(totalPages));
   }
@@ -234,6 +227,9 @@ export const Pagination = (props) => {
     container.appendChild(info);
   }
 
+  };
+
+  renderControls();
   return container;
 };
 

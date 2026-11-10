@@ -54,6 +54,7 @@ import { AnimatedBox } from "../src/animations/AnimatedBox.js";
 import { AnimatedText } from "../src/animations/AnimatedText.js";
 import { ParallaxBox } from "../src/animations/ParallaxBox.js";
 import { setBaseFontSize } from "../src/utils/units.js";
+import { applyPulse } from "../src/utils/visualEffects.js";
 
 const results = [];
 let pass = 0;
@@ -75,6 +76,7 @@ const assert = (condition, message) => {
 };
 
 const frame = () => new Promise((resolve) => requestAnimationFrame(resolve));
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /** Awaits `count` animation frames, so a loop has visibly advanced. */
 const frames = async(count) => {
@@ -346,6 +348,7 @@ await t("the mode is a preference, not a guess", async() => {
   assert(motionDuration(240) === 0, `reduce must buy no time: ${motionDuration(240)}`);
   setMotionMode("auto");
   assert(motionDuration(240) === 240, `auto must keep the duration: ${motionDuration(240)}`);
+  assert(motionDuration(Infinity) === 0, "an infinite duration must not create an endless loop");
   setMotionMode("full");
   assert(motionDuration(240) === 240, "full always animates");
   off();
@@ -395,6 +398,21 @@ await t("reduced motion still moves the element to where it belongs", async() =>
   assert(translation(field).x === 0, `a reduce shake must not displace: ${translation(field).x}`);
   unmount(el);
   unmount(field);
+  setMotionMode("auto");
+});
+
+await t("an infinite imperative duration still settles", async() => {
+  setMotionMode("full");
+  const el = mount({ opacity: "0" });
+  const animation = animateAsync(el, "opacity", 0, 1, Infinity);
+  const completed = await Promise.race([
+    animation.then(() => true),
+    wait(250).then(() => false),
+  ]);
+  if (!completed) stopAnimation(el);
+  assert(completed, "an infinite duration left the animation loop running");
+  assert(el.style.opacity === "1", `the animation did not land: ${el.style.opacity}`);
+  unmount(el);
   setMotionMode("auto");
 });
 
@@ -451,6 +469,10 @@ await t("AnimatedBox carries the OS preference rule", () => {
   const text = rule.textContent;
   assert(text.includes("@media (prefers-reduced-motion: reduce)"), `not a media rule: ${text}`);
   assert(text.includes("[data-fb-anim]"), `wrong selector: ${text}`);
+  assert(
+    text.includes(':root:not([data-fb-motion-mode="full"])'),
+    "full mode is not exempt from the system preference rule",
+  );
   for (const declaration of [
     "animation-duration: 0.01ms !important",
     "animation-delay: 0s !important",
@@ -464,6 +486,47 @@ await t("AnimatedBox carries the OS preference rule", () => {
   const injected = [...document.querySelectorAll("#fletbox-reduced-motion")].length;
   assert(injected === 1, `the rule was injected ${injected} times`);
   loop.remove();
+});
+
+await t("CSS loops follow the app motion mode without overriding full mode", () => {
+  const loop = document.createElement("div");
+  document.body.appendChild(loop);
+  AnimatedBox({
+    animations: [{ effect: "rotate", from: 0, to: 360, duration: 1000, loop: true }],
+    child: loop,
+  });
+  const durationMs = () => {
+    const value = getComputedStyle(loop).animationDuration;
+    const number = parseFloat(value);
+    return value.endsWith("ms") ? number : number * 1000;
+  };
+  setMotionMode("reduce");
+  assert(
+    durationMs() < 1 && getComputedStyle(loop).animationIterationCount === "1",
+    `setMotionMode("reduce") left a CSS loop running: ${getComputedStyle(loop).animation}`,
+  );
+  setMotionMode("full");
+  assert(
+    durationMs() === 1000 && getComputedStyle(loop).animationIterationCount === "infinite",
+    `setMotionMode("full") did not restore animation: ${getComputedStyle(loop).animation}`,
+  );
+  setMotionMode("auto");
+  loop.remove();
+});
+
+await t("an active utility pulse stops when motion is reduced", () => {
+  const el = document.createElement("div");
+  document.body.appendChild(el);
+  setMotionMode("full");
+  applyPulse(el, { duration: "1s" });
+  setMotionMode("reduce");
+  const duration = getComputedStyle(el).animationDuration;
+  const durationMs = duration.endsWith("ms")
+    ? parseFloat(duration)
+    : parseFloat(duration) * 1000;
+  assert(durationMs < 1, `the active pulse kept moving for ${duration}`);
+  setMotionMode("auto");
+  el.remove();
 });
 
 await t("ParallaxBox parks when the reader asked for no movement", async() => {
@@ -487,6 +550,67 @@ await t("ParallaxBox parks when the reader asked for no movement", async() => {
   window.scrollTo(0, 0);
   box._cleanup?. ();
   box.remove();
+});
+
+await t("ParallaxBox keeps transitions through the latest pointer update", async() => {
+  const box = ParallaxBox({
+    type: "mouse",
+    duration: 400,
+    child: document.createElement("div"),
+  });
+  document.body.appendChild(box);
+  try {
+    box.setPosition(8, 0);
+    await wait(200);
+    box.setPosition(16, 0);
+    await wait(250);
+    const inner = box.firstElementChild;
+    assert(
+      inner.style.transition !== "",
+      "an earlier transition timer removed smoothing before the latest movement finished",
+    );
+    await wait(200);
+    assert(inner.style.transition === "", "the latest transition did not clear when it finished");
+  } finally {
+    box._cleanup?.();
+    box.remove();
+  }
+});
+
+await t("MatrixRain resumes when reduced motion is turned off", async() => {
+  const fillRect = CanvasRenderingContext2D.prototype.fillRect;
+  let draws = 0;
+  let canvas;
+  CanvasRenderingContext2D.prototype.fillRect = function(...args) {
+    if (this.canvas === canvas) draws++;
+    return fillRect.apply(this, args);
+  };
+  try {
+    setMotionMode("full");
+    const { MatrixRain } = await import("../src/animations/MatrixRain.js");
+    canvas = MatrixRain();
+    document.body.appendChild(canvas);
+    await frames(3);
+    setMotionMode("reduce");
+    await frames(3);
+    const stoppedAt = draws;
+    await frames(3);
+    assert(draws === stoppedAt, "MatrixRain kept drawing under reduced motion");
+    setMotionMode("full");
+    await frames(2);
+    assert(draws > stoppedAt, "MatrixRain did not restart its frame loop");
+    canvas._cleanup();
+    const cleanedAt = draws;
+    setMotionMode("reduce");
+    setMotionMode("full");
+    await frames(2);
+    assert(draws === cleanedAt, "MatrixRain restarted after cleanup");
+  } finally {
+    canvas?._cleanup?.();
+    canvas?.remove();
+    CanvasRenderingContext2D.prototype.fillRect = fillRect;
+    setMotionMode("auto");
+  }
 });
 
 // A widget that holds a loop should stop it the moment the preference flips.
@@ -678,6 +802,31 @@ await t("AnimatedText staggers on one shared rule", async() => {
     return i * 100;
   });
   assert(delays.length === 4, `the stagger collapsed: ${delays.join(", ")}`);
+  box.remove();
+});
+
+await t("AnimatedText keeps Unicode grapheme clusters intact", async() => {
+  const { Text } = await import("../src/widgets/Text.js");
+  const value = "A👨‍👩‍👧‍👦e\u0301";
+  const expected = [...new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(value)]
+    .map(({ segment }) => segment);
+  const box = AnimatedText({
+    child: Text({ text: value }),
+    animations: [{ effect: "opacity", from: 0, to: 1, duration: 100 }],
+  });
+  const letters = [...box.children].filter((child) => child.style.animation);
+  assert(
+    letters.length === expected.length,
+    `expected ${expected.length} graphemes, got ${letters.length}`,
+  );
+  assert(
+    letters.map((letter) => letter.textContent).join("") === value,
+    "segmentation changed the original text",
+  );
+  assert(
+    letters.map((letter) => letter.textContent).join("|") === expected.join("|"),
+    "a grapheme was split across animated elements",
+  );
   box.remove();
 });
 

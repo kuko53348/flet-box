@@ -111,6 +111,13 @@ export const setMotionMode = (next) => {
   }
   if (next === mode) return mode;
   mode = next;
+  if (typeof document !== "undefined" && document.documentElement) {
+    if (next === "auto") {
+      document.documentElement.removeAttribute("data-fb-motion-mode");
+    } else {
+      document.documentElement.setAttribute("data-fb-motion-mode", next);
+    }
+  }
   notify();
   return mode;
 };
@@ -155,11 +162,16 @@ export const markMotionLoop = (element) => {
   const style = document.createElement("style");
   style.id = REDUCED_MOTION_RULE_ID;
   style.textContent = `@media (prefers-reduced-motion: reduce) {
-  [data-fb-anim] {
+  :root:not([data-fb-motion-mode="full"]) [data-fb-anim] {
     animation-duration: 0.01ms !important;
     animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
   }
+}
+:root[data-fb-motion-mode="reduce"] [data-fb-anim] {
+  animation-duration: 0.01ms !important;
+  animation-delay: 0s !important;
+  animation-iteration-count: 1 !important;
 }`;
   document.head.appendChild(style);
 };
@@ -175,7 +187,8 @@ export const markMotionLoop = (element) => {
  * @returns {number} `0` when motion is reduced, otherwise `duration` sanitized.
  */
 export const motionDuration = (duration) => {
-  const safe = Math.max(0, Number(duration) || 0);
+  const numeric = Number(duration);
+  const safe = Number.isFinite(numeric) ? Math.max(0, numeric) : 0;
   return prefersReducedMotion() ? 0 : safe;
 };
 

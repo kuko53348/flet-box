@@ -61,7 +61,7 @@ export const DataTable = (props) => {
     : "none";
 
   // ========== HEADER ==========
-  const thead = document.createElement("thead");
+  let thead = document.createElement("thead");
   const headerRow = document.createElement("tr");
 
   for (const col of columns) {
@@ -261,6 +261,7 @@ export const DataTable = (props) => {
     }
     newThead.appendChild(newHeaderRow);
     table.replaceChild(newThead, thead);
+    thead = newThead;
 
     // Rebuild body with existing rows
     container.updateData(rows);

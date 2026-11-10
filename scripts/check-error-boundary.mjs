@@ -461,7 +461,7 @@ await check("APP_UNGUARDED bites", () => {
   const broken = mutate(
     sources,
     FILE_RUNAPP,
-    '    if (failure) {\n      renderFailure(root, failure, { widgetName: "App", phase: "app" });\n      return;\n    }\n',
+    '    if (failed) {\n      renderFailure(root, failure, { widgetName: "App", phase: "app" });\n      return;\n    }\n',
     "",
   );
   const found = hit(scan(broken), "APP_UNGUARDED");

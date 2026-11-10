@@ -21,6 +21,8 @@ import {
   getCurrentPath,
   getBasePath,
   clearRouter,
+  goTo,
+  useQueryParams,
 } from "../src/navigations/Router.js";
 
 const ROUTES = {
@@ -66,6 +68,31 @@ for (const [url, base, wantBase, wantPath] of cases) {
   );
 }
 
+clearRouter();
+
+initRouter(ROUTES, "/documentation?token=a%3Db");
+if (
+  getCurrentPath() !== "/documentation" ||
+  useQueryParams().token !== "a=b"
+) {
+  failures++;
+  console.error(
+    `❌ explicit initial URL → path="${getCurrentPath()}" token="${useQueryParams().token}"`,
+  );
+} else {
+  console.log("✅ explicit initial URL separates path and query");
+}
+clearRouter();
+
+initRouter(ROUTES, "/");
+goTo("/?token=YWJj==");
+const query = useQueryParams();
+if (query.token !== "YWJj==") {
+  failures++;
+  console.error(`❌ query token="${query.token}" (expected "YWJj==")`);
+} else {
+  console.log("✅ query token preserves equals signs");
+}
 clearRouter();
 
 // ---------------------------------------------------------------------------

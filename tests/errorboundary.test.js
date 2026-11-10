@@ -183,6 +183,22 @@ const run = async() => {
     appPlaceholder?.textContent || "",
   );
 
+  const falsyApp = runApp(() => {
+    throw null;
+  }, "root");
+  const falsyPlaceholder = root.querySelector('[role="alert"]');
+  record(
+    "a component that throws a falsy value still paints the root",
+    root.getAttribute(FAILURE_ATTR) === "app" && Boolean(falsyPlaceholder),
+    `${root.getAttribute(FAILURE_ATTR)} · ${falsyPlaceholder?.textContent || "no placeholder"}`,
+  );
+  record(
+    "the falsy thrown value is preserved in the app failure message",
+    (falsyPlaceholder?.textContent || "").includes("null"),
+    falsyPlaceholder?.textContent || "",
+  );
+  falsyApp?.destroy();
+
   // ============================================================
   // 7. THE ERRORS NO WIDGET OWNS
   // ============================================================
