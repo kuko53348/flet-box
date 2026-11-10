@@ -12,7 +12,7 @@
  * @module animations/MatrixRain
  */
 
-import { prefersReducedMotion } from "./motion.js";
+import { onMotionModeChange, prefersReducedMotion } from "./motion.js";
 
 /**
  * Creates and starts a Matrix-rain animation on a `<canvas>` element.
@@ -55,6 +55,8 @@ export const MatrixRain = (props = {}) => {
   let columns = 0;
   let resizeObserver = null;
   let observedParent = null;
+  let disposed = false;
+  let removeMotionListener = () => {};
   // The canvas is returned to the caller and appended afterwards, so it is NOT
   // connected when the animation starts. `wasConnected` tracks that first mount
   // so the loop can stop when the canvas is later removed from the document.
@@ -232,9 +234,13 @@ export const MatrixRain = (props = {}) => {
    * @returns {void}
    */
   const cleanup = () => {
-    if (animationId) cancelAnimationFrame(animationId);
+    if (disposed) return;
+    disposed = true;
+    if (animationId !== null) cancelAnimationFrame(animationId);
+    animationId = null;
     window.removeEventListener("resize", handleResize);
     if (resizeObserver) resizeObserver.disconnect();
+    removeMotionListener();
   };
 
   // Chain cleanup so any previously assigned _cleanup is also called
@@ -243,6 +249,14 @@ export const MatrixRain = (props = {}) => {
     cleanup();
     if (originalCleanup) originalCleanup();
   };
+  removeMotionListener = onMotionModeChange((reduced) => {
+    if (reduced) {
+      if (animationId !== null) cancelAnimationFrame(animationId);
+      animationId = null;
+    } else if (!disposed && animationId === null) {
+      animationId = requestAnimationFrame(draw);
+    }
+  });
 
   // Return the canvas directly — not a wrapper container
   return canvas;

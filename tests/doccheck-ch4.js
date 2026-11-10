@@ -384,6 +384,10 @@ export default function run(ctx) {
     if (!two) throw new Error("no page-2 button");
     two.click();
     eq(got, 2);
+    eq(e.querySelector('[aria-current="page"]')?.textContent.trim(), "2");
+    if (!e.textContent.includes("11-20 of 95")) {
+      throw new Error(`page summary did not advance: ${e.textContent}`);
+    }
   });
   t("Pagination: clicking the active page does not fire onPageChange", () => {
     let got = null;

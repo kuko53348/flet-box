@@ -90,17 +90,7 @@ const extractParams = (pattern, path) => {
 const extractQueryParams = (url) => {
   const queryIndex = url.indexOf("?");
   if (queryIndex === -1) return {};
-
-  const queryString = url.slice(queryIndex + 1);
-  const params = {};
-
-  queryString.split("&").forEach((param) => {
-    const [key, value] = param.split("=");
-    if (key) {
-      params[decodeURIComponent(key)] = value ? decodeURIComponent(value) : "";
-    }
-  });
-  return params;
+  return Object.fromEntries(new URLSearchParams(url.slice(queryIndex + 1)));
 };
 
 /**
@@ -165,6 +155,18 @@ const normalizeBase = (base) => {
  * @returns {string} Path as seen by the browser.
  */
 const withBase = (path) => `${basePath}${path}`;
+
+/**
+ * Append an encoded query snapshot to a path.
+ *
+ * @param {string} path - App-relative or base-prefixed path without a query.
+ * @param {Object.<string, string>} query - Query state to encode.
+ * @returns {string} Path with its query string.
+ */
+const withQuery = (path, query) => {
+  const search = new URLSearchParams(query || {}).toString();
+  return search ? `${path}?${search}` : path;
+};
 
 /**
  * Remove the deployment base from a browser URL path.
@@ -247,6 +249,7 @@ const resolveBase = (explicitBase, rawPath) => {
  */
 export const initRouter = (routesConfig, initialPath = null, options = {}) => {
   routes = routesConfig;
+  const hasExplicitPath = Boolean(initialPath);
 
   // Prefer the explicit initialPath; fall back to the live browser URL so
   // that deep-links resolve to the correct route on first load.
@@ -254,6 +257,7 @@ export const initRouter = (routesConfig, initialPath = null, options = {}) => {
   if (!urlPath && typeof window !== "undefined") {
     urlPath = window.location.pathname;
   }
+  if (urlPath) urlPath = cleanPath(urlPath);
 
   // Peel the deployment prefix off the browser URL before matching so a site
   // served under /repo-name/ resolves to its routes instead of redirecting.
@@ -282,7 +286,9 @@ export const initRouter = (routesConfig, initialPath = null, options = {}) => {
 
   // Parse any query params present in the current URL.
   currentQuery =
-    typeof window !== "undefined"
+    hasExplicitPath && initialPath.includes("?")
+      ? extractQueryParams(initialPath)
+      : typeof window !== "undefined"
       ? extractQueryParams(window.location.search)
       : extractQueryParams(urlPath);
 
@@ -291,12 +297,13 @@ export const initRouter = (routesConfig, initialPath = null, options = {}) => {
   // redirected to the first route above).
   if (
     typeof window !== "undefined" &&
-    window.location.pathname !== withBase(currentPath)
+    (window.location.pathname !== withBase(currentPath) ||
+      window.location.search !== withQuery("", currentQuery))
   ) {
     window.history.replaceState(
       { path: currentPath },
       "",
-      withBase(currentPath),
+      withQuery(withBase(currentPath), currentQuery),
     );
   }
 
@@ -307,13 +314,11 @@ export const initRouter = (routesConfig, initialPath = null, options = {}) => {
     const handlePopState = (event) => {
       const path =
         event.state?.path || stripBase(window.location.pathname);
-      if (path !== currentPath) {
-        currentPath = path;
-        const match = findMatchingRoute(currentPath);
-        currentParams = match?.params || {};
-        currentQuery = extractQueryParams(window.location.search);
-        notify();
-      }
+      currentPath = cleanPath(path);
+      const match = findMatchingRoute(currentPath);
+      currentParams = match?.params || {};
+      currentQuery = extractQueryParams(window.location.search);
+      notify();
     };
     window.addEventListener("popstate", handlePopState);
     removePopStateListener = () =>
@@ -351,7 +356,11 @@ export const goTo = (path, params = {}) => {
     currentQuery = { ...queryParams, ...params };
 
     if (typeof window !== "undefined") {
-      window.history.pushState({ path: currentPath }, "", withBase(path));
+      window.history.pushState(
+        { path: currentPath },
+        "",
+        withQuery(withBase(currentPath), currentQuery),
+      );
     }
     notify();
   } else {
@@ -385,7 +394,11 @@ export const replace = (path, params = {}) => {
     currentQuery = { ...queryParams, ...params };
 
     if (typeof window !== "undefined") {
-      window.history.replaceState({ path: currentPath }, "", withBase(path));
+      window.history.replaceState(
+        { path: currentPath },
+        "",
+        withQuery(withBase(currentPath), currentQuery),
+      );
     }
     notify();
   }
@@ -466,8 +479,8 @@ export const getCurrentRouteConfig = () => {
   const match = findMatchingRoute(currentPath);
   return {
     route: match?.route || routes[currentPath],
-    params: currentParams,
-    query: currentQuery,
+    params: { ...currentParams },
+    query: { ...currentQuery },
     path: currentPath,
   };
 };

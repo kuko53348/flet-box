@@ -218,12 +218,15 @@ What it does to each surface, and why none of it needs a per-screen `if`:
   The reader can flip the OS setting *while the app is open*: the engine injects one
   `@media (prefers-reduced-motion: reduce)` rule that overrides every element it
   animates, so a loop already running stops without a rebuild and without a listener
-  to leak. The factory marks any element it gives an `infinite` animation — a
+  to leak. The same hook follows `setMotionMode("reduce")`, while `"full"` opts out
+  of the system preference. The factory marks any element it gives an `infinite` animation — a
   `Skeleton`, a striped `ProgressBar`, a `ListView` spinner — so a loop you write
   yourself through the `animation` prop is covered too. Nothing in the app has to do
   anything about it.
 - `ParallaxBox` parks its layer at the origin. `MatrixRain` paints one static field
-  and releases its `requestAnimationFrame`. `applyPulse` does nothing.
+  and releases its `requestAnimationFrame`, then resumes if motion is allowed again.
+  `applyPulse` does nothing when called in reduced mode, and an active pulse is
+  shortened if the app switches modes.
 
 ```js
 const chooseMotion = (on) => {

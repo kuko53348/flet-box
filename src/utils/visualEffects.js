@@ -156,6 +156,7 @@ export const applyPulse = (element, options = {}) => {
     `;
   const name = animationName("pulse", frames);
   element.style.animation = `${name} ${duration} ease-in-out`;
+  markMotionLoop(element);
 
   injectKeyframes(name, frames);
 };

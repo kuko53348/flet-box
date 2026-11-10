@@ -67,7 +67,7 @@ export const ParallaxBox = (props = {}) => {
   let animationFrame = null;
   let animatedContent = null;
   let initialTimer = null;
-  const transitionTimers = new Set();
+  let transitionTimer = null;
 
   /**
    * Schedules removal of the CSS transition after it has finished playing,
@@ -76,11 +76,14 @@ export const ParallaxBox = (props = {}) => {
    * @returns {void}
    */
   const clearTransitionLater = () => {
+    if (transitionTimer !== null) clearTimeout(transitionTimer);
     const timer = setTimeout(() => {
-      transitionTimers.delete (timer);
-      if (animatedContent) animatedContent.style.transition = "";
+      if (transitionTimer === timer) {
+        transitionTimer = null;
+        if (animatedContent) animatedContent.style.transition = "";
+      }
     }, duration);
-    transitionTimers.add(timer);
+    transitionTimer = timer;
   };
 
   /**
@@ -365,8 +368,7 @@ export const ParallaxBox = (props = {}) => {
     }
     if (animationFrame) cancelAnimationFrame(animationFrame);
     if (initialTimer) clearTimeout(initialTimer);
-    transitionTimers.forEach((timer) => clearTimeout(timer));
-    transitionTimers.clear();
+    if (transitionTimer !== null) clearTimeout(transitionTimer);
   };
 
   // The lifecycle observer fires `onUnmount` on a plain DOM disconnect but never

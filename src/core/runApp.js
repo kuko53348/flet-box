@@ -41,6 +41,7 @@ export const runApp = (
   let currentMainContainer = null;
   let unsubscribeTheme = null;
   let unwatchSystemTheme = null;
+  let releaseGlobalRender = null;
 
   /**
    * Recursively releases the resources of the entire widget tree before
@@ -185,10 +186,12 @@ export const runApp = (
     // state value surgical.
     beginRenderPass();
     let appContent;
-    let failure = null;
+    let failure;
+    let failed = false;
     try {
       appContent = typeof App === "function" ? App() : App;
     } catch (error) {
+      failed = true;
       failure = error;
     } finally {
       endRenderPass();
@@ -197,7 +200,7 @@ export const runApp = (
     // A throw in the component body — before any widget exists — has no widget
     // to catch it. Without this the root stayed empty and the screen was
     // blank; now it says what went wrong and where.
-    if (failure) {
+    if (failed) {
       renderFailure(root, failure, { widgetName: "App", phase: "app" });
       return;
     }
@@ -224,9 +227,7 @@ export const runApp = (
 
   // Register renderApp as the global re-render callback so that setState calls
   // anywhere in the tree can trigger a full rebuild.
-  setGlobalRender(() => {
-    renderApp();
-  });
+  releaseGlobalRender = setGlobalRender(renderApp);
 
   applySystemTheme();
   unwatchSystemTheme = watchSystemTheme();
@@ -276,6 +277,10 @@ export const runApp = (
       if (unwatchSystemTheme) {
         unwatchSystemTheme();
         unwatchSystemTheme = null;
+      }
+      if (releaseGlobalRender) {
+        releaseGlobalRender();
+        releaseGlobalRender = null;
       }
       if (currentMainContainer) {
         teardownTree(currentMainContainer);
@@ -407,6 +412,7 @@ export const mountAll = (widget, rootIds) => {
  */
 export const createApp = (routes, options = {}) => {
   const { rootId = "root", fallback = null } = options;
+  let unwatchSystemTheme = null;
 
   const root = document.getElementById(rootId);
   if (root) {
@@ -425,7 +431,8 @@ export const createApp = (routes, options = {}) => {
      */
     start: () => {
       applySystemTheme();
-      watchSystemTheme();
+      if (unwatchSystemTheme) unwatchSystemTheme();
+      unwatchSystemTheme = watchSystemTheme();
       initRouter(routes);
       const root = document.getElementById(rootId);
       if (root && fallback) {
@@ -439,6 +446,10 @@ export const createApp = (routes, options = {}) => {
      * Clears the root element, effectively unmounting the application.
      */
     destroy: () => {
+      if (unwatchSystemTheme) {
+        unwatchSystemTheme();
+        unwatchSystemTheme = null;
+      }
       const root = document.getElementById(rootId);
       if (root) root.innerHTML = "";
     },

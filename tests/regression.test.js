@@ -71,13 +71,21 @@ import {
   CollapsibleSideBar,
   AdaptiveScaffold,
 } from "../src/navigations/index.js";
-import { goTo, getCurrentPath, initRouter, clearRouter } from "../src/navigations/Router.js";
+import {
+  goTo,
+  getCurrentPath,
+  getCurrentRouteConfig,
+  initRouter,
+  clearRouter,
+  useParams,
+  useQueryParams,
+} from "../src/navigations/Router.js";
 import { WidgetFactory } from "../src/widget-factory/index.js";
 import { AnimatedBox } from "../src/animations/AnimatedBox.js";
 import { AnimatedText } from "../src/animations/AnimatedText.js";
 import { MatrixRain } from "../src/animations/MatrixRain.js";
 import { animate, pulse, stopAnimation } from "../src/animations/animate.js";
-import { runApp } from "../src/core/runApp.js";
+import { runApp, createApp } from "../src/core/runApp.js";
 import { useState, saveState, getState } from "../src/tools/useState.js";
 import { saveRam } from "../src/services/RamStore.js";
 import { colors, palettes, setTheme, applySystemTheme } from "../src/utils/themes.js";
@@ -237,6 +245,11 @@ async function run() {
     ok(
       dt.querySelectorAll("tbody tr").length === 1,
       `updateColumns wiped the rows (${dt.querySelectorAll("tbody tr").length} left)`,
+    );
+    dt.updateColumns([{ key: "a", label: "A3" }]);
+    ok(
+      dt.querySelector("thead")?.textContent.includes("A3"),
+      "second updateColumns did not replace the header",
     );
   });
 
@@ -5182,6 +5195,122 @@ async function run() {
       }
       chart.remove();
     }
+  });
+
+  await t("createApp: destroy releases its system-theme watcher", () => {
+    const root = document.createElement("div");
+    root.id = "create-app-theme-test-root";
+    document.body.appendChild(root);
+
+    const realMatchMedia = window.matchMedia;
+    const savedPref = localStorage.getItem("fletbox-theme");
+    const added = [];
+    const removed = [];
+    window.matchMedia = () => ({
+      matches: false,
+      addEventListener: (type, fn) => added.push([type, fn]),
+      removeEventListener: (type, fn) => removed.push([type, fn]),
+    });
+
+    const app = createApp({ "/": () => document.createElement("span") }, { rootId: root.id });
+    try {
+      app.start();
+      ok(added.length === 1, `listeners added=${added.length}`);
+      app.start();
+      ok(
+        removed.some(([type, fn]) => type === "change" && fn === added[0][1]),
+        "restarting did not remove the previous media-query change listener",
+      );
+      ok(added.length === 2, `listeners added after restart=${added.length}`);
+      app.destroy();
+      ok(
+        removed.some(([type, fn]) => type === "change" && fn === added[1][1]),
+        "destroy did not remove the current media-query change listener",
+      );
+    } finally {
+      app.destroy();
+      clearRouter();
+      root.remove();
+      window.matchMedia = realMatchMedia;
+      if (savedPref === null) localStorage.removeItem("fletbox-theme");
+      else localStorage.setItem("fletbox-theme", savedPref);
+      applySystemTheme();
+    }
+  });
+
+  await t("runApp: destroy prevents later state updates from rendering", async() => {
+    let setValue;
+    let renders = 0;
+    const root = document.createElement("div");
+    root.id = "destroyed-runapp-root";
+    document.body.appendChild(root);
+
+    const app = runApp(() => {
+      renders++;
+      const [value, set] = useState("destroyedRunAppValue", 0);
+      setValue = set;
+      return W.Text({ text: value.valueOf() });
+    }, root.id);
+
+    try {
+      await wait(40);
+      ok(renders === 1, `initial renders=${renders}`);
+      app.destroy();
+      const rendersAtDestroy = renders;
+      setValue(1);
+      await wait(40);
+      ok(renders === rendersAtDestroy, `rendered ${renders - rendersAtDestroy} time(s) after destroy`);
+      ok(root.childElementCount === 0, "destroyed app content reappeared in its root");
+    } finally {
+      app.destroy();
+      clearRouter();
+      root.remove();
+    }
+  });
+
+  await t("Router: popstate updates query when the path is unchanged", () => {
+    const originalUrl = `${location.pathname}${location.search}${location.hash}`;
+    const routes = { "/": () => WidgetFactory("div") };
+    try {
+      initRouter(routes, "/");
+      history.pushState({ path: "/" }, "", "/?page=1");
+      window.dispatchEvent(new PopStateEvent("popstate", { state: { path: "/" } }));
+      history.pushState({ path: "/" }, "", "/?page=2");
+      window.dispatchEvent(new PopStateEvent("popstate", { state: { path: "/" } }));
+      history.pushState({ path: "/" }, "", "/?page=1");
+      window.dispatchEvent(new PopStateEvent("popstate", { state: { path: "/" } }));
+      ok(useQueryParams().page === "1", `query page=${useQueryParams().page}`);
+    } finally {
+      clearRouter();
+      history.replaceState(null, "", originalUrl);
+    }
+  });
+
+  await t("Router: goTo merges extra query params into the address bar", () => {
+    const originalUrl = `${location.pathname}${location.search}${location.hash}`;
+    try {
+      initRouter({ "/": () => WidgetFactory("div") }, "/");
+      goTo("/?term=blue", { page: "2", label: "a+b c" });
+      ok(useQueryParams().page === "2", "router state omitted the extra query param");
+      ok(useQueryParams().label === "a+b c", "query value did not round-trip");
+      ok(
+        new URLSearchParams(location.search).get("page") === "2",
+        `address bar search=${location.search}`,
+      );
+    } finally {
+      clearRouter();
+      history.replaceState(null, "", originalUrl);
+    }
+  });
+
+  await t("Router: route config is an isolated state snapshot", () => {
+    initRouter({ "/user/:id": () => WidgetFactory("div") }, "/user/42");
+    const snapshot = getCurrentRouteConfig();
+    snapshot.params.id = "mutated";
+    snapshot.query.page = "mutated";
+    ok(useParams().id === "42", `router param changed to ${useParams().id}`);
+    ok(!("page" in useQueryParams()), "mutating the snapshot changed router query state");
+    clearRouter();
   });
 
   // ------------------------------------------------------------------ report

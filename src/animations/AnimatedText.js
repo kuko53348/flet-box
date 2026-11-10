@@ -56,7 +56,11 @@ export const AnimatedText = ({
     alignItems: orientation === "row" ? "center" : "flex-start",
   });
 
-  const letters = originalText.split("");
+  const letters =
+    typeof Intl.Segmenter === "function"
+      ? [...new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(originalText)]
+          .map(({ segment }) => segment)
+      : Array.from(originalText);
 
   letters.forEach((letter, index) => {
     // Render spaces as fixed-width spacers rather than animated characters

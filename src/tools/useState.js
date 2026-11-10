@@ -20,10 +20,13 @@ let renderTimeout = null;
  * Called by `runApp` to register the application's root render callback.
  *
  * @param {Function} renderFn - The root render function to invoke on state change.
- * @returns {void}
+ * @returns {Function} Disposer that clears this callback if it is still active.
  */
 export const setGlobalRender = (renderFn) => {
   globalRender = renderFn;
+  return () => {
+    if (globalRender === renderFn) globalRender = null;
+  };
 };
 
 /**
