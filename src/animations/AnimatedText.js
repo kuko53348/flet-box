@@ -58,7 +58,7 @@ export const AnimatedText = ({
 
   const letters =
     typeof Intl.Segmenter === "function"
-      ? [...new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(originalText)]
+      ? [...new Intl.Segmenter(undefined, { granularity : "grapheme" }).segment(originalText)]
           .map(({ segment }) => segment)
       : Array.from(originalText);
 
