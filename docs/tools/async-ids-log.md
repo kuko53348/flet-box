@@ -20,7 +20,7 @@ import { delay, withMinDelay, retry, uuid, shortId, print } from "flet-box";
 | --- | --- | --- | --- |
 | `delay` | `delay(ms)` | `Promise<void>` | Resolve after `ms` milliseconds. |
 | `sleep` | `sleep(ms)` | `Promise<void>` | Alias-style async sleep. |
-| `withMinDelay` | `withMinDelay(promise, minMs?)` | `Promise<T>` | Resolve only after both the promise and `minMs` complete. |
+| `withMinDelay` | `withMinDelay(promise, minMs?)` | `Promise<T>` | Resolve or reject only after both the promise and `minMs` complete. |
 | `retry` | `retry(fn, retries?, delayMs?)` | `Promise<T>` | Call `fn` again on rejection, up to `retries` times, waiting `delayMs` between attempts. |
 | `uuid` | `uuid()` | `string` | A version-4 style UUID. |
 | `shortId` | `shortId()` | `string` | A short unique id. |

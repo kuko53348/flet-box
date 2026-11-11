@@ -158,7 +158,7 @@ createList.search = (list, query, fields = null) => {
     const searchableFields = fields || Object.keys(item);
     return searchableFields.some((field) => {
       const value = item[field];
-      return value && String(value).toLowerCase().includes(searchTerm);
+      return value != null && String(value).toLowerCase().includes(searchTerm);
     });
   });
 };

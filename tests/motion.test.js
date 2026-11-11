@@ -572,7 +572,7 @@ await t("ParallaxBox keeps transitions through the latest pointer update", async
     await wait(200);
     assert(inner.style.transition === "", "the latest transition did not clear when it finished");
   } finally {
-    box._cleanup?.();
+    box._cleanup?. ();
     box.remove();
   }
 });
@@ -606,7 +606,7 @@ await t("MatrixRain resumes when reduced motion is turned off", async() => {
     await frames(2);
     assert(draws === cleanedAt, "MatrixRain restarted after cleanup");
   } finally {
-    canvas?._cleanup?.();
+    canvas?._cleanup?. ();
     canvas?.remove();
     CanvasRenderingContext2D.prototype.fillRect = fillRect;
     setMotionMode("auto");

@@ -58,6 +58,9 @@
 //     a rectangle of its own plate instead of wearing it;
 //   - a Button label wrapped inside a fixed-height pill, so three lines of copy
 //     ran through the rounded ends and past the padding box.
+//   - withMinDelay rejected as soon as its work failed, before the minimum
+//     loading-state duration had elapsed;
+//   - createList.search ignored numeric zero and boolean false field values.
 //
 // It publishes `window.__REGRESSION = { pass, fail, results }`.
 import * as W from "../src/widgets/index.js";
@@ -100,6 +103,8 @@ import {
 } from "../src/utils/themes.js";
 import { ACCENT_FAMILIES } from "../src/utils/colors.js";
 import { color } from "../src/tools/color.js";
+import { createList } from "../src/tools/createList.js";
+import { withMinDelay } from "../src/tools/delay.js";
 import { TAP_MINIMUM } from "../src/tools/scale.js";
 import {
   BREAKPOINTS,
@@ -4908,6 +4913,38 @@ async function run() {
     ]);
     ok(settled === false, `a dead stylesheet resolved ${settled}, expected false`);
     ok(await fontsReady() === true, "fontsReady() did not settle in the browser");
+  });
+
+  await t("withMinDelay: rejected work also waits for the minimum duration", async() => {
+    const reason = new Error("expected rejection");
+    const guarded = withMinDelay(Promise.reject(reason), 60).then(
+      () => false,
+      (error) => {
+        ok(error === reason, "withMinDelay changed the rejection reason");
+        return false;
+      },
+    );
+    const settledTooSoon = await Promise.race([
+      guarded,
+      wait(20).then(() => true),
+    ]);
+    ok(settledTooSoon, "withMinDelay rejected before its minimum duration");
+    await guarded;
+  });
+
+  await t("createList.search: falsey field values remain searchable", () => {
+    const rows = [
+      { score: 0, enabled: false },
+      { score: 1, enabled: true },
+    ];
+    ok(
+      createList.search(rows, "0", ["score"])[0] === rows[0],
+      "search skipped a numeric zero",
+    );
+    ok(
+      createList.search(rows, "false", ["enabled"])[0] === rows[0],
+      "search skipped boolean false",
+    );
   });
 
   await t("Skeleton: a documented shimmerColor paints the wave band", async() => {
