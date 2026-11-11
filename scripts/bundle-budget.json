@@ -1,8 +1,8 @@
 {
   "framework": {
-    "raw": 365093,
-    "gzip": 115110,
-    "brotli": 97145,
+    "raw": 365152,
+    "gzip": 115143,
+    "brotli": 97105,
     "modules": {
       "src/widget-factory/translateProps.js": 41648,
       "src/widgets/Markdown.js": 22676,
@@ -82,7 +82,7 @@
       "src/widget-factory/processProps.js": 1278,
       "src/tools/dict.js": 1269,
       "src/widget-factory/lifecycle.js": 1224,
-      "src/tools/createList.js": 1193,
+      "src/tools/createList.js": 1199,
       "src/tools/transform.js": 1094,
       "src/tools/fonts.js": 1090,
       "src/tools/useState.js": 1083,
@@ -134,6 +134,7 @@
       "src/widgets/Card.js": 298,
       "src/core/App.js": 297,
       "src/tools/animation.js": 282,
+      "src/tools/delay.js": 265,
       "src/utils/stackLayout.js": 256,
       "src/utils/composeUpdate.js": 252,
       "src/widgets/GridView.js": 252,
@@ -141,7 +142,6 @@
       "src/tools/ref.js": 233,
       "src/widgets/Column.js": 229,
       "src/widgets/Row.js": 223,
-      "src/tools/delay.js": 212,
       "src/widget-factory/createWidget.js": 197,
       "src/tools/gradient.js": 182,
       "src/tools/transition.js": 169,
@@ -160,8 +160,8 @@
     }
   },
   "demo": {
-    "raw": 84387,
-    "gzip": 22376,
-    "brotli": 19149
+    "raw": 84393,
+    "gzip": 22379,
+    "brotli": 19143
   }
 }

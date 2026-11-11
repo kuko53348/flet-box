@@ -13,19 +13,21 @@
 export const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
- * Ensures a promise takes at least `minMs` milliseconds to resolve.
+ * Ensures a promise takes at least `minMs` milliseconds to settle.
  * Useful for preventing UI flicker when async operations complete too quickly.
  *
  * @param {Promise<*>} promise - The promise to execute.
  * @param {number} [minMs=500] - Minimum display time in milliseconds.
- * @returns {Promise<*>} Resolves with the promise result after at least `minMs` ms.
+ * @returns {Promise<*>} Resolves or rejects with the promise outcome after at
+ *   least `minMs` ms.
  *
  * @example
  * const data = await withMinDelay(fetchData(), 800);
  */
 export const withMinDelay = async(promise, minMs = 500) => {
-  const [result] = await Promise.all([promise, delay(minMs)]);
-  return result;
+  const [result] = await Promise.allSettled([promise, delay(minMs)]);
+  if (result.status === "rejected") throw result.reason;
+  return result.value;
 };
 
 /**
