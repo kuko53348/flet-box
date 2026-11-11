@@ -9,6 +9,7 @@
 import fs from "fs";
 import path from "path";
 import { c, gradient, rainbow, section } from "../utils/colors.js";
+import { assertCliName, parseBatchCount } from "../utils/cliNames.js";
 
 /**
  * Returns the source code for a new FletBox component module.
@@ -79,12 +80,14 @@ export const createComponent = async(input) => {
   const componentNames = [];
 
   // Numeric input: create a batch of sequentially numbered components.
-  if (!isNaN(input) && Number.isInteger(parseFloat(input))) {
-    const count = Math.min(parseInt(input), 10);
+  const batchCount = parseBatchCount(input, "Component");
+  if (batchCount !== null) {
+    const count = batchCount;
     for (let i = 1; i <= count; i++) {
       componentNames.push(`Component${i}`);
     }
   } else {
+    assertCliName(input, "component");
     componentNames.push(input);
   }
 

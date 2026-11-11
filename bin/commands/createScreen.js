@@ -11,6 +11,7 @@
 import fs from "fs";
 import path from "path";
 import { c, gradient, rainbow, section } from "../utils/colors.js";
+import { assertCliName, parseBatchCount } from "../utils/cliNames.js";
 
 /**
  * Returns the source code for a new FletBox screen module.
@@ -111,12 +112,14 @@ export const createScreen = async(input) => {
   const screenNames = [];
 
   // Numeric input: create a batch of sequentially numbered screens (max 10).
-  if (!isNaN(input) && Number.isInteger(parseFloat(input))) {
-    const count = Math.min(parseInt(input), 10);
+  const batchCount = parseBatchCount(input, "Screen");
+  if (batchCount !== null) {
+    const count = batchCount;
     for (let i = 1; i <= count; i++) {
       screenNames.push(`Screen${i}`);
     }
   } else {
+    assertCliName(input, "screen");
     screenNames.push(input);
   }
 

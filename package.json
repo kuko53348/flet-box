@@ -51,12 +51,14 @@
   "bugs": {
     "url": "https://github.com/kuko53348/flet-box/issues"
   },
+  "dependencies": {
+    "chokidar": "^4.0.3",
+    "ws": "^8.21.0"
+  },
   "devDependencies": {
     "@types/node": "^26.6.6",
-    "chokidar": "^4.0.3",
     "esbuild": "^0.28.0",
-    "typescript": "^7.0.2",
-    "ws": "^8.21.0"
+    "typescript": "^7.0.2"
   },
   "files": [
     "bin/",
