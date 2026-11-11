@@ -40,6 +40,9 @@ flet-box --version
 flet-box --help
 ```
 
+The CLI's development server dependencies are installed with the package; they
+are tooling only and are not added to your app's browser bundle.
+
 Inside a project the framework itself is an ordinary dependency:
 
 ```bash
@@ -169,6 +172,9 @@ This creates:
 src/screens/HomeScreen.js
 ```
 
+Screen names must be JavaScript identifiers (for example `Home`);
+path separators and invalid identifier characters are rejected.
+
 The command also prints the import and route lines you need to add to `src/app.js`.
 
 You can create several screens at once:
@@ -192,6 +198,9 @@ This creates:
 ```text
 src/components/ProfileCard.js
 ```
+
+Component names must also be JavaScript identifiers (for example
+`ProfileCard`); path separators and invalid identifier characters are rejected.
 
 The generated component is a starting point. Edit its props and replace its content with your own widgets.
 

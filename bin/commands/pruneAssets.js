@@ -45,6 +45,16 @@ const size = (bytes) =>
       ? `${Math.round(bytes / 1024)} KB`
       : `${bytes} B`;
 
+const isWithin = (root, candidate) => {
+  const relative = path.relative(root, candidate);
+  return (
+    relative === "" ||
+    (relative !== ".." &&
+      !relative.startsWith(`..${path.sep}`) &&
+      !path.isAbsolute(relative))
+  );
+};
+
 /**
  * @param {string} dir
  * @returns {string[]} Image files under it, absolute, sorted.
@@ -93,12 +103,18 @@ export const pruneAssets = async(args = []) => {
   // is how a cleanup run ends up pointing at someone else's folder.
   const positional = args.filter((a, i) => !a.startsWith("--") && !["--root", "--keep"].includes(args[i - 1]));
   const dir = path.resolve(root, positional[0] || "assets");
-  if (!dir.startsWith(root)) {
-    console.log(c("red", `Refusing: ${dir} is outside the project root ${root}.`));
+  if (!fs.existsSync(root) || !fs.statSync(root).isDirectory()) {
+    console.log(c("red", `No such project folder: ${root}`));
     return { exitCode: 1 };
   }
-  if (!fs.existsSync(dir)) {
+  if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) {
     console.log(c("red", `No such folder: ${path.relative(root, dir) || dir}`));
+    return { exitCode: 1 };
+  }
+  const realRoot = fs.realpathSync(root);
+  const realDir = fs.realpathSync(dir);
+  if (!isWithin(realRoot, realDir)) {
+    console.log(c("red", `Refusing: ${dir} resolves outside the project root ${root}.`));
     return { exitCode: 1 };
   }
 

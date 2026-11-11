@@ -215,6 +215,38 @@ await check("prune refuses a folder outside the project root", async() => {
   assert.equal(exitCode, 1, "it accepted a path outside the project");
 });
 
+await check("prune refuses prefix-sibling and symlink paths outside the root", async() => {
+  const root = path.join(scratch, "prefix-root");
+  const sibling = path.join(scratch, "prefix-root-backup");
+  const outsideAssets = path.join(sibling, "assets");
+  fs.mkdirSync(path.join(root, "src"), { recursive: true });
+  fs.mkdirSync(outsideAssets, { recursive: true });
+  const outsideImage = path.join(outsideAssets, "orphan.png");
+  writePhoto(outsideImage);
+
+  const siblingResult = await pruneAssets([
+    outsideAssets,
+    "--root",
+    root,
+    "--apply",
+    "--quiet",
+  ]);
+  assert.equal(siblingResult.exitCode, 1, "it accepted a sibling whose name shares the root prefix");
+  assert.ok(fs.existsSync(outsideImage), "it deleted an image from the prefix-sibling folder");
+
+  const link = path.join(root, "linked-assets");
+  fs.symlinkSync(outsideAssets, link, "dir");
+  const symlinkResult = await pruneAssets([
+    link,
+    "--root",
+    root,
+    "--apply",
+    "--quiet",
+  ]);
+  assert.equal(symlinkResult.exitCode, 1, "it accepted a directory symlink that resolves outside the root");
+  assert.ok(fs.existsSync(outsideImage), "it deleted an image through an outside-root symlink");
+});
+
 fs.rmSync(scratch, { recursive: true, force: true });
 
 if (failures.length) {

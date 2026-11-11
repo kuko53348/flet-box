@@ -2,12 +2,11 @@
 /**
  * Guard the shape of the PUBLISHED package, not the checkout.
  *
- * The repo installs `ws` and `chokidar` as devDependencies, so `node bin/cli.js`
- * works here no matter how many of its modules reach for them at import time.
- * A consumer gets only what `files` ships, with `--omit=dev`, and an eager
- * `import { WebSocketServer } from "ws"` in one command file used to take down
- * every CLI command for them. Extract the real tarball and run it with no
- * node_modules in scope, which is the only shape where that fails.
+ * The server commands need `ws` and `chokidar`, so the published package must
+ * declare them as production dependencies. Other CLI commands should still run
+ * without loading the server. Extract the real tarball and exercise those
+ * commands with no node_modules in scope, then verify the server dependencies
+ * are declared for normal npm installs.
  */
 import { execFileSync, spawnSync } from "node:child_process";
 import fs from "node:fs";
@@ -37,6 +36,12 @@ try {
   const pkg = path.join(tmp, "package");
   const cli = path.join(pkg, "bin", "cli.js");
   if (!fs.existsSync(cli)) fail("the tarball has no bin/cli.js");
+  const manifest = JSON.parse(fs.readFileSync(path.join(pkg, "package.json"), "utf8"));
+  for (const dependency of ["ws", "chokidar"]) {
+    if (!manifest.dependencies?.[dependency]) {
+      fail(`the installed CLI's server dependency ${dependency} is not a production dependency`);
+    }
+  }
 
   // Nothing is installed next to the extracted package: this is a consumer tree.
   const commands = [
@@ -72,6 +77,47 @@ try {
   const wrote = fs.readdirSync(helpCwd);
   if (wrote.length) fail(`flet-box create --help wrote: ${wrote.join(", ")}`);
   if (!/create <name>/.test(help.stdout)) fail("flet-box create --help did not print the help");
+
+  const scaffoldCwd = path.join(tmp, "scaffold-cwd");
+  const project = path.join(scaffoldCwd, "app");
+  fs.mkdirSync(path.join(project, "src", "screens"), { recursive: true });
+  fs.mkdirSync(path.join(project, "src", "components"), { recursive: true });
+  fs.writeFileSync(path.join(project, "src", "app.js"), "export {};\n");
+  const generated = spawnSync(process.execPath, [cli, "screen", "Home"], {
+    cwd: project,
+    encoding: "utf8",
+    timeout: 60000,
+  });
+  if (generated.status !== 0 || !fs.existsSync(path.join(project, "src", "screens", "HomeScreen.js"))) {
+    fail("flet-box screen Home did not create its file");
+  }
+  const component = spawnSync(process.execPath, [cli, "component", "Card"], {
+    cwd: project,
+    encoding: "utf8",
+    timeout: 60000,
+  });
+  if (component.status !== 0 || !fs.existsSync(path.join(project, "src", "components", "Card.js"))) {
+    fail("flet-box component Card did not create its file");
+  }
+
+  for (const [command, name, escapedFile] of [
+    ["screen", "../../../escapedScreen", path.join(scaffoldCwd, "escapedScreenScreen.js")],
+    ["component", "../../../escapedComponent", path.join(scaffoldCwd, "escapedComponent.js")],
+  ]) {
+    const result = spawnSync(process.execPath, [cli, command, name], {
+      cwd: project,
+      encoding: "utf8",
+      timeout: 60000,
+    });
+    if (result.status !== 1) fail(`flet-box ${command} did not reject a path-like generated name (status ${result.status})`);
+    if (fs.existsSync(escapedFile)) fail(`flet-box ${command} wrote outside the project`);
+  }
+  const emptyBatch = spawnSync(process.execPath, [cli, "screen", "0"], {
+    cwd: project,
+    encoding: "utf8",
+    timeout: 60000,
+  });
+  if (emptyBatch.status !== 1) fail(`flet-box screen 0 did not reject an empty batch (status ${emptyBatch.status})`);
 
   // The docs ship for the offline agent, so a release that drops them is a
   // release where `npm run check` stops being able to explain itself.

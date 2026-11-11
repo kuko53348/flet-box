@@ -4,7 +4,7 @@
 
 <h1>FletBox</h1>
 
-<b>Ship web, PWA, Android &amp; iOS from one codebase — with zero runtime dependencies.</b><br>
+<b>Ship web, PWA, Android &amp; iOS from one codebase — with no added dependencies in your app runtime.</b><br>
 A declarative, Flutter/Flet-like UI framework in plain vanilla JavaScript.<br>
 Real DOM · No Virtual DOM · No build config to learn.
 
@@ -16,7 +16,7 @@ Real DOM · No Virtual DOM · No build config to learn.
 <br><br>
 
 <a href="https://github.com/kuko53348/flet-box/blob/HEAD/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square" alt="License: MIT"></a>
-<img src="https://img.shields.io/badge/dependencies-0-brightgreen?style=flat-square" alt="Zero dependencies">
+<img src="https://img.shields.io/badge/app%20runtime%20dependencies-0-brightgreen?style=flat-square" alt="Zero app runtime dependencies">
 <img src="https://img.shields.io/badge/platforms-web%20%7C%20PWA%20%7C%20android%20%7C%20ios-007acc?style=flat-square" alt="Platforms">
 <a href="https://github.com/kuko53348/flet-box"><img src="https://img.shields.io/github/stars/kuko53348/flet-box?style=social" alt="GitHub stars"></a>
 
@@ -32,13 +32,15 @@ Real DOM · No Virtual DOM · No build config to learn.
 
 ---
 
-**Stop paying the framework tax.** FletBox has no runtime dependencies, no Virtual DOM, and nothing to install beyond Node. Write widgets in the syntax you already know — plain JavaScript — and deploy to browser, PWA, Android, and iOS from the same source.
+**Stop paying the framework tax.** FletBox widgets add no runtime dependencies to your app, use no Virtual DOM, and need nothing beyond Node to build. The CLI's development server uses its own `ws` and `chokidar` packages. Write widgets in the syntax you already know — plain JavaScript — and deploy to browser, PWA, Android, and iOS from the same source.
 
 > ▶ **Learn it on YouTube:** [@flet-box](https://www.youtube.com/@flet-box) — tutorials, walkthroughs, and new widgets.
 
 ## Installation
 
-FletBox is on npm, and it drags nothing in with it — `"dependencies": {}`:
+FletBox widgets add no dependencies to your app bundle. The CLI package includes
+`ws` and `chokidar` for its development server; those tools are not imported by
+the app runtime.
 
 ```bash
 npm install -g flet-box           # the CLI, once (Node >= 20.9)
@@ -49,9 +51,9 @@ npm install                       # pulls flet-box itself from the registry
 flet-box run                      # dev server with hot reload
 ```
 
-Nothing to install at all: `npx flet-box create appName` runs the same scaffolder
-straight from the registry, and the project it writes declares `flet-box` as a
-normal dependency.
+No global install is needed: `npx flet-box create appName` runs the same
+scaffolder straight from the registry, and the project it writes declares
+`flet-box` as a normal dependency.
 
 Cloning the repository and `npm link`ing it is still how you *develop the framework
 itself* — see [CONTRIBUTING](CONTRIBUTING.md).
